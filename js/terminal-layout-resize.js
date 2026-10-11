@@ -20,11 +20,11 @@ clampCoinsRsiHeight,
 clampCoinsVolumeHeight,
 clampCoinsAoHeight,
 clampCoinsMacdHeight
-} from "./terminal-layout-math.js?v=6";
+} from "./terminal-layout-math.js?v=9457222d";
 
 import {
 isTerminalPage
-} from "./terminal/terminal-state.js?v=17";
+} from "./terminal/terminal-state.js?v=4747a92f";
 
 export {
 COINS_LIST_DEFAULT_PX,

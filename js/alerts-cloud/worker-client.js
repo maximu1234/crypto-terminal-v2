@@ -1,11 +1,11 @@
 import {
 SUPABASE_AUTH_STORAGE_KEY
-} from "../supabase-client.js?v=10";
+} from "../supabase-client.js?v=1c4904d5";
 
 import {
 waitForCloudAuth,
 ensureCloudLoginResolved
-} from "../cloud-sync.js?v=87";
+} from "../cloud-sync.js?v=cab32aef";
 
 import {
 getCachedAlertAuth,
@@ -13,21 +13,21 @@ setAlertAuthCache,
 resolveAlertAuthFast,
 readAlertTokenSync,
 readPersistedAuthSession
-} from "../alert-auth-cache.js?v=8";
+} from "../alert-auth-cache.js?v=7d0f1599";
 
 import {
 normalizeAlertWorkerBaseUrl
-} from "../alert-worker-url.js?v=2";
+} from "../alert-worker-url.js?v=ac260eea";
 
 import {
 alertsDebugLog,
 broadcastAlertsRegistrySync,
 lastSeenCloudAlerts
-} from "./debug.js?v=17";
+} from "./debug.js?v=892b4e7d";
 
 import {
 isAlertsCloudDisabled
-} from "../supabase-usage-prefs.js?v=20";
+} from "../supabase-usage-prefs.js?v=8f43fc8c";
 
 function alertsCloudBlocked(){
 
@@ -484,7 +484,7 @@ return false;
 let env;
 try{
 env =
-await import("../supabase-env.js?v=5");
+await import("../supabase-env.js?v=ed71d82f");
 }catch{
 return false;
 }
@@ -719,7 +719,7 @@ let env;
 
 try{
 env =
-await import("../supabase-env.js?v=5");
+await import("../supabase-env.js?v=ed71d82f");
 }catch{
 return false;
 }
@@ -1079,7 +1079,7 @@ return false;
 }
 
 const { forgetAlertDeleted } =
-await import("../alerts.js?v=128");
+await import("../alerts.js?v=63158382");
 
 forgetAlertDeleted(
 sym,
@@ -1111,7 +1111,7 @@ return cachedWorkerBaseUrl;
 
 try{
 const env =
-await import("../supabase-env.js?v=5");
+await import("../supabase-env.js?v=ed71d82f");
 
 const raw =
 String(
@@ -1984,7 +1984,7 @@ let env;
 
 try{
 env =
-await import("../supabase-env.js?v=5");
+await import("../supabase-env.js?v=ed71d82f");
 }catch{
 return false;
 }
@@ -2371,7 +2371,7 @@ null;
 
 if(cloudId){
 const { markAlertCloudId } =
-await import("../alerts.js?v=128");
+await import("../alerts.js?v=63158382");
 
 markAlertCloudId(
 symbol,

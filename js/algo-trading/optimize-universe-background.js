@@ -6,20 +6,20 @@
 import {
 loadOptimizeUniverseResult,
 saveOptimizeUniverseResult
-} from "./modal-results-storage.js?v=5";
+} from "./modal-results-storage.js?v=2fe198eb";
 
 import {
 pattern12SettingsCacheKey
-} from "./pattern-12-settings.js?v=5";
+} from "./pattern-12-settings.js?v=cd75d3d2";
 
 import {
 getActiveExchangeId,
 EXCHANGE_CHANGED_EVENT
-} from "../exchanges/context.js?v=1";
+} from "../exchanges/context.js?v=16fdeacc";
 
 import {
 shouldRunAlgoBackgroundJobs
-} from "../desktop-feature-nav-prefs.js?v=5";
+} from "../desktop-feature-nav-prefs.js?v=0fd2425e";
 
 export const ALGO_OPTIMIZE_UNIVERSE_BG_EVENT =
 "algo-optimize-universe-bg-update";
@@ -94,7 +94,7 @@ async function loadScanner(){
 
 const mod =
 await import(
-"./strategy-param-optimize-scan.js?v=16"
+"./strategy-param-optimize-scan.js?v=2602832e"
 );
 
 return mod.scanAlgoStrategyParamOptimizeUniverse;

@@ -4,23 +4,23 @@
 import {
 clearAllHtfCache,
 fetchHtfCandles
-} from "./htf-loader.js?v=6";
+} from "./htf-loader.js?v=4c5b8439";
 
 import {
 isChartLayoutReady
-} from "../chart-layout-gate.js?v=4";
+} from "../chart-layout-gate.js?v=4a8798af";
 import {
 runWithPreservedVisibleLogicalRange
-} from "../chart-visible-range.js?v=3";
+} from "../chart-visible-range.js?v=255ee6c8";
 import {
 calculateShiftedEmaSeries
-} from "./htf-ema.js?v=1";
+} from "./htf-ema.js?v=b7d2ebae";
 import {
 closeIndicatorColorPicker,
 openIndicatorColorPicker,
 previewColorHex,
 isValidDrawColor
-} from "./indicator-color-picker-ui.js?v=2";
+} from "./indicator-color-picker-ui.js?v=755ce025";
 
 export const EMA_SHIFT_RIBBON_ID =
 "ema-shift-ribbon";

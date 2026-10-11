@@ -5,10 +5,10 @@ import {
   RSI_TOUCH_FLIP_LEN_GRID,
   listRsiTouchFlipOptimizeCombos,
   optimizeRsiTouchFlipParams
-} from "./rsi-touch-flip-optimize.js?v=11";
+} from "./rsi-touch-flip-optimize.js?v=293a02bd";
 import {
   runRsiTouchFlip
-} from "./rsi-touch-flip-engine.js?v=8";
+} from "./rsi-touch-flip-engine.js?v=92d67502";
 import {
   clampRsiTouchFlipTrainPct,
   formatRsiTouchFlipParamsBrief,
@@ -21,7 +21,7 @@ import {
   rsiTouchFlipJsonReplacer,
   rsiTouchFlipJsonReviver,
   RSI_TOUCH_FLIP_DEFAULT_TRAIN_PCT
-} from "./rsi-touch-flip-walkforward.js?v=13";
+} from "./rsi-touch-flip-walkforward.js?v=76212104";
 
 const FIT_KEY = "algo_trading_rsi_touch_flip_fit_v1";
 

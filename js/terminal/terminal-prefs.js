@@ -2,11 +2,11 @@ import {
 getAllCoinsMarketIds,
 getActiveCoinsMarkets,
 getActiveExchangeId
-} from "../market-api.js?v=14";
+} from "../market-api.js?v=7b3e6b3c";
 
 import {
 EXCHANGE_IDS
-} from "../exchanges/registry.js?v=1";
+} from "../exchanges/registry.js?v=c1f7bab0";
 
 import {
 coinsState,
@@ -14,36 +14,36 @@ COINS_PREFS_KEY,
 COINS_SORT_MODES,
 COINS_TF_VALUES,
 isTerminalPage
-} from "./terminal-state.js?v=17";
+} from "./terminal-state.js?v=4747a92f";
 
 import {
 getCurrentSymbols,
 getFirstVisibleSymbol,
 getExtraCoinMarkets
-} from "./terminal-table.js?v=59";
+} from "./terminal-table.js?v=5096da98";
 
 import {
 parseAlertDeepLinkExchange
-} from "../alert-deep-link-url.js?v=2";
+} from "../alert-deep-link-url.js?v=63f051ff";
 
 import {
 parseDiaryTradeDeepLink
-} from "../trade-diary-terminal-deep-link.js?v=3";
+} from "../trade-diary-terminal-deep-link.js?v=7e2fd114";
 
 import {
 DEFAULT_CHART_SYMBOL,
 defaultChartSymbolForExchange,
 pickSymbolFromLastView as pickSymbolFromLastViewPure
-} from "./exchange-last-symbol.js?v=2";
+} from "./exchange-last-symbol.js?v=807c4cf2";
 
 import {
 CHART_PRICE_SCALE_MODE_LOGARITHMIC,
 normalizeChartPriceScaleMode
-} from "../chart/price-scale-mode.js?v=3";
+} from "../chart/price-scale-mode.js?v=7deaefee";
 
 import {
 normalizeMinVolume
-} from "../screener-volume-filter.js?v=4";
+} from "../screener-volume-filter.js?v=2018f0b9";
 
 export {
 DEFAULT_CHART_SYMBOL,

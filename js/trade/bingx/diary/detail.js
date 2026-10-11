@@ -3,13 +3,13 @@
  */
 import {
   getActiveExchangeId
-} from "../../../market-api.js?v=14";
+} from "../../../market-api.js?v=7b3e6b3c";
 
 import {
   dayKeyFromMs,
   readDiaryDayTrades,
   writeDiaryDayTrades
-} from "../../../trade-diary-storage.js?v=4";
+} from "../../../trade-diary-storage.js?v=1deb8f10";
 
 export function diaryBuildDetailRequest(trade) {
   return {

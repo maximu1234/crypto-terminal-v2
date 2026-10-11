@@ -1,32 +1,32 @@
 import {
 getActiveExchangeId
-} from "./exchanges/context.js?v=1";
+} from "./exchanges/context.js?v=16fdeacc";
 
 import {
 getExchangeDefinition,
 isRealtimeMarketDataset,
 getActiveCoinsMarkets
-} from "./exchanges/registry.js?v=1";
+} from "./exchanges/registry.js?v=c1f7bab0";
 
 import {
 formatExchangeDisplayLabel
-} from "./exchanges/symbol.js?v=2";
+} from "./exchanges/symbol.js?v=b2916b67";
 
 import {
 bybitPublicAdapter
-} from "./exchanges/bybit/public.js?v=7";
+} from "./exchanges/bybit/public.js?v=13506e40";
 
 import {
 bingxPublicAdapter
-} from "./exchanges/bingx/public.js?v=11";
+} from "./exchanges/bingx/public.js?v=753d2147";
 
 import {
 moexPublicAdapter
-} from "./exchanges/moex/public.js?v=5";
+} from "./exchanges/moex/public.js?v=042981d5";
 
 import {
 peekBybitSymbolsCache
-} from "./api.js?v=39";
+} from "./api.js?v=7715ccfd";
 
 const ADAPTERS =
 {
@@ -72,7 +72,7 @@ getActiveExchangeId,
 setActiveExchangeId,
 EXCHANGE_CHANGED_EVENT,
 initExchangeContext
-} from "./exchanges/context.js?v=1";
+} from "./exchanges/context.js?v=16fdeacc";
 
 export {
 getExchangeDefinition,
@@ -82,12 +82,12 @@ getAllCoinsMarketIds,
 isRealtimeMarketDataset,
 EXCHANGE_IDS,
 EXCHANGE_DEFINITIONS
-} from "./exchanges/registry.js?v=1";
+} from "./exchanges/registry.js?v=c1f7bab0";
 
 export {
 formatExchangeDisplayLabel,
 toCanonicalSymbol
-} from "./exchanges/symbol.js?v=2";
+} from "./exchanges/symbol.js?v=b2916b67";
 
 export async function loadMarketHistory(
 symbol,

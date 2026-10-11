@@ -2,7 +2,7 @@ import {
 getSupabase,
 isSupabaseConfigured,
 SUPABASE_AUTH_STORAGE_KEY
-} from "../supabase-client.js?v=10";
+} from "../supabase-client.js?v=1c4904d5";
 
 import {
 waitForCloudAuth,
@@ -10,7 +10,7 @@ isCloudLoggedIn,
 isCloudLoggedInEffective,
 onCloudSyncChange,
 ensureCloudLoginResolved
-} from "../cloud-sync.js?v=87";
+} from "../cloud-sync.js?v=cab32aef";
 
 import {
 getCachedAlertAuth,
@@ -19,17 +19,17 @@ clearAlertAuthCache,
 resolveAlertAuthFast,
 readAlertTokenSync,
 readPersistedAuthSession
-} from "../alert-auth-cache.js?v=8";
+} from "../alert-auth-cache.js?v=7d0f1599";
 
 import {
 normalizeAlertWorkerBaseUrl
-} from "../alert-worker-url.js?v=2";
+} from "../alert-worker-url.js?v=ac260eea";
 
 import {
 createPullCoalescer,
 isAlertsPage,
 isDrawingsUiPage
-} from "../cloud-sync-throttle.js?v=4";
+} from "../cloud-sync-throttle.js?v=3c85c6a2";
 
 
 const IS_YANDEX =

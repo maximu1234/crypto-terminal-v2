@@ -4,7 +4,7 @@
 import {
 normalizeAlgoOptimizeStrategyId,
 algoOptimizeStrategyLabel
-} from "./strategy-param-optimize.js?v=9";
+} from "./strategy-param-optimize.js?v=4337e90e";
 
 import {
 ALGO_OPTIMIZE_UNIVERSE_BG_EVENT,
@@ -14,40 +14,40 @@ isAlgoOptimizeUniverseJobRunning,
 getAlgoOptimizeUniverseJobStrategy,
 readAlgoOptimizeUniverseJob,
 resumeAlgoOptimizeUniverseJob
-} from "./optimize-universe-background.js?v=10";
+} from "./optimize-universe-background.js?v=e4577260";
 
 import {
 normalizeAlgoScanTf,
 ALGO_TICKER_SCAN_TF
-} from "./ticker-scanner.js?v=15";
+} from "./ticker-scanner.js?v=3aa0a47d";
 
 import {
 normalizeAlgoStatsMode
-} from "./pattern-trade-stats.js?v=15";
+} from "./pattern-trade-stats.js?v=2530eb1e";
 
 import {
 loadOptimizeUniverseResult,
 saveOptimizeUniverseResult
-} from "./modal-results-storage.js?v=5";
+} from "./modal-results-storage.js?v=2fe198eb";
 
 import {
 pattern12SettingsCacheKey
-} from "./pattern-12-settings.js?v=5";
+} from "./pattern-12-settings.js?v=cd75d3d2";
 
 import {
 publishBotTickerBookFromOptimizeRows,
 loadBotTickerBook,
 persistBotTickerBookToMain
-} from "./bot-ticker-book.js?v=7";
+} from "./bot-ticker-book.js?v=24739acf";
 
 import {
 writeTickerStrategyOverlays
-} from "./ticker-strategy-overlays.js?v=1";
+} from "./ticker-strategy-overlays.js?v=12676ce2";
 
 import {
 botStrategyToFlagId,
 replaceAlgoTickerFlagList
-} from "./ticker-flags.js?v=10";
+} from "./ticker-flags.js?v=72da874e";
 
 /**
  * @param {number|null|undefined} value

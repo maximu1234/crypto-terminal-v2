@@ -3,17 +3,17 @@ loadMarketSymbols,
 getActiveExchangeDefinition,
 getActiveExchangeId,
 EXCHANGE_CHANGED_EVENT
-} from "./market-api.js?v=14";
+} from "./market-api.js?v=7b3e6b3c";
 
 import {
 buildAlertChartUrl
-} from "./alert-deep-link-url.js?v=2";
+} from "./alert-deep-link-url.js?v=63f051ff";
 
 import {
 BYBIT_LISTINGS_PAGE_WINDOW_MS,
 filterRecentListings,
 formatListingDateTime
-} from "./bybit-listings.js?v=5";
+} from "./bybit-listings.js?v=e4b02e33";
 
 const statusEl =
 document.getElementById("listings-status");

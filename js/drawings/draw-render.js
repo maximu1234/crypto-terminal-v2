@@ -13,45 +13,45 @@ fibShapeLevelXSpan,
 isFibType,
 isFibExtType,
 resolveFibTrendLineColor
-} from "./fib-spec.js?v=18";
+} from "./fib-spec.js?v=5f577f26";
 
 import {
 isPositionType
-} from "./position.js?v=11";
+} from "./position.js?v=152e419c";
 
 import {
 drawFilledArrow,
 drawRectangleShape
-} from "./arrow-rect.js?v=4";
+} from "./arrow-rect.js?v=8d4294c4";
 
 import {
 drawFvpShape
-} from "./fixed-volume-profile-draw.js?v=2";
+} from "./fixed-volume-profile-draw.js?v=f0cfee18";
 
 import {
 isFvpType,
 copyFvpStyleToShape
-} from "./fixed-volume-profile.js?v=3";
+} from "./fixed-volume-profile.js?v=bb03b4a7";
 
 import {
 drawBrushPath
-} from "./brush.js?v=2";
+} from "./brush.js?v=7e0b1c34";
 
 import {
 isHorizPriceTool,
 horizPriceLineX1
-} from "./constants.js?v=14";
+} from "./constants.js?v=c47ce407";
 
 import {
 channelLevelSegment,
 ensureChannelLevelsVisible
-} from "./channel-spec.js?v=2";
+} from "./channel-spec.js?v=a8bcf3c9";
 
 import {
 isTextTool,
 drawTextShape,
 TEXT_DEFAULT_CONTENT
-} from "./text.js?v=3";
+} from "./text.js?v=441520b6";
 
 import {
 isElliottType,
@@ -71,7 +71,7 @@ PATTERN_12_DEFAULT_CHANNEL_COLOR,
 pattern12ChannelGeometry,
 pattern12DashScreen,
 pattern12TpTickLayout
-} from "./elliott-spec.js?v=23";
+} from "./elliott-spec.js?v=3fb92981";
 
 /**
  * @param {object} deps

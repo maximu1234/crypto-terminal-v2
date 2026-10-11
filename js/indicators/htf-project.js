@@ -6,12 +6,12 @@ import {
 aggregateCandlesToTf,
 fetchHtfCandles,
 tfPeriodSec
-} from "./htf-loader.js?v=6";
+} from "./htf-loader.js?v=4c5b8439";
 
 import {
 calculateRSI,
 alignRsiWithCandleTimes
-} from "../indicators.js?v=3";
+} from "../indicators.js?v=85e28ecc";
 
 export const HTF_TF_OPTIONS =
 [

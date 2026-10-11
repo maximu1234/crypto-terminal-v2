@@ -1,20 +1,20 @@
 import {
 fetchBybit
-} from "./bybit-fetch.js?v=24";
+} from "./bybit-fetch.js?v=1c54517b";
 
 import {
 fetchTwelveTimeSeries
-} from "./twelvedata-fetch.js?v=1";
+} from "./twelvedata-fetch.js?v=12842159";
 
 import {
 klineHistoryPageEnds,
 shouldFetchKlinePagesInParallel
-} from "./kline-history-pages.js?v=2";
+} from "./kline-history-pages.js?v=cc7b66ca";
 
 import {
 clampHistoryPageLimit,
 noteHistoryTransfer
-} from "./history-link-pace.js?v=1";
+} from "./history-link-pace.js?v=f684ac11";
 
 /* =========================================================
    BYBIT HISTORY

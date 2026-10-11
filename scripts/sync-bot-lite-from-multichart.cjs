@@ -94,7 +94,7 @@ function syncProxyHelpers() {
 
 function syncCssFromHtml(html) {
   fs.mkdirSync(BOT_CSS, { recursive: true });
-  const re = /href="\/css\/([^"?]+)(?:\?v=\d+)?"/g;
+  const re = /href="\/css\/([^"?]+)(?:\?v=[0-9a-f]+)?"/g;
   let n = 0;
   let m;
   while ((m = re.exec(html))) {

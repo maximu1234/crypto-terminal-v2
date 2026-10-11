@@ -4,21 +4,21 @@
 import {
 scanAlgoStrategyUniverse,
 normalizeAlgoScanStrategyId
-} from "./strategy-universe-scan.js?v=11";
+} from "./strategy-universe-scan.js?v=2c070114";
 
 import {
 normalizeAlgoScanTf,
 ALGO_TICKER_SCAN_TF
-} from "./ticker-scanner.js?v=15";
+} from "./ticker-scanner.js?v=3aa0a47d";
 
 import {
 normalizeAlgoStatsMode
-} from "./pattern-trade-stats.js?v=15";
+} from "./pattern-trade-stats.js?v=2530eb1e";
 
 import {
 loadUniverseScanResult,
 saveUniverseScanResult
-} from "./modal-results-storage.js?v=5";
+} from "./modal-results-storage.js?v=2fe198eb";
 
 const ST_LABELS =
 {

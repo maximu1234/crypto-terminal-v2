@@ -5,7 +5,7 @@
  */
 import {
 getTradeConfig
-} from "./config.js?v=3";
+} from "./config.js?v=6ddbe7e2";
 
 function normalizeSymbol(
 symbol

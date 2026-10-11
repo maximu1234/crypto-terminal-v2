@@ -6,23 +6,23 @@
  */
 import {
 initChartIndicators
-} from "../chart-indicators.js?v=75";
+} from "../chart-indicators.js?v=f833c923";
 
 import {
 createPattern12Indicator
-} from "./pattern-12.js?v=17";
+} from "./pattern-12.js?v=afcb52c5";
 
 import {
 createPattern12EarlyT3Indicator
-} from "./pattern-12-early-t3.js?v=2";
+} from "./pattern-12-early-t3.js?v=1012cc82";
 
 import {
 ALGO_INDICATORS_STORAGE_KEY
-} from "./indicators-storage.js?v=1";
+} from "./indicators-storage.js?v=bbd2b17b";
 
 export {
 ALGO_INDICATORS_STORAGE_KEY
-} from "./indicators-storage.js?v=1";
+} from "./indicators-storage.js?v=bbd2b17b";
 
 /**
  * @param {Parameters<typeof initChartIndicators>[0]} opts

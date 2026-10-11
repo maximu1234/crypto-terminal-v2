@@ -1,10 +1,11 @@
 #!/usr/bin/env node
 /**
- * Синхронизирует ?v=N во всех js/html с js/asset-manifest.js (ASSETS).
+ * Синхронизирует ?v= с js/asset-manifest.js (ASSETS).
+ * Токен — хэш содержимого файла и тех модулей, которые он импортирует.
  *
- *   node scripts/sync-asset-versions.cjs              # sync all
+ *   node scripts/sync-asset-versions.cjs              # пересчитать хэши и записать ?v=
  *   node scripts/sync-asset-versions.cjs bump chart.js [more.js]
- *   Один проход: лист, все кто его импортирует, и asset-manifest.js — каждый +1.
+ *   То же пересчитывание; имена проверяются, что ключ есть в реестре.
  *   node scripts/sync-asset-versions.cjs list         # показать реестр
  */
 const fs =
@@ -14,6 +15,12 @@ require(
 const path =
 require(
 "path"
+);
+const {
+computeContentHashes
+} =
+require(
+"./asset-content-hash.cjs"
 );
 
 const ROOT =
@@ -39,7 +46,7 @@ const assets =
 {};
 
 const re =
-/"([^"]+\.(?:js|css))"\s*:\s*(\d+)/g;
+/"([^"]+\.(?:js|css))"\s*:\s*(?:"([0-9a-f]+)"|(\d+))/g;
 
 let m;
 
@@ -58,12 +65,12 @@ m[
 1
 ]
 ] =
-parseInt(
 m[
 2
-],
-10
-);
+] ||
+m[
+3
+];
 
 }
 
@@ -107,7 +114,7 @@ assets
 
 const lineRe =
 new RegExp(
-`("${name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}"\\s*:\\s*)\\d+`
+`("${name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}"\\s*:\\s*)(?:"[0-9a-f]+"|\\d+)`
 );
 
 if(
@@ -124,7 +131,7 @@ continue;
 src =
 src.replace(
 lineRe,
-`$1${ver}`
+`$1"${ver}"`
 );
 }
 
@@ -356,7 +363,7 @@ filePath,
 let changed =
 false;
 const versionRe =
-/([a-zA-Z0-9_./-]+\.(?:js|css))\?v=(\d+)/g;
+/([a-zA-Z0-9_./-]+\.(?:js|css))\?v=([0-9a-f]+)/gi;
 const matches =
 [
 ...content.matchAll(
@@ -382,12 +389,11 @@ m[
 1
 ];
 const found =
-parseInt(
+String(
 m[
 2
-],
-10
-);
+]
+).toLowerCase();
 const key =
 resolveImportKey(
 filePath,
@@ -405,9 +411,11 @@ continue;
 }
 
 const want =
+String(
 assets[
 key
-];
+]
+);
 
 if(
 found ===
@@ -496,7 +504,7 @@ assets
 const reverse =
 new Map();
 const versionRe =
-/([a-zA-Z0-9_./-]+\.(?:js|css))\?v=\d+/g;
+/([a-zA-Z0-9_./-]+\.(?:js|css))\?v=[0-9a-f]+/gi;
 
 for(
 const file of collectFiles()
@@ -582,6 +590,136 @@ fromKey
 }
 
 return reverse;
+
+}
+
+function resolveAssetFile(
+key
+){
+
+const jsPath =
+path.join(
+ROOT,
+"js",
+key
+);
+
+if(
+fs.existsSync(
+jsPath
+) &&
+fs.lstatSync(
+jsPath
+).isFile()
+){
+return jsPath;
+}
+
+const cssPath =
+path.join(
+ROOT,
+"css",
+key
+);
+
+if(
+fs.existsSync(
+cssPath
+) &&
+fs.lstatSync(
+cssPath
+).isFile()
+){
+return cssPath;
+}
+
+return null;
+
+}
+
+function rehashAssets(
+assets
+){
+
+const entries =
+[];
+
+for(
+const key of Object.keys(
+assets
+)
+){
+
+const file =
+resolveAssetFile(
+key
+);
+
+if(
+!file
+){
+continue;
+}
+
+entries.push({
+key,
+body:
+fs.readFileSync(
+file,
+"utf8"
+)
+});
+
+}
+
+const next =
+computeContentHashes(
+entries
+);
+
+for(
+const [
+key,
+token
+] of Object.entries(
+next
+)
+){
+
+if(
+assets[
+key
+] ==
+null
+){
+continue;
+}
+
+if(
+String(
+assets[
+key
+]
+) !==
+token
+){
+console.log(
+`Hash ${key} → v=${token}`
+);
+}
+
+assets[
+key
+] =
+token;
+
+}
+
+writeManifestAssets(
+assets
+);
+
+return assets;
 
 }
 
@@ -676,29 +814,30 @@ name.replace(
 ""
 )
 );
-const closure =
-collectBumpClosure(
-assets,
-seeds
-);
 
 for(
-const name of closure
+const name of seeds
 ){
+
+if(
 assets[
 name
-] +=
-1;
-console.log(
-`Bumped ${name} → v=${assets[name]}`
+] ==
+null
+){
+console.error(
+`Unknown asset: ${name}`
+);
+process.exit(
+1
 );
 }
 
-writeManifestAssets(
+}
+
+return rehashAssets(
 assets
 );
-
-return assets;
 
 }
 
@@ -726,8 +865,12 @@ process.exit(
 
 assets[
 name
-] +=
-1;
+] =
+rehashAssets(
+assets
+)[
+name
+];
 
 writeManifestAssets(
 assets
@@ -823,7 +966,9 @@ args.slice(
 }else{
 
 assets =
-readManifestAssets();
+rehashAssets(
+readManifestAssets()
+);
 
 }
 

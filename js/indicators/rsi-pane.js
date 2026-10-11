@@ -10,11 +10,11 @@ import {
 formatHtfTfLegend,
 htfTfSelectHtml,
 normalizeHtfTf
-} from "./htf-project.js?v=5";
+} from "./htf-project.js?v=2d6ecf34";
 
 import {
 syncPaneViewportAfterData
-} from "./indicator-pane-viewport.js?v=12";
+} from "./indicator-pane-viewport.js?v=d73a4e93";
 
 export const RSI_PANE_ID =
 "rsi";

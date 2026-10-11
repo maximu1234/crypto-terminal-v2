@@ -1,6 +1,6 @@
 import {
 toMoexSymbol
-} from "../symbol.js?v=2";
+} from "../symbol.js?v=b2916b67";
 
 /** @typedef {'shares'|'etf'|'indices'|'currency'} MoexMarketCategory */
 

@@ -10,27 +10,27 @@ filterPatternScanRowsBySide,
 normalizePatternScanSideFilter,
 normalizeScriptScanIndicatorId,
 loadPatternScanSymbols
-} from "./pattern-12-scanner.js?v=31";
+} from "./pattern-12-scanner.js?v=297ef592";
 
 import {
 loadScriptPageState,
 saveScriptPageState,
 periodMsById
-} from "./script-page-storage.js?v=22";
+} from "./script-page-storage.js?v=bb1a5524";
 
 import {
 loadScriptFavoritesForScan,
 intersectFavoritesWithMarket
-} from "./script-favorites-list.js?v=2";
+} from "./script-favorites-list.js?v=b3550f1f";
 
 import {
 EXCHANGE_CHANGED_EVENT,
 getActiveExchangeId
-} from "./market-api.js?v=14";
+} from "./market-api.js?v=7b3e6b3c";
 
 import {
 shouldRunScriptBackgroundJobs
-} from "./desktop-feature-nav-prefs.js?v=5";
+} from "./desktop-feature-nav-prefs.js?v=0fd2425e";
 
 export const SCRIPT_SCAN_BG_EVENT =
 "script-scan-bg-update";

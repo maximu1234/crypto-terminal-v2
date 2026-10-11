@@ -58,7 +58,7 @@ alerts registry / monitor / cloud (как сейчас по срочности)
 | 4 | Lazy **только** не-алерты (favorites idle; alerts immediate) | **185** | done |
 | 1b | Skip drawing sync during coins/book layout drag | **186** | done |
 | 5 | IndexedDB drawings (KV; LS dual-write removed → BroadcastChannel) | **193** | done |
-| 6 | CDN hash содержимого. Пока его нет, `bump` поднимает лист и импортёров одним проходом | по профилю | bump-проход есть, hash ещё нет |
+| 6 | CDN hash содержимого. `sync-asset-versions` пишет короткий sha256 файла и его импортов | по профилю | hash есть, повторный sync стабилен |
 | 7 | Pattern 1-2 скан считает попадания в worker | по профилю | done для скана |
 
 ## Smoke после каждой фазы

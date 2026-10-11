@@ -10,7 +10,7 @@
  */
 import {
 calculateRSI
-} from "../indicators.js?v=3";
+} from "../indicators.js?v=85e28ecc";
 
 const MAX_HIST =
 10000;

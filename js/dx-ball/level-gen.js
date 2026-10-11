@@ -2,7 +2,7 @@
  * Procedural DX-Ball boards — 100 levels with rising difficulty.
  * Hard (invincible/almost) bricks never seal breakable bricks above them.
  */
-import { COLS } from "./constants.js?v=2";
+import { COLS } from "./constants.js?v=9ae61186";
 
 function mulberry32(seed) {
   let t = seed >>> 0;

@@ -1,10 +1,10 @@
 import {
 getActiveExchangeId
-} from "./exchanges/context.js?v=1";
+} from "./exchanges/context.js?v=16fdeacc";
 
 import {
 EXCHANGE_IDS
-} from "./exchanges/registry.js?v=1";
+} from "./exchanges/registry.js?v=c1f7bab0";
 
 export const DRAWINGS_TF_SUFFIX_RE =
 /^(.+)_(1|5|15|60|240|D)$/;

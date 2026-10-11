@@ -4,7 +4,7 @@
 import {
 diaryChartTimeTicks,
 summarizeDiaryPeriodAnalytics
-} from "./diary-period-analytics.js?v=2";
+} from "./diary-period-analytics.js?v=4e88b9b7";
 
 function escapeHtml(
 value

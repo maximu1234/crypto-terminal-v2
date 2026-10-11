@@ -7,11 +7,11 @@ getScalpingDomVolumeInput,
 SCALPING_DOM_PRICE_SCALE_OPTIONS,
 setScalpingDomPriceScale,
 setScalpingDomVolumeInput
-} from "./prefs.js?v=4";
+} from "./prefs.js?v=ca9722ad";
 
 import {
 compressedBboPaintMode
-} from "./ladder-slice.js?v=11";
+} from "./ladder-slice.js?v=d43ffbec";
 
 const ROW_H =
 14;

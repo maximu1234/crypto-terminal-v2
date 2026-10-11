@@ -4,14 +4,14 @@
 import {
 getActiveExchangeId,
 EXCHANGE_CHANGED_EVENT
-} from "./exchanges/context.js?v=1";
+} from "./exchanges/context.js?v=16fdeacc";
 
 import {
 subscribeKline as subscribeBybitKline,
 subscribeTicker as subscribeBybitTicker,
 connectKlineStream as connectBybitKlineStream,
 disconnectKlineStream as disconnectBybitKlineStream
-} from "./ws.js?v=28";
+} from "./ws.js?v=19a0f08a";
 
 import {
 subscribeBingxKline,
@@ -19,17 +19,17 @@ subscribeBingxTicker,
 connectBingxKlineStream,
 disconnectBingxKlineStream,
 shutdownBingxWs
-} from "./exchanges/bingx/ws.js?v=21";
+} from "./exchanges/bingx/ws.js?v=b567a68e";
 
 import {
 bindLiveCandleCatchup,
 installMarketWsResume
-} from "./market-ws-resume.js?v=8";
+} from "./market-ws-resume.js?v=ace0468e";
 
 import {
 subscribeMoexKline,
 subscribeMoexTicker
-} from "./moex-live-poll.js?v=3";
+} from "./moex-live-poll.js?v=20b673b7";
 
 let boundExchangeListener =
 false;

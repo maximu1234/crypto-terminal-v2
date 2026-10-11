@@ -11,11 +11,11 @@ WIDTH_OPTIONS,
 FIB_MIN_ANCHOR_SPAN_PX,
 FIB_LABEL_X_PAD_PX,
 FIB_LABEL_RIGHT_RESERVE_PX
-} from "./constants.js?v=14";
+} from "./constants.js?v=c47ce407";
 
 import {
 isLwPriceScaleModeLogarithmic
-} from "../chart/price-scale-mode.js?v=3";
+} from "../chart/price-scale-mode.js?v=7deaefee";
 
 export {
 FIB_MIN_ANCHOR_SPAN_PX,

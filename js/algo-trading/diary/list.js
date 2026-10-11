@@ -11,15 +11,15 @@ import {
   startOfDayMs,
   todayDiaryDayKey,
   writeDiaryDayTrades
-} from "./day-storage.js?v=1";
+} from "./day-storage.js?v=d3b238b0";
 
 import {
   diaryDayKeyLocal
-} from "./format.js?v=1";
+} from "./format.js?v=e2a1aeff";
 
 import {
   diaryAcceptDayCache
-} from "./policy.js?v=1";
+} from "./policy.js?v=f86ab126";
 
 /** Separate day-cache namespace (not Terminal bybit). */
 const EXCHANGE_ID = "algo_bybit";

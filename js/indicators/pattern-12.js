@@ -3,17 +3,17 @@
  */
 import {
 isChartLayoutReady
-} from "../chart-layout-gate.js?v=4";
+} from "../chart-layout-gate.js?v=4a8798af";
 import {
 PATTERN_12_ID,
 computePattern12Scene,
 defaultPattern12Settings,
 normalizePattern12Settings
-} from "./pattern-12-math.js?v=13";
+} from "./pattern-12-math.js?v=a63cb1e8";
 
 import {
 paintPattern12Scene
-} from "./pattern-12-paint.js?v=8";
+} from "./pattern-12-paint.js?v=0d9019db";
 
 function readSettings(
 store

@@ -3,39 +3,39 @@
  */
 import {
 defaultPattern12Settings
-} from "./pattern-12-math.js?v=21";
+} from "./pattern-12-math.js?v=d408e1df";
 
 import {
 getOrComputeAlgoPattern12Scene,
 setAlgoPattern12PaintEntryFilter,
 clearAlgoPattern12PaintEntryFilter
-} from "./pattern-12-scene-cache.js?v=10";
+} from "./pattern-12-scene-cache.js?v=ab20cc1a";
 
 import {
 detectPatternEntryEventsFromSetups,
 resolvePatternSetupEvent
-} from "./pattern-entry-logic.js?v=14";
+} from "./pattern-entry-logic.js?v=516b2a3a";
 
 import {
 countPattern12SetupsFromScene,
 renderAlgoPatternCounts
-} from "./pattern-stats.js?v=3";
+} from "./pattern-stats.js?v=dc1bf6db";
 
 import {
 computeAlgoTradeStats,
 renderAlgoTradeStats,
 filterSequentialEntryEvents,
 normalizeAlgoStatsMode
-} from "./pattern-trade-stats.js?v=15";
+} from "./pattern-trade-stats.js?v=2530eb1e";
 
 import {
 computePartialTpTradeStats,
 filterSequentialPartialEntryEvents
-} from "./pattern-trade-stats-partial.js?v=22";
+} from "./pattern-trade-stats-partial.js?v=a92ca5c3";
 
 import {
 filterEntryEventsBySupertrend
-} from "./pattern-supertrend-filter.js?v=5";
+} from "./pattern-supertrend-filter.js?v=7676bfd0";
 
 /**
  * @param {Array} candles

@@ -173,7 +173,7 @@ try{
 const {
 ensureCloudLoginResolved
 } =
-await import("./cloud-sync.js?v=87");
+await import("./cloud-sync.js?v=cab32aef");
 
 const ctx =
 await ensureCloudLoginResolved(
@@ -194,7 +194,7 @@ return;
 const {
 getSupabase
 } =
-await import("./supabase-client.js?v=10");
+await import("./supabase-client.js?v=1c4904d5");
 
 const sb =
 await getSupabase();

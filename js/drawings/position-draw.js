@@ -13,12 +13,12 @@ POSITION_DEFAULT_TP_ZONE_PX,
 POSITION_DEFAULT_SL_ZONE_PX,
 POSITION_DEFAULT_WIDTH_BARS,
 POSITION_RR_LABEL_SAMPLE
-} from "./constants.js?v=14";
+} from "./constants.js?v=c47ce407";
 
 import {
 formatMoneyUsd,
 formatVolumeUsd
-} from "../position-sizing.js?v=3";
+} from "../position-sizing.js?v=81c492bf";
 
 import {
 positionEntryPrice,
@@ -28,11 +28,11 @@ positionSizingFromShape,
 initialPositionTpSlFromScale,
 clampPositionPrices as clampPositionPricesPure,
 formatPositionPrice
-} from "./position.js?v=11";
+} from "./position.js?v=152e419c";
 
 import {
 isSeriesLogarithmic
-} from "./fib-spec.js?v=18";
+} from "./fib-spec.js?v=5f577f26";
 
 /**
  * @param {{

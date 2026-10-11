@@ -3,11 +3,11 @@
  */
 import {
 toMoexSymbol
-} from "./exchanges/symbol.js?v=2";
+} from "./exchanges/symbol.js?v=b2916b67";
 
 import {
 liveBarPeriodSec
-} from "./chart/live-bar-roll.js?v=6";
+} from "./chart/live-bar-roll.js?v=6ff2b718";
 
 export const MOEX_POLL_MS =
 8000;
@@ -467,7 +467,7 @@ const {
 refreshMoexMarketdata
 } =
 await import(
-"./exchanges/moex/public.js?v=5"
+"./exchanges/moex/public.js?v=042981d5"
 );
 
 return refreshMoexMarketdata();

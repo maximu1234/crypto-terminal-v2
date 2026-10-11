@@ -8,20 +8,20 @@ setFavoriteGroup,
 getFavoriteGroup,
 canSetBlueFlag,
 FAVORITES_BY_EXCHANGE_KEY
-} from "./favorites.js?v=6";
+} from "./favorites.js?v=d5f9b002";
 
 import {
 persistFavoritesToCloud,
 onFavoritesRemoteUpdate
-} from "./cloud-sync.js?v=87";
+} from "./cloud-sync.js?v=cab32aef";
 
 import {
 EXCHANGE_CHANGED_EVENT
-} from "./market-api.js?v=14";
+} from "./market-api.js?v=7b3e6b3c";
 
 import {
 seedWatchlistTfOnBlueFlag
-} from "./storage.js?v=14";
+} from "./storage.js?v=bc113be9";
 
 let favorites =
 loadFavoritesGroups();

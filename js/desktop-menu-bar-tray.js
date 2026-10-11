@@ -5,16 +5,16 @@
 import {
 isMenuBarTrayEnabled,
 MENU_BAR_TRAY_PREF_EVENT
-} from "./desktop-menu-bar-tray-prefs.js?v=3";
+} from "./desktop-menu-bar-tray-prefs.js?v=cad92009";
 
 import {
 TOTAL_PNL_HIDDEN_KEY,
 isTradePnlHidden
-} from "./trade-pnl-privacy.js?v=1";
+} from "./trade-pnl-privacy.js?v=abe7bf95";
 
 import {
 syncFeatureNavPrefsToMain
-} from "./desktop-feature-nav-prefs.js?v=5";
+} from "./desktop-feature-nav-prefs.js?v=0fd2425e";
 
 let traySyncTeardown =
 null;

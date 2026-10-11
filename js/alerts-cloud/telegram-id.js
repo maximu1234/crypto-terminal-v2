@@ -1,20 +1,20 @@
 import {
 waitForCloudAuth,
 ensureCloudLoginResolved
-} from "../cloud-sync.js?v=87";
+} from "../cloud-sync.js?v=cab32aef";
 
 import {
 setAlertAuthCache,
 resolveAlertAuthFast,
 readAlertTokenSync,
 readPersistedAuthSession
-} from "../alert-auth-cache.js?v=8";
+} from "../alert-auth-cache.js?v=7d0f1599";
 
 import {
 fetchWithTimeout,
 withTimeout,
 getAccessTokenForUser
-} from "./worker-client.js?v=21";
+} from "./worker-client.js?v=14103f22";
 
 const TELEGRAM_CHAT_CACHE_PREFIX =
 "ct_telegram_chat_v1:";
@@ -261,7 +261,7 @@ return null;
 async function getSupabaseHttpConfig(){
 
 const env =
-await import("../supabase-env.js?v=5");
+await import("../supabase-env.js?v=ed71d82f");
 
 const base =
 String(env.SUPABASE_URL || "").replace(/\/$/, "");

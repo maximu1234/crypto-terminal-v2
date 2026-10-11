@@ -6,21 +6,21 @@ import {
 getActiveExchangeId,
 isExchangeTradingEnabled,
 EXCHANGE_CHANGED_EVENT
-} from "./market-api.js?v=14";
+} from "./market-api.js?v=7b3e6b3c";
 
 import {
 clearTradePositionsCache
-} from "./trade-positions-cache.js?v=48";
+} from "./trade-positions-cache.js?v=6585989c";
 
 import {
 stopTradeStreamBridge,
 startTradeStreamBridge
-} from "./trade-stream-bridge.js?v=32";
+} from "./trade-stream-bridge.js?v=9c66cfaf";
 
 import {
 loadTradeExchangeModules,
 resetTradeExchangeModules
-} from "./trade/module-router.js?v=37";
+} from "./trade/module-router.js?v=497346be";
 
 const BODY_CLASS =
 "exchange-trading-inactive";

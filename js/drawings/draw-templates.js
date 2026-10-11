@@ -5,7 +5,7 @@ RECT_DEFAULT_FILL_COLOR,
 RECT_DEFAULT_FILL_OPACITY,
 createRectangleToolDefaults,
 FIB_TOOL_DEFAULTS_VERSION
-} from "./constants.js?v=14";
+} from "./constants.js?v=c47ce407";
 
 import {
 cloneDefaultFibRows,
@@ -16,29 +16,29 @@ isFibType,
 isFibExtType,
 FIB_EXT_TOOL_DEFAULTS_VERSION,
 resolveFibTrendLineColor
-} from "./fib-spec.js?v=18";
+} from "./fib-spec.js?v=5f577f26";
 
 import {
 normalizeRectangleShape
-} from "./arrow-rect.js?v=4";
+} from "./arrow-rect.js?v=8d4294c4";
 
 import {
 isFvpType,
 extractFvpStyleSnapshot,
 copyFvpStyleToShape,
 createFvpToolDefaults
-} from "./fixed-volume-profile.js?v=3";
+} from "./fixed-volume-profile.js?v=bb03b4a7";
 
 import {
 isPositionType
-} from "./position.js?v=11";
+} from "./position.js?v=152e419c";
 
 import {
 isTextTool,
 TEXT_DEFAULT_COLOR,
 TEXT_DEFAULT_SIZE,
 clampTextFontSize
-} from "./text.js?v=3";
+} from "./text.js?v=441520b6";
 
 import {
 CHANNEL_DEFAULT_COLOR,
@@ -46,7 +46,7 @@ CHANNEL_TOOL_DEFAULTS_VERSION,
 cloneDefaultChannelRows,
 createChannelToolDefaults,
 ensureChannelLevelsVisible
-} from "./channel-spec.js?v=2";
+} from "./channel-spec.js?v=a8bcf3c9";
 
 import {
 ELLIOTT_DEFAULT_COLOR,
@@ -61,7 +61,7 @@ normalizePattern12TpFlags,
 normalizePatternChannelColor,
 normalizePatternChannelWidth,
 normalizePatternLineStyle
-} from "./elliott-spec.js?v=23";
+} from "./elliott-spec.js?v=3fb92981";
 
 export const DRAW_TEMPLATES_STORAGE_KEY =
 "draw_templates_v1";

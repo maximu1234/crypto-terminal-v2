@@ -3,7 +3,7 @@
  */
 import {
 getActiveExchangeId
-} from "./exchanges/context.js?v=1";
+} from "./exchanges/context.js?v=16fdeacc";
 
 export const PATTERN_SCAN_RESULTS_KEY =
 "pattern_12_scan_results_v1";

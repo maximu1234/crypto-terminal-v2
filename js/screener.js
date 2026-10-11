@@ -1,6 +1,6 @@
 import {
 symbolListSignature
-} from "./api.js?v=39";
+} from "./api.js?v=7715ccfd";
 
 import {
 loadMarketHistory,
@@ -9,29 +9,33 @@ peekMarketSymbolsCache,
 getActiveExchangeDefinition,
 getActiveExchangeId,
 EXCHANGE_CHANGED_EVENT
-} from "./market-api.js?v=14";
+} from "./market-api.js?v=7b3e6b3c";
 
 import {
 peekHistoryCache,
 putHistoryCache,
 mergeCandleRows,
 logicalIndexShift
-} from "./market-history-cache.js?v=2";
+} from "./market-history-cache.js?v=dedca4e1";
 
 import {
 openChromeSurface
-} from "./chrome-motion.js?v=5";
+} from "./chrome-motion.js?v=bb1d8933";
 
 import {
 isScreenerWidgetCurrent as isScreenerWidgetCurrentGuard
-} from "./screener-widget-guard.js?v=1";
+} from "./screener-widget-guard.js?v=0a29711c";
 
 import {
 normalizeMinVolume,
 filterSymbolsByMinVolume,
 formatMinVolumeFilter,
 mountMinVolumeFilterInput
-} from "./screener-volume-filter.js?v=4";
+} from "./screener-volume-filter.js?v=2018f0b9";
+
+import {
+renderScreenerPagination
+} from "./screener-pagination.js?v=6470ffba";
 
 import {
 createScreenerChart,
@@ -44,21 +48,21 @@ updateRsiLevelLinesLayout,
 linkPairedChartTimeScales,
 SCREENER_VISIBLE_BARS,
 SCREENER_MAX_BARS
-} from "./chart-import.js?v=70";
+} from "./chart-import.js?v=c172cdf4";
 
 import {
 isIpadWebViewport
-} from "./ipad-web-viewport.js?v=2";
+} from "./ipad-web-viewport.js?v=68cc93ec";
 
 import {
 calculateRSI,
 alignRsiWithCandleTimes
-} from "./indicators.js?v=3";
+} from "./indicators.js?v=85e28ecc";
 
 import {
 subscribeKline,
 bindLiveCandleCatchup
-} from "./market-ws.js?v=10";
+} from "./market-ws.js?v=ab0ef4a1";
 
 import {
 ensureOhlcRollover,
@@ -67,26 +71,26 @@ lastOhlcBar,
 liveBarPeriodSec,
 paintCatchupLiveSeries,
 paintLiveOhlcSeries
-} from "./chart/live-bar-roll.js?v=6";
+} from "./chart/live-bar-roll.js?v=6ff2b718";
 
 import {
 connectTickerStream,
 fetchTickersInto
-} from "./tickers.js?v=34";
+} from "./tickers.js?v=729ac4e5";
 
 import {
 createTickerUiBatcher
-} from "./ticker-update-batch.js?v=1";
+} from "./ticker-update-batch.js?v=cc523cbc";
 
 import {
 mountReleaseMarker
-} from "./release-marker.js?v=141";
+} from "./release-marker.js?v=1d385138";
 
 import {
 saveScreenerState,
 loadScreenerState,
 seedWatchlistTfOnBlueFlag
-} from "./storage.js?v=14";
+} from "./storage.js?v=bc113be9";
 
 import {
 loadFavoritesGroups,
@@ -95,40 +99,40 @@ getFavoriteGroup,
 setFavoriteGroup,
 canSetBlueFlag,
 FAVORITES_BY_EXCHANGE_KEY
-} from "./favorites.js?v=6";
+} from "./favorites.js?v=d5f9b002";
 
 import {
 ensureCloudReady
-} from "./auth-ui.js?v=82";
+} from "./auth-ui.js?v=adc291da";
 
 import {
 ensureSettled,
 withTimeout
-} from "./async-timeout.js?v=2";
+} from "./async-timeout.js?v=14be549c";
 
 import {
 persistFavoritesToCloud,
 onFavoritesRemoteUpdate
-} from "./cloud-sync.js?v=87";
+} from "./cloud-sync.js?v=cab32aef";
 
 import {
 attachSymbolAutocomplete,
 preloadTradingSymbols
-} from "./symbol-autocomplete.js?v=8";
+} from "./symbol-autocomplete.js?v=8f25788b";
 
 import {
 mountQwertyKeyInput,
 shouldIgnoreTypingHotkey
-} from "./qwerty-key-input.js?v=4";
+} from "./qwerty-key-input.js?v=7ac067d9";
 
 import {
 mapWithConcurrency
-} from "./load-concurrency.js?v=2";
+} from "./load-concurrency.js?v=8a9792d3";
 
 import {
 perfMark,
 perfMeasure
-} from "./perf-marks.js?v=2";
+} from "./perf-marks.js?v=6857dee5";
 
 import {
 SCREENER_WIDGET_OSCILLATOR_CHANGED,
@@ -136,7 +140,7 @@ SCREENER_WIDGET_OSCILLATOR_MACD,
 createScreenerMacdChart,
 getScreenerWidgetOscillator,
 setScreenerMacdData
-} from "./screener-widget-oscillator.js?v=6";
+} from "./screener-widget-oscillator.js?v=e28bfde2";
 
 const SCREENER_MAX_CONCURRENT_CHART_LOADS =
 4;
@@ -168,7 +172,7 @@ if(
 ){
 screenerZoomMountPromise =
 import(
-"./screener-widget-zoom.js?v=42"
+"./screener-widget-zoom.js?v=8c75e6ca"
 ).then(
 mod=>{
 refreshZoomFavoriteUi =
@@ -1403,1393 +1407,66 @@ statusEl.classList.toggle(
 
 }
 
-function paintScreenerWidgetLive(
-widget,
-{
-isNewBar,
-kind,
-shifted
-} = {}
-){
+import {
+bindScreenerWidgets,
+createWidget,
+destroyWidgets,
+loadWidgetChart,
+observeWidgetKlineVisibility,
+updateWidgetMeta
+} from "./screener-widgets.js?v=8d19f3be";
 
-const {
-chart,
-series,
-chartEl
-} =
-widget;
-const last =
-lastOhlcBar(
-widget.candles
-);
-
-paintLiveOhlcSeries(
-series,
-widget.candles,
-{
-kind,
-shifted
-}
-);
-
-if(
-last
-){
-applyChartPriceFormat(
-series,
-last.close
-);
-}
-
-if(
-widget.rsiSeries &&
-(
-isNewBar ||
-kind ===
-"hist" ||
-widget.oscKind ===
-SCREENER_WIDGET_OSCILLATOR_MACD
-)
-){
-updateWidgetRsiData(
-widget
-);
-}
-
-if(
-!widget.userAdjustedZoom &&
-isNewBar
-){
-
-const total =
-widget.candles.length;
-const visible =
-Math.min(
-SCREENER_VISIBLE_BARS,
-total
-);
-
-restoreScreenerViewport(
-chart,
-chartEl.clientWidth,
-visible,
-total
-);
-
-}
-
-}
-
-function destroyWidgets(){
-
-activeWidgets.forEach(w=>{
-
-w.disposed =
-true;
-
-unobserveWidgetKlineVisibility(
-w
-);
-
-w.unsubKline?.();
-
-try{
-w.unlinkTimeScales?.();
-}catch{
-/* ignore */
-}
-
-w.unlinkTimeScales =
-null;
-
-if(w.resizeObserver){
-w.resizeObserver.disconnect();
-}
-
-if(w.chart){
-
-try{
-w.chart.remove();
-}catch{
-/* ignore */
-}
-
-}
-
-if(w.rsiChart){
-
-try{
-w.rsiChart.remove();
-}catch{
-/* ignore */
-}
-
-}
-
-w.root?.remove();
-
+bindScreenerWidgets({
+get activeWidgets(){ return activeWidgets; },
+set activeWidgets(value){ activeWidgets = value; },
+get currentTF(){ return currentTF; },
+get gridEl(){ return gridEl; },
+get invertCharts(){ return invertCharts; },
+get renderToken(){ return renderToken; },
+get tickerMap(){ return tickerMap; },
+get SCREENER_FLAG_WRAP_HTML(){ return SCREENER_FLAG_WRAP_HTML; },
+activeExchangeName,
+applyWidgetInversion,
+buildWidgetBodyHtml,
+escapeHtml,
+formatVolume,
+isScreenerWidgetCurrent,
+layoutWidgetRsi,
+openScreenerZoomFromWidget,
+screenerWidgetOscillatorKind,
+screenerWidgetShowsOscillator,
+setStatus,
+updateWidgetRsiData,
+wireScreenerFlagWrap
 });
-
-activeWidgets = [];
-gridEl.innerHTML = "";
-
-}
-
-function updateWidgetMeta(symbol, root){
-
-const tick =
-tickerMap.get(symbol);
-
-const volEl =
-root.querySelector(".screener-volume");
-
-const chEl =
-root.querySelector(".screener-change");
-
-if(!tick){
-return;
-}
-
-if(volEl){
-const valueEl =
-volEl.querySelector(
-".screener-volume-value"
-);
-const compact =
-formatVolume(
-tick.volume24
-);
-
-if(
-valueEl
-){
-valueEl.textContent =
-compact;
-}else{
-volEl.innerHTML =
-`Объём 24ч <span class="screener-volume-value">${compact}</span>`;
-}
-}
-
-if(chEl){
-
-const ch =
-tick.change24 ?? 0;
-
-chEl.textContent =
-`${ch >= 0 ? "+" : ""}${ch.toFixed(2)}%`;
-
-chEl.className =
-`screener-change ${ch >= 0 ? "positive" : "negative"}`;
-
-}
-
-}
-
-function openTerminal(symbol, e){
-
-if(e){
-e.stopPropagation();
-}
-
-window.location.href =
-`terminal.html?symbol=${encodeURIComponent(symbol)}&tf=${encodeURIComponent(currentTF)}`;
-
-}
-
-const SCREENER_KLINE_VISIBILITY_MARGIN =
-"200px 0px";
-
-let screenerKlineVisibilityObserver =
-null;
-
-function ensureScreenerKlineVisibilityObserver(){
-
-if(
-screenerKlineVisibilityObserver ||
-typeof IntersectionObserver ===
-"undefined"
-){
-return;
-}
-
-screenerKlineVisibilityObserver =
-new IntersectionObserver(
-entries=>{
-
-entries.forEach(
-entry=>{
-
-const widget =
-activeWidgets.find(
-w=>
-w.root ===
-entry.target
-);
-
-if(
-!widget
-){
-return;
-}
-
-if(
-entry.isIntersecting
-){
-
-if(
-widget.candles.length &&
-!widget.unsubKline &&
-isScreenerWidgetCurrent(
-widget
-)
-){
-attachWidgetKlineStream(
-widget
-);
-}
-
-}else{
-
-widget.unsubKline?.();
-widget.unsubKline =
-null;
-
-}
-
-}
-);
-
-},
-{
-rootMargin:
-SCREENER_KLINE_VISIBILITY_MARGIN,
-threshold:
-0.01
-}
-);
-
-}
-
-function observeWidgetKlineVisibility(
-widget
-){
-
-ensureScreenerKlineVisibilityObserver();
-screenerKlineVisibilityObserver?.observe(
-widget.root
-);
-
-}
-
-function unobserveWidgetKlineVisibility(
-widget
-){
-
-screenerKlineVisibilityObserver?.unobserve(
-widget.root
-);
-
-}
-
-function isScreenerWidgetInView(
-root
-){
-
-if(
-typeof IntersectionObserver ===
-"undefined"
-){
-return true;
-}
-
-const rect =
-root.getBoundingClientRect();
-const margin =
-200;
-
-return (
-rect.bottom >=
--margin &&
-rect.top <=
-window.innerHeight +
-margin
-);
-
-}
-
-function attachWidgetKlineStream(
-widget
-){
-
-if(
-!isScreenerWidgetCurrent(
-widget
-)
-){
-return;
-}
-
-const {
-symbol
-} =
-widget;
-
-if(
-!widget.candles.length
-){
-return;
-}
-
-widget.unsubKline?.();
-
-if(
-!isScreenerWidgetInView(
-widget.root
-)
-){
-widget.unsubKline =
-null;
-return;
-}
-
-const unsub =
-subscribeKline(
-symbol,
-currentTF,
-candle=>{
-
-if(
-!isScreenerWidgetCurrent(
-widget
-)
-){
-return;
-}
-
-try{
-
-const maxLen =
-widget.userAdjustedZoom
-? 0
-: SCREENER_MAX_BARS;
-const {
-rolled,
-kind,
-shifted
-} =
-ingestLiveOhlcKline(
-widget.candles,
-candle,
-liveBarPeriodSec(
-currentTF
-),
-maxLen
-);
-
-if(
-!kind &&
-!rolled
-){
-return;
-}
-
-const isNewBar =
-kind ===
-"new" ||
-rolled;
-
-paintScreenerWidgetLive(
-widget,
-{
-isNewBar,
-kind,
-shifted
-}
-);
-
-}catch{
-/* chart disposed during page change */
-}
-
-}
-);
-const timer =
-setInterval(
-()=>{
-
-if(
-!isScreenerWidgetCurrent(
-widget
-) ||
-!widget.candles.length
-){
-return;
-}
-
-if(
-!ensureOhlcRollover(
-widget.candles,
-liveBarPeriodSec(
-currentTF
-)
-)
-){
-return;
-}
-
-try{
-paintScreenerWidgetLive(
-widget,
-{
-isNewBar:
-true,
-kind:
-"new"
-}
-);
-}catch{
-/* chart disposed during page change */
-}
-
-},
-1000
-);
-
-const unbindCatchup =
-bindLiveCandleCatchup({
-getSymbol:
-()=>
-widget.symbol,
-getTf:
-()=>
-currentTF,
-getCandles:
-()=>
-widget.candles,
-maxLen:
-widget.userAdjustedZoom
-? 0
-: SCREENER_MAX_BARS,
-isAlive:
-()=>
-isScreenerWidgetCurrent(
-widget
-),
-paint:
-(rows, info)=>{
-paintCatchupLiveSeries(
-widget.series,
-rows,
-widget.chart,
-info?.appended,
-info?.prevLen
-);
-paintScreenerWidgetLive(
-widget,
-{
-isNewBar:
-false,
-kind:
-"hist"
-}
-);
-}
-});
-
-widget.unsubKline =
-()=>{
-unbindCatchup?.();
-unsub?.();
-clearInterval(
-timer
-);
-};
-
-}
-
-async function refreshScreenerWidgetTail(
-widget
-){
-
-if(
-!widget?.candles?.length ||
-!isScreenerWidgetCurrent(
-widget
-)
-){
-return;
-}
-
-let latest;
-
-try{
-latest =
-await loadMarketHistory(
-widget.symbol,
-currentTF,
-1,
-{ parallel: true }
-);
-}catch{
-return;
-}
-
-if(
-widget.loadId !==
-renderToken ||
-!isScreenerWidgetCurrent(
-widget
-) ||
-!latest?.length
-){
-return;
-}
-
-const previous =
-widget.candles;
-const merged =
-mergeCandleRows(
-previous,
-latest,
-{
-preferIncoming:
-true,
-limit:
-SCREENER_MAX_BARS
-}
-);
-const shift =
-logicalIndexShift(
-previous,
-merged
-);
-const range =
-widget.userAdjustedZoom
-? widget.chart.timeScale().getVisibleLogicalRange()
-: null;
-
-widget.candles =
-merged;
-widget._lastZoomCandleLen =
-0;
-
-try{
-updateWidgetRsiData(
-widget
-);
-}catch{
-return;
-}
-
-if(
-widget.userAdjustedZoom &&
-range &&
-shift
-){
-widget.chart.timeScale().setVisibleLogicalRange(
-{
-from:
-range.from +
-shift,
-to:
-range.to +
-shift
-}
-);
-}else if(
-!widget.userAdjustedZoom
-){
-widget.syncChartSize?.();
-}
-
-putHistoryCache(
-getActiveExchangeId(),
-widget.symbol,
-currentTF,
-merged,
-{
-coversVisible:
-merged.length >=
-SCREENER_VISIBLE_BARS ||
-merged.length <
-500
-}
-);
-
-}
-
-async function loadWidgetChart(widget){
-
-const {
-symbol,
-chart,
-series,
-chartEl,
-loadId
-} = widget;
-
-chartEl.classList.add("loading");
-
-try{
-
-const cached =
-peekHistoryCache(
-getActiveExchangeId(),
-symbol,
-currentTF
-);
-let fromCache =
-false;
-let candles;
-
-if(
-cached &&
-(
-cached.candles.length >=
-SCREENER_VISIBLE_BARS ||
-cached.coversVisible
-)
-){
-candles =
-cached.candles.slice(
--SCREENER_MAX_BARS
-);
-fromCache =
-true;
-}else{
-candles =
-await loadMarketHistory(
-symbol,
-currentTF,
-2,
-{ parallel: true }
-);
-}
-
-if(loadId !== renderToken){
-return;
-}
-
-if(
-candles.length
-){
-putHistoryCache(
-getActiveExchangeId(),
-symbol,
-currentTF,
-candles,
-{
-coversVisible:
-candles.length >=
-SCREENER_VISIBLE_BARS ||
-candles.length <
-500
-}
-);
-}
-
-if(!candles.length){
-
-if(loadId === renderToken){
-setStatus(
-`График ${activeExchangeName()} не загрузился — «Повторить» внизу экрана`,
-true
-);
-}
-
-return;
-
-}
-
-const loaded =
-candles.length > SCREENER_MAX_BARS
-? candles.slice(-SCREENER_MAX_BARS)
-: candles;
-
-widget.candles = loaded;
-widget.userAdjustedZoom = false;
-
-if(
-!isScreenerWidgetCurrent(
-widget
-)
-){
-return;
-}
-
-try{
-
-applyChartPriceFormat(
-series,
-loaded[loaded.length - 1].close
-);
-
-updateWidgetRsiData(
-widget
-);
-
-}catch{
-chartEl.classList.remove(
-"loading"
-);
-return;
-}
-
-widget._lastZoomCandleLen =
-0;
-
-const runZoom =
-()=>{
-
-if(
-!isScreenerWidgetCurrent(
-widget
-)
-){
-return;
-}
-
-try{
-widget.syncChartSize?.();
-}catch{
-/* chart disposed during page change */
-}
-
-};
-
-runZoom();
-requestAnimationFrame(
-()=>{
-runZoom();
-requestAnimationFrame(
-()=>{
-if(
-loadId ===
-renderToken
-){
-chartEl.classList.remove(
-"loading"
-);
-}
-}
-);
-}
-);
-
-attachWidgetKlineStream(
-widget
-);
-
-if(
-fromCache
-){
-void refreshScreenerWidgetTail(
-widget
-);
-}
-
-}catch(err){
-
-console.error("Screener chart:", symbol, err);
-
-}finally{
-
-if(
-loadId ===
-renderToken &&
-!widget.candles.length
-){
-chartEl.classList.remove(
-"loading"
-);
-}
-
-}
-
-}
-
-function createWidget(symbol, loadId){
-
-const showOscillator =
-screenerWidgetShowsOscillator();
-const oscKind =
-screenerWidgetOscillatorKind();
-const showMacd =
-showOscillator &&
-oscKind ===
-SCREENER_WIDGET_OSCILLATOR_MACD;
-
-const root =
-document.createElement("article");
-
-root.className =
-showMacd
-? "screener-widget has-macd"
-: showOscillator
-? "screener-widget has-rsi"
-: "screener-widget";
-root.dataset.symbol = symbol;
-
-root.innerHTML = `
-
-<div class="screener-widget-header">
-
-<div class="screener-header-left">
-
-${SCREENER_FLAG_WRAP_HTML}
-
-<div class="screener-symbol">${escapeHtml(symbol)}</div>
-
-</div>
-
-<div class="screener-header-right">
-
-<div class="screener-meta">
-
-<span class="screener-change">—</span>
-
-<span class="screener-volume">Объём 24ч <span class="screener-volume-value">—</span></span>
-
-</div>
-
-<button class="screener-open" type="button" title="Открыть в Монетах">↗</button>
-
-</div>
-
-</div>
-
-${buildWidgetBodyHtml(showOscillator, oscKind)}
-
-`;
-
-wireScreenerFlagWrap(
-root,
-symbol
-);
-
-if(
-isIpadWebViewport()
-){
-
-root.classList.add(
-"screener-widget--ipad-web"
-);
-
-const expandBtn =
-document.createElement(
-"button"
-);
-
-expandBtn.type =
-"button";
-expandBtn.className =
-"screener-widget-expand";
-expandBtn.title =
-"Увеличить график";
-expandBtn.setAttribute(
-"aria-label",
-"Увеличить график"
-);
-expandBtn.textContent =
-"увеличить";
-
-root.querySelector(
-".screener-header-left"
-)?.after(
-expandBtn
-);
-
-}
-
-root.querySelector(".screener-open").onclick = e=>{
-openTerminal(symbol, e);
-};
-
-const chartEl =
-root.querySelector(".screener-chart");
-
-const {
-chart,
-series
-} =
-createScreenerChart(chartEl);
-
-const widget = {
-symbol,
-root,
-chart,
-series,
-chartEl,
-loadId,
-disposed:
-false,
-unlinkTimeScales:
-null,
-candles: [],
-userAdjustedZoom:false,
-oscKind:
-showOscillator
-? oscKind
-: null,
-rsiChart:null,
-rsiSeries:null,
-rsiChartEl:null,
-rsiWrapEl:null,
-macdHistSeries:null,
-macdSignalSeries:null
-};
-
-if(
-showOscillator
-){
-
-const rsiWrapEl =
-root.querySelector(
-".screener-rsi-wrap"
-);
-
-const rsiChartEl =
-root.querySelector(
-".screener-rsi-chart"
-);
-
-widget.rsiWrapEl =
-rsiWrapEl;
-widget.rsiChartEl =
-rsiChartEl;
-
-if(
-showMacd
-){
-
-const macdPair =
-createScreenerMacdChart(
-rsiChartEl
-);
-
-widget.rsiChart =
-macdPair.chart;
-widget.rsiSeries =
-macdPair.macdSeries;
-widget.macdHistSeries =
-macdPair.histSeries;
-widget.macdSignalSeries =
-macdPair.signalSeries;
-
-}else{
-
-const rsiPair =
-createRSIChart(
-rsiChartEl
-);
-
-widget.rsiChart =
-rsiPair.chart;
-widget.rsiSeries =
-rsiPair.series;
-
-}
-
-chart.applyOptions({
-timeScale:{
-visible:false,
-borderVisible:false
-}
-});
-
-widget.rsiChart.applyOptions({
-timeScale:{
-visible:true,
-timeVisible:true,
-ticksVisible:true,
-borderColor:"#1f2937",
-borderVisible:true,
-secondsVisible:false
-},
-rightPriceScale:{
-borderVisible:false
-}
-});
-
-widget.unlinkTimeScales =
-linkPairedChartTimeScales(
-chart,
-widget.rsiChart,
-()=>{
-
-if(
-isScreenerWidgetCurrent(
-widget
-)
-){
-layoutWidgetRsi(
-widget
-);
-}
-
-}
-);
-
-}
-
-applyWidgetInversion(
-widget,
-invertCharts
-);
-
-function markUserZoom(){
-
-widget.userAdjustedZoom = true;
-
-}
-
-chartEl.addEventListener("wheel", markUserZoom, { passive:true });
-chartEl.addEventListener("mousedown", markUserZoom);
-chartEl.addEventListener("touchstart", markUserZoom, { passive:true });
-
-function syncChartSize(){
-
-if(
-!isScreenerWidgetCurrent(
-widget
-)
-){
-return 0;
-}
-
-try{
-
-const w =
-chartEl.clientWidth;
-
-const h =
-chartEl.clientHeight;
-
-if(w < 2 || h < 2){
-return 0;
-}
-
-const sizeKey =
-`${w}x${h}`;
-
-const sizeUnchanged =
-widget._lastChartSizeKey ===
-sizeKey;
-
-if(
-!sizeUnchanged
-){
-
-widget._lastChartSizeKey =
-sizeKey;
-
-chart.applyOptions({ width: w, height: h });
-
-}
-
-if(
-widget.rsiChart &&
-widget.rsiChartEl
-){
-
-let scaleW =
-56;
-
-try{
-scaleW =
-chart.priceScale(
-"right"
-).width() ||
-scaleW;
-}catch{
-/* ignore */
-}
-
-widget.rsiWrapEl?.style.setProperty(
-"--chart-scale-width",
-`${scaleW}px`
-);
-
-const rw =
-widget.rsiChartEl.clientWidth;
-const rh =
-widget.rsiChartEl.clientHeight;
-
-if(
-rw >=
-2 &&
-rh >=
-2
-){
-
-const rsiKey =
-`${rw}x${rh}`;
-
-if(
-widget._lastRsiSizeKey !==
-rsiKey
-){
-widget._lastRsiSizeKey =
-rsiKey;
-widget.rsiChart.applyOptions({
-width: rw,
-height: rh
-});
-}
-
-layoutWidgetRsi(
-widget
-);
-}
-
-}
-
-if(!widget.candles.length){
-return 0;
-}
-
-if(widget.userAdjustedZoom){
-
-const range =
-chart.timeScale().getVisibleLogicalRange();
-
-if(!range){
-return 0;
-}
-
-const bars =
-Math.max(
-0,
-Math.round(range.to - range.from)
-);
-widget._lastVisibleBars =
-bars;
-return bars;
-
-}
-
-if(
-sizeUnchanged &&
-widget._lastZoomCandleLen ===
-widget.candles.length
-){
-return widget._lastVisibleBars ||
-0;
-}
-
-const bars =
-applyScreenerZoom(
-chart,
-series,
-widget.candles,
-w,
-h,
-{
-shouldContinue:()=>
-isScreenerWidgetCurrent(
-widget
-)
-}
-);
-
-widget._lastZoomCandleLen =
-widget.candles.length;
-widget._lastVisibleBars =
-bars;
-return bars;
-
-}catch{
-return 0;
-}
-
-}
-
-const resizeTarget =
-root.querySelector(
-".screener-widget-body"
-) ||
-chartEl;
-
-let screenerResizeRaf =
-0;
-
-function scheduleSyncChartSize(){
-
-if(
-screenerResizeRaf
-){
-cancelAnimationFrame(
-screenerResizeRaf
-);
-}
-
-screenerResizeRaf =
-requestAnimationFrame(
-()=>{
-screenerResizeRaf =
-0;
-syncChartSize();
-}
-);
-
-}
-
-const resizeObserver =
-new ResizeObserver(
-scheduleSyncChartSize
-);
-
-resizeObserver.observe(resizeTarget);
-widget.resizeObserver = resizeObserver;
-widget.syncChartSize = syncChartSize;
-
-requestAnimationFrame(syncChartSize);
-
-updateWidgetMeta(symbol, root);
-
-root.querySelector(
-".screener-widget-expand"
-)?.addEventListener(
-"click",
-event=>{
-event.preventDefault();
-event.stopPropagation();
-void openScreenerZoomFromWidget(
-widget
-);
-}
-);
-
-return widget;
-
-}
 
 function renderPagination(){
 
 clampPage();
 
-const total =
-totalPages();
+renderScreenerPagination({
+paginationEl,
+currentPage,
+totalPages:
+totalPages(),
+selectPage(
+page
+){
 
-paginationEl.innerHTML = "";
-
-const prev =
-document.createElement("button");
-
-prev.className = "page-btn page-nav-prev";
-prev.setAttribute(
-"aria-label",
-"Предыдущая страница"
-);
-prev.textContent = "‹";
-prev.disabled = currentPage <= 1;
-prev.onclick = ()=>{
-currentPage--;
-persistState();
-renderPage();
-};
-
-paginationEl.appendChild(prev);
-
-const pagesWrap =
-document.createElement("div");
-
-pagesWrap.className = "pagination-pages";
-pagesWrap.setAttribute(
-"aria-label",
-"Номера страниц"
-);
-
-paginationEl.appendChild(pagesWrap);
-
-const maxButtons =
-11;
-const half =
-Math.floor(maxButtons / 2);
-let start = Math.max(1, currentPage - half);
-let end = Math.min(total, start + maxButtons - 1);
-
-start = Math.max(1, end - maxButtons + 1);
-
-if(start > 1){
-
-addPageButton(1);
-
-if(start > 2){
-addEllipsis();
-}
-
-}
-
-for(let p = start; p <= end; p++){
-addPageButton(p);
-}
-
-if(end < total){
-
-if(end < total - 1){
-addEllipsis();
-}
-
-addPageButton(total);
-
-}
-
-const next =
-document.createElement("button");
-
-next.className = "page-btn page-nav-next";
-next.setAttribute(
-"aria-label",
-"Следующая страница"
-);
-next.textContent = "›";
-next.disabled = currentPage >= total;
-next.onclick = ()=>{
-currentPage++;
-persistState();
-renderPage();
-};
-
-paginationEl.appendChild(next);
-
-function addPageButton(page){
-
-const btn =
-document.createElement("button");
-
-btn.className =
-`page-btn${page === currentPage ? " active" : ""}`;
-
-btn.textContent = String(page);
-
-btn.onclick = ()=>{
-
-if(page === currentPage){
+if(
+page ===
+currentPage
+){
 return;
 }
 
-currentPage = page;
+currentPage =
+page;
 persistState();
 renderPage();
 
-};
-
-pagesWrap.appendChild(btn);
-
 }
-
-function addEllipsis(){
-
-const span =
-document.createElement("span");
-
-span.className = "page-ellipsis";
-span.textContent = "…";
-pagesWrap.appendChild(span);
-
-}
+});
 
 }
 
@@ -3660,7 +2337,7 @@ setStatus(
 true
 );
 
-void import("./bybit-network-ui.js?v=11").then(m=>{
+void import("./bybit-network-ui.js?v=3b530ded").then(m=>{
 m.showBybitNetworkIssue(err);
 });
 
@@ -3737,7 +2414,7 @@ perfMark(
 
 const { waitForSiteCssReady } =
 await import(
-"./site-css-gate.js?v=1"
+"./site-css-gate.js?v=2f1bf426"
 );
 
 await waitForSiteCssReady();
@@ -3843,7 +2520,7 @@ err
 screenerMarketLoadFailed = true;
 allSymbols = [];
 
-void import("./bybit-network-ui.js?v=11").then(m=>{
+void import("./bybit-network-ui.js?v=3b530ded").then(m=>{
 m.showBybitNetworkIssue(err);
 });
 

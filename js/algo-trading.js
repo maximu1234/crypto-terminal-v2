@@ -12,79 +12,79 @@ applyRsiFixedPriceScale,
 appendFutureWhitespaceBars,
 computeChartFutureMarginBars,
 syncLinkedChartTimescales
-} from "./chart-import.js?v=70";
+} from "./chart-import.js?v=c172cdf4";
 
 import {
 applyLiveSeriesUpdate,
 ensureOhlcRollover,
 liveBarPeriodSec,
 paintCatchupLiveSeries
-} from "./chart/live-bar-roll.js?v=6";
+} from "./chart/live-bar-roll.js?v=6ff2b718";
 
 import {
 terminalVisibleBars,
 terminalHistoryInitialRequests,
 TERMINAL_VISIBLE_BARS,
 TERMINAL_HISTORY_LAZY_BATCH_BARS
-} from "./terminal-chart-history-prefs.js?v=1";
+} from "./terminal-chart-history-prefs.js?v=948df10f";
 
 import {
 peekHistoryCache,
 putHistoryCache,
 mergeCandleRows,
 logicalIndexShift
-} from "./market-history-cache.js?v=2";
+} from "./market-history-cache.js?v=dedca4e1";
 
 import {
 ALGO_TICKER_SCAN_HISTORY_REQUESTS
-} from "./algo-trading/ticker-scanner.js?v=15";
+} from "./algo-trading/ticker-scanner.js?v=3aa0a47d";
 
 import {
 defaultRsiPaneSettings,
 normalizeRsiPaneSettings
-} from "./indicators/rsi-pane.js?v=16";
+} from "./indicators/rsi-pane.js?v=9e95c49b";
 
 import {
 buildChartRsiPoints
-} from "./indicators/htf-project.js?v=5";
+} from "./indicators/htf-project.js?v=2d6ecf34";
 
 import {
 loadMarketHistory,
 getActiveExchangeId
-} from "./market-api.js?v=14";
+} from "./market-api.js?v=7b3e6b3c";
 
 import {
 subscribeKline,
 bindLiveCandleCatchup
-} from "./market-ws.js?v=10";
+} from "./market-ws.js?v=ab0ef4a1";
 
 import {
 mountAlgoTradingCoinList,
 refreshAlgoMarketListFromFlags
-} from "./algo-trading-list.js?v=42";
+} from "./algo-trading-list.js?v=a7672ecc";
 
 import {
 mountAlgoTickerScanUi
-} from "./algo-trading/ticker-scan-ui.js?v=38";
+} from "./algo-trading/ticker-scan-ui.js?v=001c77e0";
 
 import {
 getTickerStrategyOverlay,
 hasTickerStrategyOverlay,
 setTickerStrategyOverlay,
 writeTickerStrategyOverlays
-} from "./algo-trading/ticker-strategy-overlays.js?v=1";
+} from "./algo-trading/ticker-strategy-overlays.js?v=12676ce2";
 
 import {
 mountAlgoStrategyParamOptimizeUi
-} from "./algo-trading/strategy-param-optimize-ui.js?v=6";
+} from "./algo-trading/strategy-param-optimize-ui.js?v=e4b23135";
 
 import {
 mountAlgoRuntimeUi
-} from "./algo-trading/runtime-ui.js?v=17";
+} from "./algo-trading/runtime-ui.js?v=88effc76";
 
 import {
 mountAlgoBotStrategyUi
-} from "./algo-trading/bot-strategy-ui.js?v=108";
+} from "./algo-trading/bot-strategy-ui.js?v=c7c7d86f";
 
 import {
 ALGO_ANALYSIS_BOT_CHANGE_EVENT,
@@ -96,63 +96,63 @@ getActiveAnalysisBotId,
 isActiveAnalysisBot,
 isAnyAnalysisBotActive,
 setActiveAnalysisBotId
-} from "./algo-trading/active-analysis-bot.js?v=4";
+} from "./algo-trading/active-analysis-bot.js?v=c1b8293b";
 
 import {
 mountSessionLogServerSettings
-} from "./algo-trading/bot-session-log-server-ui.js?v=24";
+} from "./algo-trading/bot-session-log-server-ui.js?v=d5a79d9a";
 
 import {
 syncBotStrategiesToMain
-} from "./algo-trading/bot-bridge.js?v=30";
+} from "./algo-trading/bot-bridge.js?v=17baeaa9";
 
 import {
 mountAlgoTradeUi
-} from "./algo-trading/trade/boot.js?v=25";
+} from "./algo-trading/trade/boot.js?v=d4320125";
 
 import {
 mountAlgoTradingDrawings
-} from "./algo-trading/drawings.js?v=46";
+} from "./algo-trading/drawings.js?v=104a3052";
 
 import {
 mountAlgoTradingIndicators
-} from "./algo-trading/indicators.js?v=24";
+} from "./algo-trading/indicators.js?v=65859057";
 
 import {
 mountAlgoPatternEntryOverlay
-} from "./algo-trading/pattern-entry-overlay.js?v=17";
+} from "./algo-trading/pattern-entry-overlay.js?v=ceecf4be";
 
 import {
 mountRsiTouchFlipHost
-} from "./algo-trading/rsi-touch-flip-panel.js?v=43";
+} from "./algo-trading/rsi-touch-flip-panel.js?v=29260637";
 
 import {
 mountMacdFlipTouchHost
-} from "./algo-trading/macd-flip-touch-panel.js?v=6";
+} from "./algo-trading/macd-flip-touch-panel.js?v=eef7f6a3";
 
 import {
 loadRsiTouchFlipPrefs,
 saveRsiTouchFlipPrefs
-} from "./algo-trading/rsi-touch-flip-prefs.js?v=10";
+} from "./algo-trading/rsi-touch-flip-prefs.js?v=8d462a58";
 import {
 loadMacdFlipTouchPrefs
-} from "./algo-trading/macd-flip-touch-prefs.js?v=9";
+} from "./algo-trading/macd-flip-touch-prefs.js?v=e8cc13ba";
 
 import {
 clearAlgoPatternAnalysisUi,
 refreshAlgoPatternAnalysis
-} from "./algo-trading/pattern-analysis.js?v=38";
+} from "./algo-trading/pattern-analysis.js?v=1e002b9c";
 
 import {
 invalidateAlgoPattern12SceneCache,
 clearAlgoPattern12PaintEntryFilter
-} from "./algo-trading/pattern-12-scene-cache.js?v=10";
+} from "./algo-trading/pattern-12-scene-cache.js?v=ab20cc1a";
 
 import {
 clampSlPctOfX,
 clampTpRr,
 clampRiskUsd
-} from "./algo-trading/pattern-entry-positions.js?v=16";
+} from "./algo-trading/pattern-entry-positions.js?v=492702eb";
 
 import {
 clampPartialTpX,
@@ -163,51 +163,51 @@ rebalanceTpShares,
 DEFAULT_PARTIAL_TP1_X,
 DEFAULT_PARTIAL_TP2_X,
 DEFAULT_PARTIAL_TP3_X
-} from "./algo-trading/pattern-trade-stats-partial.js?v=22";
+} from "./algo-trading/pattern-trade-stats-partial.js?v=a92ca5c3";
 
 import {
 clampEntryTimeoutBars,
 clampMaxPt1Pt4Bars
-} from "./algo-trading/pattern-entry-logic.js?v=14";
+} from "./algo-trading/pattern-entry-logic.js?v=516b2a3a";
 
 /* TEMP_PULLBACK_BEFORE_ARM — remove with temp-pullback-before-arm.js */
 import {
 clampPullbackBeforeArmPct,
 normalizePullbackBeforeArmEnabled
-} from "./algo-trading/temp-pullback-before-arm.js?v=4";
+} from "./algo-trading/temp-pullback-before-arm.js?v=f6ddff7a";
 
 import {
 normalizeAlgoSupertrendTf,
 clampAlgoSupertrendAtr,
 clampAlgoSupertrendFactor
-} from "./algo-trading/pattern-supertrend-filter.js?v=5";
+} from "./algo-trading/pattern-supertrend-filter.js?v=7676bfd0";
 
 import {
 createAlgoSupertrendFilterOverlay
-} from "./algo-trading/supertrend-filter-overlay.js?v=2";
+} from "./algo-trading/supertrend-filter-overlay.js?v=c9dd85fb";
 
 import {
 normalizeAlgoStatsMode
-} from "./algo-trading/pattern-trade-stats.js?v=15";
+} from "./algo-trading/pattern-trade-stats.js?v=2530eb1e";
 
 import {
 readAlgoPattern12Settings
-} from "./algo-trading/pattern-12-settings.js?v=5";
+} from "./algo-trading/pattern-12-settings.js?v=cd75d3d2";
 
 import {
 setChartLayoutReady,
 isChartLayoutReady
-} from "./chart-layout-gate.js?v=4";
+} from "./chart-layout-gate.js?v=4a8798af";
 
 import {
 invalidatePreservedVisibleLogicalRange,
 runWithPreservedVisibleLogicalRange
-} from "./chart-visible-range.js?v=3";
+} from "./chart-visible-range.js?v=255ee6c8";
 
 import {
 coinsState,
 marketMap
-} from "./terminal/terminal-state.js?v=17";
+} from "./terminal/terminal-state.js?v=4747a92f";
 
 import {
 DEFAULT_TF,
@@ -220,23 +220,23 @@ writePrefs,
 clampScanMinWinRate,
 normalizeAlgoScanTfPref,
 resolveInitialSymbol
-} from "./algo-trading/page-prefs.js?v=2";
+} from "./algo-trading/page-prefs.js?v=0fea35db";
 
 import {
 mergeLiveCandle
-} from "./algo-trading/live-candle.js?v=5";
+} from "./algo-trading/live-candle.js?v=537e93bf";
 
 import {
 formatTurnover24Label
-} from "./algo-trading/page-format.js?v=1";
+} from "./algo-trading/page-format.js?v=43c07209";
 
 import {
 bindAlgoNumericField
-} from "./algo-trading/page-dom.js?v=1";
+} from "./algo-trading/page-dom.js?v=3cc21775";
 
 import {
 bindAlgoPageHotkeys
-} from "./algo-trading/page-hotkeys.js?v=3";
+} from "./algo-trading/page-hotkeys.js?v=b6c24375";
 
 import {
 createAlgoStrategyMemory,
@@ -250,7 +250,7 @@ applyStrategyPatchToMemory as applyStrategyPatchToMemoryFromMemory,
 syncStrategyDomFromMemory as syncStrategyDomFromMemoryFromMemory,
 restoreStrategyMemoryFromPrefs as restoreStrategyMemoryFromPrefsFromMemory,
 buildAlgoPrefsSnapshot
-} from "./algo-trading/page-strategy-state.js?v=1";
+} from "./algo-trading/page-strategy-state.js?v=ae7b6845";
 
 import {
 syncRsiHudPeriod as syncRsiHudPeriodEl,
@@ -258,20 +258,20 @@ syncRsiLevelDom as syncRsiLevelDomEl,
 setRsiHud as setRsiHudEl,
 lastRsiValue as lastRsiValueFromCandles,
 layoutRsiPane
-} from "./algo-trading/page-rsi.js?v=6";
+} from "./algo-trading/page-rsi.js?v=8b96a174";
 
 import {
 bindAlgoStatsPanelResize
-} from "./algo-trading/stats-panel-resize.js?v=2";
+} from "./algo-trading/stats-panel-resize.js?v=2da2612d";
 
 import {
 isAlgoBotLiteMode,
 mountAlgoBotLiteLayout
-} from "./algo-trading/lite-layout.js?v=5";
+} from "./algo-trading/lite-layout.js?v=7a635cbf";
 
 import {
 loadAlgoBotLiteHistory
-} from "./algo-trading/lite-history.js?v=6";
+} from "./algo-trading/lite-history.js?v=12c6fb29";
 
 /** Глубина ботов / сканов / «Подобрать»: ~10 000. График сначала ~5000, затем догрузка. */
 const HISTORY_REQUESTS =

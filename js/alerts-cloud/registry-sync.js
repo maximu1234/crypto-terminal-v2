@@ -1,24 +1,24 @@
 import {
 isCloudLoggedInEffective,
 ensureCloudLoginResolved
-} from "../cloud-sync.js?v=87";
+} from "../cloud-sync.js?v=cab32aef";
 
 import {
 resolveAlertAuthFast,
 readAlertTokenSync,
 readPersistedAuthSession,
 setAlertAuthCache
-} from "../alert-auth-cache.js?v=8";
+} from "../alert-auth-cache.js?v=7d0f1599";
 
 import {
 createPullCoalescer,
 isAlertsPage,
 isDrawingsUiPage
-} from "../cloud-sync-throttle.js?v=4";
+} from "../cloud-sync-throttle.js?v=3c85c6a2";
 
 import {
 isAlgoReducedCloudClient
-} from "../page-routes.js?v=8";
+} from "../page-routes.js?v=4dc7f350";
 
 import {
 IS_YANDEX,
@@ -30,7 +30,7 @@ markAlertsPullSuccess,
 warnAlertsPullThrottled,
 isAlertsPullInBackoff,
 broadcastAlertsRegistrySync
-} from "./debug.js?v=17";
+} from "./debug.js?v=892b4e7d";
 
 import {
 runCloudOp,
@@ -46,11 +46,11 @@ clearAllAlertsFromCloud,
 fetchWithTimeout,
 softDeleteAlertViaRest,
 hintWorkerReloadAlerts
-} from "./worker-client.js?v=21";
+} from "./worker-client.js?v=14103f22";
 
 import {
 isAlertsCloudDisabled
-} from "../supabase-usage-prefs.js?v=20";
+} from "../supabase-usage-prefs.js?v=8f43fc8c";
 
 function resolveAlertExchangeId(
 entry
@@ -131,7 +131,7 @@ cloudId
 ){
 
 const { markAlertCloudSynced, markAlertCloudId } =
-await import("../alerts.js?v=128");
+await import("../alerts.js?v=63158382");
 
 const ok =
 await verifyAlertActiveInCloud(
@@ -270,7 +270,7 @@ return false;
 }
 
 const env =
-await import("../supabase-env.js?v=5");
+await import("../supabase-env.js?v=ed71d82f");
 
 const base =
 String(env.SUPABASE_URL || "")
@@ -398,7 +398,7 @@ null;
 
 if(cloudId){
 const { markAlertCloudId } =
-await import("../alerts.js?v=128");
+await import("../alerts.js?v=63158382");
 
 markAlertCloudId(
 symbol,
@@ -622,7 +622,7 @@ registrySyncTimer = null;
 }
 
 const { stripAlertFlagsNotInRegistry } =
-await import("../alerts.js?v=128");
+await import("../alerts.js?v=63158382");
 
 const ok =
 await clearAllAlertsFromCloud();
@@ -658,7 +658,7 @@ return 0;
 }
 
 const { getActiveAlerts } =
-await import("../alerts.js?v=128");
+await import("../alerts.js?v=63158382");
 
 const localKeys =
 new Set(
@@ -758,7 +758,7 @@ return false;
 }
 
 const { ensureCloudReady } =
-await import("../auth-ui.js?v=82");
+await import("../auth-ui.js?v=adc291da");
 
 await ensureCloudReady();
 
@@ -789,7 +789,7 @@ attempt++
 if(await pushAlertViaWorker(row)){
 
 const { markAlertCloudSynced } =
-await import("../alerts.js?v=128");
+await import("../alerts.js?v=63158382");
 
 /* Worker пишет service role — не ждём SELECT по JWT пользователя */
 markAlertCloudSynced(
@@ -820,7 +820,7 @@ ctx
 ){
 
 const { markAlertCloudSynced } =
-await import("../alerts.js?v=128");
+await import("../alerts.js?v=63158382");
 
 if(
 await markRowSyncedAfterVerify(
@@ -915,7 +915,7 @@ return 0;
 }
 
 const { getActiveAlerts, countAlertsOnChart } =
-await import("../alerts.js?v=128");
+await import("../alerts.js?v=63158382");
 
 const onChart =
 countAlertsOnChart();
@@ -990,7 +990,7 @@ return ok;
 async function syncAllLocalAlertsToCloudImpl(){
 
 const { ensureCloudReady } =
-await import("../auth-ui.js?v=82");
+await import("../auth-ui.js?v=adc291da");
 
 await ensureCloudReady();
 
@@ -1005,7 +1005,7 @@ return 0;
 }
 
 const { getActiveAlerts } =
-await import("../alerts.js?v=128");
+await import("../alerts.js?v=63158382");
 
 const list =
 getActiveAlerts();
@@ -1087,7 +1087,7 @@ let env;
 
 try{
 env =
-await import("../supabase-env.js?v=5");
+await import("../supabase-env.js?v=ed71d82f");
 }catch{
 return null;
 }
@@ -1451,7 +1451,7 @@ normalizeAlertTf,
 isAlertDeleted,
 forgetAlertDeleted
 } =
-await import("../alerts.js?v=128");
+await import("../alerts.js?v=63158382");
 
 const cloudByKey =
 new Map();
@@ -1569,7 +1569,7 @@ tf: row.tf || "60"
 if(removedRows.length){
 
 const { applyRemoteAlertRemoved } =
-await import("../alerts.js?v=128");
+await import("../alerts.js?v=63158382");
 
 for(const row of removedRows){
 
@@ -1862,7 +1862,7 @@ let env;
 
 try{
 env =
-await import("../supabase-env.js?v=5");
+await import("../supabase-env.js?v=ed71d82f");
 }catch{
 return null;
 }
@@ -2092,12 +2092,12 @@ return 0;
 const {
 mergeAlertHistoryFromCloudEvents
 } =
-await import("../alerts.js?v=128");
+await import("../alerts.js?v=63158382");
 
 const {
 getActiveExchangeId
 } =
-await import("../market-api.js?v=14");
+await import("../market-api.js?v=7b3e6b3c");
 
 const added =
 mergeAlertHistoryFromCloudEvents(
@@ -2140,7 +2140,7 @@ const n =
 await reconcileLocalRegistryWithCloud();
 
 const { stripAlertFlagsNotInRegistry } =
-await import("../alerts.js?v=128");
+await import("../alerts.js?v=63158382");
 
 stripAlertFlagsNotInRegistry(
 isAlertsPage()
@@ -2190,7 +2190,7 @@ return 0;
 
 try{
 const { ensureCloudLoginResolved } =
-await import("../cloud-sync.js?v=87");
+await import("../cloud-sync.js?v=cab32aef");
 
 await ensureCloudLoginResolved(
 8000
@@ -2218,7 +2218,7 @@ return 0;
 }
 
 const { stripAlertFlagsNotInRegistry } =
-await import("../alerts.js?v=128");
+await import("../alerts.js?v=63158382");
 
 stripAlertFlagsNotInRegistry(
 isAlertsPage()

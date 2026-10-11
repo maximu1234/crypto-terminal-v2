@@ -3,15 +3,15 @@
  */
 import {
 isExchangeTradingEnabled
-} from "../../market-api.js?v=14";
+} from "../../market-api.js?v=7b3e6b3c";
 
 import {
 maskTradeDisplay
-} from "../../trade-pnl-privacy.js?v=1";
+} from "../../trade-pnl-privacy.js?v=abe7bf95";
 
 import {
 registerChartScaleLabelProvider
-} from "../../chart/scale-label-providers.js?v=3";
+} from "../../chart/scale-label-providers.js?v=fd4f7c2a";
 
 const BADGE_LEFT =
 12;

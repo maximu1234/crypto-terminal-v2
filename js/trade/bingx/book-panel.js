@@ -4,18 +4,18 @@
 import {
 formatTradePnl,
 formatTradeUsdt
-} from "../../trade-format.js?v=1";
+} from "../../trade-format.js?v=9ffb302f";
 
 import {
 getAllCachedPositions,
 isTradePositionRecentlyClosed,
 removeTradePositionFromCache,
 syncTradePositionsCache
-} from "./positions-cache.js?v=7";
+} from "./positions-cache.js?v=b026a4f3";
 
 import {
 getTradeConfig
-} from "./config.js?v=10";
+} from "./config.js?v=ddb85880";
 
 import {
 applyPositionColumnLayout,
@@ -25,16 +25,16 @@ wirePositionColumnResize,
 wireOrderColumnResize,
 wireAlertColumnResize,
 columnResizeHandle
-} from "./book-columns.js?v=1";
+} from "./book-columns.js?v=9736fcfc";
 
 import {
 openChromeSurface,
 closeChromeSurface
-} from "../../chrome-motion.js?v=5";
+} from "../../chrome-motion.js?v=bb1d8933";
 
 import {
 openPnlShareModal
-} from "./pnl-share-modal.js?v=4";
+} from "./pnl-share-modal.js?v=c1972da3";
 
 import {
 formatAlertDate,
@@ -43,7 +43,7 @@ getAlertsSorted,
 getAlertsHistorySorted,
 removeAlert,
 removeAlertHistoryEntry
-} from "../../alerts.js?v=128";
+} from "../../alerts.js?v=63158382";
 
 const SHARE_ICON_V =
 2;

@@ -3,23 +3,23 @@
  */
 import {
 waitForSiteCssReady
-} from "./site-css-gate.js?v=1";
+} from "./site-css-gate.js?v=2f1bf426";
 
 import {
 loadLightweightCharts
-} from "./charts-lib-boot.js?v=3";
+} from "./charts-lib-boot.js?v=04885614";
 
 import {
 jsImport
-} from "./asset-manifest.js?v=75";
+} from "./asset-manifest.js?v=f555b953";
 
 import {
 isScriptNavEnabled
-} from "./desktop-feature-nav-prefs.js?v=5";
+} from "./desktop-feature-nav-prefs.js?v=0fd2425e";
 
 import {
 mountMoexUnavailableStub
-} from "./exchanges/moex-readonly-stub.js?v=1";
+} from "./exchanges/moex-readonly-stub.js?v=4606d3be";
 
 async function boot(){
 

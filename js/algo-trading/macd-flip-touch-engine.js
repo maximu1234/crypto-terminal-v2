@@ -6,11 +6,11 @@ MACD_FLIP_TOUCH_SIDE_LONG,
 MACD_FLIP_TOUCH_SIDE_SHORT,
 MACD_FLIP_TOUCH_SIZE_EQUAL,
 normalizeMacdFlipTouchPrefs
-} from "./macd-flip-touch-prefs.js?v=9";
+} from "./macd-flip-touch-prefs.js?v=e8cc13ba";
 import {
 computeMacdLineSignalArrays,
 macdSettingsFromFlipPrefs
-} from "./macd-flip-touch-macd.js?v=1";
+} from "./macd-flip-touch-macd.js?v=02dde0cd";
 
 
 export function notionalAt(

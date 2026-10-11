@@ -2,31 +2,31 @@ import {
 fetchBingx,
 isBingxNonRetryableSymbolError,
 isBingxRateLimitError
-} from "./fetch.js?v=5";
+} from "./fetch.js?v=a76bddd0";
 
 import {
 buildBingxMarketLists,
 classifyBingxContract
-} from "./markets.js?v=3";
+} from "./markets.js?v=24fc7cb6";
 
 import {
 toBingxSymbol,
 toCanonicalSymbol
-} from "../symbol.js?v=2";
+} from "../symbol.js?v=b2916b67";
 
 import {
 tfToBingxInterval
-} from "./intervals.js?v=1";
+} from "./intervals.js?v=ce5c9eb7";
 
 import {
 klineHistoryPageEnds,
 shouldFetchKlinePagesInParallel
-} from "../../kline-history-pages.js?v=2";
+} from "../../kline-history-pages.js?v=cc7b66ca";
 
 import {
 clampHistoryPageLimit,
 noteHistoryTransfer
-} from "../../history-link-pace.js?v=1";
+} from "../../history-link-pace.js?v=f684ac11";
 
 const SYMBOLS_CACHE_PREFIX =
 "bingx_swap_symbols_v4";
@@ -1137,7 +1137,7 @@ const {
 pingBingxPublic
 } =
 await import(
-"./fetch.js?v=5"
+"./fetch.js?v=a76bddd0"
 );
 
 return pingBingxPublic();
@@ -1314,4 +1314,4 @@ b.price
 
 export {
 tfToBingxInterval
-} from "./intervals.js?v=1";
+} from "./intervals.js?v=ce5c9eb7";

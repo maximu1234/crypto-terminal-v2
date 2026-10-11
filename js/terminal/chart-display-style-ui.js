@@ -6,7 +6,7 @@ CHART_DISPLAY_SOURCES,
 CHART_DISPLAY_LINE_STYLES,
 CHART_DISPLAY_TYPE_LINE,
 normalizeChartDisplayStyle
-} from "../chart/chart-display-style.js?v=2";
+} from "../chart/chart-display-style.js?v=e916eea3";
 
 const SOURCE_LABELS =
 {

@@ -6,7 +6,7 @@ import {
   resolveDiaryPreset,
   startOfDayMs,
   endOfDayMs
-} from "./time-utils.js?v=1";
+} from "./time-utils.js?v=753b2239";
 
 const PERIOD_STORAGE_KEY = "algo_trade_diary_period_v1";
 

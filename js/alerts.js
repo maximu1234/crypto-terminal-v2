@@ -1,19 +1,19 @@
 import {
 getActiveExchangeId
-} from "./exchanges/context.js?v=1";
+} from "./exchanges/context.js?v=16fdeacc";
 
 import {
 readAlertTokenSync
-} from "./alert-auth-cache.js?v=8";
+} from "./alert-auth-cache.js?v=7d0f1599";
 
 import {
 withTimeout
-} from "./async-timeout.js?v=2";
+} from "./async-timeout.js?v=14be549c";
 
 import {
 pauseRegistryCloudSync,
 scheduleRemoteRegistrySync
-} from "./alerts-cloud-sync.js?v=128";
+} from "./alerts-cloud-sync.js?v=41e92cb7";
 
 import {
 drawingsStorageKey as exchangeDrawingsStorageKey,
@@ -29,7 +29,7 @@ drawingsKvGet,
 drawingsKvSet,
 drawingsKvRemove,
 drawingsKvListKeys
-} from "./drawings-kv.js?v=3";
+} from "./drawings-kv.js?v=fc0e52d7";
 
 export {
 isDrawingsStorageKey,
@@ -150,7 +150,7 @@ return job;
 
 function queueAlertsCloud(fn){
 
-import("./alerts-cloud-sync.js?v=128")
+import("./alerts-cloud-sync.js?v=41e92cb7")
 .then(m=>fn(m))
 .catch(err=>{
 console.warn("alerts cloud:", err);
@@ -1454,7 +1454,7 @@ opts =
 ){
 
 const { isCloudLoggedIn } =
-await import("./cloud-sync.js?v=87");
+await import("./cloud-sync.js?v=cab32aef");
 
 if(
 !isCloudLoggedIn()
@@ -1463,7 +1463,7 @@ return null;
 }
 
 const { getTelegramChatId } =
-await import("./alerts-cloud-sync.js?v=128");
+await import("./alerts-cloud-sync.js?v=41e92cb7");
 
 if(
 await getTelegramChatId() == null
@@ -1551,12 +1551,12 @@ sym
 );
 
 const { ensureCloudReady } =
-await import("./auth-ui.js?v=82");
+await import("./auth-ui.js?v=adc291da");
 
 await ensureCloudReady();
 
 const m =
-await import("./alerts-cloud-sync.js?v=128");
+await import("./alerts-cloud-sync.js?v=41e92cb7");
 
 const pushed =
 await m.pushOneAlertRow(
@@ -1648,14 +1648,14 @@ list.push(row);
 saveAlerts(list);
 
 const { ensureCloudReady } =
-await import("./auth-ui.js?v=82");
+await import("./auth-ui.js?v=adc291da");
 
 await ensureCloudReady();
 
 mergeRegistryFromChartDrawings();
 
 const m =
-await import("./alerts-cloud-sync.js?v=128");
+await import("./alerts-cloud-sync.js?v=41e92cb7");
 
 const pushed =
 await m.pushOneAlertRow(
@@ -1793,7 +1793,7 @@ dispatchPriceAlertsChanged(
 sym
 );
 
-void import("./alerts-cloud-sync.js?v=128").then(async m=>{
+void import("./alerts-cloud-sync.js?v=41e92cb7").then(async m=>{
 
 const ok =
 await m.flushAlertCloudPush(
@@ -1824,7 +1824,7 @@ pauseRegistryCloudSync(
 );
 });
 
-void import("./alert-monitor.js?v=89").then(m=>{
+void import("./alert-monitor.js?v=66170843").then(m=>{
 m.armAlertQuietAfterDrag(
 sym,
 sid
@@ -2524,7 +2524,7 @@ sym
 );
 
 if(existing){
-void import("./alert-monitor.js?v=89").then(m=>{
+void import("./alert-monitor.js?v=66170843").then(m=>{
 m.notifyAlertTriggered({
 symbol: sym,
 shapeId: sid,
@@ -2795,7 +2795,7 @@ dispatchPriceAlertsChanged(
 sym
 );
 
-void import("./alert-monitor.js?v=89").then(m=>{
+void import("./alert-monitor.js?v=66170843").then(m=>{
 m.notifyAlertTriggered({
 symbol: sym,
 shapeId: sid,
@@ -2805,7 +2805,7 @@ source: existing?.source
 });
 });
 
-void import("./alerts-cloud-sync.js?v=128").then(m=>{
+void import("./alerts-cloud-sync.js?v=41e92cb7").then(m=>{
 m.fireAlertCloudTrigger(
 sym,
 sid,
@@ -2899,7 +2899,7 @@ remaining
 );
 stripAlertFlagsNotInRegistry();
 
-void import("./alerts-cloud-sync.js?v=128").then(m=>{
+void import("./alerts-cloud-sync.js?v=41e92cb7").then(m=>{
 m.runCloudOp(()=>
 m.removeAllAlertsEverywhere()
 ).then(ok=>{
@@ -3332,14 +3332,14 @@ export async function clearAllDrawings(){
 const {
 ensureDrawingsKvReady
 } =
-await import("./drawings-kv.js?v=3");
+await import("./drawings-kv.js?v=fc0e52d7");
 
 await ensureDrawingsKvReady();
 
 const {
 purgeExchangeLocalDrawingsStorage
 } =
-await import("./drawings-storage.js?v=10");
+await import("./drawings-storage.js?v=c2e9af64");
 
 const symbols =
 purgeExchangeLocalDrawingsStorage(

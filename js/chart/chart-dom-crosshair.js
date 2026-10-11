@@ -1,7 +1,7 @@
 import {
 formatPrice,
 formatChartPrice
-} from "./chart-options.js?v=7";
+} from "./chart-options.js?v=f4be0094";
 
 const DOM_CROSSHAIR_VERT =
 "chart-dom-crosshair-vert";

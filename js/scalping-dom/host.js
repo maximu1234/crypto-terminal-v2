@@ -4,7 +4,7 @@
 import {
 openChromeSurface,
 closeChromeSurface
-} from "../chrome-motion.js?v=5";
+} from "../chrome-motion.js?v=bb1d8933";
 
 const ROOT_ID =
 "scalping-dom-root";

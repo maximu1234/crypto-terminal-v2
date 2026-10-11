@@ -5,13 +5,13 @@
  */
 import {
   loadLightweightCharts
-} from "../charts-lib-boot.js?v=3";
+} from "../charts-lib-boot.js?v=04885614";
 import {
   withChartLocalTime
-} from "../chart/chart-local-time.js?v=1";
+} from "../chart/chart-local-time.js?v=027bb0cc";
 import {
   RSI_TOUCH_FLIP_EQUITY_POS_COLOR
-} from "./rsi-touch-flip-equity.js?v=7";
+} from "./rsi-touch-flip-equity.js?v=e44d4938";
 
 const BG =
 "#0f1419";

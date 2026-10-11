@@ -6,11 +6,11 @@
 import {
 fibPriceAtRatio,
 normalizeFibLevelColor
-} from "./fib-spec.js?v=18";
+} from "./fib-spec.js?v=5f577f26";
 
 import {
 CHANNEL_DEFAULT_COLOR
-} from "./channel-spec.js?v=2";
+} from "./channel-spec.js?v=a8bcf3c9";
 
 export const ELLIOTT_DEFAULT_COLOR =
 "#38bdf8";

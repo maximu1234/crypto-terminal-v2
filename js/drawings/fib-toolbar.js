@@ -4,21 +4,21 @@
 import {
 openChromeSurface,
 closeChromeSurface
-} from "../chrome-motion.js?v=5";
+} from "../chrome-motion.js?v=bb1d8933";
 
 import {
 getDrawToolIconSrc
-} from "../draw-toolbar-icon-data.js?v=39";
+} from "../draw-toolbar-icon-data.js?v=f5e35567";
 
 import {
 closeElliottFlyout
-} from "./elliott-toolbar.js?v=12";
+} from "./elliott-toolbar.js?v=cd94d014";
 
 import {
 FIB_EXT_TYPE,
 FIB_RETRACEMENT_TYPE,
 isFibType
-} from "./fib-spec.js?v=18";
+} from "./fib-spec.js?v=5f577f26";
 
 const FLYOUT_CLASS =
 "fib-flyout";

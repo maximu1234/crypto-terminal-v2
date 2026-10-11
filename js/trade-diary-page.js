@@ -4,24 +4,24 @@
  */
 import {
   isDesktopTradeDiaryContext
-} from "./trade-diary-access.js?v=5";
+} from "./trade-diary-access.js?v=c3fda1b4";
 
 import {
   getLoadedTradeExchangeModules,
   loadTradeExchangeModules
-} from "./trade/module-router.js?v=37";
+} from "./trade/module-router.js?v=497346be";
 
 import {
   installWebTradingShell
-} from "./trade-web/client.js?v=6";
+} from "./trade-web/client.js?v=4050e4f8";
 
 import {
   setActiveExchangeId
-} from "./market-api.js?v=14";
+} from "./market-api.js?v=7b3e6b3c";
 
 import {
   mountMoexUnavailableStub
-} from "./exchanges/moex-readonly-stub.js?v=1";
+} from "./exchanges/moex-readonly-stub.js?v=4606d3be";
 
 if (
   mountMoexUnavailableStub({

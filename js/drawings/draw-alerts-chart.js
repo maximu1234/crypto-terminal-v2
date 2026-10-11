@@ -8,15 +8,15 @@ ALERT_LINE_DASH,
 alertPriceForDisplay,
 getActiveAlerts,
 isOscillatorAlert
-} from "../alerts.js?v=128";
+} from "../alerts.js?v=63158382";
 
 import {
 isChartLayoutReady
-} from "../chart-layout-gate.js?v=4";
+} from "../chart-layout-gate.js?v=4a8798af";
 
 import {
 registerChartScaleLabelProvider
-} from "../chart/scale-label-providers.js?v=3";
+} from "../chart/scale-label-providers.js?v=fd4f7c2a";
 
 export function createDrawAlertsChart(
 deps

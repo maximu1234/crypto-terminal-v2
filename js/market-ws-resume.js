@@ -5,29 +5,29 @@
  */
 import {
 forceReconnectPublicSocket
-} from "./ws.js?v=28";
+} from "./ws.js?v=19a0f08a";
 
 import {
 resetBingxWs
-} from "./exchanges/bingx/ws.js?v=21";
+} from "./exchanges/bingx/ws.js?v=b567a68e";
 
 import {
 getActiveExchangeId,
 loadMarketHistory
-} from "./market-api.js?v=14";
+} from "./market-api.js?v=7b3e6b3c";
 
 import {
 lastOhlcBar,
 liveBarPeriodSec,
 mergeCatchupOhlcBars,
 paintCatchupLiveSeries
-} from "./chart/live-bar-roll.js?v=6";
+} from "./chart/live-bar-roll.js?v=6ff2b718";
 
 import {
 catchupHistoryPages,
 shouldCatchupFromBackground,
 STALE_PERIODS
-} from "./market-ws-resume-policy.js?v=1";
+} from "./market-ws-resume-policy.js?v=f30b3941";
 
 const FOREGROUND_EVENT =
 "market-ws-foreground";

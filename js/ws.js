@@ -1,17 +1,17 @@
 import {
 getBybitWsUrl,
 rotateBybitWsEndpoint
-} from "./bybit-fetch.js?v=24";
+} from "./bybit-fetch.js?v=1c54517b";
 
 import {
 collectKlineRows,
 queueKlineByTime,
 takeQueuedKlinesSorted
-} from "./chart/live-bar-roll.js?v=6";
+} from "./chart/live-bar-roll.js?v=6ff2b718";
 
 import {
 planPublicTopicLiveness
-} from "./public-topic-liveness.js?v=1";
+} from "./public-topic-liveness.js?v=b0bcae3c";
 
 let socket = null;
 

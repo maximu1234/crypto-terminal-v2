@@ -4,7 +4,7 @@
  */
 import {
   macdFlipTouchSplitIndex
-} from "./macd-flip-touch-walkforward.js?v=13";
+} from "./macd-flip-touch-walkforward.js?v=5dcbbb9f";
 
 export const MACD_FLIP_TOUCH_EQUITY_TRAIN_COLOR =
 "#2dd4bf";

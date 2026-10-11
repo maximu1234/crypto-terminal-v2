@@ -7,29 +7,29 @@ computeChartFutureMarginBars,
 computeCoinsChartViewportPlan,
 equalizeLinkedPanePriceScales,
 syncLinkedChartTimescales
-} from "../chart-import.js?v=70";
+} from "../chart-import.js?v=c172cdf4";
 
 import {
 terminalVisibleBars,
 TERMINAL_VISIBLE_BARS
-} from "../terminal-chart-history-prefs.js?v=1";
+} from "../terminal-chart-history-prefs.js?v=948df10f";
 
 import {
 isChartLayoutReady,
 isChromeOverlayActive
-} from "../chart-layout-gate.js?v=4";
+} from "../chart-layout-gate.js?v=4a8798af";
 
 import {
 isCoinsPaneHeightDrag
-} from "../terminal-layout-resize.js?v=9";
+} from "../terminal-layout-resize.js?v=671925b0";
 
 import {
 CHART_REDRAW_REASON
-} from "../chart-redraw-scheduler.js?v=2";
+} from "../chart-redraw-scheduler.js?v=230ac007";
 
 import {
 invalidatePreservedVisibleLogicalRange
-} from "../chart-visible-range.js?v=3";
+} from "../chart-visible-range.js?v=255ee6c8";
 
 let layoutCtx =
 null;

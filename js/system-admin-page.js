@@ -1,28 +1,28 @@
 import {
 ensureCloudReady
-} from "./auth-ui.js?v=82";
+} from "./auth-ui.js?v=adc291da";
 
 import {
 ensureCloudLoginResolved,
 getEffectiveCloudUserEmail
-} from "./cloud-sync.js?v=87";
+} from "./cloud-sync.js?v=cab32aef";
 
 import {
 isSystemAdminUser,
 getSystemAdminEmails,
 isLoggedInEffective
-} from "./system-admin-access.js?v=16";
+} from "./system-admin-access.js?v=48c3529a";
 
 import {
 bindSupabaseUsagePrefsForm
-} from "./system-admin-supabase-prefs.js?v=19";
+} from "./system-admin-supabase-prefs.js?v=94e23af0";
 
 import {
 bindAlertsGarbagePurge
-} from "./system-admin-alerts-purge.js?v=15";
+} from "./system-admin-alerts-purge.js?v=46f7b33f";
 import {
 bindWorkerReloadMsSettings
-} from "./system-admin-worker-reload-ms.js?v=6";
+} from "./system-admin-worker-reload-ms.js?v=e2606a6f";
 
 const rootEl =
 document.getElementById("system-admin-root");

@@ -7,19 +7,19 @@ import {
   applyScreenerZoom,
   SCREENER_MAX_BARS,
   SCREENER_VISIBLE_BARS
-} from "../chart-import.js?v=70";
+} from "../chart-import.js?v=c172cdf4";
 import {
   loadMarketHistory
-} from "../market-api.js?v=14";
+} from "../market-api.js?v=7b3e6b3c";
 import {
   subscribeKline
-} from "../market-ws.js?v=10";
+} from "../market-ws.js?v=ab0ef4a1";
 import {
   ensureOhlcRollover,
   ingestLiveOhlcKline,
   liveBarPeriodSec,
   paintLiveOhlcSeries
-} from "../chart/live-bar-roll.js?v=6";
+} from "../chart/live-bar-roll.js?v=6ff2b718";
 
 function waitFrames(n = 2) {
   return new Promise((resolve) => {

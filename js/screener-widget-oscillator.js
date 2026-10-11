@@ -4,14 +4,14 @@
  */
 import {
 createVolumeChart
-} from "./chart-import.js?v=70";
+} from "./chart-import.js?v=c172cdf4";
 
 import {
 calculateMacd,
 macdHistColor,
 MACD_LINE_COLOR,
 MACD_SIGNAL_COLOR
-} from "./indicators/macd-math.js?v=3";
+} from "./indicators/macd-math.js?v=ca060ff4";
 
 export const SCREENER_WIDGET_OSCILLATOR_KEY =
 "multichart_screener_widget_oscillator_v1";

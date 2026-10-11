@@ -6,10 +6,10 @@ import {
 ALGO_ANALYSIS_BOT_CHANGE_EVENT,
 ALGO_ANALYSIS_BOT_MACD_FLIP_TOUCH,
 isActiveAnalysisBot
-} from "./active-analysis-bot.js?v=4";
+} from "./active-analysis-bot.js?v=c1b8293b";
 import {
 loadMarketHistory
-} from "../market-api.js?v=14";
+} from "../market-api.js?v=7b3e6b3c";
 import {
 MACD_FLIP_TOUCH_SIZE_AVERAGE,
 loadMacdFlipTouchPrefs,
@@ -20,7 +20,7 @@ loadMacdFlipTouchTickerPrefs,
 normalizeMacdFlipTouchPrefs,
 shouldReloadMacdFlipTouchColumn,
 loadMacdFlipTouchBalancePct
-} from "./macd-flip-touch-prefs.js?v=9";
+} from "./macd-flip-touch-prefs.js?v=e8cc13ba";
 import {
 MACD_FLIP_TOUCH_BOOK_CHANGE_EVENT,
 MACD_FLIP_TOUCH_BOOK_OPEN_EVENT,
@@ -29,31 +29,31 @@ loadMacdFlipTouchBook,
 macdFlipTouchShareBudgetFits,
 upsertMacdFlipTouchBookRow,
 removeMacdFlipTouchBookRow
-} from "./macd-flip-touch-book.js?v=5";
+} from "./macd-flip-touch-book.js?v=d4d39562";
 import {
 getAlgoTradingWalletBalance
-} from "./runtime-bridge.js?v=6";
+} from "./runtime-bridge.js?v=8fabea4a";
 import {
 runMacdFlipTouch
-} from "./macd-flip-touch-engine.js?v=8";
+} from "./macd-flip-touch-engine.js?v=0e901e4f";
 import {
 resolveMacdFlipTouchChartMacd,
 macdFlipTouchChartDays
-} from "./macd-flip-touch-mtf.js?v=5";
+} from "./macd-flip-touch-mtf.js?v=f7dfda1e";
 import {
 mountMacdFlipTouchOverlay
-} from "./macd-flip-touch-overlay.js?v=3";
+} from "./macd-flip-touch-overlay.js?v=d943e13d";
 import {
 mountMacdFlipTouchFit,
 loadMacdFlipTouchFitRowForSymbol
-} from "./macd-flip-touch-fit-panel.js?v=15";
+} from "./macd-flip-touch-fit-panel.js?v=aa803657";
 import {
 MACD_FLIP_TOUCH_DEFAULT_TRAIN_PCT,
 macdFlipTouchFitPrefsForHydrate
-} from "./macd-flip-touch-walkforward.js?v=13";
+} from "./macd-flip-touch-walkforward.js?v=5dcbbb9f";
 import {
 buildMacdFlipTouchEquityModel
-} from "./macd-flip-touch-equity.js?v=7";
+} from "./macd-flip-touch-equity.js?v=8b6c93df";
 
 function el(
 id
@@ -468,7 +468,7 @@ if(
 ){
 equityChartMod =
 await import(
-"./macd-flip-touch-equity-chart.js?v=7"
+"./macd-flip-touch-equity-chart.js?v=61ab1e0a"
 );
 }
 

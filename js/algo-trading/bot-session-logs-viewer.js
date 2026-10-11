@@ -7,38 +7,38 @@ fetchLanBotStatus,
 sendLanBotCommand,
 normalizeLanBotStrategyId,
 pushAuthSessionToRemoteBot
-} from "./bot-remote-client.js?v=27";
+} from "./bot-remote-client.js?v=7275040e";
 import {
 formatBotStrategySettingsRows,
 loadBotStrategiesPrefs
-} from "./bot-strategy-prefs.js?v=33";
+} from "./bot-strategy-prefs.js?v=e463f141";
 import {
 syncAllTickerFlagsRootToMain
-} from "./bot-bridge.js?v=30";
+} from "./bot-bridge.js?v=17baeaa9";
 import {
 ALGO_TICKER_FLAGS_KEY
-} from "./ticker-flags.js?v=10";
+} from "./ticker-flags.js?v=72da874e";
 import {
 loadStagedBotTickerBook,
 loadBotTickerBook
-} from "./bot-ticker-book.js?v=7";
+} from "./bot-ticker-book.js?v=24739acf";
 import {
 loadEarlyT3BotPrefs
-} from "./early-t3-bot-prefs.js?v=5";
+} from "./early-t3-bot-prefs.js?v=920e9956";
 import {
 loadRsiTouchFlipBook
-} from "./rsi-touch-flip-book.js?v=5";
+} from "./rsi-touch-flip-book.js?v=c5c9afac";
 import {
 loadRsiTouchFlipBalancePct,
 loadRsiTouchFlipLeverage
-} from "./rsi-touch-flip-prefs.js?v=10";
+} from "./rsi-touch-flip-prefs.js?v=8d462a58";
 import {
 loadMacdFlipTouchBook
-} from "./macd-flip-touch-book.js?v=5";
+} from "./macd-flip-touch-book.js?v=d4d39562";
 import {
 loadMacdFlipTouchBalancePct,
 loadMacdFlipTouchMarginMode
-} from "./macd-flip-touch-prefs.js?v=9";
+} from "./macd-flip-touch-prefs.js?v=e8cc13ba";
 
 const STORAGE_KEY =
 "algo_remote_session_logs_v1";

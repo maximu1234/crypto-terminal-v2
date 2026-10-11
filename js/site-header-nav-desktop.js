@@ -1,6 +1,6 @@
 import {
 WEB_HEADER_NAV_ITEMS
-} from "./site-header-nav-web.js?v=1";
+} from "./site-header-nav-web.js?v=914dbeab";
 
 const DESKTOP_EXTRA_ITEMS =
 [

@@ -4,7 +4,7 @@
  */
 import {
   pickRsiTouchFlipLaunchPrefs
-} from "./rsi-touch-flip-prefs.js?v=10";
+} from "./rsi-touch-flip-prefs.js?v=8d462a58";
 
 export const RSI_TOUCH_FLIP_BOOK_KEY =
   "algo_trading_rsi_touch_flip_book_v1";

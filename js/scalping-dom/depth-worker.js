@@ -4,20 +4,20 @@
  */
 import {
 createTickBook
-} from "./tick-book.js?v=3";
+} from "./tick-book.js?v=2fb03244";
 
 import {
 buildVisibleSliceFromTickBook
-} from "./ladder-slice.js?v=11";
+} from "./ladder-slice.js?v=d43ffbec";
 
 import {
 createBybitDepthWs,
 BYBIT_DOM_DEPTH
-} from "./depth-ws-bybit.js?v=6";
+} from "./depth-ws-bybit.js?v=88ccac1e";
 
 import {
 createBingxDepthWs
-} from "./depth-ws-bingx.js?v=5";
+} from "./depth-ws-bingx.js?v=465af8e4";
 
 const book =
 createTickBook();

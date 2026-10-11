@@ -8,32 +8,32 @@
 
 import {
 peekBybitSymbolsCache
-} from "./api.js?v=39";
+} from "./api.js?v=7715ccfd";
 
 import {
 fetchBybit
-} from "./bybit-fetch.js?v=24";
+} from "./bybit-fetch.js?v=1c54517b";
 
 import {
 peekMarketSymbolsCache
-} from "./market-api.js?v=14";
+} from "./market-api.js?v=7b3e6b3c";
 
 import {
 EXCHANGE_CHANGED_EVENT
-} from "./exchanges/context.js?v=1";
+} from "./exchanges/context.js?v=16fdeacc";
 
 import {
 fetchBingx
-} from "./exchanges/bingx/fetch.js?v=5";
+} from "./exchanges/bingx/fetch.js?v=a76bddd0";
 
 import {
 fetchMoex,
 issBlockToRows
-} from "./exchanges/moex/fetch.js?v=1";
+} from "./exchanges/moex/fetch.js?v=3c776f95";
 
 import {
 MOEX_BOARD_SPECS
-} from "./exchanges/moex/listings.js?v=2";
+} from "./exchanges/moex/listings.js?v=3a6cfc21";
 
 const ACRONYMS =
 new Set([

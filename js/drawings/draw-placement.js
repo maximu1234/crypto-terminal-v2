@@ -5,7 +5,7 @@
 import {
 hideDomChartCrosshair,
 positionTabletProbeHorizInStack
-} from "../chart-import.js?v=70";
+} from "../chart-import.js?v=c172cdf4";
 
 import {
 ensureFibLevelsVisible,
@@ -14,37 +14,37 @@ ensureFibAnchorMinSpan,
 isFibType,
 isFibExtType,
 resolveFibTrendLineColor
-} from "./fib-spec.js?v=18";
+} from "./fib-spec.js?v=5f577f26";
 
 import {
 isPositionType
-} from "./position.js?v=11";
+} from "./position.js?v=152e419c";
 
 import {
 uid
-} from "./math.js?v=2";
+} from "./math.js?v=2731b0ed";
 
 import {
 snapPlotToCandleWick
-} from "./draw-magnet.js?v=1";
+} from "./draw-magnet.js?v=df326ca8";
 
 import {
 touchShapeRevision
-} from "../drawings-storage.js?v=10";
+} from "../drawings-storage.js?v=c2e9af64";
 
 import {
 isHorizPriceTool
-} from "./constants.js?v=14";
+} from "./constants.js?v=c47ce407";
 
 import {
 isTextTool,
 TEXT_DEFAULT_CONTENT
-} from "./text.js?v=3";
+} from "./text.js?v=441520b6";
 
 import {
 ensureChannelLevelsVisible,
 cloneDefaultChannelRows
-} from "./channel-spec.js?v=2";
+} from "./channel-spec.js?v=a8bcf3c9";
 
 import {
 isElliottType,
@@ -52,18 +52,18 @@ isPattern12Draw,
 elliottPointCount,
 normalizePattern12TpFlags,
 normalizePattern12TpLevels
-} from "./elliott-spec.js?v=23";
+} from "./elliott-spec.js?v=3fb92981";
 
 import {
 isFvpType,
 copyFvpStyleToShape
-} from "./fixed-volume-profile.js?v=3";
+} from "./fixed-volume-profile.js?v=bb03b4a7";
 
 import {
 constrainPointerToAxis,
 eventHasShiftKey,
 lastPlacementPointPlotXY
-} from "./draw-axis-lock.js?v=1";
+} from "./draw-axis-lock.js?v=a3b136ee";
 
 export function createDrawPlacement(
 deps

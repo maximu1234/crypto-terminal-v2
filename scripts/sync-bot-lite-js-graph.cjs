@@ -56,7 +56,7 @@ function htmlScriptFiles() {
   if (!fs.existsSync(HTML)) return [];
   const html = fs.readFileSync(HTML, "utf8");
   const files = [];
-  const re = /(?:src|href)="\/js\/([^"?]+)(?:\?v=\d+)?"/g;
+  const re = /(?:src|href)="\/js\/([^"?]+)(?:\?v=[0-9a-f]+)?"/g;
   let m;
   while ((m = re.exec(html))) {
     files.push(path.join(OUT_JS, m[1]));

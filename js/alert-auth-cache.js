@@ -7,7 +7,7 @@ import {
 SUPABASE_AUTH_STORAGE_KEY,
 SUPABASE_AUTH_BACKUP_KEY,
 restoreAuthSessionFromBackup
-} from "./auth-storage.js?v=11";
+} from "./auth-storage.js?v=67aa0041";
 
 let cache = null;
 
@@ -376,7 +376,7 @@ syncHit
 
   try{
     const { getSupabase } =
-    await import("./supabase-client.js?v=10");
+    await import("./supabase-client.js?v=1c4904d5");
 
     const sb =
     await Promise.race([
@@ -452,7 +452,7 @@ export async function resolveAlertAuthFast() {
 
   try{
     const env =
-    await import("./supabase-env.js?v=5");
+    await import("./supabase-env.js?v=ed71d82f");
 
     const url =
     String(env.SUPABASE_URL || "").trim();

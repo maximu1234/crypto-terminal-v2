@@ -16,40 +16,40 @@ getActiveExchangeMarkets,
 getActiveExchangeId,
 getActiveExchangeDefinition,
 EXCHANGE_CHANGED_EVENT
-} from "./market-api.js?v=14";
+} from "./market-api.js?v=7b3e6b3c";
 
 import {
 peekHistoryCache,
 putHistoryCache,
 mergeCandleRows,
 logicalIndexShift
-} from "./market-history-cache.js?v=2";
+} from "./market-history-cache.js?v=dedca4e1";
 
 import {
 isSlowHistoryLink,
 slowHistoryPageLimit
-} from "./history-link-pace.js?v=1";
+} from "./history-link-pace.js?v=f684ac11";
 
 import {
 clearBybitNetworkIssue
-} from "./bybit-network-ui.js?v=11";
+} from "./bybit-network-ui.js?v=3b530ded";
 
 import {
 openChromeSurface
-} from "./chrome-motion.js?v=5";
+} from "./chrome-motion.js?v=bb1d8933";
 
 import {
 resolveUrlExchangeDeepLink
-} from "./alert-deep-link-exchange.js?v=16";
+} from "./alert-deep-link-exchange.js?v=7d460fb7";
 
 import {
 defaultRsiPaneSettings,
 normalizeRsiPaneSettings
-} from "./indicators/rsi-pane.js?v=16";
+} from "./indicators/rsi-pane.js?v=9e95c49b";
 
 import {
 buildChartRsiPoints
-} from "./indicators/htf-project.js?v=5";
+} from "./indicators/htf-project.js?v=2d6ecf34";
 
 import {
 loadFavoritesGroups,
@@ -58,26 +58,26 @@ getFavoriteGroup,
 setFavoriteGroup,
 flagSortRank,
 canSetBlueFlag
-} from "./favorites.js?v=6";
+} from "./favorites.js?v=d5f9b002";
 
 import {
 seedWatchlistTfOnBlueFlag
-} from "./storage.js?v=14";
+} from "./storage.js?v=bc113be9";
 
 import {
 ensureCloudReady
-} from "./auth-ui.js?v=82";
+} from "./auth-ui.js?v=adc291da";
 
 import {
 getActiveAlerts,
 isMacdAlert,
 isRsiAlert
-} from "./alerts.js?v=128";
+} from "./alerts.js?v=63158382";
 
 import {
 persistFavoritesToCloud,
 onFavoritesRemoteUpdate
-} from "./cloud-sync.js?v=87";
+} from "./cloud-sync.js?v=cab32aef";
 
 import {
 createCandlestickChart,
@@ -107,7 +107,7 @@ appendFutureWhitespaceBars,
 applyCoinsChartViewport,
 refreshCoinsChartBarSpacing,
 tfPeriodSec
-} from "./chart-import.js?v=70";
+} from "./chart-import.js?v=c172cdf4";
 
 import {
 terminalVisibleBars,
@@ -117,69 +117,69 @@ TERMINAL_HISTORY_DEPTH_EVENT,
 getTerminalHistoryDepth,
 terminalHistoryInitialRequests,
 TERMINAL_HISTORY_LAZY_BATCH_BARS
-} from "./terminal-chart-history-prefs.js?v=1";
+} from "./terminal-chart-history-prefs.js?v=948df10f";
 
 import {
 mountCoinsTabletController
-} from "./terminal-tablet-controller.js?v=17";
+} from "./terminal-tablet-controller.js?v=ac4c39f9";
 
 import {
 disconnectKlineStream
-} from "./market-ws.js?v=10";
+} from "./market-ws.js?v=ab0ef4a1";
 
 import {
 syncBackgroundAlertStreams,
 onMacdSeriesUpdate,
 onRsiSeriesUpdate
-} from "./alert-monitor.js?v=89";
+} from "./alert-monitor.js?v=66170843";
 
 import {
 createSharedDrawUndoStack
-} from "./drawings/draw-undo.js?v=2";
+} from "./drawings/draw-undo.js?v=4725fe9d";
 
 import {
 mountDrawToolbar,
 mountDrawToolIcons
-} from "./draw-ui-shared.js?v=51";
+} from "./draw-ui-shared.js?v=a01caf04";
 import {
 mountTerminalChecklist
-} from "./terminal/terminal-checklist.js?v=1";
+} from "./terminal/terminal-checklist.js?v=fdec0be2";
 
 import {
 mountTerminalDxBall
-} from "./terminal/terminal-dxball.js?v=8";
+} from "./terminal/terminal-dxball.js?v=5757f8f6";
 
 import {
 mountChartSnapshot
-} from "./chart-snapshot.js?v=7";
+} from "./chart-snapshot.js?v=fad34145";
 
 import {
 mountChartSymbolFullName
-} from "./symbol-display-name.js?v=8";
+} from "./symbol-display-name.js?v=c6224330";
 
 import {
 perfMark,
 perfMeasure
-} from "./perf-marks.js?v=2";
+} from "./perf-marks.js?v=6857dee5";
 
 import {
 isCoinsPaneHeightDrag,
 mountCoinsLayoutResize
-} from "./terminal-layout-resize.js?v=9";
+} from "./terminal-layout-resize.js?v=671925b0";
 
 import {
 mountQwertyKeyInput,
 shouldIgnoreTypingHotkey
-} from "./qwerty-key-input.js?v=4";
+} from "./qwerty-key-input.js?v=7ac067d9";
 
 import {
 DRAW_TOOL_HOTKEYS
-} from "./drawings/draw-tool-hotkeys.js?v=1";
+} from "./drawings/draw-tool-hotkeys.js?v=4aa435aa";
 
 import {
 isChartLayoutReady,
 setChartLayoutReady
-} from "./chart-layout-gate.js?v=4";
+} from "./chart-layout-gate.js?v=4a8798af";
 
 import {
 registerCoinsState,
@@ -191,16 +191,26 @@ COINS_TF_HOTKEYS,
 COINS_MARKETS,
 isTerminalPage,
 isTradePage
-} from "./terminal/terminal-state.js?v=17";
+} from "./terminal/terminal-state.js?v=4747a92f";
+
+import {
+mountCoinsScaleInvertMenu
+} from "./terminal/terminal-scale-menu.js?v=a6f7747b";
+
+import {
+mountTerminalDrawChrome
+} from "./terminal/terminal-draw-chrome.js?v=ad52491f";
+
+
 
 import {
 stopTickerStream
-} from "./tickers.js?v=34";
+} from "./tickers.js?v=729ac4e5";
 
 import {
 mountCoinsListRefreshControls,
 applyCoinsListRefreshInterval
-} from "./terminal-list-refresh.js?v=15";
+} from "./terminal-list-refresh.js?v=e671e15d";
 
 import {
 readCoinsPrefs,
@@ -214,11 +224,11 @@ applyCoinsPrefs,
 applySortForCurrentMarket,
 readUrlParams,
 readLastViewForExchange
-} from "./terminal/terminal-prefs.js?v=44";
+} from "./terminal/terminal-prefs.js?v=826c796a";
 
 import {
 mountDesktopOpenChartHandler
-} from "./desktop-open-chart.js?v=8";
+} from "./desktop-open-chart.js?v=0351d0df";
 
 import {
 getCurrentSymbols,
@@ -236,11 +246,11 @@ setCoinsTableHooks,
 syncCoinListFreezeFromFlagMenus,
 getExtraCoinMarkets,
 isExtraCoinMarket
-} from "./terminal/terminal-table.js?v=59";
+} from "./terminal/terminal-table.js?v=5096da98";
 
 import {
 createCoinsChartSwitchVeil
-} from "./terminal/terminal-chart-switch-veil.js?v=7";
+} from "./terminal/terminal-chart-switch-veil.js?v=1c588e96";
 
 import {
 registerCoinsChartLayoutContext,
@@ -251,34 +261,34 @@ syncCoinsChartLinkedViewports,
 resizeCharts,
 scheduleResizeCharts,
 applyDefaultZoom
-} from "./terminal/terminal-chart-layout.js?v=25";
+} from "./terminal/terminal-chart-layout.js?v=7c8289ee";
 
 import {
 placeCoinsTabletListNav
-} from "./terminal/coins-tablet-list-nav.js?v=2";
+} from "./terminal/coins-tablet-list-nav.js?v=ac1c11c4";
 
 import {
 initTerminalMultiChart,
 syncPrimaryTfToLayout,
 isTerminalMultiChartLayout
-} from "./terminal-multi-chart.js?v=54";
+} from "./terminal-multi-chart.js?v=ac24c861";
 
 import {
 mountTerminalLayoutPicker
-} from "./terminal-layout-picker.js?v=11";
+} from "./terminal-layout-picker.js?v=1aaad26b";
 
 import {
 mountChartDisplayStyleUi
-} from "./terminal/chart-display-style-ui.js?v=2";
+} from "./terminal/chart-display-style-ui.js?v=62beb927";
 
 import {
 loadChartDisplayStyle,
 saveChartDisplayStyle
-} from "./chart/chart-display-style.js?v=2";
+} from "./chart/chart-display-style.js?v=e916eea3";
 
 import {
 createPriceSeriesHost
-} from "./chart/price-series-host.js?v=13";
+} from "./chart/price-series-host.js?v=348af29c";
 
 import {
 CHART_PRICE_SCALE_MODE_LOGARITHMIC,
@@ -286,20 +296,20 @@ CHART_PRICE_SCALE_MODE_REGULAR,
 normalizeChartPriceScaleMode,
 applyChartPriceScaleMode,
 lwPriceScaleModeId
-} from "./chart/price-scale-mode.js?v=3";
+} from "./chart/price-scale-mode.js?v=7deaefee";
 
 import {
 normalizeMinVolume,
 parseMinVolumeFilter,
 syncMinVolumeFilterInput,
 mountMinVolumeFilterInput
-} from "./screener-volume-filter.js?v=4";
+} from "./screener-volume-filter.js?v=2018f0b9";
 
 import {
 shouldRunScriptBackgroundJobs,
 isAlgoTradingNavEnabled,
 FEATURE_NAV_PREF_EVENT
-} from "./desktop-feature-nav-prefs.js?v=5";
+} from "./desktop-feature-nav-prefs.js?v=0fd2425e";
 
 /** @type {typeof import("./algo-trading/terminal-early-t3-list.js")|null} */
 let terminalAlgoEarlyT3ListMod =
@@ -1234,780 +1244,6 @@ persistCoinsChartPriceScaleMode();
 
 }
 
-function mountCoinsScaleInvertMenu(){
-
-if(
-!isTerminalPage ||
-!chartWrapEl ||
-!chartEl
-){
-return ()=>{};
-}
-
-const rsiWrapEl =
-document.getElementById(
-"rsi-wrap"
-);
-
-const rsiChartEl =
-document.getElementById(
-"rsi-chart"
-);
-
-const scaleStripEl =
-document.getElementById(
-"price-scale-touch-strip"
-);
-
-const rsiScaleStripEl =
-document.getElementById(
-"rsi-scale-touch-strip"
-);
-
-/** Длиннее окна double-tap по шкале (~320–500 ms), короче случайного long-press при pan */
-const HOLD_MS =
-520;
-
-const menu =
-document.createElement("div");
-menu.className =
-"chart-scale-context-menu hidden";
-menu.setAttribute(
-"role",
-"menu"
-);
-
-const priceModeBox =
-document.createElement("div");
-priceModeBox.className =
-"chart-scale-context-menu-price-modes";
-
-function makeModeItem(
-mode,
-label
-){
-
-const btn =
-document.createElement("button");
-btn.type = "button";
-btn.className =
-"chart-scale-context-menu-item";
-btn.textContent =
-label;
-btn.dataset.priceScaleMode =
-mode;
-btn.setAttribute(
-"role",
-"menuitemradio"
-);
-return btn;
-
-}
-
-const regularItem =
-makeModeItem(
-CHART_PRICE_SCALE_MODE_REGULAR,
-"Regular"
-);
-
-const logItem =
-makeModeItem(
-CHART_PRICE_SCALE_MODE_LOGARITHMIC,
-"Logarithmic"
-);
-
-const sep =
-document.createElement("div");
-sep.className =
-"chart-scale-context-menu-sep";
-sep.setAttribute(
-"role",
-"separator"
-);
-
-priceModeBox.appendChild(regularItem);
-priceModeBox.appendChild(logItem);
-priceModeBox.appendChild(sep);
-
-const item =
-document.createElement("button");
-item.type = "button";
-item.className =
-"chart-scale-context-menu-item";
-item.setAttribute(
-"role",
-"menuitem"
-);
-
-menu.appendChild(priceModeBox);
-menu.appendChild(item);
-document.body.appendChild(menu);
-
-let menuTarget =
-"price";
-
-function syncMenuState(){
-
-const inverted =
-menuTarget ===
-"rsi"
-? isCoinsRsiInverted
-: isCoinsChartInverted;
-
-item.textContent =
-inverted
-? "Вернуть обычную шкалу"
-: "Перевернуть график";
-
-item.title =
-menuTarget ===
-"rsi"
-? ""
-: inverted
-? "Вернуть обычную шкалу (Alt+I)"
-: "Перевернуть график (Alt+I)";
-
-item.setAttribute(
-"aria-pressed",
-inverted
-? "true"
-: "false"
-);
-
-const isRegular =
-coinsPriceScaleMode ===
-CHART_PRICE_SCALE_MODE_REGULAR;
-
-regularItem.classList.toggle(
-"is-checked",
-isRegular
-);
-logItem.classList.toggle(
-"is-checked",
-!isRegular
-);
-regularItem.setAttribute(
-"aria-checked",
-isRegular
-? "true"
-: "false"
-);
-logItem.setAttribute(
-"aria-checked",
-isRegular
-? "false"
-: "true"
-);
-
-const showModes =
-menuTarget ===
-"price";
-
-priceModeBox.hidden =
-!showModes;
-
-}
-
-syncMenuState();
-
-let touchHoldTimer =
-null;
-let touchStartX = 0;
-let touchStartY = 0;
-
-function hideMenu(){
-menu.classList.add("hidden");
-}
-
-function showMenuAt(
-clientX,
-clientY,
-target =
-menuTarget
-){
-
-menuTarget =
-target ===
-"rsi"
-? "rsi"
-: "price";
-
-syncMenuState();
-
-const margin = 8;
-menu.classList.remove("hidden");
-menu.style.left = "0px";
-menu.style.top = "0px";
-
-const menuRect =
-menu.getBoundingClientRect();
-const anchorEl =
-menuTarget ===
-"rsi"
-? rsiChartEl
-: chartEl;
-
-if(
-!anchorEl
-){
-hideMenu();
-return;
-}
-
-const chartRect =
-anchorEl.getBoundingClientRect();
-const scaleChart =
-menuTarget ===
-"rsi"
-? rsiChart
-: chart;
-
-const scaleW =
-scaleChart?.priceScale?.(
-"right"
-)?.width?.() ||
-56;
-
-const scaleLeft =
-chartRect.right - scaleW;
-
-let left =
-Math.round(
-scaleLeft - menuRect.width
-);
-let top =
-Math.round(
-clientY - menuRect.height / 2
-);
-
-const chartLeft =
-chartRect.left + margin;
-
-if(
-left <
-chartLeft
-){
-left =
-Math.round(
-chartLeft
-);
-}
-
-left = Math.max(
-margin,
-left
-);
-
-if(
-top + menuRect.height >
-window.innerHeight - margin
-){
-top =
-window.innerHeight - margin - menuRect.height;
-}
-
-if(
-top <
-margin
-){
-top =
-margin;
-}
-
-menu.style.left =
-`${left}px`;
-menu.style.top =
-`${top}px`;
-
-}
-
-function isInPriceScale(
-clientX,
-clientY
-){
-
-const rect =
-chartEl.getBoundingClientRect();
-const localX =
-clientX - rect.left;
-const localY =
-clientY - rect.top;
-const scaleW =
-chart.priceScale(
-"right"
-)?.width?.() || 56;
-
-return (
-localY >= 0 &&
-localY <= rect.height &&
-localX >= rect.width - scaleW &&
-localX <= rect.width
-);
-
-}
-
-function isInRsiScale(
-clientX,
-clientY
-){
-
-if(
-!rsiChartEl
-){
-return false;
-}
-
-const rect =
-rsiChartEl.getBoundingClientRect();
-const localX =
-clientX - rect.left;
-const localY =
-clientY - rect.top;
-const scaleW =
-rsiChart?.priceScale?.(
-"right"
-)?.width?.() || 56;
-
-return (
-localY >= 0 &&
-localY <= rect.height &&
-localX >= rect.width - scaleW &&
-localX <= rect.width
-);
-
-}
-
-function resolveTouchTarget(
-stripEl,
-wrapEl
-){
-
-if(
-stripEl &&
-getComputedStyle(
-stripEl
-).display !==
-"none"
-){
-return stripEl;
-}
-
-return wrapEl;
-
-}
-
-const touchTargetEl =
-resolveTouchTarget(
-scaleStripEl,
-chartWrapEl
-);
-
-const rsiTouchTargetEl =
-rsiWrapEl
-? resolveTouchTarget(
-rsiScaleStripEl,
-rsiWrapEl
-)
-: null;
-
-const onDesktopContextMenu =
-e=>{
-
-if(
-!isInPriceScale(
-e.clientX,
-e.clientY
-)
-){
-hideMenu();
-return;
-}
-
-e.preventDefault();
-e.stopPropagation();
-showMenuAt(
-e.clientX,
-e.clientY,
-"price"
-);
-
-};
-
-const onRsiDesktopContextMenu =
-e=>{
-
-if(
-!isInRsiScale(
-e.clientX,
-e.clientY
-)
-){
-hideMenu();
-return;
-}
-
-e.preventDefault();
-e.stopPropagation();
-showMenuAt(
-e.clientX,
-e.clientY,
-"rsi"
-);
-
-};
-
-const onTouchMove =
-e=>{
-
-if(
-!touchHoldTimer ||
-!e.touches ||
-e.touches.length !== 1
-){
-return;
-}
-
-const t = e.touches[0];
-const dx =
-t.clientX - touchStartX;
-const dy =
-t.clientY - touchStartY;
-
-if(
-dx * dx + dy * dy >
-64
-){
-clearTimeout(
-touchHoldTimer
-);
-touchHoldTimer =
-null;
-}
-
-};
-
-const onTouchEnd = ()=>{
-clearTimeout(
-touchHoldTimer
-);
-touchHoldTimer =
-null;
-};
-
-function bindTouchHold(
-targetEl,
-hitScale,
-scaleTarget
-){
-
-if(
-!targetEl
-){
-return ()=>{};
-}
-
-const onTouchStart =
-e=>{
-
-if(
-!e.touches ||
-e.touches.length !== 1
-){
-return;
-}
-
-const t = e.touches[0];
-
-if(
-targetEl === chartWrapEl &&
-!hitScale(
-t.clientX,
-t.clientY
-)
-){
-return;
-}
-
-if(
-targetEl === rsiWrapEl &&
-!hitScale(
-t.clientX,
-t.clientY
-)
-){
-return;
-}
-
-touchStartX = t.clientX;
-touchStartY = t.clientY;
-
-clearTimeout(
-touchHoldTimer
-);
-
-touchHoldTimer =
-setTimeout(
-()=>{
-showMenuAt(
-touchStartX,
-touchStartY,
-scaleTarget
-);
-},
-HOLD_MS
-);
-
-};
-
-const cap =
-{ capture:true, passive:true };
-
-targetEl.addEventListener(
-"touchstart",
-onTouchStart,
-cap
-);
-targetEl.addEventListener(
-"touchmove",
-onTouchMove,
-cap
-);
-targetEl.addEventListener(
-"touchend",
-onTouchEnd,
-cap
-);
-targetEl.addEventListener(
-"touchcancel",
-onTouchEnd,
-cap
-);
-
-return ()=>{
-targetEl.removeEventListener(
-"touchstart",
-onTouchStart,
-true
-);
-targetEl.removeEventListener(
-"touchmove",
-onTouchMove,
-true
-);
-targetEl.removeEventListener(
-"touchend",
-onTouchEnd,
-true
-);
-targetEl.removeEventListener(
-"touchcancel",
-onTouchEnd,
-true
-);
-};
-
-}
-
-const onDocPointerDown =
-e=>{
-
-if(
-menu.contains(e.target)
-){
-return;
-}
-
-hideMenu();
-
-};
-
-item.addEventListener(
-"click",
-e=>{
-e.preventDefault();
-e.stopPropagation();
-
-if(
-menuTarget ===
-"rsi"
-){
-toggleCoinsRsiInversion();
-}else{
-toggleCoinsChartInversion();
-}
-
-syncMenuState();
-hideMenu();
-}
-);
-
-function onPriceScaleModeClick(
-mode
-){
-
-return e=>{
-e.preventDefault();
-e.stopPropagation();
-setCoinsChartPriceScaleMode(
-mode
-);
-syncMenuState();
-hideMenu();
-};
-
-}
-
-regularItem.addEventListener(
-"click",
-onPriceScaleModeClick(
-CHART_PRICE_SCALE_MODE_REGULAR
-)
-);
-
-logItem.addEventListener(
-"click",
-onPriceScaleModeClick(
-CHART_PRICE_SCALE_MODE_LOGARITHMIC
-)
-);
-
-chartWrapEl.addEventListener(
-"contextmenu",
-onDesktopContextMenu,
-true
-);
-
-if(
-rsiWrapEl
-){
-rsiWrapEl.addEventListener(
-"contextmenu",
-onRsiDesktopContextMenu,
-true
-);
-}
-
-const unbindPriceTouch =
-bindTouchHold(
-touchTargetEl,
-isInPriceScale,
-"price"
-);
-
-const unbindRsiTouch =
-bindTouchHold(
-rsiTouchTargetEl,
-isInRsiScale,
-"rsi"
-);
-
-document.addEventListener(
-"pointerdown",
-onDocPointerDown,
-true
-);
-window.addEventListener(
-"blur",
-hideMenu
-);
-window.addEventListener(
-"resize",
-hideMenu
-);
-window.addEventListener(
-"scroll",
-hideMenu,
-true
-);
-
-function onInvertChartHotkey(
-e
-){
-
-if(
-!isTerminalPage
-){
-return;
-}
-
-if(
-shouldIgnoreListKeyNav(
-e
-)
-){
-return;
-}
-
-/*
-  Option+I (Mac) и Alt+I (Windows/Linux) — в браузере оба дают altKey.
-*/
-if(
-!e.altKey ||
-e.ctrlKey ||
-e.metaKey ||
-e.code !==
-"KeyI"
-){
-return;
-}
-
-e.preventDefault();
-hideMenu();
-toggleCoinsChartInversion();
-syncMenuState();
-
-}
-
-document.addEventListener(
-"keydown",
-onInvertChartHotkey
-);
-
-return ()=>{
-hideMenu();
-clearTimeout(touchHoldTimer);
-chartWrapEl.removeEventListener(
-"contextmenu",
-onDesktopContextMenu,
-true
-);
-if(
-rsiWrapEl
-){
-rsiWrapEl.removeEventListener(
-"contextmenu",
-onRsiDesktopContextMenu,
-true
-);
-}
-unbindPriceTouch();
-unbindRsiTouch();
-document.removeEventListener(
-"pointerdown",
-onDocPointerDown,
-true
-);
-document.removeEventListener(
-"keydown",
-onInvertChartHotkey
-);
-window.removeEventListener(
-"blur",
-hideMenu
-);
-window.removeEventListener(
-"resize",
-hideMenu
-);
-window.removeEventListener(
-"scroll",
-hideMenu,
-true
-);
-menu.remove();
-};
-
-}
 
 markTabletChartBody();
 
@@ -2028,7 +1264,18 @@ false
 }
 );
 unmountCoinsScaleInvertMenu =
-mountCoinsScaleInvertMenu();
+mountCoinsScaleInvertMenu({
+get chart(){ return chart; },
+get chartEl(){ return chartEl; },
+get chartWrapEl(){ return chartWrapEl; },
+get rsiChart(){ return rsiChart; },
+get coinsPriceScaleMode(){ return coinsPriceScaleMode; },
+get isCoinsChartInverted(){ return isCoinsChartInverted; },
+get isCoinsRsiInverted(){ return isCoinsRsiInverted; },
+setCoinsChartPriceScaleMode,
+toggleCoinsChartInversion,
+toggleCoinsRsiInversion
+})
 }
 
 let priceHudCtrl = {
@@ -3801,977 +3048,6 @@ point.value
 
 }
 
-async function mountTerminalDrawChrome(){
-
-perfMark(
-"terminal-draw-chrome-start"
-);
-
-try{
-
-const {
-initWidgetDrawings
-} =
-await import(
-"./chart-widget-host.js?v=78"
-);
-const {
-initChartIndicators
-} =
-await import(
-"./chart-indicators.js?v=75"
-);
-const {
-createPattern12EarlyT3Indicator
-} =
-await import(
-"./indicators/pattern-12-early-t3.js?v=2"
-);
-
-function teardownMacdDrawingTools(){
-
-if(
-activeDrawPane ===
-"macd"
-){
-activeDrawPane =
-"chart";
-}
-
-disposeMacdAlertUi?.();
-disposeMacdAlertUi =
-null;
-macdDrawingTools?.destroy?.();
-macdDrawingTools =
-null;
-macdSetDrawTool =
-null;
-
-}
-
-function mountMacdDrawingTools(){
-
-if(
-macdDrawingTools
-){
-return;
-}
-
-const ind =
-chartIndicators?.getIndicator?.(
-"macd"
-);
-const macdChart =
-ind?.getChart?.();
-const macdSeries =
-ind?.getMacdSeries?.();
-
-if(
-!ind?.isEnabled?.() ||
-!macdChart ||
-!macdSeries ||
-!macdWrapEl
-){
-return;
-}
-
-macdDrawingTools =
-initWidgetDrawings({
-
-chart:
-macdChart,
-
-timeChart:
-chart,
-
-series:
-macdSeries,
-
-wrapEl:
-macdWrapEl,
-
-uiRoot:
-null,
-
-toolsRoot:
-document.getElementById(
-"charts-stack"
-),
-
-bindToolbar:
-false,
-
-styleBar:
-false,
-
-mountStyleBar:
-false,
-
-sharedStyleBarSync: ()=>{
-drawingTools?.syncStyleBar?.();
-},
-
-storageKeySuffix:
-"_macd",
-
-drawPriceAlerts:
-true,
-
-alertSource:
-"macd",
-
-enableMagnet:
-false,
-
-getSymbol: ()=>
-currentSymbol,
-
-getTf: ()=>
-currentTF,
-
-getCandles:()=>
-ind.getMacdDrawCandles?.() ||
-[],
-
-isActive: ()=>
-activeDrawPane ===
-"macd",
-
-barPosKey:
-"draw_bar_pos_macd",
-
-abortTabletChartGesture:()=>{
-cancelTabletPanGesture?.();
-},
-
-sharedDrawUndo,
-deferKeyboardUndo:
-true,
-clearPeerSelections: ()=>{
-drawingTools?.clearDrawingSelection?.();
-rsiDrawingTools?.clearDrawingSelection?.();
-drawingTools?.syncStyleBar?.();
-}
-
-});
-
-if(
-!macdDrawingTools
-){
-return;
-}
-
-macdSetDrawTool =
-macdDrawingTools.setTool.bind(
-macdDrawingTools
-);
-macdSetDrawTool(
-drawingTools?.getTool?.() ??
-"cursor"
-);
-
-void import(
-"./price-alert-ui.js?v=64"
-).then(
-({
-mountPriceAlertUi
-})=>{
-
-if(
-!macdDrawingTools
-){
-return;
-}
-
-disposeMacdAlertUi?.();
-disposeMacdAlertUi =
-mountPriceAlertUi(
-{
-chart:
-macdChart,
-series:
-macdSeries,
-wrapEl:
-macdWrapEl,
-getSymbol:()=>
-currentSymbol,
-getTf:()=>
-currentTF,
-getDrawingTools:()=>
-macdDrawingTools,
-alertSource:
-"macd",
-scheduleRedraw:()=>{
-return (
-macdDrawingTools?.scheduleDragRedraw?.() ||
-macdDrawingTools?.scheduleRedraw?.()
-);
-},
-onCrosshairSuppress:()=>{
-chartCrosshairLink?.setSuppressed?.(
-true
-);
-},
-onCrosshairRelease:()=>{
-chartCrosshairLink?.setSuppressed?.(
-false
-);
-}
-}
-);
-
-}
-).catch(
-err=>{
-console.warn(
-"macd price alert ui:",
-err
-);
-}
-);
-
-}
-
-function syncMacdDrawingTools(){
-
-const ind =
-chartIndicators?.getIndicator?.(
-"macd"
-);
-
-if(
-ind?.isEnabled?.() &&
-ind.getChart?.() &&
-ind.getMacdSeries?.()
-){
-mountMacdDrawingTools();
-return;
-}
-
-teardownMacdDrawingTools();
-
-}
-
-drawingTools =
-initWidgetDrawings({
-
-chart,
-series: candleSeries,
-wrapEl: document.getElementById("chart-wrap"),
-uiRoot: document.getElementById("chart-wrap"),
-toolsRoot: document.getElementById("charts-stack"),
-clearAllPeers:
-drawClearAllPeers,
-getSymbol: ()=> currentSymbol,
-getTf: ()=> currentTF,
-getCandles: ()=> candles,
-isActive: ()=>
-activeDrawPane ===
-"chart",
-getStyleDelegate: ()=>
-overlayStyleBarDelegateIfNeeded(),
-abortTabletChartGesture:()=>{
-cancelTabletPanGesture?.();
-},
-onChartCrosshairSuppress:()=>{
-chartCrosshairLink?.setSuppressed?.(
-true
-);
-},
-onChartCrosshairRelease:()=>{
-chartCrosshairLink?.setSuppressed?.(
-false
-);
-},
-onChartCrosshairAt(
-clientX,
-clientY
-){
-
-if(
-!isTabletChartViewport()
-){
-return;
-}
-
-positionTabletProbeCrosshair({
-chart,
-series: candleSeries,
-chartEl,
-chartWrapEl: document.getElementById(
-"chart-wrap"
-),
-chartsStackEl: document.getElementById(
-"charts-stack"
-),
-linkedVertEl: document.getElementById(
-"linked-crosshair-vert"
-),
-horizLineEl: document.getElementById(
-"tablet-probe-crosshair-h"
-),
-timeLabelEl: document.getElementById(
-"crosshair-time-label"
-),
-priceLabelEl: document.getElementById(
-"crosshair-price-label"
-),
-clientX,
-clientY,
-onTime: updateRsiHudFromCrosshairTime
-});
-
-},
-onChartCrosshairClear(){
-
-if(
-!isTabletChartViewport()
-){
-return;
-}
-
-hideTabletProbeCrosshair({
-linkedVertEl: document.getElementById(
-"linked-crosshair-vert"
-),
-horizLineEl: document.getElementById(
-"tablet-probe-crosshair-h"
-),
-timeLabelEl: document.getElementById(
-"crosshair-time-label"
-),
-priceLabelEl: document.getElementById(
-"crosshair-price-label"
-),
-chartWrapEl: document.getElementById(
-"chart-wrap"
-),
-onClear(){
-
-const last =
-rsiPointsCache[
-rsiPointsCache.length -
-1
-];
-
-setRsiHudValue(
-last?.value ??
-null
-);
-
-}
-});
-
-try{
-chart.clearCrosshairPosition();
-}catch{
-/* ignore */
-}
-
-}
-
-,
-sharedDrawUndo,
-deferKeyboardUndo:
-true,
-clearPeerSelections: ()=>{
-rsiDrawingTools?.clearDrawingSelection?.();
-macdDrawingTools?.clearDrawingSelection?.();
-drawingTools?.syncStyleBar?.();
-}
-
-});
-
-
-rsiDrawingTools =
-initWidgetDrawings({
-
-chart:
-rsiChart,
-
-timeChart:
-chart,
-
-series:
-rsiSeries,
-
-wrapEl:
-rsiWrapEl,
-
-uiRoot:
-null,
-
-toolsRoot:
-document.getElementById(
-"charts-stack"
-),
-
-bindToolbar:
-false,
-
-styleBar:
-false,
-
-mountStyleBar:
-false,
-
-sharedStyleBarSync: ()=>{
-drawingTools?.syncStyleBar?.();
-},
-
-storageKeySuffix:
-"_rsi",
-
-drawPriceAlerts:
-true,
-
-alertSource:
-"rsi",
-
-enableMagnet:
-false,
-
-getSymbol: ()=>
-currentSymbol,
-
-getTf: ()=>
-currentTF,
-
-getCandles:
-getRsiCandlesForDraw,
-
-isActive: ()=>
-activeDrawPane ===
-"rsi" &&
-rsiPaneActive,
-
-barPosKey:
-"draw_bar_pos_rsi",
-
-abortTabletChartGesture:()=>{
-cancelTabletPanGesture?.();
-},
-
-sharedDrawUndo,
-deferKeyboardUndo:
-true,
-clearPeerSelections: ()=>{
-drawingTools?.clearDrawingSelection?.();
-macdDrawingTools?.clearDrawingSelection?.();
-drawingTools?.syncStyleBar?.();
-}
-
-});
-
-if(
-drawingTools &&
-rsiDrawingTools
-){
-
-mountTerminalSharedDrawUndoKeyboard();
-
-const mainSetTool =
-drawingTools.setTool.bind(
-drawingTools
-);
-const rsiSetTool =
-rsiDrawingTools.setTool.bind(
-rsiDrawingTools
-);
-
-mainSetDrawTool =
-mainSetTool;
-rsiSetDrawTool =
-rsiSetTool;
-
-drawingTools.setTool =
-next=>{
-mainSetTool(
-next
-);
-rsiSetTool(
-next
-);
-macdSetDrawTool?.(
-next
-);
-};
-
-drawClearAllPeers.call =
-()=>{
-rsiDrawingTools?.clearAllDrawings?.();
-macdDrawingTools?.clearAllDrawings?.();
-};
-
-mountSharedDrawSelectionDismiss();
-
-}
-
-if(
-!drawingTools
-){
-console.warn(
-"Drawings unavailable on coins page"
-);
-}
-
-chartIndicators =
-await initChartIndicators(
-{
-root:
-document.getElementById(
-"chart-indicators-wrap"
-),
-getHost:()=>({
-chart,
-series:
-candleSeries,
-wrapEl:
-document.getElementById(
-"chart-wrap"
-),
-getDrawingTools:()=>
-drawingTools,
-getSymbol:()=>
-currentSymbol,
-getCandles:()=>
-candles,
-getDisplayCandles:()=>
-buildChartDisplayCandles(),
-getTf:()=>
-currentTF,
-loadIndicatorHistory:(
-symbol,
-tf,
-requests
-)=>
-loadMarketHistory(
-symbol,
-tf,
-requests ||
-terminalHistoryInitialRequests(),
-{
-parallel:
-true,
-batchGapMs:
-0
-}
-),
-onIndicatorDataReady(
-id
-){
-
-if(
-id ===
-"macd"
-){
-macdDrawingTools?.scheduleRedraw?.();
-publishMacdAlertValue();
-}
-
-},
-shouldWatchMacdAlerts:()=>
-symbolHasMacdAlerts(),
-getVisibleBarsCap:()=>
-TERMINAL_VISIBLE_BARS,
-getChartWrapWidth:()=>
-document.getElementById(
-"chart-wrap"
-)?.clientWidth ||
-0,
-getPaneHeight:()=>{
-
-const wrap =
-document.getElementById(
-"volume-wrap"
-);
-
-if(
-!wrap ||
-wrap.classList.contains(
-"indicator-pane-hidden"
-)
-){
-return 0;
-}
-
-return wrap.getBoundingClientRect().height ||
-0;
-
-},
-rsiChart,
-setRsiPaneActive,
-isRsiPaneVisible:()=>
-rsiPaneActive,
-layoutRsiBand,
-onRsiSettingsChange,
-settleChartViewport:
-settleCoinsChartViewport,
-onIndicatorToggle(
-id,
-on
-){
-
-if(
-id ===
-"volume" ||
-id ===
-"ao" ||
-id ===
-"macd" ||
-id ===
-"rsi"
-){
-scheduleResizeCharts();
-
-if(
-candles.length
-){
-settleCoinsChartViewport();
-}
-
-chartIndicators?.notifyLayoutChange?.();
-
-}
-
-if(
-id ===
-"macd"
-){
-syncMacdDrawingTools();
-}
-
-}
-})
-,
-extraIndicators: [
-createPattern12EarlyT3Indicator
-]
-}
-);
-
-syncMacdDrawingTools();
-
-mountChartSymbolFullName({
-getSymbol(){
-return currentSymbol;
-},
-getExchange(){
-return getActiveExchangeId();
-}
-});
-
-document.getElementById(
-"rsi-hud"
-)?.addEventListener(
-"dblclick",
-event=>{
-event.preventDefault();
-event.stopPropagation();
-chartIndicators?.openSettings?.(
-"rsi"
-);
-}
-);
-
-document.getElementById(
-"macd-hud"
-)?.addEventListener(
-"dblclick",
-event=>{
-event.preventDefault();
-event.stopPropagation();
-chartIndicators?.openSettings?.(
-"macd"
-);
-}
-);
-
-if(
-isTradePage &&
-chart &&
-candleSeries
-){
-window.__tradeChartHost =
-{
-chart,
-series:
-candleSeries,
-wrapEl:
-document.getElementById(
-"chart-wrap"
-),
-chartEl:
-document.getElementById(
-"chart"
-),
-getSymbol(){
-return String(
-currentSymbol ||
-""
-).replace(
-/\.P$/i,
-""
-).trim().toUpperCase();
-},
-getDrawingTools:()=>
-drawingTools
-};
-
-window.dispatchEvent(
-new CustomEvent(
-"trade-chart-host-ready"
-)
-);
-
-}
-
-
-
-if(
-drawingTools ||
-isTradePage
-){
-
-priceScaleTouchHooks.onScaleFrame =
-range=>{
-priceHudCtrl.refresh?.();
-drawingTools?.applyPriceScaleFrame?.(
-range
-);
-};
-
-priceScaleTouchHooks.onDragStart =
-range=>{
-drawingTools?.beginPriceScaleDragRedraw?.(
-range
-);
-};
-
-priceScaleTouchHooks.onDragEnd =
-()=>{
-drawingTools?.endPriceScaleDragRedraw?.();
-window.__tradeChartOverlay?.onPriceScaleDragEnd?.();
-};
-
-priceScaleTouchHooks.onReset =
-()=>{
-drawingTools?.endPriceScaleDragRedraw?.();
-window.__tradeChartOverlay?.onPriceScaleDragEnd?.();
-drawingTools?.scheduleRedraw?.();
-};
-
-}
-
-if(
-rsiDrawingTools
-){
-
-rsiPriceScaleTouchHooks.onScaleFrame =
-range=>{
-rsiDrawingTools?.applyPriceScaleFrame?.(
-range
-);
-};
-
-rsiPriceScaleTouchHooks.onDragStart =
-range=>{
-rsiDrawingTools?.beginPriceScaleDragRedraw?.(
-range
-);
-};
-
-rsiPriceScaleTouchHooks.onDragEnd =
-()=>{
-rsiDrawingTools?.endPriceScaleDragRedraw?.();
-};
-
-rsiPriceScaleTouchHooks.onReset =
-()=>{
-rsiDrawingTools?.endPriceScaleDragRedraw?.();
-rsiDrawingTools?.scheduleRedraw?.();
-};
-
-}
-
-if(
-drawingTools ||
-rsiDrawingTools
-){
-
-wireCoinsLinkedDrawPanRedraw();
-
-}
-
-if(
-drawingTools
-){
-
-const mountAlertUi =
-async()=>{
-
-let tradePlusHandler =
-null;
-
-if(
-isTradePage
-){
-try{
-const {
-createTradePlusMenuHandler
-} =
-await import(
-"./trade-order-plus-ui.js?v=23"
-);
-
-tradePlusHandler =
-createTradePlusMenuHandler(
-{
-getSymbol:()=>
-currentSymbol,
-getTf:()=>
-currentTF,
-scheduleRedraw:()=>
-(
-drawingTools?.scheduleDragRedraw?.() ||
-drawingTools?.scheduleRedraw?.()
-)
-}
-);
-}catch(
-err
-){
-console.warn(
-"trade order plus ui:",
-err
-);
-}
-}
-
-const {
-mountPriceAlertUi
-} =
-await import(
-"./price-alert-ui.js?v=64"
-);
-
-let disposeAlertUi =
-mountPriceAlertUi(
-{
-chart,
-series:
-candleSeries,
-wrapEl:
-chartWrapEl,
-getSymbol:()=>
-currentSymbol,
-getTf:()=>
-currentTF,
-getDrawingTools:()=>
-drawingTools,
-scheduleRedraw:()=>{
-return (
-drawingTools?.scheduleDragRedraw?.() ||
-drawingTools?.scheduleRedraw?.()
-);
-},
-onCrosshairSuppress:()=>{
-chartCrosshairLink?.setSuppressed?.(
-true
-);
-},
-onCrosshairRelease:()=>{
-chartCrosshairLink?.setSuppressed?.(
-false
-);
-},
-onPlusActivate:
-tradePlusHandler
-}
-);
-
-};
-
-void mountAlertUi().catch(
-err=>{
-console.warn(
-"price alert ui:",
-err
-);
-}
-);
-
-if(
-rsiDrawingTools &&
-rsiChart &&
-rsiSeries &&
-rsiWrapEl
-){
-
-const {
-mountPriceAlertUi: mountRsiPriceAlertUi
-} =
-await import(
-"./price-alert-ui.js?v=64"
-);
-
-mountRsiPriceAlertUi(
-{
-chart:
-rsiChart,
-series:
-rsiSeries,
-wrapEl:
-rsiWrapEl,
-getSymbol:()=>
-currentSymbol,
-getTf:()=>
-currentTF,
-getDrawingTools:()=>
-rsiDrawingTools,
-alertSource:
-"rsi",
-scheduleRedraw:()=>{
-return (
-rsiDrawingTools?.scheduleDragRedraw?.() ||
-rsiDrawingTools?.scheduleRedraw?.()
-);
-},
-onCrosshairSuppress:()=>{
-chartCrosshairLink?.setSuppressed?.(
-true
-);
-},
-onCrosshairRelease:()=>{
-chartCrosshairLink?.setSuppressed?.(
-false
-);
-}
-}
-);
-
-}
-
-}
-
-}catch(err){
-
-console.error("Drawings UI mount failed:", err);
-
-}finally{
-
-perfMark(
-"terminal-draw-chrome-end"
-);
-perfMeasure(
-"terminal-draw-chrome",
-"terminal-draw-chrome-start",
-"terminal-draw-chrome-end"
-);
-
-}
-
-}
 
 mountChartSnapshot({
 getSymbol:()=>
@@ -5890,7 +4166,7 @@ if(
 isTradePage
 ){
 void import(
-"./trade-volume-presets.js?v=24"
+"./trade-volume-presets.js?v=a3ec1b9a"
 ).then(
 ({
 switchTradeVolumeSymbol
@@ -5983,7 +4259,7 @@ currentDataset
 )
 ){
 
-void import("./bybit-network-ui.js?v=11").then(m=>{
+void import("./bybit-network-ui.js?v=3b530ded").then(m=>{
 m.showBybitNetworkIssue(
 new Error(
 `История свечей ${getActiveExchangeDefinition().name} пуста`
@@ -7954,7 +6230,7 @@ if(
 ){
 terminalAlgoEarlyT3ListMod =
 await import(
-"./algo-trading/terminal-early-t3-list.js?v=16"
+"./algo-trading/terminal-early-t3-list.js?v=872901a3"
 );
 }
 terminalAlgoEarlyT3ListMod.mountTerminalAlgoEarlyT3List();
@@ -7976,7 +6252,60 @@ async function init(){
 await syncTerminalAlgoEarlyT3List();
 
 const chromeP =
-mountTerminalDrawChrome();
+mountTerminalDrawChrome({
+get activeDrawPane(){ return activeDrawPane; },
+set activeDrawPane(value){ activeDrawPane = value; },
+get cancelTabletPanGesture(){ return cancelTabletPanGesture; },
+get candleSeries(){ return candleSeries; },
+get candles(){ return candles; },
+get chart(){ return chart; },
+get chartCrosshairLink(){ return chartCrosshairLink; },
+get chartEl(){ return chartEl; },
+get chartIndicators(){ return chartIndicators; },
+set chartIndicators(value){ chartIndicators = value; },
+get chartWrapEl(){ return chartWrapEl; },
+get chartsStackEl(){ return chartsStackEl; },
+get currentSymbol(){ return currentSymbol; },
+get currentTF(){ return currentTF; },
+get disposeMacdAlertUi(){ return disposeMacdAlertUi; },
+set disposeMacdAlertUi(value){ disposeMacdAlertUi = value; },
+get drawClearAllPeers(){ return drawClearAllPeers; },
+get drawingTools(){ return drawingTools; },
+set drawingTools(value){ drawingTools = value; },
+get getRsiCandlesForDraw(){ return getRsiCandlesForDraw; },
+get layoutRsiBand(){ return layoutRsiBand; },
+get macdDrawingTools(){ return macdDrawingTools; },
+set macdDrawingTools(value){ macdDrawingTools = value; },
+get macdSetDrawTool(){ return macdSetDrawTool; },
+set macdSetDrawTool(value){ macdSetDrawTool = value; },
+get macdWrapEl(){ return macdWrapEl; },
+get mainSetDrawTool(){ return mainSetDrawTool; },
+set mainSetDrawTool(value){ mainSetDrawTool = value; },
+get mountSharedDrawSelectionDismiss(){ return mountSharedDrawSelectionDismiss; },
+get mountTerminalSharedDrawUndoKeyboard(){ return mountTerminalSharedDrawUndoKeyboard; },
+get onRsiSettingsChange(){ return onRsiSettingsChange; },
+get overlayStyleBarDelegateIfNeeded(){ return overlayStyleBarDelegateIfNeeded; },
+get priceHudCtrl(){ return priceHudCtrl; },
+get priceScaleTouchHooks(){ return priceScaleTouchHooks; },
+get publishMacdAlertValue(){ return publishMacdAlertValue; },
+get rsi(){ return rsi; },
+get rsiChart(){ return rsiChart; },
+get rsiDrawingTools(){ return rsiDrawingTools; },
+set rsiDrawingTools(value){ rsiDrawingTools = value; },
+get rsiPaneActive(){ return rsiPaneActive; },
+get rsiPointsCache(){ return rsiPointsCache; },
+get rsiPriceScaleTouchHooks(){ return rsiPriceScaleTouchHooks; },
+get rsiSeries(){ return rsiSeries; },
+get rsiSetDrawTool(){ return rsiSetDrawTool; },
+set rsiSetDrawTool(value){ rsiSetDrawTool = value; },
+get rsiWrapEl(){ return rsiWrapEl; },
+get setRsiHudValue(){ return setRsiHudValue; },
+get setRsiPaneActive(){ return setRsiPaneActive; },
+get sharedDrawUndo(){ return sharedDrawUndo; },
+get symbolHasMacdAlerts(){ return symbolHasMacdAlerts; },
+get updateRsiHudFromCrosshairTime(){ return updateRsiHudFromCrosshairTime; },
+get wireCoinsLinkedDrawPanRedraw(){ return wireCoinsLinkedDrawPanRedraw; }
+})
 
 void ensureCloudReady().then(()=>{
 void drawingTools?.refreshDrawToolsAccessUi?.();
@@ -8075,7 +6404,7 @@ window.cryptoTerminalDesktop?.isDesktop ||
 window.cryptoTerminalDesktop?.webTrading
 ){
 void import(
-"./script-terminal-status.js?v=18"
+"./script-terminal-status.js?v=22d13db1"
 ).then(
 m=>
 m.mountScriptTerminalStatus?.()
@@ -8093,7 +6422,7 @@ if(
 shouldRunScriptBackgroundJobs()
 ){
 void import(
-"./script-scan-background.js?v=24"
+"./script-scan-background.js?v=1c787dc8"
 ).then(
 m=>
 m.resumeScriptScanBackgroundJob?.()

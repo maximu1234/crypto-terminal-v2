@@ -3,59 +3,59 @@ coinsState,
 marketMap,
 coinElements,
 isTerminalPage
-} from "./terminal-state.js?v=17";
+} from "./terminal-state.js?v=4747a92f";
 
 import {
 normalizeMinVolume,
 filterMarketItemsByMinVolume
-} from "../screener-volume-filter.js?v=4";
+} from "../screener-volume-filter.js?v=2018f0b9";
 
 import {
 isActiveRealtimeMarketDataset,
 isExchangeTradingEnabled,
 peekMarketQuote
-} from "../market-api.js?v=14";
+} from "../market-api.js?v=7b3e6b3c";
 
 import {
 connectKlineStream,
 subscribeTicker,
 bindLiveCandleCatchup
-} from "../market-ws.js?v=10";
+} from "../market-ws.js?v=ab0ef4a1";
 
 import {
 connectTickerStream,
 fetchTickersInto
-} from "../tickers.js?v=34";
+} from "../tickers.js?v=729ac4e5";
 
 import {
 createTickerUiBatcher
-} from "../ticker-update-batch.js?v=1";
+} from "../ticker-update-batch.js?v=cc523cbc";
 
 import {
 processAlertCandle
-} from "../alert-monitor.js?v=89";
+} from "../alert-monitor.js?v=66170843";
 
 import {
 getFavoriteGroup,
 flagSortRank,
 emptyFavorites
-} from "../favorites.js?v=6";
+} from "../favorites.js?v=d5f9b002";
 
 import {
 isTradePage
-} from "./terminal-state.js?v=17";
+} from "./terminal-state.js?v=4747a92f";
 
 import {
 applyLiveOhlcBar,
 ensureOhlcRollover,
 liveBarPeriodSec,
 paintCatchupLiveSeries
-} from "../chart/live-bar-roll.js?v=6";
+} from "../chart/live-bar-roll.js?v=6ff2b718";
 
 import {
 canonicalChartSymbol,
 shouldApplyLivePriceToChart
-} from "./chart-live-guard.js?v=1";
+} from "./chart-live-guard.js?v=91dbce1f";
 
 /** Desktop /trade only — не тянем trade-open-positions в открытый web /coins. */
 function escapeHtml(
@@ -92,7 +92,7 @@ isTradePage
 ){
 const tradePositions =
 await import(
-"../trade-open-positions.js?v=17"
+"../trade-open-positions.js?v=0fbcb138"
 );
 hasOpenPosition =
 tradePositions.hasOpenPosition;

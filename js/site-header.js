@@ -3,11 +3,11 @@
  */
 import {
 ensureHeaderSettingsShell
-} from "./header-settings-shell.js?v=4";
+} from "./header-settings-shell.js?v=4cd8426a";
 
 import {
 renderHeaderNav
-} from "./site-header-nav.js?v=10";
+} from "./site-header-nav.js?v=37f95bcf";
 
 export const APP_HEADER_NAV_ID =
 "app-header-nav";
@@ -277,7 +277,7 @@ window.cryptoTerminalDesktop?.isDesktop ||
 window.cryptoTerminalDesktop?.webTrading
 ){
 void import(
-"./script-terminal-status.js?v=18"
+"./script-terminal-status.js?v=22d13db1"
 ).then(
 m=>
 m.mountScriptTerminalStatus()

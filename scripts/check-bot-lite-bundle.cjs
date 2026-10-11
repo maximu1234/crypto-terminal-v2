@@ -152,7 +152,7 @@ if (!fs.existsSync(sceneCachePath)) {
 }
 
 const jsDir = path.join(ROOT, "bot-app/site-bundle/js");
-const importRe = /from\s+["'](\.[^"'?]+)(?:\?v=\d+)?["']/g;
+const importRe = /from\s+["'](\.[^"'?]+)(?:\?v=[0-9a-f]+)?["']/g;
 let importMatch;
 while ((importMatch = importRe.exec(js))) {
   const target = path.normalize(path.join(jsDir, importMatch[1]));
@@ -174,7 +174,7 @@ function localExportRe() {
 }
 
 function stripQuery(spec) {
-  return spec.replace(/\?v=\d+$/, "");
+  return spec.replace(/\?v=[0-9a-f]+$/i, "");
 }
 
 function resolveSpec(fromFile, spec) {
@@ -246,7 +246,7 @@ function checkBootGraphNamedExports() {
   const htmlPath = path.join(ROOT, "bot-app/site-bundle/algo-trading.html");
   if (fs.existsSync(htmlPath)) {
     const html = fs.readFileSync(htmlPath, "utf8");
-    const htmlJs = /(?:src|href)="\/js\/([^"?]+)(?:\?v=\d+)?"/g;
+    const htmlJs = /(?:src|href)="\/js\/([^"?]+)(?:\?v=[0-9a-f]+)?"/g;
     let hm;
     while ((hm = htmlJs.exec(html))) {
       bootFiles.push(path.join(jsDir, hm[1]));

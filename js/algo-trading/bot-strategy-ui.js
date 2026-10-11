@@ -13,11 +13,11 @@ normalizeLaunchStrategyId,
 botStrategyListLabel,
 botSidesDirectionLabel,
 formatBotStrategySettingsRows
-} from "./bot-strategy-prefs.js?v=33";
+} from "./bot-strategy-prefs.js?v=e463f141";
 import {
 loadEarlyT3BotPrefs,
 saveEarlyT3BotPrefs
-} from "./early-t3-bot-prefs.js?v=5";
+} from "./early-t3-bot-prefs.js?v=920e9956";
 import {
 snapshotRsiTouchFlipBook,
 rsiTouchFlipShareBudgetFits,
@@ -26,7 +26,7 @@ rsiTouchFlipEqualShareBudget,
 loadRsiTouchFlipBook,
 replaceRsiTouchFlipBook,
 RSI_TOUCH_FLIP_BOOK_CHANGE_EVENT
-} from "./rsi-touch-flip-book.js?v=5";
+} from "./rsi-touch-flip-book.js?v=c5c9afac";
 import {
 snapshotMacdFlipTouchBook,
 macdFlipTouchShareBudgetFits,
@@ -35,7 +35,7 @@ macdFlipTouchEqualShareBudget,
 loadMacdFlipTouchBook,
 replaceMacdFlipTouchBook,
 MACD_FLIP_TOUCH_BOOK_CHANGE_EVENT
-} from "./macd-flip-touch-book.js?v=5";
+} from "./macd-flip-touch-book.js?v=d4d39562";
 import {
 loadRsiTouchFlipBalancePct,
 saveRsiTouchFlipBalancePct,
@@ -45,17 +45,17 @@ saveRsiTouchFlipMarginMode,
 loadRsiTouchFlipLeverage,
 saveRsiTouchFlipLeverage,
 normalizeRsiTouchFlipLeverage
-} from "./rsi-touch-flip-prefs.js?v=10";
+} from "./rsi-touch-flip-prefs.js?v=8d462a58";
 import {
 loadMacdFlipTouchBalancePct,
 saveMacdFlipTouchBalancePct,
 normalizeMacdFlipTouchBalancePct,
 loadMacdFlipTouchMarginMode,
 saveMacdFlipTouchMarginMode
-} from "./macd-flip-touch-prefs.js?v=9";
+} from "./macd-flip-touch-prefs.js?v=e8cc13ba";
 import {
 getAlgoTradingWalletBalance
-} from "./runtime-bridge.js?v=6";
+} from "./runtime-bridge.js?v=8fabea4a";
 import {
 ALGO_ANALYSIS_BOT_NONE,
 ALGO_ANALYSIS_BOT_PATTERN_12,
@@ -67,10 +67,10 @@ getActiveAnalysisBotId,
 isActiveAnalysisBot,
 isAnyAnalysisBotActive,
 setActiveAnalysisBotId
-} from "./active-analysis-bot.js?v=4";
+} from "./active-analysis-bot.js?v=c1b8293b";
 import {
 clampMaxPt1Pt4Bars
-} from "./pattern-entry-logic.js?v=14";
+} from "./pattern-entry-logic.js?v=516b2a3a";
 import {
 syncBotStrategiesToMain,
 syncAllTickerFlagsRootToMain,
@@ -90,25 +90,25 @@ isAlgoBotDesktop,
 fetchAlgoBotCloudLock,
 clearAlgoBotCloudLock,
 ensureAlgoBotCloudLock
-} from "./bot-bridge.js?v=30";
+} from "./bot-bridge.js?v=17baeaa9";
 import {
 stageBotTickerBookFromPublished,
 hydrateBotTickerBookFromMain,
 loadStagedBotTickerBook,
 loadBotTickerBook,
 persistBotTickerBookToMain
-} from "./bot-ticker-book.js?v=7";
+} from "./bot-ticker-book.js?v=24739acf";
 import {
 isMultichartRemoteControlHost
-} from "./bot-remote-client.js?v=27";
+} from "./bot-remote-client.js?v=7275040e";
 import {
 mountRemoteSessionLogsEntry,
 mountRemoteWatchlistsPushEntry,
 mountLocalSessionLogsEntry
-} from "./bot-session-logs-viewer.js?v=51";
+} from "./bot-session-logs-viewer.js?v=351db887";
 import {
 rebalanceTpShares
-} from "./pattern-trade-stats-partial.js?v=22";
+} from "./pattern-trade-stats-partial.js?v=a92ca5c3";
 
 const STATUS_POLL_MS =
 2500;
@@ -1054,7 +1054,7 @@ applyRunBtn();
 );
 
 void import(
-"./optimize-universe-background.js?v=10"
+"./optimize-universe-background.js?v=e4577260"
 ).then(
 m=>
 m.stopAlgoOptimizeUniverseJob?.()
@@ -4924,7 +4924,7 @@ ALGO_ANALYSIS_BOT_PATTERN_12
 )
 ){
 void import(
-"./optimize-universe-background.js?v=10"
+"./optimize-universe-background.js?v=e4577260"
 ).then(
 m=>
 m.stopAlgoOptimizeUniverseJob?.()

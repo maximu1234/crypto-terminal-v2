@@ -9,11 +9,11 @@ saveAlgoTradingKeys,
 clearAlgoTradingKeys,
 getAlgoTradingWalletBalance,
 setAlgoTradingMode
-} from "./runtime-bridge.js?v=6";
+} from "./runtime-bridge.js?v=8fabea4a";
 import {
 fetchAlgoBotStatus,
 isAlgoBotDesktop
-} from "./bot-bridge.js?v=30";
+} from "./bot-bridge.js?v=17baeaa9";
 
 const SECRET_SAVED_PLACEHOLDER =
 "••••••••••••••••";

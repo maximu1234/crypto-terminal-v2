@@ -4,14 +4,14 @@
 import {
 openChromeSurface,
 closeChromeSurface
-} from "../chrome-motion.js?v=5";
+} from "../chrome-motion.js?v=bb1d8933";
 
 import {
 ELLIOTT_WAVE_TYPES,
 ELLIOTT_PATTERN_TYPES,
 ELLIOTT_TOOL_META,
 isElliottType
-} from "./elliott-spec.js?v=23";
+} from "./elliott-spec.js?v=3fb92981";
 
 const FLYOUT_CLASS =
 "elliott-flyout";

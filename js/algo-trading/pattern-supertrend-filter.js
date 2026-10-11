@@ -6,7 +6,7 @@
  */
 import {
 aggregateCandlesToTf
-} from "../indicators/htf-loader.js?v=6";
+} from "../indicators/htf-loader.js?v=4c5b8439";
 
 import {
 buildSupertrendChartLineData,
@@ -15,7 +15,7 @@ clampSupertrendAtrLength,
 clampSupertrendFactor,
 DEFAULT_SUPERTREND_ATR_LENGTH,
 DEFAULT_SUPERTREND_FACTOR
-} from "../indicators/supertrend-math.js?v=3";
+} from "../indicators/supertrend-math.js?v=7d6c81b0";
 
 export const ALGO_SUPERTREND_TF_OPTIONS =
 [

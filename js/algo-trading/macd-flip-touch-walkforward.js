@@ -5,10 +5,10 @@
  */
 import {
   macdFlipTouchChartDays
-} from "./macd-flip-touch-mtf.js?v=5";
+} from "./macd-flip-touch-mtf.js?v=f7dfda1e";
 import {
   MACD_FLIP_TOUCH_TF_OPTIONS
-} from "./macd-flip-touch-prefs.js?v=9";
+} from "./macd-flip-touch-prefs.js?v=e8cc13ba";
 
 export const MACD_FLIP_TOUCH_DEFAULT_TRAIN_PCT = 70;
 

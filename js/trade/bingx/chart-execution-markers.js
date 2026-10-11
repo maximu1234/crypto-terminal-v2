@@ -3,25 +3,25 @@
  */
 import {
 coinsState
-} from "../../terminal/terminal-state.js?v=17";
+} from "../../terminal/terminal-state.js?v=4747a92f";
 
 import {
 EXCHANGE_CHANGED_EVENT,
 getActiveExchangeId
-} from "../../market-api.js?v=14";
+} from "../../market-api.js?v=7b3e6b3c";
 
 import {
 buildMarkersForCandles,
 normalizeSymbol
-} from "../../trade-markers-sandbox/marker-math.js?v=13";
+} from "../../trade-markers-sandbox/marker-math.js?v=a5c98186";
 
 import {
 fetchTradesForSymbol
-} from "../../trade-markers-sandbox/trade-fetch.js?v=32";
+} from "../../trade-markers-sandbox/trade-fetch.js?v=5857e63c";
 
 import {
 clearDiaryTradeDeepLinkParams
-} from "../../trade-diary-terminal-deep-link.js?v=3";
+} from "../../trade-diary-terminal-deep-link.js?v=7e2fd114";
 
 let showMarkers =
 false;

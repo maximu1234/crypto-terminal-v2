@@ -2,7 +2,7 @@ import {
 fetchMoex,
 issBlockToRows,
 pingMoexPublic
-} from "./fetch.js?v=1";
+} from "./fetch.js?v=3c776f95";
 
 import {
 MOEX_BOARD_SPECS,
@@ -12,16 +12,16 @@ moexBoardListQuery,
 moexCandlesPath,
 normalizeMoexInstrument,
 buildMoexMarketLists
-} from "./listings.js?v=2";
+} from "./listings.js?v=3a6cfc21";
 
 import {
 tfToMoexInterval,
 moexIntervalMs
-} from "./intervals.js?v=1";
+} from "./intervals.js?v=b9cbc22e";
 
 import {
 toMoexSymbol
-} from "../symbol.js?v=2";
+} from "../symbol.js?v=b2916b67";
 
 const SYMBOLS_CACHE_KEY =
 "moex_symbols_v2";
@@ -1586,4 +1586,4 @@ limit
 
 export {
 tfToMoexInterval
-} from "./intervals.js?v=1";
+} from "./intervals.js?v=b9cbc22e";

@@ -11,15 +11,15 @@ import {
   startOfDayMs,
   todayDiaryDayKey,
   writeDiaryDayTrades
-} from "../../../trade-diary-storage.js?v=4";
+} from "../../../trade-diary-storage.js?v=1deb8f10";
 
 import {
   diaryDayKeyLocal
-} from "../../../trade-diary-format.js?v=6";
+} from "../../../trade-diary-format.js?v=e2a1aeff";
 
 import {
   diaryAcceptDayCache
-} from "./policy.js?v=1";
+} from "./policy.js?v=f86ab126";
 
 const EXCHANGE_ID = "bybit";
 

@@ -3,7 +3,7 @@ loadFavoritesGroups,
 saveFavoritesGroups,
 favoritesToCloudList,
 favoritesFromCloudList
-} from "./favorites.js?v=6";
+} from "./favorites.js?v=d5f9b002";
 
 export function saveWidgetState(index, symbol, tf){
 

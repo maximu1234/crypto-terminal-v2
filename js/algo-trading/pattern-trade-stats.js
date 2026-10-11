@@ -12,7 +12,7 @@ linearUsdFromFill,
 DEFAULT_SL_PCT_OF_X,
 DEFAULT_TP_RR,
 DEFAULT_RISK_USD
-} from "./pattern-entry-positions.js?v=16";
+} from "./pattern-entry-positions.js?v=492702eb";
 
 /**
  * @typedef {"win"|"loss"|"open"} TradeOutcome

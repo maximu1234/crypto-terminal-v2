@@ -4,7 +4,7 @@
  */
 import {
 normalizeFibLevelColor
-} from "./fib-spec.js?v=18";
+} from "./fib-spec.js?v=5f577f26";
 
 export const CHANNEL_DEFAULT_COLOR =
 "#ffa53e";

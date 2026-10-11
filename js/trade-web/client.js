@@ -4,13 +4,13 @@
  */
 import {
   ALERT_WORKER_URL
-} from "../supabase-env.js?v=5";
+} from "../supabase-env.js?v=ed71d82f";
 import {
   normalizeAlertWorkerBaseUrl
-} from "../alert-worker-url.js?v=2";
+} from "../alert-worker-url.js?v=ac260eea";
 import {
   createWebPnlShareCardApi
-} from "./pnl-share-card.js?v=2";
+} from "./pnl-share-card.js?v=dda22b51";
 
 const TOKEN_KEY = "mc_trade_token_v2";
 const TOKEN_KEY_LEGACY = "mc_trade_token_v1";

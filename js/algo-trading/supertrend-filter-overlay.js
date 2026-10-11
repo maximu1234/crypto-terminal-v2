@@ -3,15 +3,15 @@
  */
 import {
 buildAlgoSupertrendLineData
-} from "./pattern-supertrend-filter.js?v=5";
+} from "./pattern-supertrend-filter.js?v=7676bfd0";
 
 import {
 splitSupertrendValuedSegments
-} from "../indicators/supertrend-math.js?v=3";
+} from "../indicators/supertrend-math.js?v=7d6c81b0";
 
 import {
 paintSupertrendSegments
-} from "../indicators/supertrend-paint.js?v=1";
+} from "../indicators/supertrend-paint.js?v=fa48f634";
 
 /**
  * @param {{

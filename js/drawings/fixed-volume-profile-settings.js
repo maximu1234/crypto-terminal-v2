@@ -3,14 +3,14 @@
 import {
 mountTvColorPicker,
 parseDrawColor
-} from "../draw-color-palette.js?v=7";
+} from "../draw-color-palette.js?v=e2a8aa69";
 
 import {
 normalizeFibLineStyle,
 normalizeFibLevelWidth,
 setFibLineStyleButton,
 setFibLevelWidthButton
-} from "./fib-spec.js?v=18";
+} from "./fib-spec.js?v=5f577f26";
 
 import {
 closeAllFibLineStyleMenus,
@@ -19,12 +19,12 @@ closeAllFibLineWidthMenus,
 openFibLineWidthMenu,
 isFibLineStyleMenuOpenForAnchor,
 isFibLineWidthMenuOpenForAnchor
-} from "./fib-portals.js?v=3";
+} from "./fib-portals.js?v=2d6d15fb";
 
 import {
 createFvpToolDefaults,
 migrateFvpToolDefaults
-} from "./fixed-volume-profile.js?v=3";
+} from "./fixed-volume-profile.js?v=bb03b4a7";
 
 function swatchVar(
 color

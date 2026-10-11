@@ -1,6 +1,6 @@
 import {
 normalizeAlertWorkerBaseUrl
-} from "./alert-worker-url.js?v=2";
+} from "./alert-worker-url.js?v=ac260eea";
 
 /** Публичные REST API Bybit (зеркало — запас при блокировках DNS/региона). */
 export const BYBIT_API_BASES = [
@@ -233,7 +233,7 @@ new CustomEvent(
 
 function loadWorkerProxyBaseFromEnv(){
 
-return import("./supabase-env.js?v=5")
+return import("./supabase-env.js?v=ed71d82f")
 .then(env=>{
 return normalizeAlertWorkerBaseUrl(
 env.ALERT_WORKER_URL
@@ -709,7 +709,7 @@ function markBybitSuccess(baseIndex){
 activeApiBaseIndex =
 baseIndex;
 
-void import("./bybit-network-ui.js?v=11").then(m=>{
+void import("./bybit-network-ui.js?v=3b530ded").then(m=>{
 m.clearBybitNetworkIssue();
 });
 
@@ -728,7 +728,7 @@ err
 return;
 }
 
-void import("./bybit-network-ui.js?v=11").then(m=>{
+void import("./bybit-network-ui.js?v=3b530ded").then(m=>{
 m.showBybitNetworkIssue(err);
 });
 

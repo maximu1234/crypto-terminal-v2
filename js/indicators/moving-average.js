@@ -4,21 +4,21 @@
 import {
 calculateMaPoints,
 alignMaPointsToDisplayCandles
-} from "./ma-math.js?v=2";
+} from "./ma-math.js?v=a42e8535";
 
 import {
 runWithPreservedVisibleLogicalRange
-} from "../chart-visible-range.js?v=3";
+} from "../chart-visible-range.js?v=255ee6c8";
 
 import {
 isChartLayoutReady
-} from "../chart-layout-gate.js?v=4";
+} from "../chart-layout-gate.js?v=4a8798af";
 import {
 openIndicatorColorPicker,
 previewColorHex,
 isValidDrawColor,
 closeIndicatorColorPicker
-} from "./indicator-color-picker-ui.js?v=2";
+} from "./indicator-color-picker-ui.js?v=755ce025";
 
 import {
 formatHtfTfLegend,
@@ -26,7 +26,7 @@ htfTfSelectHtml,
 normalizeHtfTf,
 projectHtfPointsOntoChart,
 resolveIndicatorSourceCandles
-} from "./htf-project.js?v=5";
+} from "./htf-project.js?v=2d6ecf34";
 
 export const MOVING_AVERAGE_ID =
 "ma";

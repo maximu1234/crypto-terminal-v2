@@ -5,10 +5,10 @@ import {
   MACD_FLIP_TOUCH_SLOW_GRID,
   listMacdFlipTouchOptimizeCombos,
   optimizeMacdFlipTouchParams
-} from "./macd-flip-touch-optimize.js?v=11";
+} from "./macd-flip-touch-optimize.js?v=4c190d2e";
 import {
   runMacdFlipTouch
-} from "./macd-flip-touch-engine.js?v=8";
+} from "./macd-flip-touch-engine.js?v=0e901e4f";
 import {
   clampMacdFlipTouchTrainPct,
   formatMacdFlipTouchParamsBrief,
@@ -21,7 +21,7 @@ import {
   macdFlipTouchJsonReplacer,
   macdFlipTouchJsonReviver,
   MACD_FLIP_TOUCH_DEFAULT_TRAIN_PCT
-} from "./macd-flip-touch-walkforward.js?v=13";
+} from "./macd-flip-touch-walkforward.js?v=5dcbbb9f";
 
 const FIT_KEY = "algo_trading_macd_flip_touch_fit_v1";
 

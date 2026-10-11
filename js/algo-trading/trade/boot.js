@@ -3,28 +3,28 @@
  */
 import {
 refreshAlgoTradingGate
-} from "./trading-gate.js?v=2";
+} from "./trading-gate.js?v=2bd9e2fd";
 
 import {
 initAlgoPositionsCache
-} from "./positions-cache.js?v=3";
+} from "./positions-cache.js?v=ea4eb9ea";
 
 import {
 initAlgoTradeStreamBridge,
 stopAlgoTradeStreamBridge
-} from "./stream-bridge.js?v=2";
+} from "./stream-bridge.js?v=f2f33e88";
 
 import {
 initAlgoTradeBookPanel
-} from "./book-panel.js?v=34";
+} from "./book-panel.js?v=8f605d12";
 
 import {
 createTradeChartOverlay
-} from "./chart-overlay.js?v=5";
+} from "./chart-overlay.js?v=37daae1e";
 
 import {
 createTradeChartOrders
-} from "./chart-orders.js?v=4";
+} from "./chart-orders.js?v=96d06e19";
 
 /**
  * @param {{

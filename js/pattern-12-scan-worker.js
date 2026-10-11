@@ -3,11 +3,11 @@
  */
 import {
 findPattern12HitsInLookback
-} from "./pattern-12-scanner.js?v=31";
+} from "./pattern-12-scanner.js?v=297ef592";
 
 import {
 unpackCandles
-} from "./candle-columns.js?v=2";
+} from "./candle-columns.js?v=ecea9c10";
 
 self.onmessage =
 event=>{

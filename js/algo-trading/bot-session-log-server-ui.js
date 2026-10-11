@@ -4,15 +4,15 @@
  */
 import {
 isAlgoBotLiteShell
-} from "../page-routes.js?v=8";
+} from "../page-routes.js?v=4dc7f350";
 import {
 applyPersistedAuthSessionNow,
 clearCloudAuthProblem,
 importAuthSessionTransferString
-} from "../cloud-sync.js?v=87";
+} from "../cloud-sync.js?v=cab32aef";
 import {
 forceRestoreDesktopAuthSession
-} from "../auth-storage.js?v=11";
+} from "../auth-storage.js?v=67aa0041";
 
 if(
 typeof window !==

@@ -2,21 +2,21 @@ import {
 getActiveExchangeId,
 setActiveExchangeId,
 getExchangeDefinition
-} from "./market-api.js?v=14";
+} from "./market-api.js?v=7b3e6b3c";
 
 import {
 isKnownExchangeId
-} from "./exchanges/context.js?v=1";
+} from "./exchanges/context.js?v=16fdeacc";
 
 import {
 cssUrl
-} from "./asset-manifest.js?v=75";
+} from "./asset-manifest.js?v=f555b953";
 
 import {
 ALERT_DEEP_LINK_EXCHANGE_PARAM,
 buildAlertChartUrl,
 parseAlertDeepLinkExchange
-} from "./alert-deep-link-url.js?v=2";
+} from "./alert-deep-link-url.js?v=63f051ff";
 
 export {
 ALERT_DEEP_LINK_EXCHANGE_PARAM,

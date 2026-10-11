@@ -5,17 +5,17 @@ POSITION_SCALE_SL_BG,
 POSITION_SCALE_TP_BG,
 POSITION_DEFAULT_TP_PCT,
 POSITION_DEFAULT_SL_PCT
-} from "./constants.js?v=14";
+} from "./constants.js?v=c47ce407";
 
 import {
 distToRect,
 distToSegment
-} from "./math.js?v=2";
+} from "./math.js?v=2731b0ed";
 
 import {
 calcPositionVolumeUsd,
 formatRiskRewardLabel
-} from "../position-sizing.js?v=3";
+} from "../position-sizing.js?v=81c492bf";
 
 export function isPositionType(type){
 

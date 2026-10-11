@@ -7,16 +7,16 @@ import {
   GLOBAL_STYLE_KEY,
   RECT_DEFAULT_COLOR,
   migrateRectangleToolDefaults
-} from "./constants.js?v=14";
+} from "./constants.js?v=c47ce407";
 
 import {
   normalizeRectangleShape
-} from "./arrow-rect.js?v=4";
+} from "./arrow-rect.js?v=8d4294c4";
 
 import {
   migrateFvpToolDefaults,
   isFvpType
-} from "./fixed-volume-profile.js?v=3";
+} from "./fixed-volume-profile.js?v=bb03b4a7";
 
 import {
   migrateFibToolDefaults,
@@ -25,21 +25,21 @@ import {
   isFibType,
   isFibExtType,
   resolveFibTrendLineColor
-} from "./fib-spec.js?v=18";
+} from "./fib-spec.js?v=5f577f26";
 
 import {
   isPositionType
-} from "./position.js?v=11";
+} from "./position.js?v=152e419c";
 
 import {
   migrateTextToolDefaults,
   TEXT_DEFAULT_COLOR,
   TEXT_DEFAULT_SIZE
-} from "./text.js?v=3";
+} from "./text.js?v=441520b6";
 
 import {
   migrateChannelToolDefaults
-} from "./channel-spec.js?v=2";
+} from "./channel-spec.js?v=a8bcf3c9";
 
 import {
   ELLIOTT_TOOL_TYPES,
@@ -47,7 +47,7 @@ import {
 isPattern12Draw,
 migrateElliottToolDefaults,
 normalizePattern12TpFlags
-} from "./elliott-spec.js?v=23";
+} from "./elliott-spec.js?v=3fb92981";
 
 /**
  * @returns {{

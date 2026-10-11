@@ -15,25 +15,25 @@ mountChartPriceHud,
 applyTabletMainChartScroll,
 applyTabletRsiChartOptions,
 SCREENER_MAX_BARS
-} from "./chart-import.js?v=70";
+} from "./chart-import.js?v=c172cdf4";
 
 import {
 isIpadWebViewport
-} from "./ipad-web-viewport.js?v=2";
+} from "./ipad-web-viewport.js?v=68cc93ec";
 
 import {
 loadMarketHistory
-} from "./market-api.js?v=14";
+} from "./market-api.js?v=7b3e6b3c";
 
 import {
 calculateRSI,
 alignRsiWithCandleTimes
-} from "./indicators.js?v=3";
+} from "./indicators.js?v=85e28ecc";
 
 import {
 subscribeKline,
 bindLiveCandleCatchup
-} from "./market-ws.js?v=10";
+} from "./market-ws.js?v=ab0ef4a1";
 
 import {
 ensureOhlcRollover,
@@ -42,18 +42,18 @@ lastOhlcBar,
 liveBarPeriodSec,
 paintCatchupLiveSeries,
 paintLiveOhlcSeries
-} from "./chart/live-bar-roll.js?v=6";
+} from "./chart/live-bar-roll.js?v=6ff2b718";
 
 import {
 SCREENER_WIDGET_OSCILLATOR_CHANGED,
 SCREENER_WIDGET_OSCILLATOR_MACD,
 createScreenerMacdChart,
 setScreenerMacdData
-} from "./screener-widget-oscillator.js?v=6";
+} from "./screener-widget-oscillator.js?v=e28bfde2";
 
 import {
 shouldIgnoreTypingHotkey
-} from "./qwerty-key-input.js?v=4";
+} from "./qwerty-key-input.js?v=7ac067d9";
 
 let zoomPatternOverlayApi =
 null;
@@ -65,7 +65,7 @@ if(
 ){
 zoomPatternOverlayApi =
 await import(
-"./screener-pattern-overlay.js?v=10"
+"./screener-pattern-overlay.js?v=36a6e28c"
 );
 }
 
@@ -1119,7 +1119,7 @@ const {
 mountWidgetTabletChart
 } =
 await import(
-"./tablet-widget-chart.js?v=11"
+"./tablet-widget-chart.js?v=54b95dac"
 );
 
 if(

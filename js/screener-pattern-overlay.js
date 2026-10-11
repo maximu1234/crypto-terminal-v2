@@ -9,11 +9,11 @@ import {
 computePattern12Scene as computePattern12OriginalScene,
 defaultPattern12Settings as defaultPattern12OriginalSettings,
 normalizePattern12Settings as normalizePattern12OriginalSettings
-} from "./indicators/pattern-12-math.js?v=13";
+} from "./indicators/pattern-12-math.js?v=a63cb1e8";
 
 import {
 paintPattern12Scene
-} from "./indicators/pattern-12-paint.js?v=8";
+} from "./indicators/pattern-12-paint.js?v=0d9019db";
 
 const SCRIPT_SCAN_INDICATOR_EARLY_T3 =
 "pattern-12-early-t3";
@@ -45,7 +45,7 @@ if(
 ){
 earlyT3MathPromise =
 import(
-"./indicators/pattern-12-early-t3-math.js?v=1"
+"./indicators/pattern-12-early-t3-math.js?v=3afbc903"
 );
 }
 

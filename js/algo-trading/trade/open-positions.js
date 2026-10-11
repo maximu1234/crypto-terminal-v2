@@ -4,7 +4,7 @@
 import {
 syncTradePositionsCache,
 getAllCachedPositions
-} from "./positions-cache.js?v=3";
+} from "./positions-cache.js?v=ea4eb9ea";
 
 const openPositionSymbols =
 new Set();

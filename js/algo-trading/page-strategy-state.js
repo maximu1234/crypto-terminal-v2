@@ -7,7 +7,7 @@ clampSlPctOfX,
 clampTpRr,
 DEFAULT_TP_RR,
 DEFAULT_RISK_USD
-} from "./pattern-entry-positions.js?v=16";
+} from "./pattern-entry-positions.js?v=492702eb";
 
 import {
 clampPartialTpX,
@@ -18,27 +18,27 @@ normalizeTpShares,
 DEFAULT_PARTIAL_TP1_X,
 DEFAULT_PARTIAL_TP2_X,
 DEFAULT_PARTIAL_TP3_X
-} from "./pattern-trade-stats-partial.js?v=22";
+} from "./pattern-trade-stats-partial.js?v=a92ca5c3";
 
 import {
 clampEntryTimeoutBars,
 clampMaxPt1Pt4Bars
-} from "./pattern-entry-logic.js?v=14";
+} from "./pattern-entry-logic.js?v=516b2a3a";
 
 import {
 clampPullbackBeforeArmPct,
 normalizePullbackBeforeArmEnabled
-} from "./temp-pullback-before-arm.js?v=4";
+} from "./temp-pullback-before-arm.js?v=f6ddff7a";
 
 import {
 normalizeAlgoSupertrendTf,
 clampAlgoSupertrendAtr,
 clampAlgoSupertrendFactor
-} from "./pattern-supertrend-filter.js?v=5";
+} from "./pattern-supertrend-filter.js?v=7676bfd0";
 
 import {
 normalizeAlgoStatsMode
-} from "./pattern-trade-stats.js?v=15";
+} from "./pattern-trade-stats.js?v=2530eb1e";
 
 import {
 ALGO_STRATEGY_IDS,
@@ -49,7 +49,7 @@ chartStrategyIdFromPositions,
 readPrefs,
 clampScanMinWinRate,
 normalizeAlgoScanTfPref
-} from "./page-prefs.js?v=2";
+} from "./page-prefs.js?v=0fea35db";
 
 export function createAlgoStrategyMemory(){
 

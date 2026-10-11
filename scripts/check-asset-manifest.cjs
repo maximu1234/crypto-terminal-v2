@@ -33,7 +33,7 @@ MANIFEST,
 const assets =
 {};
 const re =
-/"([^"]+\.(?:js|css))"\s*:\s*(\d+)/g;
+/"([^"]+\.(?:js|css))"\s*:\s*(?:"([0-9a-f]+)"|(\d+))/g;
 let m;
 
 while(
@@ -50,12 +50,12 @@ m[
 1
 ]
 ] =
-parseInt(
 m[
 2
-],
-10
-);
+] ||
+m[
+3
+];
 }
 
 return assets;
@@ -233,7 +233,7 @@ walk(
 ROOT
 );
 const versionRe =
-/([a-zA-Z0-9_./-]+\.(?:js|css))\?v=(\d+)/g;
+/([a-zA-Z0-9_./-]+\.(?:js|css))\?v=([0-9a-f]+)/gi;
 let mismatches =
 0;
 let missingFiles =
@@ -366,16 +366,17 @@ continue;
 }
 
 const v =
-parseInt(
+String(
 m[
 2
-],
-10
-);
+]
+).toLowerCase();
 
 if(
 v !==
+String(
 found
+)
 ){
 console.error(
 `manifest mismatch: ${path.relative(ROOT, file)} → ${base}?v=${v} (manifest ${found})`

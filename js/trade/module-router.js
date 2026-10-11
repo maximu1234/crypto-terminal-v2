@@ -3,7 +3,7 @@
  */
 import {
   getActiveExchangeId
-} from "../market-api.js?v=14";
+} from "../market-api.js?v=7b3e6b3c";
 
 let activeId = null;
 let modules = null;
@@ -29,8 +29,8 @@ export async function loadTradeExchangeModules(exchangeId) {
 
   const generation = ++loadGeneration;
   const pending = (id === "bingx"
-    ? import("./bingx/bundle.js?v=48")
-    : import("./bybit/bundle.js?v=35")
+    ? import("./bingx/bundle.js?v=3f8d4093")
+    : import("./bybit/bundle.js?v=94c350b3")
   ).then((mod) => {
     if (generation !== loadGeneration) {
       return modules;

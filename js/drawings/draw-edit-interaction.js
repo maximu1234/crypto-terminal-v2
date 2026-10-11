@@ -4,71 +4,71 @@
  */
 import {
 isCoarseTouchViewport
-} from "../chart-import.js?v=70";
+} from "../chart-import.js?v=c172cdf4";
 
 import {
 uid
-} from "./math.js?v=2";
+} from "./math.js?v=2731b0ed";
 
 import {
 constrainPointerToAxis
-} from "./draw-axis-lock.js?v=1";
+} from "./draw-axis-lock.js?v=a3b136ee";
 
 import {
 DRAW_HANDLE_HIT_THRESHOLD_DESKTOP,
 DRAW_HANDLE_HIT_THRESHOLD_DESKTOP_POSITION,
 DRAW_BODY_HIT_THRESHOLD_TOUCH,
 isHorizPriceTool
-} from "./constants.js?v=14";
+} from "./constants.js?v=c47ce407";
 
 import {
 getRectangleHandleScreens,
 moveRectangleHandle
-} from "./arrow-rect.js?v=4";
+} from "./arrow-rect.js?v=8d4294c4";
 
 import {
 getFvpHandleScreens,
 moveFvpHandle,
 isFvpType
-} from "./fixed-volume-profile.js?v=3";
+} from "./fixed-volume-profile.js?v=bb03b4a7";
 
 import {
 isPositionType,
 positionEntryPrice
-} from "./position.js?v=11";
+} from "./position.js?v=152e419c";
 
 import {
 ensureFibAnchorMinSpan,
 isFibType,
 isFibExtType
-} from "./fib-spec.js?v=18";
+} from "./fib-spec.js?v=5f577f26";
 
 import {
 touchShapeRevision
-} from "../drawings-storage.js?v=10";
+} from "../drawings-storage.js?v=c2e9af64";
 
 import {
 stripAlertFromShape
-} from "./drawings-persist.js?v=29";
+} from "./drawings-persist.js?v=ccf2d710";
 
 import {
 moveBrushHandle,
 applyBrushScreenMove,
 brushChartPointsForMove,
 brushBodyDist
-} from "./brush.js?v=2";
+} from "./brush.js?v=7e0b1c34";
 
 import {
 isTextTool,
 hitTestTextBody
-} from "./text.js?v=3";
+} from "./text.js?v=441520b6";
 
 import {
 isElliottType,
 getElliottPoints,
 setElliottPoints,
 elliottHandleIndex
-} from "./elliott-spec.js?v=23";
+} from "./elliott-spec.js?v=3fb92981";
 
 /**
  * Handle hit circles are larger than the vertex. Drag already uses grab

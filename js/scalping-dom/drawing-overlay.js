@@ -8,7 +8,7 @@ drawingsStorageKey
 
 import {
 drawingsKvGet
-} from "../drawings-kv.js?v=3";
+} from "../drawings-kv.js?v=fc0e52d7";
 
 const LEGACY_TF_KEYS =
 Object.freeze([

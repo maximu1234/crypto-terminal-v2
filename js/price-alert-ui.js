@@ -12,15 +12,15 @@ formatRsiAlertLevel,
 isMacdAlert,
 isOscillatorAlert,
 isRsiAlert
-} from "./alerts.js?v=128";
+} from "./alerts.js?v=63158382";
 
 import {
 isCloudLoggedInEffective
-} from "./cloud-sync.js?v=87";
+} from "./cloud-sync.js?v=cab32aef";
 
 import {
 getTelegramChatId
-} from "./alerts-cloud-sync.js?v=128";
+} from "./alerts-cloud-sync.js?v=41e92cb7";
 
 import {
 formatPrice,
@@ -28,16 +28,16 @@ hideDomChartCrosshair,
 hideDomChartCrosshairHorz,
 hideDomChartCrosshairVert,
 positionDomChartCrosshair
-} from "./chart-import.js?v=70";
+} from "./chart-import.js?v=c172cdf4";
 
 import {
 isFineChartPointerType
-} from "./drawings/touch-placement-policy.js?v=1";
+} from "./drawings/touch-placement-policy.js?v=8d2e5069";
 
 import {
 isChartLayoutReady,
 shouldDeferAlertBadgeSync
-} from "./chart-layout-gate.js?v=4";
+} from "./chart-layout-gate.js?v=4a8798af";
 
 const PLUS_ICON_W =
 22;

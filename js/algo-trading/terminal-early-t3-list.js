@@ -4,7 +4,7 @@
  */
 import {
 coinsState
-} from "../terminal/terminal-state.js?v=17";
+} from "../terminal/terminal-state.js?v=4747a92f";
 import {
 setExtraCoinMarkets,
 setCoinsTableHooks,
@@ -12,17 +12,17 @@ generateMarketData,
 primeTickerSnapshots,
 renderList,
 highlightActiveSymbol
-} from "../terminal/terminal-table.js?v=59";
+} from "../terminal/terminal-table.js?v=5096da98";
 import {
 ALGO_FLAG_EARLY_T3,
 ALGO_MARKET_EARLY_T3,
 getAlgoTickerFlagList
-} from "./ticker-flags.js?v=10";
+} from "./ticker-flags.js?v=72da874e";
 import {
 fetchAlgoBotStatus,
 maybeApplyTickerFlagsFromBotStatus,
 subscribeAlgoBotStatusFlags
-} from "./bot-status-flags.js?v=1";
+} from "./bot-status-flags.js?v=a514c726";
 
 const FLAGS_CHANGED_EVENT =
 "algo-bot-ticker-flags-changed";

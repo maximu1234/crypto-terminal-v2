@@ -27,19 +27,19 @@ mapDisplayCandlesToSeriesData,
 normalizeChartDisplayStyle,
 ohlcPriceRangeFromBars,
 seriesBarClose
-} from "./chart-display-style.js?v=2";
+} from "./chart-display-style.js?v=e916eea3";
 
 import {
 mergeLiveBarIntoDisplay
-} from "./live-bar-roll.js?v=6";
+} from "./live-bar-roll.js?v=6ff2b718";
 
 import {
 runWithPreservedVisibleLogicalRange
-} from "../chart-visible-range.js?v=3";
+} from "../chart-visible-range.js?v=255ee6c8";
 
 import {
 isChartPriceScaleLogarithmic
-} from "./price-scale-mode.js?v=3";
+} from "./price-scale-mode.js?v=7deaefee";
 
 function withClose(
 bar

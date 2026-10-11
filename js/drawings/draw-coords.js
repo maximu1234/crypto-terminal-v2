@@ -5,16 +5,16 @@
 import {
 candleIndexAtOrBefore,
 tfPeriodSec
-} from "./chart-ruler.js?v=9";
+} from "./chart-ruler.js?v=45402471";
 
 import {
 isPositionType,
 positionEntryPrice
-} from "./position.js?v=11";
+} from "./position.js?v=152e419c";
 
 import {
 priceDecimalPlaces
-} from "../format-price.js?v=2";
+} from "../format-price.js?v=5eb5dc8b";
 
 const TWO_POINT_TYPES = Object.freeze([
 "trendline",

@@ -7,7 +7,7 @@ STROKE,
 DEFAULT_FIB_SPEC,
 DEFAULT_FIB_EXT_SPEC,
 FIB_TREND_LINE_COLOR
-} from "./constants.js?v=14";
+} from "./constants.js?v=c47ce407";
 
 import {
 normalizeFibLineStyle,
@@ -22,7 +22,7 @@ parseFibRatioField,
 setFibLineStyleButton,
 setFibLevelWidthButton,
 resolveFibTrendLineColor
-} from "./fib-spec.js?v=18";
+} from "./fib-spec.js?v=5f577f26";
 
 import {
 closeAllFibLineStyleMenus,
@@ -31,7 +31,7 @@ closeAllFibLineWidthMenus,
 openFibLineWidthMenu,
 isFibLineStyleMenuOpenForAnchor,
 isFibLineWidthMenuOpenForAnchor
-} from "./fib-portals.js?v=3";
+} from "./fib-portals.js?v=2d6d15fb";
 
 function fibToolFromRoot(
 root

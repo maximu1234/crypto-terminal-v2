@@ -4,7 +4,7 @@
  */
 import {
   pickMacdFlipTouchLaunchPrefs
-} from "./macd-flip-touch-prefs.js?v=9";
+} from "./macd-flip-touch-prefs.js?v=e8cc13ba";
 
 export const MACD_FLIP_TOUCH_BOOK_KEY =
   "algo_trading_macd_flip_touch_book_v1";

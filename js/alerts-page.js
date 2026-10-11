@@ -16,21 +16,21 @@ removeAlert,
 stripAlertFlagsNotInRegistry,
 removeAllAlerts,
 alertExchangeId
-} from "./alerts.js?v=128";
+} from "./alerts.js?v=63158382";
 
 import {
 buildAlertChartUrl
-} from "./alert-deep-link-exchange.js?v=16";
+} from "./alert-deep-link-exchange.js?v=7d460fb7";
 
 import {
 getTelegramChatId,
 initAlertsCloudSync,
 pullAlertHistoryFromCloud
-} from "./alerts-cloud-sync.js?v=128";
+} from "./alerts-cloud-sync.js?v=41e92cb7";
 
 import {
 readAlertTokenSync
-} from "./alert-auth-cache.js?v=8";
+} from "./alert-auth-cache.js?v=7d0f1599";
 
 import {
 isCloudLoggedIn,
@@ -39,28 +39,28 @@ onCloudSyncChange,
 getCloudUserEmail,
 pullDeviceStateFromCloud,
 ensureCloudLoginResolved
-} from "./cloud-sync.js?v=87";
+} from "./cloud-sync.js?v=cab32aef";
 
 import {
 ensureCloudReady
-} from "./auth-ui.js?v=82";
+} from "./auth-ui.js?v=adc291da";
 
 import {
 TELEGRAM_BOT_USERNAME,
 getTelegramBotUrl
-} from "./telegram-bot-public.js?v=1";
+} from "./telegram-bot-public.js?v=f3a1da67";
 
-import { formatPrice } from "./format-price.js?v=2";
+import { formatPrice } from "./format-price.js?v=5eb5dc8b";
 
 import {
 EXCHANGE_CHANGED_EVENT,
 getActiveExchangeDefinition,
 getActiveExchangeId
-} from "./market-api.js?v=14";
+} from "./market-api.js?v=7b3e6b3c";
 
 import {
 mountMoexUnavailableStub
-} from "./exchanges/moex-readonly-stub.js?v=1";
+} from "./exchanges/moex-readonly-stub.js?v=4606d3be";
 
 if(
 mountMoexUnavailableStub({

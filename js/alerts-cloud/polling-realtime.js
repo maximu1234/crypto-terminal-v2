@@ -1,28 +1,28 @@
 import {
 getSupabase,
 isSupabaseConfigured
-} from "../supabase-client.js?v=10";
+} from "../supabase-client.js?v=1c4904d5";
 
 import {
 isCloudLoggedIn,
 isCloudLoggedInEffective,
 onCloudSyncChange,
 ensureCloudLoginResolved
-} from "../cloud-sync.js?v=87";
+} from "../cloud-sync.js?v=cab32aef";
 
 import {
 clearAlertAuthCache,
 readAlertTokenSync
-} from "../alert-auth-cache.js?v=8";
+} from "../alert-auth-cache.js?v=7d0f1599";
 
 import {
 normalizeAlertWorkerBaseUrl
-} from "../alert-worker-url.js?v=2";
+} from "../alert-worker-url.js?v=ac260eea";
 
 import {
 isAlertsPage,
 isDrawingsUiPage
-} from "../cloud-sync-throttle.js?v=4";
+} from "../cloud-sync-throttle.js?v=3c85c6a2";
 
 import {
 IS_YANDEX,
@@ -34,12 +34,12 @@ isAlertsPullInBackoff,
 broadcastAlertsRegistrySync,
 setAlertsRealtimeChannel,
 setAlertsRealtimeUserId
-} from "./debug.js?v=17";
+} from "./debug.js?v=892b4e7d";
 
 import {
 getAuthed,
 runCloudOp
-} from "./worker-client.js?v=21";
+} from "./worker-client.js?v=14103f22";
 
 import {
 pullRegistryFromCloudNow,
@@ -47,16 +47,16 @@ pushUnsyncedAlerts,
 scheduleRegistryCloudSync,
 isRegistryCloudSyncPaused,
 syncAllLocalAlertsToCloud
-} from "./registry-sync.js?v=31";
+} from "./registry-sync.js?v=597c62bd";
 
 import {
 isAlertsCloudDisabled,
 syncAlertsCloudPauseToServer
-} from "../supabase-usage-prefs.js?v=20";
+} from "../supabase-usage-prefs.js?v=8f43fc8c";
 
 import {
 isAlgoReducedCloudClient
-} from "../page-routes.js?v=8";
+} from "../page-routes.js?v=4dc7f350";
 
 const IS_IOS_SAFARI =
 /iP(hone|ad|od)/i.test(
@@ -127,7 +127,7 @@ let worker = "";
 
 try{
 const env =
-await import("../supabase-env.js?v=5");
+await import("../supabase-env.js?v=ed71d82f");
 worker =
 normalizeAlertWorkerBaseUrl(
 env.ALERT_WORKER_URL || ""
@@ -220,7 +220,7 @@ immediate: true
 async n=>{
 
 const { stripAlertFlagsNotInRegistry } =
-await import("../alerts.js?v=128");
+await import("../alerts.js?v=63158382");
 
 stripAlertFlagsNotInRegistry({
 emitDrawingsEvents: false
@@ -258,7 +258,7 @@ oldRow
 ){
 
 const { applyRemoteAlertFired } =
-await import("../alerts.js?v=128");
+await import("../alerts.js?v=63158382");
 
 applyRemoteAlertFired(
 oldRow
@@ -300,7 +300,7 @@ row?.deleted_at &&
 row.symbol &&
 row.shape_id
 ){
-void import("../alerts.js?v=128").then(
+void import("../alerts.js?v=63158382").then(
 ({ applyRemoteAlertRemoved })=>{
 applyRemoteAlertRemoved(row);
 }
@@ -322,7 +322,7 @@ row?.symbol &&
 row?.shape_id &&
 triggered
 ){
-void import("../alerts.js?v=128").then(
+void import("../alerts.js?v=63158382").then(
 ({ applyRemoteAlertFired })=>{
 applyRemoteAlertFired(row);
 }
@@ -338,7 +338,7 @@ row.symbol &&
 row.shape_id
 ){
 
-void import("../alerts.js?v=128").then(
+void import("../alerts.js?v=63158382").then(
 ({ applyRemoteAlertUpsert })=>{
 
 if(
@@ -384,7 +384,7 @@ if(
 return;
 }
 
-void import("../alerts.js?v=128").then(
+void import("../alerts.js?v=63158382").then(
 ({ applyRemoteAlertFired })=>{
 applyRemoteAlertFired(
 row
@@ -1009,7 +1009,7 @@ if(
 !isAlertsPage()
 ){
 const { mergeRegistryFromChartDrawings } =
-await import("../alerts.js?v=128");
+await import("../alerts.js?v=63158382");
 
 mergeRegistryFromChartDrawings({
 stripFlags: stripOpts
@@ -1025,7 +1025,7 @@ if(
 isAlertsPage()
 ){
 const { pullAlertHistoryFromCloud } =
-await import("./registry-sync.js?v=31");
+await import("./registry-sync.js?v=597c62bd");
 
 await pullAlertHistoryFromCloud({
 force: !!opts.force
@@ -1033,7 +1033,7 @@ force: !!opts.force
 }
 
 const { stripAlertFlagsNotInRegistry } =
-await import("../alerts.js?v=128");
+await import("../alerts.js?v=63158382");
 
 stripAlertFlagsNotInRegistry(
 stripOpts

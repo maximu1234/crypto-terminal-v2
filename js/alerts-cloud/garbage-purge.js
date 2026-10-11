@@ -1,19 +1,19 @@
 import {
 readAlertTokenSync,
 readPersistedAuthSession
-} from "../alert-auth-cache.js?v=8";
+} from "../alert-auth-cache.js?v=7d0f1599";
 
 import {
 ensureCloudLoginResolved
-} from "../cloud-sync.js?v=87";
+} from "../cloud-sync.js?v=cab32aef";
 
 import {
 withTimeout
-} from "../async-timeout.js?v=2";
+} from "../async-timeout.js?v=14be549c";
 
 import {
 purgeAlertRowByCloudId
-} from "./worker-client.js?v=21";
+} from "./worker-client.js?v=14103f22";
 
 function alertKeepKey(
 symbol,
@@ -103,7 +103,7 @@ let env;
 
 try{
 env =
-await import("../supabase-env.js?v=5");
+await import("../supabase-env.js?v=ed71d82f");
 }catch{
 return null;
 }

@@ -5,7 +5,7 @@
 import {
 computePattern12Scene,
 defaultPattern12Settings
-} from "./pattern-12-math.js?v=21";
+} from "./pattern-12-math.js?v=d408e1df";
 
 /**
  * @param {object|null|undefined} scene

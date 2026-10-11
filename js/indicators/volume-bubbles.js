@@ -6,18 +6,18 @@
 import {
 buildVolumeBubbles,
 clampNumber
-} from "./volume-bubbles-math.js?v=1";
+} from "./volume-bubbles-math.js?v=02b5147d";
 
 import {
 isChartLayoutReady
-} from "../chart-layout-gate.js?v=4";
+} from "../chart-layout-gate.js?v=4a8798af";
 
 import {
 closeIndicatorColorPicker,
 openIndicatorColorPicker,
 previewColorHex,
 isValidDrawColor
-} from "./indicator-color-picker-ui.js?v=2";
+} from "./indicator-color-picker-ui.js?v=755ce025";
 
 export const VOLUME_BUBBLES_ID =
 "volume-bubbles";

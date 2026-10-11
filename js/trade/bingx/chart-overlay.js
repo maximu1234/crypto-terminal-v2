@@ -8,39 +8,39 @@ syncTradePositionsCache,
 upsertTradePositionInCache,
 markTradePositionRecentlyClosed,
 isTradePositionRecentlyClosed
-} from "./positions-cache.js?v=7";
+} from "./positions-cache.js?v=b026a4f3";
 
 import {
 markStopDismissed,
 clearDismissedStops
-} from "./auto-stops.js?v=9";
+} from "./auto-stops.js?v=1933731f";
 
 import {
 isExchangeTradingEnabled
-} from "../../market-api.js?v=14";
+} from "../../market-api.js?v=7b3e6b3c";
 
 import {
 getTradeConfig
-} from "./config.js?v=10";
+} from "./config.js?v=ddb85880";
 
 import {
 setPendingStopAmend,
 clearPendingStopAmend,
 stopPricesMatch
-} from "./stop-amend.js?v=1";
+} from "./stop-amend.js?v=a0a438a1";
 
 import {
 formatTradePnl,
 formatTradeUsdt
-} from "../../trade-format.js?v=1";
+} from "../../trade-format.js?v=9ffb302f";
 
 import {
 maskTradeDisplay
-} from "../../trade-pnl-privacy.js?v=1";
+} from "../../trade-pnl-privacy.js?v=abe7bf95";
 
 import {
 registerChartScaleLabelProvider
-} from "../../chart/scale-label-providers.js?v=3";
+} from "../../chart/scale-label-providers.js?v=fd4f7c2a";
 
 const BADGE_LEFT =
 12;

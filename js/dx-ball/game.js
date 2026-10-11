@@ -6,8 +6,8 @@ import {
   CHARM_THRESHOLD, LIGHTNING_TIMEOUT_MS, STUCK_HITS, GOLD_BALL_MS,
   BRICK_COLORS, POWERUPS, POWERUP_LIST, KIND_BG,
   scaledSpeed, syncPlayfieldFromHost,
-} from './constants.js?v=2';
-import { getPack } from './levels.js?v=3';
+} from './constants.js?v=9ae61186';
+import { getPack } from './levels.js?v=f7221ae6';
 
 function clamp(v, a, b) { return Math.max(a, Math.min(b, v)); }
 function rand(a, b) { return a + Math.random() * (b - a); }

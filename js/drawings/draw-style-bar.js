@@ -5,18 +5,18 @@
 import {
 mountTvColorPicker,
 parseDrawColor
-} from "../draw-color-palette.js?v=7";
+} from "../draw-color-palette.js?v=e2a8aa69";
 
 import {
 isCoarseTouchViewport
-} from "../chart-import.js?v=70";
+} from "../chart-import.js?v=c172cdf4";
 
 import {
 STROKE,
 FIB_TOOL_DEFAULTS_VERSION,
 RECT_DEFAULT_FILL_OPACITY,
 RECT_TOOL_DEFAULTS_VERSION
-} from "./constants.js?v=14";
+} from "./constants.js?v=c47ce407";
 
 import {
 migrateFibToolDefaults,
@@ -27,49 +27,49 @@ isFibType,
 isFibExtType,
 FIB_EXT_TOOL_DEFAULTS_VERSION,
 resolveFibTrendLineColor
-} from "./fib-spec.js?v=18";
+} from "./fib-spec.js?v=5f577f26";
 
 import {
 setFibPanelCommitHook,
 closeAllFibLineStyleMenus,
 closeAllFibLineWidthMenus
-} from "./fib-portals.js?v=3";
+} from "./fib-portals.js?v=2d6d15fb";
 
 import {
 openChromeSurface,
 closeChromeSurface
-} from "../chrome-motion.js?v=5";
+} from "../chrome-motion.js?v=bb1d8933";
 
 import {
 isPositionType,
 positionEntryPrice
-} from "./position.js?v=11";
+} from "./position.js?v=152e419c";
 
 import {
 isTextTool,
 TEXT_SIZE_OPTIONS,
 clampTextFontSize,
 TEXT_DEFAULT_SIZE
-} from "./text.js?v=3";
+} from "./text.js?v=441520b6";
 
 import {
 parseMoneyInput,
 calcPositionVolumeUsd
-} from "../position-sizing.js?v=3";
+} from "../position-sizing.js?v=81c492bf";
 
 import {
 applyPositionVolumeFromDrawing
-} from "../trade-volume-presets.js?v=24";
+} from "../trade-volume-presets.js?v=a3ec1b9a";
 
 import {
 stashDrawingStopsFromDrawing,
 clearDrawingStopsPending,
 hasDrawingStopsPending
-} from "../trade-auto-stops.js?v=31";
+} from "../trade-auto-stops.js?v=f2bed5c6";
 
 import {
 touchShapeRevision
-} from "../drawings-storage.js?v=10";
+} from "../drawings-storage.js?v=c2e9af64";
 
 import {
 applyStyleSnapshotToShape,
@@ -81,14 +81,14 @@ listTemplatesForType,
 mergeStyleSnapshot,
 saveNamedTemplate,
 deleteTemplateAtIndex
-} from "./draw-templates.js?v=31";
+} from "./draw-templates.js?v=de73f6f3";
 
 import {
 isFvpType,
 copyFvpStyleToShape,
 createFvpToolDefaults,
 FVP_TOOL_DEFAULTS_VERSION
-} from "./fixed-volume-profile.js?v=3";
+} from "./fixed-volume-profile.js?v=bb03b4a7";
 
 import {
 fvpSettingsHtml,
@@ -96,14 +96,14 @@ fillFvpSettingsPanel,
 readFvpSettingsPanel,
 bindFvpSettingsPanel,
 closeFvpColorMenu
-} from "./fixed-volume-profile-settings.js?v=4";
+} from "./fixed-volume-profile-settings.js?v=22d0f288";
 
 import {
 rectSettingsHtml,
 fillRectSettingsPanel as fillRectSettingsPanelDom,
 readRectSettingsPanel,
 bindRectSettingsPanel
-} from "./draw-rect-settings.js?v=3";
+} from "./draw-rect-settings.js?v=4c8ccbaf";
 
 import {
 fibSettingsHtml,
@@ -113,13 +113,13 @@ readFibSettingsPanel,
 bindFibSettingsPanel,
 setFibLevelColorButton,
 mergeFibLevelsAfterGlobalChange
-} from "./draw-fib-settings.js?v=4";
+} from "./draw-fib-settings.js?v=fba82cc1";
 
 import {
 CHANNEL_DEFAULT_COLOR,
 CHANNEL_TOOL_DEFAULTS_VERSION,
 ensureChannelLevelsVisible
-} from "./channel-spec.js?v=2";
+} from "./channel-spec.js?v=a8bcf3c9";
 
 import {
 channelSettingsHtml,
@@ -127,7 +127,7 @@ mountChannelLevelRows,
 fillChannelSettingsPanel as fillChannelSettingsPanelDom,
 readChannelSettingsPanel,
 bindChannelSettingsPanel
-} from "./draw-channel-settings.js?v=1";
+} from "./draw-channel-settings.js?v=c760d270";
 
 import {
 ELLIOTT_TOOL_DEFAULTS_VERSION,
@@ -137,7 +137,7 @@ isPattern12Draw,
 migrateElliottToolDefaults,
 normalizePattern12TpFlags,
 normalizePattern12TpLevels
-} from "./elliott-spec.js?v=23";
+} from "./elliott-spec.js?v=3fb92981";
 
 import {
 elliottSettingsHtml,
@@ -145,11 +145,11 @@ fillElliottSettingsPanel as fillElliottSettingsPanelDom,
 readElliottSettingsPanel,
 bindElliottSettingsPanel,
 syncElliottSettingsColor
-} from "./draw-elliott-settings.js?v=14";
+} from "./draw-elliott-settings.js?v=f22b6fc7";
 
 import {
 hasCoordSettings
-} from "./draw-coords.js?v=4";
+} from "./draw-coords.js?v=09587365";
 
 import {
 bindCoordSettingsPanel,
@@ -158,7 +158,7 @@ coordSettingsHtml,
 drawSettingsTabsHtml,
 fillCoordSettingsPanel,
 isCoordInputFocused
-} from "./draw-coord-settings.js?v=2";
+} from "./draw-coord-settings.js?v=d6ea92cb";
 
 export function createDrawStyleBar(
 deps

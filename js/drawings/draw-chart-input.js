@@ -5,11 +5,11 @@
 import {
 isCoarseTouchViewport,
 isTabletChartViewport
-} from "../chart-import.js?v=70";
+} from "../chart-import.js?v=c172cdf4";
 
 import {
 isFineChartPointerType
-} from "./touch-placement-policy.js?v=1";
+} from "./touch-placement-policy.js?v=8d2e5069";
 
 export function createDrawChartInput(
 deps

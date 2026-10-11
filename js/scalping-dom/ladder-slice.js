@@ -5,7 +5,7 @@ import {
 stickyHalfSpanForScale,
 makeStickyPriceRange,
 stickyRangeNeedsRecenter
-} from "./depth-store.js?v=11";
+} from "./depth-store.js?v=7092e7a6";
 
 const HARD_MAX_ROWS =
 320;

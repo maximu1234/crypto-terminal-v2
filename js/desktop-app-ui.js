@@ -3,11 +3,11 @@
  */
 import {
 isScreenerPage
-} from "./page-routes.js?v=8";
+} from "./page-routes.js?v=4dc7f350";
 
 import {
 mountReleaseMarker
-} from "./release-marker.js?v=141";
+} from "./release-marker.js?v=1d385138";
 
 export function initDesktopAppUi(){
 
@@ -31,7 +31,7 @@ link.id =
 link.rel =
 "stylesheet";
 link.href =
-"/css/desktop-app.css?v=2";
+"/css/desktop-app.css?v=11532f09";
 document.head.appendChild(
 link
 );

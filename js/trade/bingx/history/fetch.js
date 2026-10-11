@@ -7,7 +7,7 @@
 import {
   closedPnlTradesToExecutions,
   normalizeSymbol
-} from "../../../trade-markers-sandbox/marker-math.js?v=13";
+} from "../../../trade-markers-sandbox/marker-math.js?v=a5c98186";
 
 const CHART_START_BUFFER_MS = 2 * 60 * 60 * 1000;
 

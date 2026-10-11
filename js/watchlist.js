@@ -1,37 +1,37 @@
 import {
 saveWidgetStateBySymbol,
 loadWidgetStateBySymbol
-} from "./storage.js?v=14";
+} from "./storage.js?v=bc113be9";
 
 import {
 getTerminalBlueSymbols
-} from "./favorites.js?v=6";
+} from "./favorites.js?v=d5f9b002";
 
 import {
 loadMarketHistory,
 getActiveExchangeId,
 getActiveExchangeDefinition,
 EXCHANGE_CHANGED_EVENT
-} from "./market-api.js?v=14";
+} from "./market-api.js?v=7b3e6b3c";
 
 import {
 peekHistoryCache,
 putHistoryCache,
 mergeCandleRows,
 logicalIndexShift
-} from "./market-history-cache.js?v=2";
+} from "./market-history-cache.js?v=dedca4e1";
 
 import {
 clearBybitNetworkIssue
-} from "./bybit-network-ui.js?v=11";
+} from "./bybit-network-ui.js?v=3b530ded";
 
 import {
 buildAlertChartUrl
-} from "./alert-deep-link-url.js?v=2";
+} from "./alert-deep-link-url.js?v=63f051ff";
 
 import {
 isLocalDevHost
-} from "./bybit-fetch.js?v=24";
+} from "./bybit-fetch.js?v=1c54517b";
 
 import {
 applyChartPriceFormat,
@@ -41,31 +41,31 @@ createRSIChart,
 updateRsiBandLayout,
 updateRsiLevelLinesLayout,
 linkPairedChartTimeScales
-} from "./chart-import.js?v=70";
+} from "./chart-import.js?v=c172cdf4";
 
 import {
 formatPrice
-} from "./format-price.js?v=2";
+} from "./format-price.js?v=5eb5dc8b";
 
 import {
 calculateRSI,
 alignRsiWithCandleTimes
-} from "./indicators.js?v=3";
+} from "./indicators.js?v=85e28ecc";
 
 import {
 createDashboardChartWidget,
 mountDashboardChartInteractions
-} from "./chart-widget-host.js?v=78";
+} from "./chart-widget-host.js?v=48bfde55";
 
 import {
 mountWidgetTabletChart
-} from "./tablet-widget-chart.js?v=11";
+} from "./tablet-widget-chart.js?v=54b95dac";
 
 import {
 subscribeKline,
 subscribeTicker,
 bindLiveCandleCatchup
-} from "./market-ws.js?v=10";
+} from "./market-ws.js?v=ab0ef4a1";
 
 import {
 applyLiveLastPriceToCandles,
@@ -76,7 +76,7 @@ lastOhlcBar,
 liveBarPeriodSec,
 paintCatchupLiveSeries,
 paintLiveOhlcSeries
-} from "./chart/live-bar-roll.js?v=6";
+} from "./chart/live-bar-roll.js?v=6ff2b718";
 
 import {
 getWidgetToolbarHtml,
@@ -85,30 +85,30 @@ initWidgetDrawToolsDropdown,
 wireWidgetDrawToolMenu,
 closeAllWidgetDrawToolsMenus,
 resetWidgetDrawToolsMenus
-} from "./watchlist-draw-ui.js?v=34";
+} from "./watchlist-draw-ui.js?v=7adb537b";
 
 import {
 ensureDrawToolsVisible
-} from "./draw-tools-visible.js?v=2";
+} from "./draw-tools-visible.js?v=fc8f1d0d";
 
 import {
 preloadTradingSymbols
-} from "./symbol-autocomplete.js?v=8";
+} from "./symbol-autocomplete.js?v=8f25788b";
 
 import {
 loadLightweightCharts
-} from "./charts-lib-boot.js?v=3";
+} from "./charts-lib-boot.js?v=04885614";
 
 import {
 initWatchlistPageUi
-} from "./watchlist-page.js?v=4";
+} from "./watchlist-page.js?v=f273626f";
 
 import {
 getWidgetFlagHtml,
 wireWidgetFlagUi,
 updateWidgetFlagUi,
 bindWidgetFlagGlobalListeners
-} from "./widget-favorite-flag.js?v=21";
+} from "./widget-favorite-flag.js?v=27b96aea";
 
 function escapeHtml(
 value
@@ -181,7 +181,7 @@ return;
 
 const mod =
 await import(
-"./trade-widget-mount.js?v=33"
+"./trade-widget-mount.js?v=bc91696b"
 );
 
 mountTradeOnDashboardWidget =
@@ -1143,7 +1143,7 @@ widget.classList.add(
 "widget-chart-empty"
 );
 
-void import("./bybit-network-ui.js?v=11").then(
+void import("./bybit-network-ui.js?v=3b530ded").then(
 m=>{
 m.showBybitNetworkIssue(
 new Error(

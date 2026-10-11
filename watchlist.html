@@ -11,14 +11,14 @@
 
 <title>Вотчлист — Multichart</title>
 
-<link rel="stylesheet" href="/css/critical-shell.css?v=11">
-<script src="/js/site-css-ready.js?v=3"></script>
-<link rel="stylesheet" href="/css/common.css?v=68">
-<link rel="stylesheet" href="/css/chrome-motion.css?v=5">
-<link rel="stylesheet" href="/css/watchlist.css?v=69">
-<link rel="stylesheet" href="/css/screener.css?v=59">
-<link rel="stylesheet" href="/css/watchlist-page.css?v=3">
-<link rel="stylesheet" href="/css/draw-menus.css?v=5">
+<link rel="stylesheet" href="/css/critical-shell.css?v=306c4f27">
+<script src="/js/site-css-ready.js?v=b5c14dd2"></script>
+<link rel="stylesheet" href="/css/common.css?v=8f7db7de">
+<link rel="stylesheet" href="/css/chrome-motion.css?v=ce79f4e8">
+<link rel="stylesheet" href="/css/watchlist.css?v=5a45ad64">
+<link rel="stylesheet" href="/css/screener.css?v=64f27479">
+<link rel="stylesheet" href="/css/watchlist-page.css?v=96a49e61">
+<link rel="stylesheet" href="/css/draw-menus.css?v=ec157f82">
 
 <link rel="preload" href="/vendor/lightweight-charts.standalone.production.js" as="script">
 
@@ -90,7 +90,7 @@ try{
 const {
 dismissAppBootSplash
 } =
-await import("/js/app-boot-splash.js?v=2");
+await import("/js/app-boot-splash.js?v=6c280d61");
 dismissAppBootSplash();
 }catch{
 /* optional */
@@ -100,7 +100,7 @@ const {
 mountMoexUnavailableStub
 } =
 await import(
-"/js/exchanges/moex-readonly-stub.js?v=1"
+"/js/exchanges/moex-readonly-stub.js?v=4606d3be"
 );
 
 if(
@@ -116,7 +116,7 @@ document.querySelector(
 )
 })
 ){
-import("/js/site-boot.js?v=157").catch(err=>{
+import("/js/site-boot.js?v=d5a16176").catch(err=>{
 console.warn("site-boot:", err);
 });
 }else{
@@ -128,7 +128,7 @@ if(
 window.cryptoTerminalDesktop?.isDesktop
 ){
 tradeBoot =
-await import("/js/trade-desktop-boot.js?v=44");
+await import("/js/trade-desktop-boot.js?v=8cf870a4");
 
 if(
 tradeBoot.isWatchlistTradeMode()
@@ -142,7 +142,7 @@ mode:
 }
 }else{
 tradeBoot =
-await import("/js/trade-web/boot.js?v=24");
+await import("/js/trade-web/boot.js?v=aa420774");
 await tradeBoot.initTradeWebBeforeChart(
 {
 mode:
@@ -152,10 +152,10 @@ mode:
 }
 
 const { loadLightweightCharts } =
-await import("/js/charts-lib-boot.js?v=3");
+await import("/js/charts-lib-boot.js?v=04885614");
 
 await loadLightweightCharts();
-await import("./js/watchlist.js?v=161");
+await import("./js/watchlist.js?v=e8b617c5");
 
 if(
 window.cryptoTerminalDesktop?.isDesktop
@@ -181,8 +181,8 @@ mode:
 );
 }
 
-await import("./js/watchlist-page.js?v=4");
-import("/js/site-boot.js?v=157").catch(err=>{
+await import("./js/watchlist-page.js?v=f273626f");
+import("/js/site-boot.js?v=d5a16176").catch(err=>{
 console.warn("site-boot:", err);
 });
 

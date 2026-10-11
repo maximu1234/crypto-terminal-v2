@@ -7,11 +7,11 @@ isMenuBarTrayEnabled,
 isMenuBarTrayPlatform,
 setLaunchAgentAtLoginLocal,
 setMenuBarTrayEnabled
-} from "./desktop-menu-bar-tray-prefs.js?v=3";
+} from "./desktop-menu-bar-tray-prefs.js?v=cad92009";
 
 import {
 applyDesktopMenuBarTrayPreference
-} from "./desktop-menu-bar-tray.js?v=10";
+} from "./desktop-menu-bar-tray.js?v=ea5f485f";
 
 import {
 ALERT_NOTIFY_MODE_LABELS,
@@ -21,32 +21,32 @@ getAlertNotifyMode,
 getAlertToastDurationSec,
 setAlertNotifyMode,
 setAlertToastDurationSec
-} from "./alert-ui-prefs.js?v=1";
+} from "./alert-ui-prefs.js?v=245b4cc4";
 
 import {
 isScriptNavEnabled,
 isAlgoTradingNavEnabled,
 setScriptNavEnabled,
 setAlgoTradingNavEnabled
-} from "./desktop-feature-nav-prefs.js?v=5";
+} from "./desktop-feature-nav-prefs.js?v=0fd2425e";
 
 import {
 TERMINAL_HISTORY_DEPTH_MAX,
 TERMINAL_HISTORY_DEPTH_MIN,
 getTerminalHistoryDepth,
 setTerminalHistoryDepth
-} from "./terminal-chart-history-prefs.js?v=1";
+} from "./terminal-chart-history-prefs.js?v=948df10f";
 
 import {
 SCREENER_WIDGET_OSCILLATOR_MACD,
 SCREENER_WIDGET_OSCILLATOR_RSI,
 getScreenerWidgetOscillator,
 setScreenerWidgetOscillator
-} from "./screener-widget-oscillator.js?v=6";
+} from "./screener-widget-oscillator.js?v=e28bfde2";
 
 import {
 renderHeaderNav
-} from "./site-header-nav.js?v=10";
+} from "./site-header-nav.js?v=37f95bcf";
 
 const APP_HEADER_NAV_ID =
 "app-header-nav";

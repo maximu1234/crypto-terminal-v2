@@ -5,20 +5,20 @@
 import {
 parseDrawColor,
 formatDrawColor
-} from "../draw-color-palette.js?v=7";
+} from "../draw-color-palette.js?v=e2a8aa69";
 
 import {
 STROKE,
 RECT_DEFAULT_FILL_COLOR,
 RECT_DEFAULT_FILL_OPACITY
-} from "./constants.js?v=14";
+} from "./constants.js?v=c47ce407";
 
 import {
 normalizeFibLineStyle,
 normalizeFibLevelWidth,
 setFibLineStyleButton,
 setFibLevelWidthButton
-} from "./fib-spec.js?v=18";
+} from "./fib-spec.js?v=5f577f26";
 
 import {
 closeAllFibLineStyleMenus,
@@ -27,7 +27,7 @@ closeAllFibLineWidthMenus,
 openFibLineWidthMenu,
 isFibLineStyleMenuOpenForAnchor,
 isFibLineWidthMenuOpenForAnchor
-} from "./fib-portals.js?v=3";
+} from "./fib-portals.js?v=2d6d15fb";
 
 export function rectSettingsHtml(){
 

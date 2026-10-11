@@ -19,7 +19,7 @@ drawingsIdbAvailable,
 drawingsIdbDelete,
 drawingsIdbGetAll,
 drawingsIdbSet
-} from "./drawings-idb.js?v=2";
+} from "./drawings-idb.js?v=902d6b0b";
 
 export const DRAWINGS_IDB_MIGRATED_KEY =
 "drawings_idb_migrated_v1";

@@ -8,25 +8,25 @@ import {
 loadMarketHistory,
 loadMarketSymbols,
 buildMarketLists
-} from "./market-api.js?v=14";
+} from "./market-api.js?v=7b3e6b3c";
 
 import {
 packCandles
-} from "./candle-columns.js?v=2";
+} from "./candle-columns.js?v=ecea9c10";
 
 import {
 PATTERN_12_ID,
 computePattern12Scene as computePattern12OriginalScene,
 defaultPattern12Settings as defaultPattern12OriginalSettings,
 normalizePattern12Settings as normalizePattern12OriginalSettings
-} from "./indicators/pattern-12-math.js?v=13";
+} from "./indicators/pattern-12-math.js?v=a63cb1e8";
 
 import {
 PATTERN_12_EARLY_T3_ID,
 computePattern12Scene as computePattern12EarlyT3Scene,
 defaultPattern12Settings as defaultPattern12EarlyT3Settings,
 normalizePattern12Settings as normalizePattern12EarlyT3Settings
-} from "./indicators/pattern-12-early-t3-math.js?v=1";
+} from "./indicators/pattern-12-early-t3-math.js?v=3afbc903";
 
 /** Совпадает с DEFAULT_STORAGE_KEY в chart-indicators.js (Терминал / Монеты). */
 export const TERMINAL_INDICATORS_STORAGE_KEY =
@@ -780,7 +780,7 @@ try{
 scanWorker =
 new Worker(
 new URL(
-"./pattern-12-scan-worker.js?v=7",
+"./pattern-12-scan-worker.js?v=06322b90",
 import.meta.url
 ),
 {

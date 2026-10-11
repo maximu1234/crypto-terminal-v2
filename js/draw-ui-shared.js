@@ -1,14 +1,14 @@
 import {
 getDrawToolIconSrc
-} from "./draw-toolbar-icon-data.js?v=39";
+} from "./draw-toolbar-icon-data.js?v=f5e35567";
 
 import {
 ensureElliottToolbarEvents
-} from "./drawings/elliott-toolbar.js?v=12";
+} from "./drawings/elliott-toolbar.js?v=cd94d014";
 
 import {
 ensureFibToolbarEvents
-} from "./drawings/fib-toolbar.js?v=10";
+} from "./drawings/fib-toolbar.js?v=dd31e8c1";
 
 export function drawToolIconImg(
 name,

@@ -1,7 +1,7 @@
 import {
 destroyDiaryTradeChart,
 mountDiaryTradeChart
-} from "./chart.js?v=6";
+} from "./chart.js?v=afbe0211";
 
 import {
 executionSideLabel,
@@ -14,13 +14,13 @@ formatDiaryDateTime,
 formatDiaryUsd,
 sideLabel,
 sideToneClass
-} from "./format.js?v=1";
+} from "./format.js?v=e2a1aeff";
 
 import {
 diaryApplyDetailToTrade,
 diaryBuildDetailRequest,
 diaryInterpretDetailResult
-} from "./detail.js?v=1";
+} from "./detail.js?v=23ac6993";
 
 function tradingApi(){
 

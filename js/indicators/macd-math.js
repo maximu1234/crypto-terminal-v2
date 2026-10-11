@@ -5,7 +5,7 @@
  */
 import {
 normalizeHtfTf
-} from "./htf-project.js?v=5";
+} from "./htf-project.js?v=2d6ecf34";
 
 export const MACD_FAST_LENGTH =
 12;

@@ -1,4 +1,4 @@
-import { buildEndlessLevels } from "./level-gen.js?v=3";
+import { buildEndlessLevels } from "./level-gen.js?v=15a836b8";
 
 /**
  * Level packs for Super DX-Ball remake.

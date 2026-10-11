@@ -5,4 +5,4 @@ export {
 formatPrice,
 formatPriceWithDecimals,
 priceDecimalPlaces
-} from "./chart/chart-options.js?v=7";
+} from "./chart/chart-options.js?v=f4be0094";
