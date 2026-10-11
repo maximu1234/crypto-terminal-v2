@@ -55,7 +55,7 @@ alignRsiWithCandleTimes
 import {
 createDashboardChartWidget,
 mountDashboardChartInteractions
-} from "./chart-widget-host.js?v=187c3f9e";
+} from "./chart-widget-host.js?v=dc81d4ae";
 
 import {
 mountWidgetTabletChart
@@ -108,7 +108,7 @@ getWidgetFlagHtml,
 wireWidgetFlagUi,
 updateWidgetFlagUi,
 bindWidgetFlagGlobalListeners
-} from "./widget-favorite-flag.js?v=3c2cbf2a";
+} from "./widget-favorite-flag.js?v=75a20c46";
 
 function escapeHtml(
 value
@@ -181,7 +181,7 @@ return;
 
 const mod =
 await import(
-"./trade-widget-mount.js?v=00d3315d"
+"./trade-widget-mount.js?v=c1128c3e"
 );
 
 mountTradeOnDashboardWidget =

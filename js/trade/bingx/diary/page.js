@@ -19,7 +19,7 @@ sideToneClass
 import {
 closeTradeDetail,
 openTradeDetail
-} from "../../../trade-diary-detail.js?v=5e089655";
+} from "../../../trade-diary-detail.js?v=b568b9fd";
 
 import {
 mountTradeDiaryPeriodPicker
@@ -72,7 +72,7 @@ import {
 getLoadedTradeExchangeModules,
 loadTradeExchangeModules,
 resetTradeExchangeModules
-} from "../../module-router.js?v=6a55715d";
+} from "../../module-router.js?v=4bd831ab";
 
 const EXCHANGE_ID =
 "bingx";
