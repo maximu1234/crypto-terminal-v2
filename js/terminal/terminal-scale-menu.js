@@ -713,7 +713,7 @@ return;
 }
 
 if(
-shouldIgnoreListKeyNav(
+deps.shouldIgnoreListKeyNav(
 e
 )
 ){

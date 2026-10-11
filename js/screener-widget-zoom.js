@@ -1287,6 +1287,9 @@ h
 );
 state.fittedOnce =
 true;
+state.chartEl.classList.remove(
+"loading"
+);
 
 applyZoomInversion(
 state,
@@ -1611,9 +1614,6 @@ candles;
 if(
 candles.length
 ){
-state.series.setData(
-candles
-);
 applyChartPriceFormat(
 state.series,
 candles[
@@ -1803,6 +1803,9 @@ backdrop
 const chartEl =
 panel.querySelector(
 ".screener-widget-zoom-main-chart"
+);
+chartEl.classList.add(
+"loading"
 );
 const rsiWrapEl =
 panel.querySelector(
@@ -2233,9 +2236,6 @@ candles;
 if(
 candles.length
 ){
-series.setData(
-candles
-);
 applyChartPriceFormat(
 series,
 candles[
@@ -2252,6 +2252,10 @@ state
 );
 refreshZoomPriceHud(
 state
+);
+}else{
+chartEl.classList.remove(
+"loading"
 );
 }
 

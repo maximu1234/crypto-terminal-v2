@@ -12,8 +12,11 @@ function read(rel) {
 
 test("Algo Bot lite loads candle history for RSI overview / fit", () => {
   const page = read("js/algo-trading.js");
+  const loader = read("js/algo-trading/chart-load-symbol.js");
   assert.match(page, /loadAlgoBotLiteHistory/);
-  assert.match(page, /\[algo-trading\] lite history/);
+  assert.match(page, /loadSymbolMoved/);
+  assert.match(loader, /loadAlgoBotLiteHistory/);
+  assert.match(loader, /\[algo-trading\] lite history/);
   const helper = read("js/algo-trading/lite-history.js");
   assert.match(helper, /fetchKlineHistoryDeep/);
   assert.match(helper, /loadMarketHistory/);

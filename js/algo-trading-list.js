@@ -28,7 +28,7 @@ syncCoinListFreezeFromFlagMenus,
 getCurrentSymbols,
 getVisibleSymbolList,
 setCoinOpenPositionChecker
-} from "./algo-trading/coin-list-host.js?v=76f84037";
+} from "./algo-trading/coin-list-host.js?v=104a8038";
 
 import {
 hasOpenPosition,
@@ -37,7 +37,7 @@ initAlgoOpenPositions
 
 import {
 mountCoinsListRefreshControls
-} from "./terminal-list-refresh.js?v=e671e15d";
+} from "./terminal-list-refresh.js?v=857523a6";
 
 import {
 ALGO_MARKET_LONG_5M,

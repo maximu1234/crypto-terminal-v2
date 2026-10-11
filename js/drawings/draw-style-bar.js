@@ -59,13 +59,13 @@ calcPositionVolumeUsd
 
 import {
 applyPositionVolumeFromDrawing
-} from "../trade-volume-presets.js?v=a3ec1b9a";
+} from "../trade-volume-presets.js?v=bd1a8814";
 
 import {
 stashDrawingStopsFromDrawing,
 clearDrawingStopsPending,
 hasDrawingStopsPending
-} from "../trade-auto-stops.js?v=f2bed5c6";
+} from "../trade-auto-stops.js?v=ff28ace3";
 
 import {
 touchShapeRevision
@@ -160,6 +160,12 @@ fillCoordSettingsPanel,
 isCoordInputFocused
 } from "./draw-coord-settings.js?v=d6ea92cb";
 
+import {
+fillStyleUI as fillStyleUIMoved,
+updateStyleBar as updateStyleBarMoved,
+applyStyleFromUI as applyStyleFromUIMoved,
+persistStyleSnapshotToTarget as persistStyleSnapshotToTargetMoved
+} from "./draw-style-fill.js?v=d5843536";
 export function createDrawStyleBar(
 deps
 ){
@@ -3841,957 +3847,117 @@ document.activeElement
 
 }
 
+function styleFillHost(){
+if(!styleFillHost.current){
+styleFillHost.current = {
+get CHANNEL_TOOL_DEFAULTS_VERSION(){ return CHANNEL_TOOL_DEFAULTS_VERSION; },
+get ELLIOTT_TOOL_DEFAULTS_VERSION(){ return ELLIOTT_TOOL_DEFAULTS_VERSION; },
+get applyFibGlobalColorFromToolbar(){ return applyFibGlobalColorFromToolbar; },
+get applyFibGlobalWidthFromToolbar(){ return applyFibGlobalWidthFromToolbar; },
+get applyStyleSnapshotToShape(){ return applyStyleSnapshotToShape; },
+get baseDefaultStyle(){ return baseDefaultStyle; },
+get clampTextFontSize(){ return clampTextFontSize; },
+get closePopovers(){ return closePopovers; },
+get collectTemplateApplyTargets(){ return collectTemplateApplyTargets; },
+get colorBtn(){ return colorBtn; },
+get deleteOneBtn(){ return deleteOneBtn; },
+get elliottPanelSyncing(){ return elliottPanelSyncing; },
+set elliottPanelSyncing(value){ elliottPanelSyncing = value; },
+get ensureChannelLevelsVisible(){ return ensureChannelLevelsVisible; },
+get ensureElliottSettingsPanel(){ return ensureElliottSettingsPanel; },
+get extractStyleSnapshot(){ return extractStyleSnapshot; },
+get fibDefaultsVersionFor(){ return fibDefaultsVersionFor; },
+get fibPanelCoordType(){ return fibPanelCoordType; },
+get fillChannelSettingsPanel(){ return fillChannelSettingsPanel; },
+get fillElliottSettingsPanelDom(){ return fillElliottSettingsPanelDom; },
+get fillFibSettingsPanel(){ return fillFibSettingsPanel; },
+get fillRectSettingsPanel(){ return fillRectSettingsPanel; },
+get getChannelEditShape(){ return getChannelEditShape; },
+get getDrawings(){ return getDrawings; },
+get getFibEditShape(){ return getFibEditShape; },
+get getFibRows(){ return getFibRows; },
+get getPlacement(){ return getPlacement; },
+get getRectEditShape(){ return getRectEditShape; },
+get getSelected(){ return getSelected; },
+get getSelectedIds(){ return getSelectedIds; },
+get getStyleDelegate(){ return getStyleDelegate; },
+get getStyleTargetType(){ return getStyleTargetType; },
+get getToolDefaults(){ return getToolDefaults; },
+get isChannelSettingsOpen(){ return isChannelSettingsOpen; },
+get isCoarseTouchViewport(){ return isCoarseTouchViewport; },
+get isElliottSettingsOpen(){ return isElliottSettingsOpen; },
+get isElliottType(){ return isElliottType; },
+get isFibExtType(){ return isFibExtType; },
+get isFibSettingsOpen(){ return isFibSettingsOpen; },
+get isFibType(){ return isFibType; },
+get isFvpSettingsOpen(){ return isFvpSettingsOpen; },
+get isPattern12Draw(){ return isPattern12Draw; },
+get isPositionRiskInputFocused(){ return isPositionRiskInputFocused; },
+get isPositionType(){ return isPositionType; },
+get isRectSettingsOpen(){ return isRectSettingsOpen; },
+get isTemplateEligibleType(){ return isTemplateEligibleType; },
+get isTextTool(){ return isTextTool; },
+get isTradeVolumeUiActive(){ return isTradeVolumeUiActive; },
+get lockBtn(){ return lockBtn; },
+get migrateElliottToolDefaults(){ return migrateElliottToolDefaults; },
+get normalizePattern12TpFlags(){ return normalizePattern12TpFlags; },
+get normalizePattern12TpLevels(){ return normalizePattern12TpLevels; },
+get positionApplyBtn(){ return positionApplyBtn; },
+get positionApplyStopsBtn(){ return positionApplyStopsBtn; },
+get positionRiskInput(){ return positionRiskInput; },
+get positionRiskWrap(){ return positionRiskWrap; },
+get readChannelPanelFromDOM(){ return readChannelPanelFromDOM; },
+get readElliottSettingsPanel(){ return readElliottSettingsPanel; },
+get readFvpSettingsPanel(){ return readFvpSettingsPanel; },
+get readRectPanelFromDOM(){ return readRectPanelFromDOM; },
+get readStyleFromUI(){ return readStyleFromUI; },
+get redraw(){ return redraw; },
+get resolveFibStyleTarget(){ return resolveFibStyleTarget; },
+get resolveFibTrendLineColor(){ return resolveFibTrendLineColor; },
+get saveDrawings(){ return saveDrawings; },
+get saveGlobalStyle(){ return saveGlobalStyle; },
+get saveToolDefaults(){ return saveToolDefaults; },
+get setActiveTextSize(){ return setActiveTextSize; },
+get setActiveWidth(){ return setActiveWidth; },
+get settingsBtn(){ return settingsBtn; },
+get settingsOpenMatchesType(){ return settingsOpenMatchesType; },
+get settingsPopover(){ return settingsPopover; },
+get styleBar(){ return styleBar; },
+get styleCtx(){ return styleCtx; },
+get syncChartTouchPan(){ return syncChartTouchPan; },
+get syncCoordSettingsIfIdle(){ return syncCoordSettingsIfIdle; },
+get syncDrawChromeLayout(){ return syncDrawChromeLayout; },
+get syncElliottSettingsColor(){ return syncElliottSettingsColor; },
+get syncPositionApplyStopsArmed(){ return syncPositionApplyStopsArmed; },
+get templateBtn(){ return templateBtn; },
+get textSizeBtn(){ return textSizeBtn; },
+get touchShapeRevisionFn(){ return touchShapeRevisionFn; },
+get typeShowsSettingsBtn(){ return typeShowsSettingsBtn; },
+get updateColorStripe(){ return updateColorStripe; },
+get widthBtn(){ return widthBtn; }
+};
+}
+return styleFillHost.current;
+}
+
 function fillStyleUI(style, type){
-
-if(!styleBar){
-return;
-}
-
-const stripeColor =
-style.color;
-
-updateColorStripe(stripeColor);
-
-if(
-isElliottType(
-type
-) &&
-isElliottSettingsOpen()
-){
-syncElliottSettingsColor(
-settingsPopover,
-stripeColor
+return fillStyleUIMoved(
+styleFillHost(),
+...arguments
 );
-}
-setActiveWidth(style.lineWidth);
-
-settingsBtn?.classList.toggle(
-"hidden",
-!typeShowsSettingsBtn(
-type
-)
-);
-
-const isTextToolbar =
-isTextTool(
-type
-);
-
-styleBar?.classList.toggle(
-"draw-style-float--text",
-isTextToolbar
-);
-
-colorBtn?.classList.toggle(
-"draw-color-btn--text",
-isTextToolbar
-);
-
-if(
-colorBtn
-){
-colorBtn.title =
-isTextToolbar
-? "Цвет текста"
-: "Цвет";
-}
-
-textSizeBtn?.classList.toggle(
-"hidden",
-!isTextToolbar
-);
-
-if(
-isTextToolbar
-){
-setActiveTextSize(
-style.fontSize
-);
-}
-
-const isPosToolbar =
-isPositionType(type);
-
-const isArrowTool =
-type ===
-"arrow";
-
-styleBar?.classList.toggle(
-"draw-style-float--position",
-isPosToolbar
-);
-
-styleBar?.classList.toggle(
-"draw-style-float--fvp",
-type ===
-"fvp"
-);
-
-templateBtn?.classList.toggle(
-"hidden",
-isPosToolbar ||
-!isTemplateEligibleType(
-type
-)
-);
-
-colorBtn?.classList.toggle(
-"hidden",
-isPosToolbar ||
-type ===
-"rectangle" ||
-isFibType(
-type
-) ||
-type ===
-"fvp"
-);
-
-widthBtn?.classList.toggle(
-"hidden",
-isPosToolbar ||
-isArrowTool ||
-isTextToolbar ||
-type ===
-"fvp"
-);
-
-positionRiskWrap?.classList.toggle(
-"hidden",
-!isPosToolbar
-);
-positionApplyBtn?.classList.toggle(
-"hidden",
-!isPosToolbar ||
-!isTradeVolumeUiActive()
-);
-positionApplyStopsBtn?.classList.toggle(
-"hidden",
-!isPosToolbar ||
-!isTradeVolumeUiActive()
-);
-syncPositionApplyStopsArmed();
-
-if(
-isPositionType(type) &&
-positionRiskInput &&
-!isPositionRiskInputFocused()
-){
-
-const sel =
-getSelected();
-
-const shapeRisk =
-sel &&
-isPositionType(sel.type) &&
-Number.isFinite(
-Number(
-sel.riskUsd
-)
-) &&
-Number(
-sel.riskUsd
-) >
-0
-? Number(
-sel.riskUsd
-)
-: null;
-
-const riskVal =
-shapeRisk ??
-style.riskUsd ??
-getToolDefaults()[type]?.riskUsd;
-
-positionRiskInput.value =
-riskVal > 0
-? String(riskVal)
-: "";
-
-}
-
-if(
-isFibType(
-type
-)
-){
-
-if(
-!isFibSettingsOpen() ||
-fibPanelCoordType !==
-type
-){
-
-const fibShape =
-isFibType(
-getSelected()?.type
-)
-? getSelected()
-: getFibEditShape();
-
-fillFibSettingsPanel(
-getFibRows(
-fibShape ||
-{
-type,
-fibLevels: style.fibLevels
-}
-),
-style.fibShowTrendLine,
-style.color,
-style.lineWidth,
-(
-fibShape ||
-style
-).fibTrendLineColor,
-(
-fibShape ||
-style
-).fibShowLabels
-);
-
-}
-
-}else if(
-type ===
-"rectangle"
-){
-
-if(
-!isRectSettingsOpen()
-){
-
-const rectShape =
-getSelected()?.type ===
-"rectangle"
-? getSelected()
-: getRectEditShape();
-
-fillRectSettingsPanel(
-rectShape ||
-baseDefaultStyle(
-"rectangle"
-)
-);
-
-}
-
-}else if(
-type ===
-"channel"
-){
-
-if(
-!isChannelSettingsOpen()
-){
-
-const channelShape =
-getSelected()?.type ===
-"channel"
-? getSelected()
-: getChannelEditShape();
-
-fillChannelSettingsPanel(
-channelShape ||
-baseDefaultStyle(
-"channel"
-)
-);
-
-}
-
-}
-
-if(
-settingsPopover &&
-!settingsPopover.classList.contains(
-"hidden"
-)
-){
-
-if(
-!settingsOpenMatchesType(
-type
-)
-){
-settingsPopover.classList.add(
-"hidden"
-);
-}else{
-syncCoordSettingsIfIdle();
-}
-
-}
-
 }
 function updateStyleBar(){
-
-syncChartTouchPan();
-
-if(!styleBar){
-return;
-}
-
-const {
-getTool: toolForStyle,
-getSelectedId: selectedIdForStyle,
-getSelected: selectedForStyle,
-baseDefaultStyle: defaultStyleFor
-} =
-styleCtx();
-
-const pinnedSelection =
-styleCtx().getDesktopEdit?.()?.isDrawingSelectionPinned?.() ??
-false;
-const touchChartSelect =
-isCoarseTouchViewport();
-const delegatedStyleBar =
-!!getStyleDelegate?.();
-
-const show =
-toolForStyle() !==
-"cursor" ||
-(
-!!selectedIdForStyle() &&
-(
-pinnedSelection ||
-touchChartSelect ||
-delegatedStyleBar
-)
+return updateStyleBarMoved(
+styleFillHost(),
+...arguments
 );
-
-styleBar.classList.toggle("hidden", !show);
-
-if(show){
-syncDrawChromeLayout();
-}
-
-if(deleteOneBtn){
-deleteOneBtn.style.display =
-selectedIdForStyle() ? "inline-flex" : "none";
-}
-
-if(lockBtn){
-
-const {
-getSelectedIds: selectedIdsForLock,
-getDrawings: drawingsForLock
-} =
-styleCtx();
-const lockIdList =
-selectedIdsForLock?.() ||
-[];
-const lockTargets =
-[];
-
-if(
-lockIdList.length &&
-drawingsForLock
-){
-
-for(
-const id of lockIdList
-){
-
-const shape =
-drawingsForLock().find(
-d=>
-d.id ===
-id
-);
-
-if(
-shape
-){
-lockTargets.push(
-shape
-);
-}
-
-}
-
-}
-
-if(
-!lockTargets.length
-){
-
-const selForLock =
-selectedForStyle();
-
-if(
-selForLock
-){
-lockTargets.push(
-selForLock
-);
-}
-
-}
-
-const locked =
-lockTargets.length > 0 &&
-lockTargets.every(
-s=>
-!!s.locked
-);
-
-lockBtn.style.display =
-selectedIdForStyle()
-? "inline-flex"
-: "none";
-lockBtn.classList.toggle(
-"is-locked",
-locked
-);
-lockBtn.setAttribute(
-"aria-pressed",
-locked
-? "true"
-: "false"
-);
-lockBtn.title =
-locked
-? (
-lockTargets.length > 1
-? "Снять закрепление со всех"
-: "Снять закрепление"
-)
-: (
-lockTargets.length > 1
-? "Закрепить все объекты"
-: "Закрепить объект"
-);
-
-}
-
-if(!show){
-closePopovers();
-return;
-}
-
-const sel =
-selectedForStyle();
-const type =
-getStyleTargetType();
-
-if(sel){
-fillStyleUI(sel, sel.type);
-return;
-}
-
-if(
-toolForStyle() !==
-"cursor"
-){
-fillStyleUI(
-defaultStyleFor(
-toolForStyle()
-),
-toolForStyle()
-);
-}
-
 }
 
 function applyStyleFromUI(scope){
-
-const {
-getSelected: selectedForStyle,
-getPlacement: placementForStyle,
-saveDrawings: saveDrawingsForStyle,
-redraw: redrawForStyle,
-saveToolDefaults: saveToolDefaultsForStyle,
-saveGlobalStyle: saveGlobalStyleForStyle
-} =
-styleCtx();
-
-const style = readStyleFromUI();
-const type = getStyleTargetType();
-
-if(!type){
-return;
-}
-
-const sel =
-selectedForStyle();
-
-const fibTarget =
-isFibType(
-type
-) &&
-!placementForStyle()
-? resolveFibStyleTarget()
-: null;
-
-const primaryTarget =
-fibTarget || (
-!placementForStyle()
-? sel
-: null
+return applyStyleFromUIMoved(
+styleFillHost(),
+...arguments
 );
-
-const {
-getSelectedIds: selectedIdsForStyle,
-getDrawings: drawingsForStyle
-} =
-styleCtx();
-
-const selectedIdList =
-selectedIdsForStyle?.() ||
-[];
-const targets =
-[];
-
-if(
-!placementForStyle() &&
-selectedIdList.length >
-1 &&
-drawingsForStyle
-){
-
-for(
-const id of selectedIdList
-){
-
-const shape =
-drawingsForStyle().find(
-d=>
-d.id ===
-id
-);
-
-if(
-shape
-){
-targets.push(
-shape
-);
-}
-
-}
-
-}else if(
-primaryTarget
-){
-
-targets.push(
-primaryTarget
-);
-
-}
-
-function applyStylePayloadToShape(
-target
-){
-
-if(
-isFibType(
-target.type
-)
-){
-
-if(
-scope ===
-"width"
-){
-
-applyFibGlobalWidthFromToolbar(
-target,
-style.lineWidth
-);
-
-}else if(
-scope ===
-"color"
-){
-
-applyFibGlobalColorFromToolbar(
-target,
-style.color
-);
-
-}else{
-
-applyFibGlobalColorFromToolbar(
-target,
-style.color
-);
-
-applyFibGlobalWidthFromToolbar(
-target,
-style.lineWidth
-);
-
-}
-
-}else if(
-target.type ===
-"arrow"
-){
-
-target.color = style.color;
-
-}else if(
-target.type ===
-"rectangle"
-){
-
-target.color = style.color;
-target.lineWidth = style.lineWidth;
-
-if(
-!isRectSettingsOpen()
-){
-target.horizColor =
-style.color;
-target.vertColor =
-style.color;
-}
-
-if(
-isRectSettingsOpen()
-){
-
-const panel =
-readRectPanelFromDOM();
-
-target.lineStyle =
-panel.lineStyle;
-target.showHorizLines =
-panel.showHorizLines;
-target.showVertLines =
-panel.showVertLines;
-target.horizLineStyle =
-panel.horizLineStyle;
-target.horizColor =
-panel.horizColor;
-target.vertLineStyle =
-panel.vertLineStyle;
-target.vertColor =
-panel.vertColor;
-target.showMedian =
-panel.showMedian;
-target.showFill =
-panel.showFill;
-target.medianLineStyle =
-panel.medianLineStyle;
-target.medianLineWidth =
-panel.medianLineWidth;
-target.medianColor =
-panel.medianColor;
-target.fillColor =
-panel.fillColor;
-target.fillOpacity =
-panel.fillOpacity;
-
-}
-
-}else if(
-isTextTool(
-target.type
-)
-){
-
-target.color = style.color;
-target.fontSize =
-clampTextFontSize(
-style.fontSize
-);
-
-}else if(
-isElliottType(
-target.type
-)
-){
-
-target.color = style.color;
-target.lineWidth = style.lineWidth;
-
-}else{
-
-target.color = style.color;
-target.lineWidth = style.lineWidth;
-
-}
-
-touchShapeRevisionFn(
-target
-);
-
-}
-
-if(
-targets.length
-){
-
-for(
-const target of targets
-){
-applyStylePayloadToShape(
-target
-);
-}
-
-saveDrawingsForStyle();
-redrawForStyle();
-
-}
-
-const defaultsPayload =
-{
-color: style.color,
-lineWidth: style.lineWidth
-};
-
-if(
-isTextTool(
-type
-)
-){
-defaultsPayload.fontSize =
-clampTextFontSize(
-style.fontSize
-);
-delete defaultsPayload.lineWidth;
-}
-
-if(
-isFibType(
-type
-) &&
-style.fibLevels
-){
-
-defaultsPayload.fibDefaultsVersion =
-fibDefaultsVersionFor(
-type
-);
-
-defaultsPayload.fibLevels =
-style.fibLevels;
-
-defaultsPayload.fibShowTrendLine =
-typeof style.fibShowTrendLine ===
-"boolean"
-? style.fibShowTrendLine
-: isFibExtType(
-type
-);
-defaultsPayload.fibShowLabels =
-style.fibShowLabels !==
-false;
-defaultsPayload.fibTrendLineColor =
-resolveFibTrendLineColor(
-style.fibTrendLineColor
-);
-
-}
-
-if(
-type ===
-"rectangle"
-){
-
-if(
-isRectSettingsOpen()
-){
-
-Object.assign(
-defaultsPayload,
-readRectPanelFromDOM()
-);
-
-}else{
-
-defaultsPayload.horizColor =
-style.color;
-defaultsPayload.vertColor =
-style.color;
-
-}
-
-}
-
-if(
-type ===
-"fvp"
-){
-
-Object.assign(
-defaultsPayload,
-isFvpSettingsOpen()
-? readFvpSettingsPanel(
-settingsPopover
-)
-: extractStyleSnapshot(
-{
-type: "fvp",
-...style
-},
-"fvp"
-)
-);
-
-}
-
-if(
-type ===
-"channel"
-){
-
-Object.assign(
-defaultsPayload,
-{
-channelDefaultsVersion:
-CHANNEL_TOOL_DEFAULTS_VERSION,
-channelLevels:
-ensureChannelLevelsVisible(
-isChannelSettingsOpen()
-? readChannelPanelFromDOM().channelLevels
-: primaryTarget?.channelLevels ||
-getToolDefaults().channel?.channelLevels ||
-style.channelLevels
-)
-}
-);
-
-}
-
-if(
-isElliottType(
-type
-)
-){
-
-const prev =
-migrateElliottToolDefaults(
-getToolDefaults()[
-type
-],
-type
-);
-const panel =
-isElliottSettingsOpen()
-? readElliottSettingsPanel(
-settingsPopover,
-type
-)
-: null;
-
-Object.assign(
-defaultsPayload,
-{
-elliottDefaultsVersion:
-ELLIOTT_TOOL_DEFAULTS_VERSION,
-degree:
-primaryTarget?.degree ||
-panel?.degree ||
-prev.degree,
-degreeJunior:
-primaryTarget?.degreeJunior ||
-panel?.degreeJunior ||
-prev.degreeJunior,
-showWave:
-primaryTarget?.showWave ??
-panel?.showWave ??
-prev.showWave,
-showPatternDash:
-primaryTarget?.showPatternDash ??
-panel?.showPatternDash ??
-prev.showPatternDash,
-showPatternChannel:
-primaryTarget?.showPatternChannel ??
-panel?.showPatternChannel ??
-prev.showPatternChannel,
-patternChannelLineStyle:
-primaryTarget?.patternChannelLineStyle ||
-panel?.patternChannelLineStyle ||
-prev.patternChannelLineStyle,
-patternChannelLineWidth:
-primaryTarget?.patternChannelLineWidth ??
-panel?.patternChannelLineWidth ??
-prev.patternChannelLineWidth,
-patternChannelColor:
-primaryTarget?.patternChannelColor ||
-panel?.patternChannelColor ||
-prev.patternChannelColor,
-patternDashLineStyle:
-primaryTarget?.patternDashLineStyle ??
-panel?.patternDashLineStyle ??
-prev.patternDashLineStyle,
-patternTpLineStyle:
-primaryTarget?.patternTpLineStyle ??
-panel?.patternTpLineStyle ??
-prev.patternTpLineStyle,
-patternDashOpacity:
-primaryTarget?.patternDashOpacity ??
-panel?.patternDashOpacity ??
-prev.patternDashOpacity,
-...(
-isPattern12Draw(
-type
-)
-? {
-...normalizePattern12TpFlags(
-primaryTarget?.showTpSenior ??
-panel?.showTpSenior ??
-prev.showTpSenior,
-primaryTarget?.showTpJunior ??
-panel?.showTpJunior ??
-prev.showTpJunior
-),
-tpLevels:
-normalizePattern12TpLevels(
-primaryTarget?.tpLevels ||
-panel?.tpLevels ||
-prev.tpLevels
-)
-}
-: {}
-)
-}
-);
-
-}
-
-if(
-type ===
-"arrow"
-){
-
-delete defaultsPayload.lineWidth;
-
-}
-
-saveToolDefaultsForStyle(
-type,
-defaultsPayload
-);
-
-saveGlobalStyleForStyle({
-color: style.color,
-lineWidth: style.lineWidth
-});
-
-if(
-isElliottType(
-type
-) &&
-isElliottSettingsOpen()
-){
-syncElliottSettingsColor(
-settingsPopover,
-style.color
-);
-}
-
-if(
-!targets.length
-){
-redrawForStyle();
-}
-
 }
 
 function captureCurrentStyleSnapshot(){
@@ -4931,214 +4097,14 @@ return snapshot;
 
 }
 
-function persistStyleSnapshotToTarget(
-snapshot,
+function persistStyleSnapshotToTarget(snapshot,
 {
 updateToolDefaults = true
-} = {}
-){
-
-const type =
-getStyleTargetType();
-
-if(
-!type ||
-!snapshot
-){
-return;
-}
-
-const targets =
-getPlacement()
-? []
-: collectTemplateApplyTargets({
-type,
-selectedIds: getSelectedIds(),
-drawings: getDrawings(),
-primary: getSelected()
-});
-
-if(
-targets.length
-){
-
-for(
-const target of targets
-){
-
-applyStyleSnapshotToShape(
-target,
-snapshot
+} = {}){
+return persistStyleSnapshotToTargetMoved(
+styleFillHost(),
+...arguments
 );
-touchShapeRevisionFn(
-target
-);
-
-}
-
-saveDrawings();
-
-}
-
-if(
-updateToolDefaults &&
-isTemplateEligibleType(
-type
-)
-){
-
-const defaultsPayload =
-{
-...snapshot
-};
-
-if(
-type ===
-"arrow"
-){
-delete defaultsPayload.lineWidth;
-}
-
-if(
-isFibType(
-type
-) &&
-snapshot.fibLevels
-){
-defaultsPayload.fibDefaultsVersion =
-fibDefaultsVersionFor(
-type
-);
-}
-
-if(
-type ===
-"channel" &&
-snapshot.channelLevels
-){
-defaultsPayload.channelDefaultsVersion =
-CHANNEL_TOOL_DEFAULTS_VERSION;
-}
-
-saveToolDefaults(
-type,
-defaultsPayload
-);
-
-if(
-snapshot.color
-){
-saveGlobalStyle({
-color: snapshot.color,
-lineWidth:
-snapshot.lineWidth ??
-1
-});
-}
-
-}
-
-const lockElliott =
-isElliottType(
-type
-) &&
-isElliottSettingsOpen();
-
-if(
-lockElliott
-){
-elliottPanelSyncing =
-true;
-}
-
-try{
-
-fillStyleUI(
-snapshot,
-type
-);
-
-if(
-isFibType(
-type
-) &&
-isFibSettingsOpen()
-){
-
-fillFibSettingsPanel(
-getFibRows({
-type,
-fibLevels:
-snapshot.fibLevels
-}),
-snapshot.fibShowTrendLine,
-snapshot.color,
-snapshot.lineWidth,
-snapshot.fibTrendLineColor,
-snapshot.fibShowLabels
-);
-
-}
-
-if(
-type ===
-"rectangle" &&
-isRectSettingsOpen()
-){
-
-fillRectSettingsPanel({
-...snapshot,
-color:
-snapshot.color,
-lineWidth:
-snapshot.lineWidth
-});
-
-}
-
-if(
-type ===
-"channel" &&
-isChannelSettingsOpen()
-){
-
-fillChannelSettingsPanel({
-color:
-snapshot.color,
-channelLevels:
-snapshot.channelLevels
-});
-
-}
-
-if(
-lockElliott
-){
-
-ensureElliottSettingsPanel();
-fillElliottSettingsPanelDom(
-settingsPopover,
-{
-...snapshot,
-type
-}
-);
-
-}
-
-}finally{
-
-if(
-lockElliott
-){
-elliottPanelSyncing =
-false;
-}
-
-}
-
-redraw();
-
 }
 
 function applyDefaultStyleToTarget(){

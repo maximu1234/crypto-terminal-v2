@@ -40,7 +40,7 @@ openChromeSurface
 
 import {
 resolveUrlExchangeDeepLink
-} from "./alert-deep-link-exchange.js?v=7d460fb7";
+} from "./alert-deep-link-exchange.js?v=8032040c";
 
 import {
 defaultRsiPaneSettings,
@@ -66,18 +66,18 @@ seedWatchlistTfOnBlueFlag
 
 import {
 ensureCloudReady
-} from "./auth-ui.js?v=adc291da";
+} from "./auth-ui.js?v=07dd607e";
 
 import {
 getActiveAlerts,
 isMacdAlert,
 isRsiAlert
-} from "./alerts.js?v=63158382";
+} from "./alerts.js?v=8f0edf94";
 
 import {
 persistFavoritesToCloud,
 onFavoritesRemoteUpdate
-} from "./cloud-sync.js?v=cab32aef";
+} from "./cloud-sync.js?v=2b118db6";
 
 import {
 createCandlestickChart,
@@ -131,7 +131,7 @@ import {
 syncBackgroundAlertStreams,
 onMacdSeriesUpdate,
 onRsiSeriesUpdate
-} from "./alert-monitor.js?v=66170843";
+} from "./alert-monitor.js?v=236d1c21";
 
 import {
 createSharedDrawUndoStack
@@ -195,11 +195,11 @@ isTradePage
 
 import {
 mountCoinsScaleInvertMenu
-} from "./terminal/terminal-scale-menu.js?v=a6f7747b";
+} from "./terminal/terminal-scale-menu.js?v=d785cecd";
 
 import {
 mountTerminalDrawChrome
-} from "./terminal/terminal-draw-chrome.js?v=ad52491f";
+} from "./terminal/terminal-draw-chrome.js?v=0a5202d1";
 
 
 
@@ -210,7 +210,7 @@ stopTickerStream
 import {
 mountCoinsListRefreshControls,
 applyCoinsListRefreshInterval
-} from "./terminal-list-refresh.js?v=e671e15d";
+} from "./terminal-list-refresh.js?v=857523a6";
 
 import {
 readCoinsPrefs,
@@ -224,7 +224,7 @@ applyCoinsPrefs,
 applySortForCurrentMarket,
 readUrlParams,
 readLastViewForExchange
-} from "./terminal/terminal-prefs.js?v=826c796a";
+} from "./terminal/terminal-prefs.js?v=8ac008bc";
 
 import {
 mountDesktopOpenChartHandler
@@ -246,7 +246,7 @@ setCoinsTableHooks,
 syncCoinListFreezeFromFlagMenus,
 getExtraCoinMarkets,
 isExtraCoinMarket
-} from "./terminal/terminal-table.js?v=5096da98";
+} from "./terminal/terminal-table.js?v=ba3f86ef";
 
 import {
 createCoinsChartSwitchVeil
@@ -271,7 +271,7 @@ import {
 initTerminalMultiChart,
 syncPrimaryTfToLayout,
 isTerminalMultiChartLayout
-} from "./terminal-multi-chart.js?v=ac24c861";
+} from "./terminal-multi-chart.js?v=2812961c";
 
 import {
 mountTerminalLayoutPicker
@@ -1272,6 +1272,7 @@ get rsiChart(){ return rsiChart; },
 get coinsPriceScaleMode(){ return coinsPriceScaleMode; },
 get isCoinsChartInverted(){ return isCoinsChartInverted; },
 get isCoinsRsiInverted(){ return isCoinsRsiInverted; },
+get shouldIgnoreListKeyNav(){ return shouldIgnoreListKeyNav; },
 setCoinsChartPriceScaleMode,
 toggleCoinsChartInversion,
 toggleCoinsRsiInversion
@@ -4166,7 +4167,7 @@ if(
 isTradePage
 ){
 void import(
-"./trade-volume-presets.js?v=a3ec1b9a"
+"./trade-volume-presets.js?v=bd1a8814"
 ).then(
 ({
 switchTradeVolumeSymbol
@@ -6230,7 +6231,7 @@ if(
 ){
 terminalAlgoEarlyT3ListMod =
 await import(
-"./algo-trading/terminal-early-t3-list.js?v=872901a3"
+"./algo-trading/terminal-early-t3-list.js?v=aa8ba010"
 );
 }
 terminalAlgoEarlyT3ListMod.mountTerminalAlgoEarlyT3List();

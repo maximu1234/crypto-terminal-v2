@@ -103,7 +103,7 @@ FAVORITES_BY_EXCHANGE_KEY
 
 import {
 ensureCloudReady
-} from "./auth-ui.js?v=adc291da";
+} from "./auth-ui.js?v=07dd607e";
 
 import {
 ensureSettled,
@@ -113,7 +113,7 @@ withTimeout
 import {
 persistFavoritesToCloud,
 onFavoritesRemoteUpdate
-} from "./cloud-sync.js?v=cab32aef";
+} from "./cloud-sync.js?v=2b118db6";
 
 import {
 attachSymbolAutocomplete,
@@ -172,7 +172,7 @@ if(
 ){
 screenerZoomMountPromise =
 import(
-"./screener-widget-zoom.js?v=8c75e6ca"
+"./screener-widget-zoom.js?v=4b0ea34b"
 ).then(
 mod=>{
 refreshZoomFavoriteUi =

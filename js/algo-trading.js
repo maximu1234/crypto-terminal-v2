@@ -61,7 +61,7 @@ bindLiveCandleCatchup
 import {
 mountAlgoTradingCoinList,
 refreshAlgoMarketListFromFlags
-} from "./algo-trading-list.js?v=a7672ecc";
+} from "./algo-trading-list.js?v=7fca7eb6";
 
 import {
 mountAlgoTickerScanUi
@@ -84,7 +84,7 @@ mountAlgoRuntimeUi
 
 import {
 mountAlgoBotStrategyUi
-} from "./algo-trading/bot-strategy-ui.js?v=c7c7d86f";
+} from "./algo-trading/bot-strategy-ui.js?v=ed0304d1";
 
 import {
 ALGO_ANALYSIS_BOT_CHANGE_EVENT,
@@ -100,7 +100,7 @@ setActiveAnalysisBotId
 
 import {
 mountSessionLogServerSettings
-} from "./algo-trading/bot-session-log-server-ui.js?v=d5a79d9a";
+} from "./algo-trading/bot-session-log-server-ui.js?v=f43134f3";
 
 import {
 syncBotStrategiesToMain
@@ -108,11 +108,11 @@ syncBotStrategiesToMain
 
 import {
 mountAlgoTradeUi
-} from "./algo-trading/trade/boot.js?v=d4320125";
+} from "./algo-trading/trade/boot.js?v=956e2d1c";
 
 import {
 mountAlgoTradingDrawings
-} from "./algo-trading/drawings.js?v=104a3052";
+} from "./algo-trading/drawings.js?v=429b7297";
 
 import {
 mountAlgoTradingIndicators
@@ -306,6 +306,9 @@ key
 
 }
 
+import {
+loadSymbol as loadSymbolMoved
+} from "./algo-trading/chart-load-symbol.js?v=82c570a6";
 export async function mountAlgoTradingPage(){
 
 setActiveAnalysisBotId(
@@ -2364,510 +2367,83 @@ TERMINAL_HISTORY_LAZY_BATCH_BARS
 
 }
 
-async function loadSymbol(
-nextSymbol,
-nextTf
-){
-
-const seq =
-++loadSeq;
-const persistFromSymbol =
-symbol;
-
-if(
-seq >
-1
-){
-persistAlgoSettings(
-{
-overlaySymbol:
-persistFromSymbol
+function algoSymbolHost(){
+if(!algoSymbolHost.current){
+algoSymbolHost.current = {
+get DEFAULT_TF(){ return DEFAULT_TF; },
+get HISTORY_REQUESTS(){ return HISTORY_REQUESTS; },
+get TERMINAL_HISTORY_LAZY_BATCH_BARS(){ return TERMINAL_HISTORY_LAZY_BATCH_BARS; },
+get TERMINAL_VISIBLE_BARS(){ return TERMINAL_VISIBLE_BARS; },
+get algoChartDbg(){ return algoChartDbg; },
+get algoPattern12EnabledOnce(){ return algoPattern12EnabledOnce; },
+set algoPattern12EnabledOnce(value){ algoPattern12EnabledOnce = value; },
+get applyCandleData(){ return applyCandleData; },
+get applyLiveCandleTick(){ return applyLiveCandleTick; },
+get applyRsiData(){ return applyRsiData; },
+get bindLiveCandleCatchup(){ return bindLiveCandleCatchup; },
+get buildDisplayCandles(){ return buildDisplayCandles; },
+get candles(){ return candles; },
+set candles(value){ candles = value; },
+get chart(){ return chart; },
+get chartIndicators(){ return chartIndicators; },
+get deepenAlgoHistoryIfNeeded(){ return deepenAlgoHistoryIfNeeded; },
+get dispatchAlgoChartCandlesLoaded(){ return dispatchAlgoChartCandlesLoaded; },
+get disposed(){ return disposed; },
+get drawingTools(){ return drawingTools; },
+get ensureAlgoPattern12Enabled(){ return ensureAlgoPattern12Enabled; },
+get ensureOhlcRollover(){ return ensureOhlcRollover; },
+get fitViewport(){ return fitViewport; },
+get getActiveExchangeId(){ return getActiveExchangeId; },
+get hydrateTickerStrategyUi(){ return hydrateTickerStrategyUi; },
+get invalidateAlgoPattern12SceneCache(){ return invalidateAlgoPattern12SceneCache; },
+get isAlgoBotLiteMode(){ return isAlgoBotLiteMode; },
+get listApi(){ return listApi; },
+get liveBarPeriodSec(){ return liveBarPeriodSec; },
+get liveBarRollTimer(){ return liveBarRollTimer; },
+set liveBarRollTimer(value){ liveBarRollTimer = value; },
+get loadAlgoBotLiteHistory(){ return loadAlgoBotLiteHistory; },
+get loadMarketHistory(){ return loadMarketHistory; },
+get loadSeq(){ return loadSeq; },
+set loadSeq(value){ loadSeq = value; },
+get markAlgoHistoryStatsPending(){ return markAlgoHistoryStatsPending; },
+get markAlgoHistoryStatsReadyAndAnalyze(){ return markAlgoHistoryStatsReadyAndAnalyze; },
+get mergeLiveCandle(){ return mergeLiveCandle; },
+get normalizeSymbol(){ return normalizeSymbol; },
+get paintCatchupLiveSeries(){ return paintCatchupLiveSeries; },
+get peekHistoryCache(){ return peekHistoryCache; },
+get persistAlgoSettings(){ return persistAlgoSettings; },
+get putHistoryCache(){ return putHistoryCache; },
+get refreshAlgoHistoryTail(){ return refreshAlgoHistoryTail; },
+get refreshEntryFilterLines(){ return refreshEntryFilterLines; },
+get rsiPaneActive(){ return rsiPaneActive; },
+get rsiTouchFlipHost(){ return rsiTouchFlipHost; },
+get runWithPreservedVisibleLogicalRange(){ return runWithPreservedVisibleLogicalRange; },
+get series(){ return series; },
+get setActiveTfButton(){ return setActiveTfButton; },
+get setChartLayoutReady(){ return setChartLayoutReady; },
+get setSymbolLabel(){ return setSymbolLabel; },
+get stopKline(){ return stopKline; },
+get subscribeKline(){ return subscribeKline; },
+get symbol(){ return symbol; },
+set symbol(value){ symbol = value; },
+get terminalHistoryInitialRequests(){ return terminalHistoryInitialRequests; },
+get tf(){ return tf; },
+set tf(value){ tf = value; },
+get unbindLiveCatchup(){ return unbindLiveCatchup; },
+set unbindLiveCatchup(value){ unbindLiveCatchup = value; },
+get unsubKline(){ return unsubKline; },
+set unsubKline(value){ unsubKline = value; }
+};
 }
+return algoSymbolHost.current;
+}
+
+async function loadSymbol(nextSymbol,
+nextTf){
+return loadSymbolMoved(
+algoSymbolHost(),
+...arguments
 );
-rsiTouchFlipHost?.persistForSymbol?.(
-persistFromSymbol
-);
-}
-
-symbol =
-normalizeSymbol(
-nextSymbol
-);
-tf =
-String(
-nextTf ||
-tf ||
-DEFAULT_TF
-);
-
-rsiTouchFlipHost?.hydrateForSymbol?.(
-symbol
-);
-
-setChartLayoutReady(
-false
-);
-stopKline();
-setSymbolLabel();
-setActiveTfButton();
-hydrateTickerStrategyUi(
-{
-refreshFilters:
-false
-}
-);
-persistAlgoSettings(
-{
-writeOverlays:
-false
-}
-);
-drawingTools?.onSymbolChange?.({
-skipRedraw:
-true
-});
-
-if(
-isAlgoBotLiteMode()
-){
-markAlgoHistoryStatsPending();
-
-try{
-const rows =
-await loadAlgoBotLiteHistory(
-symbol,
-tf,
-HISTORY_REQUESTS,
-{
-parallel:
-true,
-batchGapMs:
-0
-}
-);
-
-if(
-disposed ||
-seq !==
-loadSeq
-){
-return;
-}
-
-candles =
-Array.isArray(
-rows
-)
-? rows.slice()
-: [];
-
-markAlgoHistoryStatsReadyAndAnalyze();
-listApi?.highlight?.();
-}catch(
-err
-){
-console.error(
-"[algo-trading] lite history",
-getActiveExchangeId(),
-symbol,
-tf,
-err
-);
-
-if(
-seq ===
-loadSeq
-){
-candles =
-[];
-markAlgoHistoryStatsReadyAndAnalyze();
-}
-}
-
-return;
-}
-
-/* Индикаторы обновим после полной истории — не flush на пустых/старых свечах. */
-try{
-chartIndicators?.clearMainChartOverlays?.();
-}catch{
-/* ignore */
-}
-invalidateAlgoPattern12SceneCache();
-algoPattern12EnabledOnce =
-false;
-
-markAlgoHistoryStatsPending();
-
-try{
-const cached =
-peekHistoryCache(
-getActiveExchangeId(),
-symbol,
-tf
-);
-let fromCache =
-false;
-let rows;
-
-if(
-cached &&
-(
-cached.candles.length >=
-TERMINAL_VISIBLE_BARS ||
-cached.coversVisible
-)
-){
-rows =
-cached.candles.slice();
-fromCache =
-true;
-}else{
-rows =
-await loadMarketHistory(
-symbol,
-tf,
-terminalHistoryInitialRequests(),
-{
-parallel:
-true,
-batchGapMs:
-0
-}
-);
-}
-
-if(
-disposed ||
-seq !==
-loadSeq
-){
-return;
-}
-
-candles =
-Array.isArray(
-rows
-)
-? rows.slice()
-: [];
-
-putHistoryCache(
-getActiveExchangeId(),
-symbol,
-tf,
-candles,
-{
-coversVisible:
-candles.length <
-TERMINAL_VISIBLE_BARS ||
-candles.length >=
-HISTORY_REQUESTS *
-TERMINAL_HISTORY_LAZY_BATCH_BARS
-}
-);
-
-/* Как Терминал: сначала свечи + fit, без тяжёлых оверлеев. */
-applyCandleData(
-{
-fit:
-true,
-light:
-true,
-skipAnalysis:
-true
-}
-);
-void deepenAlgoHistoryIfNeeded(
-seq
-);
-if(
-fromCache
-){
-void refreshAlgoHistoryTail(
-seq
-);
-}
-
-unsubKline =
-subscribeKline(
-symbol,
-tf,
-candle=>{
-
-if(
-disposed ||
-seq !==
-loadSeq
-){
-return;
-}
-
-ensureOhlcRollover(
-candles,
-liveBarPeriodSec(
-tf
-)
-);
-
-const beforeLen =
-candles.length;
-const beforeTime =
-candles[
-candles.length -
-1
-]?.time;
-
-if(
-!mergeLiveCandle(
-candles,
-candle,
-0,
-liveBarPeriodSec(
-tf
-)
-)
-){
-return;
-}
-
-const isNewBar =
-candles.length !==
-beforeLen ||
-candles[
-candles.length -
-1
-]?.time !==
-beforeTime;
-
-if(
-isNewBar
-){
-applyCandleData(
-{
-forceAnalysis:
-algoChartDbg(
-"analysis"
-),
-light:
-!algoChartDbg(
-"analysis"
-) &&
-!algoChartDbg(
-"indicators"
-) &&
-!algoChartDbg(
-"filterLines"
-),
-skipAnalysis:
-!algoChartDbg(
-"analysis"
-)
-}
-);
-}else{
-if(
-algoChartDbg(
-"livePrice"
-)
-){
-applyLiveCandleTick();
-}
-if(
-algoChartDbg(
-"rsi"
-) &&
-rsiPaneActive
-){
-applyRsiData(
-{
-notifyIndicators:
-false,
-liveLastOnly:
-true
-}
-);
-}
-}
-
-}
-);
-
-liveBarRollTimer =
-setInterval(
-()=>{
-if(
-disposed ||
-seq !==
-loadSeq ||
-!candles.length
-){
-return;
-}
-
-if(
-ensureOhlcRollover(
-candles,
-liveBarPeriodSec(
-tf
-)
-)
-){
-applyLiveCandleTick();
-}
-},
-1000
-);
-
-unbindLiveCatchup =
-bindLiveCandleCatchup({
-getSymbol:
-()=>
-symbol,
-getTf:
-()=>
-tf,
-getCandles:
-()=>
-candles,
-maxLen:
-0,
-isAlive:
-()=>
-!disposed &&
-seq ===
-loadSeq,
-paint:
-(rows, info)=>{
-paintCatchupLiveSeries(
-series,
-buildDisplayCandles(),
-chart,
-info?.appended,
-info?.prevLen
-);
-if(
-info?.appended
-){
-applyCandleData(
-{
-light:
-true,
-skipAnalysis:
-true
-}
-);
-}else{
-applyLiveCandleTick();
-}
-}
-});
-
-listApi?.highlight?.();
-
-/* Как scheduleChartLayoutSettled на Терминале: индикаторы и позиции поверх стабильного viewport. */
-requestAnimationFrame(
-()=>{
-requestAnimationFrame(
-()=>{
-
-if(
-disposed ||
-seq !==
-loadSeq
-){
-return;
-}
-
-setChartLayoutReady(
-true
-);
-fitViewport();
-runWithPreservedVisibleLogicalRange(
-chart,
-()=>{
-if(
-algoChartDbg(
-"analysis"
-) ||
-algoChartDbg(
-"indicators"
-)
-){
-ensureAlgoPattern12Enabled();
-}
-
-if(
-algoChartDbg(
-"filterLines"
-)
-){
-refreshEntryFilterLines();
-}
-
-if(
-algoChartDbg(
-"indicators"
-)
-){
-chartIndicators?.notifyCandlesUpdate?.();
-chartIndicators?.flushIndicatorDataRefreshNow?.();
-chartIndicators?.notifyMainChartOverlaysSync?.();
-}
-}
-);
-fitViewport();
-markAlgoHistoryStatsReadyAndAnalyze();
-dispatchAlgoChartCandlesLoaded(
-seq
-);
-
-if(
-algoChartDbg(
-"drawings"
-)
-){
-drawingTools?.scheduleRedraw?.();
-}
-
-}
-);
-}
-);
-
-}catch(
-err
-){
-console.error(
-"[algo-trading] load",
-getActiveExchangeId(),
-symbol,
-tf,
-err
-);
-
-if(
-seq ===
-loadSeq
-){
-candles =
-[];
-applyCandleData(
-{
-fit:
-true
-}
-);
-setChartLayoutReady(
-true
-);
-dispatchAlgoChartCandlesLoaded(
-seq
-);
-markAlgoHistoryStatsReadyAndAnalyze();
-}
-}
-
 }
 
 const unlinkTime =

@@ -56,7 +56,7 @@ getWidgetFlagHtml,
 wireWidgetFlagUi,
 updateWidgetFlagUi,
 bindWidgetFlagGlobalListeners
-} from "./widget-favorite-flag.js?v=27b96aea";
+} from "./widget-favorite-flag.js?v=becc4850";
 
 const SCRIPT_MAX_CONCURRENT_CHART_LOADS =
 4;
@@ -82,7 +82,7 @@ if(
 ){
 scriptZoomModulePromise =
 import(
-"./screener-widget-zoom.js?v=8c75e6ca"
+"./screener-widget-zoom.js?v=4b0ea34b"
 ).then(
 mod=>{
 refreshZoomFavoriteUi =

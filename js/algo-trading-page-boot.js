@@ -7,7 +7,7 @@ waitForSiteCssReady
 
 import {
 jsImport
-} from "./asset-manifest.js?v=f555b953";
+} from "./asset-manifest.js?v=befdcb4a";
 
 import {
 isAlgoBotLiteShell

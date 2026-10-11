@@ -169,11 +169,11 @@ createDrawingsPersist
 
 import {
 createDrawStyleBar
-} from "./draw-style-bar.js?v=5dbed217";
+} from "./draw-style-bar.js?v=2555550d";
 
 import {
 createDrawAlertsChart
-} from "./draw-alerts-chart.js?v=451df54f";
+} from "./draw-alerts-chart.js?v=70badcd6";
 
 import {
 createDrawPlacement
@@ -224,6 +224,13 @@ import {
 isAlgoReducedCloudClient
 } from "../page-routes.js?v=4dc7f350";
 
+import {
+timeFromX as timeFromXMoved,
+manualPriceToCoordinate as manualPriceToCoordinateMoved,
+plotCoordinateToPrice as plotCoordinateToPriceMoved,
+resolvePointFromPlotXY as resolvePointFromPlotXYMoved,
+hitTest as hitTestMoved
+} from "./draw-plot-hit.js?v=39e2ce10";
 export function initDrawings({
 
 chart,
@@ -965,182 +972,55 @@ return ts.timeToCoordinate(barOpen);
 
 }
 
+function plotHitHost(){
+if(!plotHitHost.current){
+plotHitHost.current = {
+get brushBodyDist(){ return brushBodyDist; },
+get candleSeries(){ return candleSeries; },
+get channelBodyDist(){ return channelBodyDist; },
+get coordChart(){ return coordChart; },
+get distToSegment(){ return distToSegment; },
+get drawBodyHitThreshold(){ return drawBodyHitThreshold; },
+get drawMagnetKeyDown(){ return drawMagnetKeyDown; },
+get drawings(){ return drawings; },
+get drawingsHidden(){ return drawingsHidden; },
+get elliottBodyDist(){ return elliottBodyDist; },
+get enableMagnet(){ return enableMagnet; },
+get fibBodyDist(){ return fibBodyDist; },
+get fvpBodyDist(){ return fvpBodyDist; },
+get getCandles(){ return getCandles; },
+get getPlotWidth(){ return getPlotWidth; },
+get hitTestHandle(){ return hitTestHandle; },
+get hitTestTextBody(){ return hitTestTextBody; },
+get horizPriceLineX1(){ return horizPriceLineX1; },
+get isElliottType(){ return isElliottType; },
+get isFibType(){ return isFibType; },
+get isFvpType(){ return isFvpType; },
+get isHorizPriceTool(){ return isHorizPriceTool; },
+get isPositionType(){ return isPositionType; },
+get isTextTool(){ return isTextTool; },
+get manualPriceScaleDrag(){ return manualPriceScaleDrag; },
+get normalizeTime(){ return normalizeTime; },
+get plotPriceToCoordinate(){ return plotPriceToCoordinate; },
+get positionBodyDist(){ return positionBodyDist; },
+get priceScaleDragActive(){ return priceScaleDragActive; },
+get rectangleBodyDist(){ return rectangleBodyDist; },
+get segmentX(){ return segmentX; },
+get series(){ return series; },
+get snapPlotToCandleWick(){ return snapPlotToCandleWick; },
+get toXY(){ return toXY; },
+get trendlineBodyDist(){ return trendlineBodyDist; },
+get xFromTime(){ return xFromTime; }
+};
+}
+return plotHitHost.current;
+}
+
 function timeFromX(x){
-
-const ts =
-coordChart.timeScale();
-const candles =
-candleSeries();
-
-if(
-candles.length >=
-2
-){
-
-const first =
-candles[
-0
-];
-const second =
-candles[
-1
-];
-const prev =
-candles[
-candles.length - 2
-];
-const last =
-candles[
-candles.length - 1
-];
-
-const head =
-segmentX(
-ts,
-first.time,
-second.time
+return timeFromXMoved(
+plotHitHost(),
+...arguments
 );
-
-if(
-head &&
-head.dt >
-0 &&
-x <
-Math.min(
-head.x0,
-head.x1
-) -
-0.5
-){
-
-const ratio =
-(x - head.x0) /
-(head.x1 - head.x0);
-
-return (
-first.time +
-ratio *
-head.dt
-);
-
-}
-
-const tail =
-segmentX(
-ts,
-prev.time,
-last.time
-);
-
-if(
-tail &&
-tail.dt >
-0 &&
-x >
-Math.max(
-tail.x0,
-tail.x1
-) +
-0.5
-){
-
-const ratio =
-(x - tail.x1) /
-(tail.x1 - tail.x0);
-
-return (
-last.time +
-ratio *
-tail.dt
-);
-
-}
-
-}
-
-let time =
-normalizeTime(
-ts.coordinateToTime(
-x
-)
-);
-
-if(
-time !=
-null
-){
-
-return time;
-
-}
-
-if(
-candles.length <
-2
-){
-return null;
-}
-
-for(
-let i =
-0;
-i <
-candles.length - 1;
-i++
-){
-
-const seg =
-segmentX(
-ts,
-candles[
-i
-].time,
-candles[
-i + 1
-].time
-);
-
-if(
-!seg ||
-seg.dt <=
-0
-){
-continue;
-}
-
-const minX =
-Math.min(
-seg.x0,
-seg.x1
-);
-const maxX =
-Math.max(
-seg.x0,
-seg.x1
-);
-
-if(
-x >=
-minX &&
-x <=
-maxX
-){
-const ratio =
-(x - seg.x0) /
-(seg.x1 - seg.x0);
-return (
-candles[
-i
-].time +
-ratio *
-seg.dt
-);
-}
-
-}
-
-return null;
-
 }
 
 let storageKey;
@@ -1827,259 +1707,18 @@ return false;
 
 }
 
-function manualPriceToCoordinate(
-price
-){
-
-const s =
-manualPriceScaleDrag;
-
-if(
-!s ||
-!Number.isFinite(
-price
-)
-){
-return null;
-}
-
-const {
-minPrice,
-maxPrice,
-top,
-bottom,
-h
-} =
-s;
-
-const plotTop =
-h * top;
-
-const plotHeight =
-h * (
-1 - top - bottom
+function manualPriceToCoordinate(price){
+return manualPriceToCoordinateMoved(
+plotHitHost(),
+...arguments
 );
-
-if(
-plotHeight <=
-0
-){
-return null;
 }
 
-const inverted =
-s.inverted;
-
-if(
-s.logarithmic &&
-minPrice >
-0 &&
-maxPrice >
-0 &&
-price >
-0
-){
-
-const logMin =
-Math.log(
-minPrice
+function plotCoordinateToPrice(py){
+return plotCoordinateToPriceMoved(
+plotHitHost(),
+...arguments
 );
-
-const logMax =
-Math.log(
-maxPrice
-);
-
-const logSpan =
-logMax - logMin;
-
-if(
-!Number.isFinite(logSpan) ||
-logSpan ===
-0
-){
-return null;
-}
-
-const logP =
-Math.log(
-price
-);
-
-const ratio =
-inverted
-? (
-logP - logMin
-) / logSpan
-: (
-logMax - logP
-) / logSpan;
-
-return plotTop + ratio * plotHeight;
-
-}
-
-const span =
-maxPrice - minPrice;
-
-if(
-!Number.isFinite(span) ||
-span ===
-0
-){
-return null;
-}
-
-const ratio =
-inverted
-? (
-price - minPrice
-) / span
-: (
-maxPrice - price
-) / span;
-
-return plotTop + ratio * plotHeight;
-
-}
-
-function plotCoordinateToPrice(
-py
-){
-
-if(
-!Number.isFinite(
-py
-)
-){
-return null;
-}
-
-if(
-priceScaleDragActive &&
-manualPriceScaleDrag
-){
-
-const s =
-manualPriceScaleDrag;
-
-const {
-minPrice,
-maxPrice,
-top,
-bottom,
-h,
-inverted,
-logarithmic
-} =
-s;
-
-const plotTop =
-h * top;
-
-const plotHeight =
-h * (
-1 - top - bottom
-);
-
-if(
-plotHeight <=
-0
-){
-return null;
-}
-
-const ratio =
-(py - plotTop) /
-plotHeight;
-
-if(
-logarithmic &&
-minPrice >
-0 &&
-maxPrice >
-0
-){
-
-const logMin =
-Math.log(
-minPrice
-);
-
-const logMax =
-Math.log(
-maxPrice
-);
-
-const logSpan =
-logMax - logMin;
-
-if(
-!Number.isFinite(
-logSpan
-) ||
-logSpan ===
-0
-){
-return null;
-}
-
-const logP =
-inverted
-? logMin +
-ratio *
-logSpan
-: logMax -
-ratio *
-logSpan;
-
-const price =
-Math.exp(
-logP
-);
-
-return Number.isFinite(
-price
-)
-? price
-: null;
-
-}
-
-const span =
-maxPrice - minPrice;
-
-if(
-!Number.isFinite(
-span
-) ||
-span ===
-0
-){
-return null;
-}
-
-const price =
-inverted
-? minPrice +
-ratio *
-span
-: maxPrice -
-ratio *
-span;
-
-return Number.isFinite(
-price
-)
-? price
-: null;
-
-}
-
-return series.coordinateToPrice(
-py
-);
-
 }
 
 function pointFromXY(px, py){
@@ -2104,104 +1743,14 @@ return { time, price };
 }
 
 /** Не сбрасывать якорь при кратком сбое time/price (зум, скролл, redraw). */
-function resolvePointFromPlotXY(
-px,
+function resolvePointFromPlotXY(px,
 py,
 prev = null,
-optEvent = null
-){
-
-const magnetActive =
-enableMagnet &&
-(
-drawMagnetKeyDown ||
-optEvent?.metaKey ===
-true
+optEvent = null){
+return resolvePointFromPlotXYMoved(
+plotHitHost(),
+...arguments
 );
-
-if(
-magnetActive
-){
-
-const snap =
-snapPlotToCandleWick({
-plotX: px,
-plotY: py,
-candles: candleSeries(),
-timeFromX,
-xFromTime,
-priceToPlotY: plotPriceToCoordinate
-});
-
-if(
-snap
-){
-return {
-time: snap.time,
-price: snap.price
-};
-}
-
-}
-
-const price =
-plotCoordinateToPrice(
-py
-);
-const time =
-timeFromX(
-px
-);
-
-if(
-price !=
-null &&
-Number.isFinite(
-price
-) &&
-time !=
-null
-){
-return {
-time,
-price
-};
-}
-
-if(
-!prev
-){
-return null;
-}
-
-const merged = {
-time:
-time ??
-prev.time,
-price:
-price !=
-null &&
-Number.isFinite(
-price
-)
-? price
-: prev.price
-};
-
-if(
-merged.time ==
-null ||
-merged.price ==
-null ||
-!Number.isFinite(
-merged.price
-)
-){
-return null;
-}
-
-return merged;
-
 }
 
 function plotPriceToCoordinate(
@@ -3371,176 +2920,10 @@ placementCtl);
 
 
 function hitTest(px, py){
-
-if(
-drawingsHidden
-){
-return null;
-}
-
-const bodyThreshold =
-drawBodyHitThreshold();
-
-for(
-let i =
-drawings.length -
-1;
-i >=
-0;
-i--
-){
-
-const d =
-drawings[
-i
-];
-
-if(
-hitTestHandle(
-px,
-py,
-d
-)
-){
-return d.id;
-}
-
-}
-
-let best = null;
-let bestDist = bodyThreshold;
-
-drawings.forEach(d=>{
-
-let dist = Infinity;
-
-if(
-d.type === "trendline" ||
-d.type === "arrow"
-){
-
-dist = trendlineBodyDist(px, py, d);
-
-}
-
-if(
-d.type ===
-"rectangle"
-){
-
-dist = rectangleBodyDist(
-px,
-py,
-d,
-toXY
+return hitTestMoved(
+plotHitHost(),
+...arguments
 );
-
-}
-
-if(
-isFvpType(
-d.type
-)
-){
-
-dist = fvpBodyDist(
-px,
-py,
-d,
-toXY,
-getCandles?.() ||
-[]
-);
-
-}
-
-if(isHorizPriceTool(d.type)){
-
-const anchor = toXY({
-time: d.time,
-price: d.price
-});
-
-if(anchor){
-dist = distToSegment(
-px,
-py,
-horizPriceLineX1(
-d.type,
-anchor.x
-),
-anchor.y,
-getPlotWidth(),
-anchor.y
-);
-}
-
-}
-
-if(
-isFibType(
-d.type
-)
-){
-
-dist = fibBodyDist(px, py, d);
-
-}
-if(d.type === "channel"){
-
-dist = channelBodyDist(px, py, d);
-
-}
-
-if(
-isElliottType(
-d.type
-)
-){
-
-dist = elliottBodyDist(
-px,
-py,
-d
-);
-
-}
-
-if(d.type === "brush"){
-
-dist = brushBodyDist(px, py, d);
-
-}
-
-if(isTextTool(d.type)){
-
-dist =
-hitTestTextBody(
-px,
-py,
-d,
-toXY
-)
-? 0
-: Infinity;
-
-}
-
-if(isPositionType(d.type)){
-
-dist = positionBodyDist(px, py, d);
-
-}
-
-if(dist < bestDist){
-bestDist = dist;
-best = d.id;
-}
-
-});
-
-return best;
-
 }
 
 function setTool(
@@ -5560,7 +4943,7 @@ lastChartAlertsPullMs =
 Date.now();
 
 void import(
-"../alerts-cloud-sync.js?v=41e92cb7"
+"../alerts-cloud-sync.js?v=d1d13773"
 ).then(
 ({ pullRegistryFromCloudNow })=>
 pullRegistryFromCloudNow({

@@ -5,7 +5,7 @@
  */
 import {
 listCachedPositionsForSymbol
-} from "../trade-positions-cache.js?v=6585989c";
+} from "../trade-positions-cache.js?v=57fb902d";
 
 function normalizeSymbol(
 raw
