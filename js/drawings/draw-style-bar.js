@@ -9,7 +9,7 @@ parseDrawColor
 
 import {
 isCoarseTouchViewport
-} from "../chart-import.js?v=c172cdf4";
+} from "../chart-import.js?v=544220a0";
 
 import {
 STROKE,
@@ -59,13 +59,13 @@ calcPositionVolumeUsd
 
 import {
 applyPositionVolumeFromDrawing
-} from "../trade-volume-presets.js?v=bd1a8814";
+} from "../trade-volume-presets.js?v=10eba9f8";
 
 import {
 stashDrawingStopsFromDrawing,
 clearDrawingStopsPending,
 hasDrawingStopsPending
-} from "../trade-auto-stops.js?v=ff28ace3";
+} from "../trade-auto-stops.js?v=87d8bd69";
 
 import {
 touchShapeRevision
@@ -166,6 +166,20 @@ updateStyleBar as updateStyleBarMoved,
 applyStyleFromUI as applyStyleFromUIMoved,
 persistStyleSnapshotToTarget as persistStyleSnapshotToTargetMoved
 } from "./draw-style-fill.js?v=d5843536";
+import {
+applyElliottSettingsFromPanel as applyElliottSettingsFromPanelMoved,
+commitFibPanelToShape as commitFibPanelToShapeMoved,
+ensureFibSettingsPanel as ensureFibSettingsPanelMoved,
+flushFibPanelForType as flushFibPanelForTypeMoved,
+commitChannelPanelToShape as commitChannelPanelToShapeMoved,
+applyRectSettingsFromPanel as applyRectSettingsFromPanelMoved,
+ensureChannelSettingsPanel as ensureChannelSettingsPanelMoved,
+ensureRectSettingsPanel as ensureRectSettingsPanelMoved,
+ensureElliottSettingsPanel as ensureElliottSettingsPanelMoved,
+openRectColorMenu as openRectColorMenuMoved,
+openElliottChannelColorMenu as openElliottChannelColorMenuMoved,
+openChannelColorMenu as openChannelColorMenuMoved
+} from "./draw-style-panels.js?v=2e6e7cc6";
 export function createDrawStyleBar(
 deps
 ){
@@ -1221,70 +1235,104 @@ return sel?.type ===
 
 }
 
+function stylePanelHost(){
+if(!stylePanelHost.current){
+stylePanelHost.current = {
+get CHANNEL_DEFAULT_COLOR(){ return CHANNEL_DEFAULT_COLOR; },
+get CHANNEL_TOOL_DEFAULTS_VERSION(){ return CHANNEL_TOOL_DEFAULTS_VERSION; },
+get ELLIOTT_TOOL_DEFAULTS_VERSION(){ return ELLIOTT_TOOL_DEFAULTS_VERSION; },
+get RECT_DEFAULT_FILL_OPACITY(){ return RECT_DEFAULT_FILL_OPACITY; },
+get RECT_TOOL_DEFAULTS_VERSION(){ return RECT_TOOL_DEFAULTS_VERSION; },
+get STROKE(){ return STROKE; },
+get activeColor(){ return activeColor; },
+get activeFibType(){ return activeFibType; },
+get attachCoordUi(){ return attachCoordUi; },
+get bindChannelSettingsPanel(){ return bindChannelSettingsPanel; },
+get bindElliottSettingsPanel(){ return bindElliottSettingsPanel; },
+get bindFibSettingsPanel(){ return bindFibSettingsPanel; },
+get bindRectSettingsPanel(){ return bindRectSettingsPanel; },
+get canApplyChannelPanel(){ return canApplyChannelPanel; },
+get canApplyElliottPanel(){ return canApplyElliottPanel; },
+get canApplyFibPanel(){ return canApplyFibPanel; },
+get canApplyRectPanel(){ return canApplyRectPanel; },
+get channelPanelBuilt(){ return channelPanelBuilt; },
+set channelPanelBuilt(value){ channelPanelBuilt = value; },
+get channelPanelSyncing(){ return channelPanelSyncing; },
+get channelSettingsHtml(){ return channelSettingsHtml; },
+get closeFibColorMenu(){ return closeFibColorMenu; },
+get composeSettingsHtml(){ return composeSettingsHtml; },
+get coordsOnlyPanelBuilt(){ return coordsOnlyPanelBuilt; },
+set coordsOnlyPanelBuilt(value){ coordsOnlyPanelBuilt = value; },
+get createElliottToolDefaults(){ return createElliottToolDefaults; },
+get elliottPanelBuilt(){ return elliottPanelBuilt; },
+set elliottPanelBuilt(value){ elliottPanelBuilt = value; },
+get elliottSettingsHtml(){ return elliottSettingsHtml; },
+get ensureChannelLevelsVisible(){ return ensureChannelLevelsVisible; },
+get ensureFibColorMenuPortal(){ return ensureFibColorMenuPortal; },
+get fibColorMenuAnchor(){ return fibColorMenuAnchor; },
+set fibColorMenuAnchor(value){ fibColorMenuAnchor = value; },
+get fibDefaultsVersionFor(){ return fibDefaultsVersionFor; },
+get fibPanelBuilt(){ return fibPanelBuilt; },
+set fibPanelBuilt(value){ fibPanelBuilt = value; },
+get fibPanelCoordType(){ return fibPanelCoordType; },
+set fibPanelCoordType(value){ fibPanelCoordType = value; },
+get fibPanelSyncing(){ return fibPanelSyncing; },
+get fibSettingsHtml(){ return fibSettingsHtml; },
+get fibSettingsShapeId(){ return fibSettingsShapeId; },
+get fvpPanelBuilt(){ return fvpPanelBuilt; },
+set fvpPanelBuilt(value){ fvpPanelBuilt = value; },
+get getAlive(){ return getAlive; },
+get getChannelEditShape(){ return getChannelEditShape; },
+get getDrawings(){ return getDrawings; },
+get getElliottEditShape(){ return getElliottEditShape; },
+get getElliottEditType(){ return getElliottEditType; },
+get getFibEditShape(){ return getFibEditShape; },
+get getRectEditShape(){ return getRectEditShape; },
+get getToolDefaults(){ return getToolDefaults; },
+get isChannelSettingsOpen(){ return isChannelSettingsOpen; },
+get isFibSettingsOpen(){ return isFibSettingsOpen; },
+get isFibType(){ return isFibType; },
+get isPattern12Draw(){ return isPattern12Draw; },
+get migrateElliottToolDefaults(){ return migrateElliottToolDefaults; },
+get mountChannelLevelRows(){ return mountChannelLevelRows; },
+get mountFibLevelRows(){ return mountFibLevelRows; },
+get mountTvColorPicker(){ return mountTvColorPicker; },
+get normalizePattern12TpFlags(){ return normalizePattern12TpFlags; },
+get normalizePattern12TpLevels(){ return normalizePattern12TpLevels; },
+get openFibColorMenu(){ return openFibColorMenu; },
+get readChannelPanelFromDOM(){ return readChannelPanelFromDOM; },
+get readElliottSettingsPanel(){ return readElliottSettingsPanel; },
+get readFibPanelFromDOM(){ return readFibPanelFromDOM; },
+get readFibSettingsPanel(){ return readFibSettingsPanel; },
+get readRectPanelFromDOM(){ return readRectPanelFromDOM; },
+get readStyleFromUI(){ return readStyleFromUI; },
+get rectPanelBuilt(){ return rectPanelBuilt; },
+set rectPanelBuilt(value){ rectPanelBuilt = value; },
+get rectSettingsHtml(){ return rectSettingsHtml; },
+get redraw(){ return redraw; },
+get resetSettingsPanelListeners(){ return resetSettingsPanelListeners; },
+get resolveFibStyleTarget(){ return resolveFibStyleTarget; },
+get resolveFibTrendLineColor(){ return resolveFibTrendLineColor; },
+get saveDrawings(){ return saveDrawings; },
+get saveToolDefaults(){ return saveToolDefaults; },
+get scheduleChannelApplyDebounced(){ return scheduleChannelApplyDebounced; },
+get scheduleChannelApplyImmediate(){ return scheduleChannelApplyImmediate; },
+get scheduleFibApplyDebounced(){ return scheduleFibApplyDebounced; },
+get scheduleFibApplyImmediate(){ return scheduleFibApplyImmediate; },
+get setFibLevelColorButton(){ return setFibLevelColorButton; },
+get settingsPopover(){ return settingsPopover; },
+get settingsPopoverHasPanel(){ return settingsPopoverHasPanel; },
+get touchShapeRevisionFn(){ return touchShapeRevisionFn; }
+};
+}
+return stylePanelHost.current;
+}
+
 function ensureRectSettingsPanel(){
-
-if(
-!settingsPopover
-){
-return;
-}
-
-if(
-rectPanelBuilt &&
-settingsPopoverHasPanel(
-"rect"
-)
-){
-return;
-}
-
-rectPanelBuilt = true;
-fibPanelBuilt = false;
-fvpPanelBuilt = false;
-channelPanelBuilt = false;
-elliottPanelBuilt = false;
-coordsOnlyPanelBuilt = false;
-
-const signal =
-resetSettingsPanelListeners();
-
-settingsPopover.classList.remove(
-"draw-settings-popover--fvp",
-"draw-settings-popover--coords"
+return ensureRectSettingsPanelMoved(
+stylePanelHost(),
+...arguments
 );
-
-settingsPopover.innerHTML =
-composeSettingsHtml(
-"rectangle",
-rectSettingsHtml()
-);
-
-bindRectSettingsPanel(
-settingsPopover,
-{
-getAlive,
-canApply: canApplyRectPanel,
-onApply: applyRectSettingsFromPanel,
-getRectEditShape,
-openColorMenu:(
-btn,
-fallback
-)=>{
-closeFibColorMenu();
-openRectColorMenu(
-btn,
-fallback
-);
-},
-signal
-}
-);
-
-attachCoordUi(
-"rectangle",
-signal
-);
-
 }
 
 function fillRectSettingsPanel(
@@ -1335,74 +1383,10 @@ isRectSettingsOpen() &&
 }
 
 function applyRectSettingsFromPanel(){
-
-if(
-!canApplyRectPanel()
-){
-return;
-}
-
-const shape =
-getRectEditShape();
-const panel =
-readRectPanelFromDOM();
-
-if(
-shape
-){
-
-shape.lineStyle =
-panel.lineStyle;
-shape.color =
-panel.color;
-shape.showHorizLines =
-panel.showHorizLines;
-shape.showVertLines =
-panel.showVertLines;
-shape.horizLineStyle =
-panel.horizLineStyle;
-shape.horizColor =
-panel.horizColor;
-shape.vertLineStyle =
-panel.vertLineStyle;
-shape.vertColor =
-panel.vertColor;
-shape.showMedian =
-panel.showMedian;
-shape.showFill =
-panel.showFill;
-shape.medianLineStyle =
-panel.medianLineStyle;
-shape.medianLineWidth =
-panel.medianLineWidth;
-shape.medianColor =
-panel.medianColor;
-shape.fillColor =
-panel.fillColor;
-shape.fillOpacity =
-panel.fillOpacity;
-
-touchShapeRevisionFn(
-shape
+return applyRectSettingsFromPanelMoved(
+stylePanelHost(),
+...arguments
 );
-saveDrawings();
-redraw();
-
-}
-
-saveToolDefaults(
-"rectangle",
-{
-...getToolDefaults().rectangle,
-...panel,
-rectDefaultsVersion:
-RECT_TOOL_DEFAULTS_VERSION,
-lineWidth:
-shape?.lineWidth ||
-1
-}
-);
-
 }
 
 function canApplyFvpPanel(){
@@ -1567,74 +1551,10 @@ isChannelSettingsOpen() &&
 }
 
 function ensureChannelSettingsPanel(){
-
-if(
-!settingsPopover
-){
-return;
-}
-
-if(
-channelPanelBuilt &&
-settingsPopoverHasPanel(
-"channel"
-)
-){
-return;
-}
-
-channelPanelBuilt = true;
-fibPanelBuilt = false;
-rectPanelBuilt = false;
-fvpPanelBuilt = false;
-elliottPanelBuilt = false;
-coordsOnlyPanelBuilt = false;
-
-const signal =
-resetSettingsPanelListeners();
-
-settingsPopover.classList.remove(
-"draw-settings-popover--fvp",
-"draw-settings-popover--coords"
+return ensureChannelSettingsPanelMoved(
+stylePanelHost(),
+...arguments
 );
-
-settingsPopover.innerHTML =
-composeSettingsHtml(
-"channel",
-channelSettingsHtml()
-);
-
-mountChannelLevelRows(
-settingsPopover
-);
-
-bindChannelSettingsPanel(
-settingsPopover,
-{
-getAlive,
-canApply: canApplyChannelPanel,
-getChannelEditShape,
-openColorMenu:(
-btn,
-fallback
-)=>{
-closeFibColorMenu();
-openChannelColorMenu(
-btn,
-fallback
-);
-},
-scheduleImmediate: scheduleChannelApplyImmediate,
-scheduleDebounced: scheduleChannelApplyDebounced,
-signal
-}
-);
-
-attachCoordUi(
-"channel",
-signal
-);
-
 }
 
 function fillChannelSettingsPanel(
@@ -1679,85 +1599,10 @@ settingsPopover
 }
 
 function commitChannelPanelToShape(){
-
-if(
-!getAlive() ||
-!isChannelSettingsOpen() ||
-channelPanelSyncing
-){
-return false;
-}
-
-const shape =
-getChannelEditShape();
-const panel =
-readChannelPanelFromDOM();
-
-if(
-!shape
-){
-
-const style =
-readStyleFromUI();
-
-saveToolDefaults(
-"channel",
-{
-channelDefaultsVersion:
-CHANNEL_TOOL_DEFAULTS_VERSION,
-color:
-style.color ||
-CHANNEL_DEFAULT_COLOR,
-lineWidth:
-style.lineWidth,
-channelLevels:
-panel.channelLevels
-}
+return commitChannelPanelToShapeMoved(
+stylePanelHost(),
+...arguments
 );
-
-redraw();
-return true;
-
-}
-
-shape.channelLevels =
-JSON.parse(
-JSON.stringify(
-ensureChannelLevelsVisible(
-panel.channelLevels
-)
-)
-);
-
-touchShapeRevisionFn(
-shape
-);
-
-saveDrawings();
-redraw();
-
-const style =
-readStyleFromUI();
-
-saveToolDefaults(
-"channel",
-{
-channelDefaultsVersion:
-CHANNEL_TOOL_DEFAULTS_VERSION,
-color:
-style.color ||
-shape.color ||
-CHANNEL_DEFAULT_COLOR,
-lineWidth:
-style.lineWidth ??
-shape.lineWidth,
-channelLevels:
-shape.channelLevels
-}
-);
-
-return true;
-
 }
 
 function scheduleChannelApplyImmediate(){
@@ -1900,59 +1745,10 @@ isElliottSettingsOpen() &&
 }
 
 function ensureElliottSettingsPanel(){
-
-if(
-!settingsPopover
-){
-return;
-}
-
-if(
-elliottPanelBuilt &&
-settingsPopoverHasPanel(
-"elliott"
-)
-){
-return;
-}
-
-elliottPanelBuilt = true;
-fibPanelBuilt = false;
-rectPanelBuilt = false;
-fvpPanelBuilt = false;
-channelPanelBuilt = false;
-coordsOnlyPanelBuilt = false;
-
-const signal =
-resetSettingsPanelListeners();
-
-settingsPopover.classList.remove(
-"draw-settings-popover--fvp",
-"draw-settings-popover--coords"
+return ensureElliottSettingsPanelMoved(
+stylePanelHost(),
+...arguments
 );
-
-settingsPopover.innerHTML =
-elliottSettingsHtml();
-
-bindElliottSettingsPanel(
-settingsPopover,
-{
-canApply: canApplyElliottPanel,
-onApply: applyElliottSettingsFromPanel,
-openColorMenu:(
-btn,
-fallback
-)=>{
-closeFibColorMenu();
-openElliottChannelColorMenu(
-btn,
-fallback
-);
-},
-signal
-}
-);
-
 }
 
 function fillElliottSettingsFromContext(){
@@ -1988,156 +1784,10 @@ elliottPanelSyncing = false;
 }
 
 function applyElliottSettingsFromPanel(){
-
-if(
-!canApplyElliottPanel()
-){
-return;
-}
-
-const type =
-getElliottEditType();
-
-if(
-!type
-){
-return;
-}
-
-const shape =
-getElliottEditShape();
-const panel =
-readElliottSettingsPanel(
-settingsPopover,
-type
+return applyElliottSettingsFromPanelMoved(
+stylePanelHost(),
+...arguments
 );
-const style =
-readStyleFromUI();
-const prev =
-migrateElliottToolDefaults(
-getToolDefaults()[
-type
-],
-type
-);
-
-if(
-shape
-){
-
-shape.degree =
-panel.degree;
-shape.degreeJunior =
-panel.degreeJunior;
-shape.showWave =
-panel.showWave !==
-false;
-shape.showPatternDash =
-panel.showPatternDash !==
-false;
-shape.showPatternChannel =
-panel.showPatternChannel ===
-true;
-shape.patternChannelLineStyle =
-panel.patternChannelLineStyle;
-shape.patternChannelLineWidth =
-panel.patternChannelLineWidth;
-shape.patternChannelColor =
-panel.patternChannelColor;
-shape.patternDashLineStyle =
-panel.patternDashLineStyle;
-shape.patternTpLineStyle =
-panel.patternTpLineStyle;
-shape.patternDashOpacity =
-panel.patternDashOpacity;
-
-if(
-isPattern12Draw(
-type
-)
-){
-Object.assign(
-shape,
-normalizePattern12TpFlags(
-panel.showTpSenior,
-panel.showTpJunior
-)
-);
-shape.tpLevels =
-normalizePattern12TpLevels(
-panel.tpLevels
-);
-}
-
-touchShapeRevisionFn(
-shape
-);
-saveDrawings();
-redraw();
-
-}
-
-saveToolDefaults(
-type,
-{
-...createElliottToolDefaults({
-type
-}),
-...prev,
-color:
-shape?.color ||
-style.color ||
-prev.color,
-lineWidth:
-shape?.lineWidth ??
-style.lineWidth ??
-prev.lineWidth,
-degree:
-panel.degree,
-degreeJunior:
-panel.degreeJunior,
-showWave:
-panel.showWave !==
-false,
-showPatternDash:
-panel.showPatternDash !==
-false,
-showPatternChannel:
-panel.showPatternChannel ===
-true,
-patternChannelLineStyle:
-panel.patternChannelLineStyle,
-patternChannelLineWidth:
-panel.patternChannelLineWidth,
-patternChannelColor:
-panel.patternChannelColor,
-patternDashLineStyle:
-panel.patternDashLineStyle,
-patternTpLineStyle:
-panel.patternTpLineStyle,
-patternDashOpacity:
-panel.patternDashOpacity,
-...(
-isPattern12Draw(
-type
-)
-? {
-...normalizePattern12TpFlags(
-panel.showTpSenior,
-panel.showTpJunior
-),
-tpLevels:
-normalizePattern12TpLevels(
-panel.tpLevels
-)
-}
-: {}
-),
-elliottDefaultsVersion:
-ELLIOTT_TOOL_DEFAULTS_VERSION
-}
-);
-
 }
 
 function canApplyFibPanel(){
@@ -2214,294 +1864,24 @@ return null;
 }
 
 function ensureFibSettingsPanel(){
-
-if(
-!settingsPopover
-){
-return;
-}
-
-const type =
-activeFibType();
-
-if(
-fibPanelBuilt &&
-settingsPopoverHasPanel(
-"fib"
-) &&
-fibPanelCoordType ===
-type
-){
-return;
-}
-
-if(
-fibPanelBuilt &&
-isFibSettingsOpen() &&
-isFibType(
-fibPanelCoordType
-) &&
-fibPanelCoordType !==
-type
-){
-flushFibPanelForType(
-fibPanelCoordType
+return ensureFibSettingsPanelMoved(
+stylePanelHost(),
+...arguments
 );
 }
 
-fibPanelBuilt = true;
-fibPanelCoordType =
-type;
-rectPanelBuilt = false;
-fvpPanelBuilt = false;
-channelPanelBuilt = false;
-elliottPanelBuilt = false;
-coordsOnlyPanelBuilt = false;
-
-const signal =
-resetSettingsPanelListeners();
-
-settingsPopover.classList.remove(
-"draw-settings-popover--fvp",
-"draw-settings-popover--coords"
+function flushFibPanelForType(type){
+return flushFibPanelForTypeMoved(
+stylePanelHost(),
+...arguments
 );
-
-settingsPopover.innerHTML =
-composeSettingsHtml(
-type,
-fibSettingsHtml(
-type
-)
-);
-
-mountFibLevelRows(
-settingsPopover,
-type
-);
-
-bindFibSettingsPanel(
-settingsPopover,
-{
-getAlive,
-canApply: canApplyFibPanel,
-getFibEditShape,
-openColorMenu:(
-btn,
-fallback
-)=>{
-closeFibColorMenu();
-openFibColorMenu(
-btn,
-fallback
-);
-},
-scheduleImmediate: scheduleFibApplyImmediate,
-scheduleDebounced: scheduleFibApplyDebounced,
-signal
-}
-);
-
-attachCoordUi(
-type,
-signal
-);
-
-}
-
-function flushFibPanelForType(
-type
-){
-
-if(
-!isFibType(
-type
-) ||
-!settingsPopoverHasPanel(
-"fib"
-) ||
-fibPanelSyncing
-){
-return;
-}
-
-const panel =
-readFibSettingsPanel(
-settingsPopover
-);
-const shape =
-getDrawings().find(
-d=>
-d.id ===
-fibSettingsShapeId &&
-d.type ===
-type
-);
-
-if(
-shape
-){
-
-shape.fibLevels =
-JSON.parse(
-JSON.stringify(
-panel.fibLevels
-)
-);
-shape.fibShowTrendLine =
-panel.fibShowTrendLine;
-shape.fibShowLabels =
-panel.fibShowLabels !==
-false;
-shape.fibTrendLineColor =
-resolveFibTrendLineColor(
-panel.fibTrendLineColor
-);
-
-if(
-Number.isFinite(
-panel.lineWidth
-)
-){
-shape.lineWidth =
-panel.lineWidth;
-}
-
-touchShapeRevisionFn(
-shape
-);
-saveDrawings();
-
-}
-
-saveToolDefaults(
-type,
-{
-fibDefaultsVersion: fibDefaultsVersionFor(
-type
-),
-color: activeColor ||
-STROKE,
-lineWidth:
-Number.isFinite(
-panel.lineWidth
-)
-? panel.lineWidth
-: 1,
-fibLevels: panel.fibLevels,
-fibShowTrendLine: panel.fibShowTrendLine,
-fibShowLabels:
-panel.fibShowLabels !==
-false,
-fibTrendLineColor: resolveFibTrendLineColor(
-panel.fibTrendLineColor
-)
-}
-);
-
 }
 
 function commitFibPanelToShape(){
-
-if(
-!getAlive() ||
-!isFibSettingsOpen() ||
-fibPanelSyncing
-){
-return false;
-}
-
-const shape =
-resolveFibStyleTarget();
-
-const panel =
-readFibPanelFromDOM();
-
-if(!shape){
-
-const style =
-readStyleFromUI();
-const type =
-activeFibType();
-
-saveToolDefaults(
-type,
-{
-fibDefaultsVersion: fibDefaultsVersionFor(
-type
-),
-color: style.color,
-lineWidth: style.lineWidth,
-fibLevels: panel.fibLevels,
-fibShowTrendLine: panel.fibShowTrendLine,
-fibShowLabels:
-panel.fibShowLabels !==
-false,
-fibTrendLineColor: resolveFibTrendLineColor(
-panel.fibTrendLineColor
-)
-}
+return commitFibPanelToShapeMoved(
+stylePanelHost(),
+...arguments
 );
-
-redraw();
-return true;
-
-}
-
-shape.fibLevels =
-JSON.parse(
-JSON.stringify(panel.fibLevels)
-);
-
-shape.fibShowTrendLine =
-panel.fibShowTrendLine;
-shape.fibShowLabels =
-panel.fibShowLabels !==
-false;
-shape.fibTrendLineColor =
-resolveFibTrendLineColor(
-panel.fibTrendLineColor
-);
-
-if(
-Number.isFinite(
-panel.lineWidth
-)
-){
-shape.lineWidth =
-panel.lineWidth;
-}
-
-touchShapeRevisionFn(
-shape
-);
-
-saveDrawings();
-redraw();
-
-const style =
-readStyleFromUI();
-
-saveToolDefaults(
-shape.type,
-{
-fibDefaultsVersion: fibDefaultsVersionFor(
-shape.type
-),
-color: style.color,
-lineWidth: style.lineWidth,
-fibLevels: shape.fibLevels,
-fibShowTrendLine: shape.fibShowTrendLine,
-fibShowLabels:
-shape.fibShowLabels !==
-false,
-fibTrendLineColor: resolveFibTrendLineColor(
-shape.fibTrendLineColor
-)
-}
-);
-
-return true;
-
 }
 
 setFibPanelCommitHook(()=>{
@@ -2549,91 +1929,12 @@ fibColorMenuAnchor = null;
 
 }
 
-function openRectColorMenu(
-anchorBtn,
-fallbackColor
-){
-
-const portal =
-ensureFibColorMenuPortal();
-
-fibColorMenuAnchor =
-anchorBtn;
-
-const shape =
-getRectEditShape();
-
-const isFill =
-anchorBtn.classList.contains(
-"rect-fill-color-btn"
+function openRectColorMenu(anchorBtn,
+fallbackColor){
+return openRectColorMenuMoved(
+stylePanelHost(),
+...arguments
 );
-
-const active =
-anchorBtn.style.getPropertyValue(
-"--rect-swatch"
-)?.trim() ||
-fallbackColor ||
-STROKE;
-
-const activeOpacity =
-isFill &&
-Number.isFinite(
-Number(
-shape?.fillOpacity
-)
-)
-? Math.round(
-Number(
-shape.fillOpacity
-) *
-100
-)
-: isFill
-? Math.round(
-RECT_DEFAULT_FILL_OPACITY *
-100
-)
-: 100;
-
-mountTvColorPicker(
-portal,
-{
-activeColor: active,
-activeOpacity,
-onChange: color=>{
-
-anchorBtn.style.setProperty(
-"--rect-swatch",
-color
-);
-
-applyRectSettingsFromPanel();
-
-},
-onSelect: color=>{
-
-anchorBtn.style.setProperty(
-"--rect-swatch",
-color
-);
-
-closeFibColorMenu();
-applyRectSettingsFromPanel();
-
-}
-}
-);
-
-portal.classList.remove("hidden");
-
-const rect =
-anchorBtn.getBoundingClientRect();
-
-portal.style.position = "fixed";
-portal.style.left = `${Math.round(rect.left)}px`;
-portal.style.top = `${Math.round(rect.bottom + 4)}px`;
-portal.style.zIndex = "20000";
-
 }
 
 function openFibColorMenu(anchorBtn, fallbackColor){
@@ -2692,132 +1993,20 @@ portal.style.zIndex = "20000";
 
 }
 
-function openElliottChannelColorMenu(
-anchorBtn,
-fallbackColor
-){
-
-const portal =
-ensureFibColorMenuPortal();
-
-fibColorMenuAnchor =
-anchorBtn;
-
-const active =
-anchorBtn.dataset.customColor ||
-fallbackColor ||
-CHANNEL_DEFAULT_COLOR;
-
-mountTvColorPicker(
-portal,
-{
-activeColor: active,
-onChange: color=>{
-
-setFibLevelColorButton(
-anchorBtn,
-color,
-fallbackColor
+function openElliottChannelColorMenu(anchorBtn,
+fallbackColor){
+return openElliottChannelColorMenuMoved(
+stylePanelHost(),
+...arguments
 );
-
-applyElliottSettingsFromPanel();
-
-},
-onSelect: color=>{
-
-setFibLevelColorButton(
-anchorBtn,
-color,
-fallbackColor
-);
-
-closeFibColorMenu();
-applyElliottSettingsFromPanel();
-
-}
-}
-);
-
-portal.classList.remove(
-"hidden"
-);
-
-const rect =
-anchorBtn.getBoundingClientRect();
-
-portal.style.position =
-"fixed";
-portal.style.left =
-`${Math.round(rect.left)}px`;
-portal.style.top =
-`${Math.round(rect.bottom + 4)}px`;
-portal.style.zIndex =
-"20000";
-
 }
 
-function openChannelColorMenu(
-anchorBtn,
-fallbackColor
-){
-
-const portal =
-ensureFibColorMenuPortal();
-
-fibColorMenuAnchor =
-anchorBtn;
-
-const active =
-anchorBtn.dataset.customColor ||
-fallbackColor ||
-CHANNEL_DEFAULT_COLOR;
-
-mountTvColorPicker(
-portal,
-{
-activeColor: active,
-onChange: color=>{
-
-setFibLevelColorButton(
-anchorBtn,
-color,
-fallbackColor
+function openChannelColorMenu(anchorBtn,
+fallbackColor){
+return openChannelColorMenuMoved(
+stylePanelHost(),
+...arguments
 );
-
-commitChannelPanelToShape();
-
-},
-onSelect: color=>{
-
-setFibLevelColorButton(
-anchorBtn,
-color,
-fallbackColor
-);
-
-closeFibColorMenu();
-commitChannelPanelToShape();
-
-}
-}
-);
-
-portal.classList.remove(
-"hidden"
-);
-
-const rect =
-anchorBtn.getBoundingClientRect();
-
-portal.style.position =
-"fixed";
-portal.style.left =
-`${Math.round(rect.left)}px`;
-portal.style.top =
-`${Math.round(rect.bottom + 4)}px`;
-portal.style.zIndex =
-"20000";
-
 }
 
 function ensureFibColorMenuPortal(){

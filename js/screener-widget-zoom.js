@@ -9,13 +9,15 @@ applyScreenerZoom,
 updateRsiBandLayout,
 updateRsiLevelLinesLayout,
 linkPairedChartTimeScales,
+syncLinkedChartTimescales,
+equalizeLinkedPanePriceScales,
 linkChartsCrosshair,
 mainChartCrosshairOptions,
 mountChartPriceHud,
 applyTabletMainChartScroll,
 applyTabletRsiChartOptions,
 SCREENER_MAX_BARS
-} from "./chart-import.js?v=c172cdf4";
+} from "./chart-import.js?v=544220a0";
 
 import {
 isIpadWebViewport
@@ -49,7 +51,7 @@ SCREENER_WIDGET_OSCILLATOR_CHANGED,
 SCREENER_WIDGET_OSCILLATOR_MACD,
 createScreenerMacdChart,
 setScreenerMacdData
-} from "./screener-widget-oscillator.js?v=e28bfde2";
+} from "./screener-widget-oscillator.js?v=62d04576";
 
 import {
 shouldIgnoreTypingHotkey
@@ -1119,7 +1121,7 @@ const {
 mountWidgetTabletChart
 } =
 await import(
-"./tablet-widget-chart.js?v=54b95dac"
+"./tablet-widget-chart.js?v=84516367"
 );
 
 if(
@@ -1151,6 +1153,50 @@ state.disposeTabletPan =
 null;
 };
 
+}catch{
+/* ignore */
+}
+
+}
+
+function alignZoomPaneScales(
+state
+){
+
+if(
+!state?.chart ||
+!state.rsiChart
+){
+return;
+}
+
+equalizeLinkedPanePriceScales(
+state.chart,
+[
+state.rsiChart
+]
+);
+
+syncLinkedChartTimescales(
+state.chart,
+state.rsiChart
+);
+
+try{
+const scaleW =
+state.chart.priceScale(
+"right"
+).width();
+
+if(
+scaleW >
+0
+){
+state.rsiWrapEl?.style.setProperty(
+"--chart-scale-width",
+`${scaleW}px`
+);
+}
 }catch{
 /* ignore */
 }
@@ -1258,6 +1304,10 @@ state
 
 }
 
+alignZoomPaneScales(
+state
+);
+
 if(
 !state.candles.length
 ){
@@ -1284,6 +1334,9 @@ state.series,
 state.candles,
 w,
 h
+);
+alignZoomPaneScales(
+state
 );
 state.fittedOnce =
 true;

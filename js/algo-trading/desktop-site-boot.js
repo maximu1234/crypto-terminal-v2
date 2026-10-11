@@ -65,7 +65,7 @@ void stopPatternOptimizeJob();
 }
 
 void import(
-"./bot-alert-bridge.js?v=339f62bd"
+"./bot-alert-bridge.js?v=54661cf3"
 ).then(
 m=>
 m.mountAlgoBotAlertBridge?.()
@@ -98,7 +98,7 @@ err
 }
 ),
 import(
-"./bot-alert-bridge.js?v=339f62bd"
+"./bot-alert-bridge.js?v=54661cf3"
 ).then(
 m=>
 m.unmountAlgoBotAlertBridge?.()

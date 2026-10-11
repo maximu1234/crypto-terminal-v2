@@ -447,11 +447,11 @@ restoreScreenerViewport,
 applyScreenerZoom,
 tfPeriodSec,
 rsiPlotTimeOffsetSec
-} from "./chart-viewport.js?v=67560962";
+} from "./chart-viewport.js?v=95c948c9";
 
 import {
 tfPeriodSec
-} from "./chart-viewport.js?v=67560962";
+} from "./chart-viewport.js?v=95c948c9";
 
 
 
@@ -1868,7 +1868,7 @@ lineEl.classList.remove(
 
 export {
 linkChartsCrosshair
-} from "./chart-crosshair-link.js?v=21cde27d";
+} from "./chart-crosshair-link.js?v=70d5451b";
 
 
 
@@ -1890,7 +1890,8 @@ const key of [
 "fixRightEdge",
 "leftOffset",
 "minBarSpacing",
-"maxBarSpacing"
+"maxBarSpacing",
+"shiftVisibleRangeOnNewBar"
 ]
 ){
 

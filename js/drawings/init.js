@@ -50,7 +50,7 @@ ensureDomChartCrosshair,
 hideDomChartCrosshair,
 positionTabletProbeHorizInStack,
 fullCrosshairOptions
-} from "../chart-import.js?v=c172cdf4";
+} from "../chart-import.js?v=544220a0";
 
 import {
 STROKE,
@@ -152,7 +152,7 @@ updateChartRulerLabelEl
 
 import {
 mountTabletDrawInput
-} from "../drawings-tablet-input.js?v=ca9f68c9";
+} from "../drawings-tablet-input.js?v=c1b2f67f";
 
 import {
 cloneDrawingsForUndo,
@@ -161,7 +161,7 @@ createDrawUndoStack
 
 import {
 createDrawDesktopSelection
-} from "./draw-edit-desktop.js?v=ca20766f";
+} from "./draw-edit-desktop.js?v=b1488680";
 
 import {
 createDrawingsPersist
@@ -169,15 +169,15 @@ createDrawingsPersist
 
 import {
 createDrawStyleBar
-} from "./draw-style-bar.js?v=2555550d";
+} from "./draw-style-bar.js?v=da4b30ad";
 
 import {
 createDrawAlertsChart
-} from "./draw-alerts-chart.js?v=70badcd6";
+} from "./draw-alerts-chart.js?v=c056d07a";
 
 import {
 createDrawPlacement
-} from "./draw-placement.js?v=502686e0";
+} from "./draw-placement.js?v=aa2cb462";
 
 import {
 createDrawTextEditor,
@@ -206,15 +206,15 @@ createBrushPlacement
 
 import {
 createDrawEditInteraction
-} from "./draw-edit-interaction.js?v=f743f9d2";
+} from "./draw-edit-interaction.js?v=68843517";
 
 import {
 createDrawChartInput
-} from "./draw-chart-input.js?v=8e331ad7";
+} from "./draw-chart-input.js?v=5bd6aa72";
 
 import {
 createDrawPriceScale
-} from "./draw-price-scale.js?v=8c24a2c7";
+} from "./draw-price-scale.js?v=fa9c07bf";
 
 import {
 createDrawRedrawLoop
@@ -231,6 +231,19 @@ plotCoordinateToPrice as plotCoordinateToPriceMoved,
 resolvePointFromPlotXY as resolvePointFromPlotXYMoved,
 hitTest as hitTestMoved
 } from "./draw-plot-hit.js?v=39e2ce10";
+import {
+setupTabletNativeSelectionBlock as setupTabletNativeSelectionBlockMoved,
+drawBrushPlacementPreview as drawBrushPlacementPreviewMoved,
+drawChartRulerOverlay as drawChartRulerOverlayMoved,
+setTool as setToolMoved,
+pickDrawTool as pickDrawToolMoved,
+deleteSelected as deleteSelectedMoved,
+handleChartRulerClick as handleChartRulerClickMoved,
+clearAllDrawingsOnChart as clearAllDrawingsOnChartMoved,
+bindClearAllToolbarButtons as bindClearAllToolbarButtonsMoved,
+setDrawingsHidden as setDrawingsHiddenMoved,
+handleToolbarToolPick as handleToolbarToolPickMoved
+} from "./draw-tool-actions.js?v=c37a8c1c";
 export function initDrawings({
 
 chart,
@@ -1497,85 +1510,78 @@ chartRulerShiftDown = true;
 
 }
 
-function drawChartRulerOverlay(
-ctx,
+function drawToolHost(){
+if(!drawToolHost.current){
+drawToolHost.current = {
+get alive(){ return alive; },
+get applyPrimarySelectedId(){ return applyPrimarySelectedId; },
+get baseDefaultStyle(){ return baseDefaultStyle; },
+get brushPlacementCtl(){ return brushPlacementCtl; },
+get cancelPlacement(){ return cancelPlacement; },
+get candleSeries(){ return candleSeries; },
+get chartRulerEndPlot(){ return chartRulerEndPlot; },
+set chartRulerEndPlot(value){ chartRulerEndPlot = value; },
+get chartRulerLabelEl(){ return chartRulerLabelEl; },
+get chartRulerStart(){ return chartRulerStart; },
+set chartRulerStart(value){ chartRulerStart = value; },
+get clearAllPeers(){ return clearAllPeers; },
+get clearChartRuler(){ return clearChartRuler; },
+get closeAllWidgetDrawToolsMenus(){ return closeAllWidgetDrawToolsMenus; },
+get closeElliottFlyout(){ return closeElliottFlyout; },
+get closeFibFlyout(){ return closeFibFlyout; },
+get computeChartRulerMetrics(){ return computeChartRulerMetrics; },
+get desktopEdit(){ return desktopEdit; },
+get drawAnchorCircle(){ return drawAnchorCircle; },
+get drawChartRuler(){ return drawChartRuler; },
+get drawShape(){ return drawShape; },
+get drawings(){ return drawings; },
+set drawings(value){ drawings = value; },
+get drawingsHidden(){ return drawingsHidden; },
+set drawingsHidden(value){ drawingsHidden = value; },
+get getSymbol(){ return getSymbol; },
+get isActive(){ return isActive; },
+get isChartRulerGoingDown(){ return isChartRulerGoingDown; },
+get isChartRulerShiftActive(){ return isChartRulerShiftActive; },
+get isCoarseTouchViewport(){ return isCoarseTouchViewport; },
+get isTabletChartViewport(){ return isTabletChartViewport; },
+get lastToolPickStamp(){ return lastToolPickStamp; },
+set lastToolPickStamp(value){ lastToolPickStamp = value; },
+get notifyTabletChartGestureAbort(){ return notifyTabletChartGestureAbort; },
+get pointFromXY(){ return pointFromXY; },
+get recordDrawingTombstone(){ return recordDrawingTombstone; },
+get redraw(){ return redraw; },
+get saveDrawings(){ return saveDrawings; },
+get scheduleRedraw(){ return scheduleRedraw; },
+get selectedId(){ return selectedId; },
+get selectedIds(){ return selectedIds; },
+get selectedIdsList(){ return selectedIdsList; },
+get shouldSuppressNativeSelection(){ return shouldSuppressNativeSelection; },
+get startPlacement(){ return startPlacement; },
+get styleBar(){ return styleBar; },
+get syncChartRulerLayerClass(){ return syncChartRulerLayerClass; },
+get syncDrawingsHiddenButton(){ return syncDrawingsHiddenButton; },
+get syncElliottGroupActive(){ return syncElliottGroupActive; },
+get syncFibGroupActive(){ return syncFibGroupActive; },
+get textEditor(){ return textEditor; },
+get toXY(){ return toXY; },
+get tool(){ return tool; },
+set tool(value){ tool = value; },
+get tools(){ return tools; },
+get updateChartRulerLabelEl(){ return updateChartRulerLabelEl; },
+get updateStyleBar(){ return updateStyleBar; },
+get wrapEl(){ return wrapEl; }
+};
+}
+return drawToolHost.current;
+}
+
+function drawChartRulerOverlay(ctx,
 plotW,
-plotH
-){
-
-if(
-!chartRulerStart ||
-!chartRulerEndPlot
-){
-return;
-}
-
-const startXY =
-toXY(
-chartRulerStart
+plotH){
+return drawChartRulerOverlayMoved(
+drawToolHost(),
+...arguments
 );
-
-if(
-!startXY
-){
-return;
-}
-
-const endPoint =
-pointFromXY(
-chartRulerEndPlot.x,
-chartRulerEndPlot.y
-);
-
-if(
-!endPoint
-){
-return;
-}
-
-const metrics =
-computeChartRulerMetrics(
-chartRulerStart,
-endPoint,
-candleSeries()
-);
-
-const goesDown =
-isChartRulerGoingDown(
-startXY,
-chartRulerEndPlot
-);
-
-drawChartRuler(
-ctx,
-startXY,
-chartRulerEndPlot,
-goesDown
-);
-
-try{
-
-updateChartRulerLabelEl(
-chartRulerLabelEl,
-{
-bx: chartRulerEndPlot.x,
-by: chartRulerEndPlot.y,
-goesDown,
-metrics,
-plotW,
-plotH
-}
-);
-
-}catch(
-labelErr
-){
-console.warn(
-"chart ruler label",
-labelErr
-);
-}
-
 }
 
 function syncChartRulerEndFromPlot(
@@ -1613,54 +1619,12 @@ return true;
 
 }
 
-function handleChartRulerClick(
-point,
-param
-){
-
-if(
-tool !==
-"cursor" ||
-!isChartRulerShiftActive(
-param
-) ||
-!point
-){
-return false;
-}
-
-if(
-chartRulerStart
-){
-clearChartRuler();
-redraw();
-return true;
-}
-
-chartRulerStart = {
-time: point.time,
-price: point.price
-};
-
-const startPlot =
-toXY(
-chartRulerStart
+function handleChartRulerClick(point,
+param){
+return handleChartRulerClickMoved(
+drawToolHost(),
+...arguments
 );
-
-chartRulerEndPlot = {
-x: param.point?.x ??
-startPlot?.x ??
-0,
-y: param.point?.y ??
-startPlot?.y ??
-0
-};
-
-syncChartRulerLayerClass();
-redraw();
-
-return true;
-
 }
 
 
@@ -2631,98 +2595,13 @@ alertsChart);
 }
 
 
-function drawBrushPlacementPreview(
-ctx,
+function drawBrushPlacementPreview(ctx,
 plotW,
-h
-){
-
-const stroke =
-brushPlacementCtl?.getBrushStroke?.();
-
-if(
-!stroke?.points?.length
-){
-return;
-}
-
-const pts =
-stroke.points;
-
-if(
-pts.length <
-1
-){
-return;
-}
-
-const style =
-baseDefaultStyle(
-"brush"
+h){
+return drawBrushPlacementPreviewMoved(
+drawToolHost(),
+...arguments
 );
-
-if(
-pts.length >=
-2
-){
-
-drawShape(
-ctx,
-{
-type: "brush",
-path: pts,
-p1: pts[
-0
-],
-p2: pts[
-pts.length -
-1
-],
-color: style.color,
-lineWidth: style.lineWidth
-},
-plotW,
-h
-);
-
-}
-
-const start =
-toXY(
-pts[
-0
-]
-);
-const end =
-toXY(
-pts[
-pts.length -
-1
-]
-);
-
-if(
-start
-){
-drawAnchorCircle(
-ctx,
-start.x,
-start.y
-);
-}
-
-if(
-end &&
-pts.length >
-1
-){
-drawAnchorCircle(
-ctx,
-end.x,
-end.y
-);
-}
-
 }
 
 
@@ -2926,79 +2805,12 @@ plotHitHost(),
 );
 }
 
-function setTool(
-next,
-pointerType
-){
-
-tool = next;
-cancelPlacement();
-
-wrapEl.classList.toggle(
-"chart-draw-interaction",
-next !==
-"cursor"
+function setTool(next,
+pointerType){
+return setToolMoved(
+drawToolHost(),
+...arguments
 );
-
-if(
-isCoarseTouchViewport() ||
-isTabletChartViewport()
-){
-document.body.classList.toggle(
-"tablet-chart-draw-mode",
-next !==
-"cursor"
-);
-}
-
-if(
-next !==
-"cursor"
-){
-desktopEdit?.clearDrawingSelection?.();
-}
-
-if(
-next !==
-"cursor"
-){
-clearChartRuler();
-notifyTabletChartGestureAbort();
-
-if(
-isActive() &&
-next !==
-"brush"
-){
-startPlacement(
-next,
-pointerType
-);
-}
-
-}else{
-notifyTabletChartGestureAbort();
-}
-
-tools.querySelectorAll("[data-draw-tool]").forEach(btn=>{
-btn.classList.toggle(
-"active",
-btn.dataset.drawTool === tool
-);
-});
-
-syncElliottGroupActive(
-tools,
-tool
-);
-syncFibGroupActive(
-tools,
-tool
-);
-
-updateStyleBar();
-redraw();
-
 }
 
 tabletDrawInput =
@@ -3040,141 +2852,19 @@ name: "",
 at: 0
 };
 
-function pickDrawTool(
-next,
-pointerType
-){
-
-if(
-!next
-){
-return;
-}
-
-closeElliottFlyout();
-closeFibFlyout();
-
-const now =
-performance.now();
-
-if(
-lastToolPickStamp.name ===
-next &&
-now - lastToolPickStamp.at <
-400
-){
-return;
-}
-
-lastToolPickStamp = {
-name: next,
-at: now
-};
-
-if(
-next ===
-"cursor"
-){
-setTool(
-"cursor"
+function pickDrawTool(next,
+pointerType){
+return pickDrawToolMoved(
+drawToolHost(),
+...arguments
 );
-closeAllWidgetDrawToolsMenus();
-return;
-}
-
-if(
-tool ===
-next
-){
-setTool(
-"cursor"
-);
-closeAllWidgetDrawToolsMenus();
-return;
-}
-
-if(
-drawingsHidden
-){
-setDrawingsHidden(
-false
-);
-}
-
-setTool(
-next,
-pointerType
-);
-
-closeAllWidgetDrawToolsMenus();
-
 }
 
 function deleteSelected(){
-
-const ids =
-selectedIds.size
-? selectedIdsList()
-: selectedId
-? [
-selectedId
-]
-: [];
-
-if(
-!ids.length
-){
-return;
-}
-
-textEditor?.close?.(
-false
+return deleteSelectedMoved(
+drawToolHost(),
+...arguments
 );
-
-const idSet =
-new Set(
-ids
-);
-
-const symDel =
-String(
-getSymbol() ||
-""
-).trim().toUpperCase();
-
-for(
-const removed of drawings.filter(
-d=>
-idSet.has(
-d.id
-)
-)
-){
-
-if(
-removed?.id &&
-symDel
-){
-recordDrawingTombstone(
-symDel,
-removed.id
-);
-}
-
-}
-
-drawings =
-drawings.filter(
-d=>
-!idSet.has(
-d.id
-)
-);
-desktopEdit.clearDrawingSelection();
-saveDrawings();
-updateStyleBar();
-redraw();
-
 }
 
 textEditor =
@@ -3261,57 +2951,10 @@ onTextDblClick
 );
 
 function clearAllDrawingsOnChart(){
-
-if(!alive){
-return false;
-}
-
-const sym =
-String(getSymbol() || "").trim().toUpperCase();
-
-for(
-const d of drawings
-){
-recordDrawingTombstone(
-sym,
-d.id
+return clearAllDrawingsOnChartMoved(
+drawToolHost(),
+...arguments
 );
-}
-
-drawings = [];
-applyPrimarySelectedId(
-null
-);
-cancelPlacement();
-saveDrawings();
-
-window.dispatchEvent(
-new CustomEvent(
-"drawings-updated",
-{
-detail:{
-symbol: sym,
-cleared: true
-}
-}
-)
-);
-
-updateStyleBar();
-scheduleRedraw();
-
-if(
-clearAllPeers?.call
-){
-try{
-clearAllPeers.call();
-}catch{
-/* ignore */
-}
-}
-
-return true;
-
 }
 
 function syncDrawingsHiddenButton(){
@@ -3351,44 +2994,11 @@ label
 
 }
 
-function setDrawingsHidden(
-next
-){
-
-const hidden =
-!!next;
-
-if(
-hidden ===
-drawingsHidden
-){
-syncDrawingsHiddenButton();
-return;
-}
-
-drawingsHidden =
-hidden;
-
-if(
-hidden
-){
-textEditor?.close?.(
-false
+function setDrawingsHidden(next){
+return setDrawingsHiddenMoved(
+drawToolHost(),
+...arguments
 );
-applyPrimarySelectedId(
-null
-);
-try{
-cancelPlacement?.();
-}catch{
-/* ignore */
-}
-updateStyleBar?.();
-}
-
-syncDrawingsHiddenButton();
-scheduleRedraw?.();
-
 }
 
 function bindHideDrawingsToolbarButtons(){
@@ -3425,44 +3035,10 @@ setDrawingsHidden(
 }
 
 function bindClearAllToolbarButtons(){
-
-const buttons =
-tools.querySelectorAll(
-".draw-tool-clear-all"
+return bindClearAllToolbarButtonsMoved(
+drawToolHost(),
+...arguments
 );
-
-buttons.forEach(btn=>{
-
-if(
-btn.dataset.clearAllBound ===
-"1"
-){
-return;
-}
-
-btn.dataset.clearAllBound = "1";
-
-const runClear = e=>{
-
-e.preventDefault();
-e.stopPropagation();
-clearAllDrawingsOnChart();
-
-};
-
-btn.addEventListener(
-"pointerdown",
-runClear,
-true
-);
-
-btn.addEventListener(
-"click",
-runClear
-);
-
-});
-
 }
 
 clickHandler = param=>{
@@ -3996,43 +3572,11 @@ redraw();
 
 window.addEventListener("blur", onWindowBlur);
 
-function handleToolbarToolPick(
-e
-){
-
-const btn =
-e.target.closest?.(
-"[data-draw-tool]"
+function handleToolbarToolPick(e){
+return handleToolbarToolPickMoved(
+drawToolHost(),
+...arguments
 );
-
-if(
-!btn ||
-!tools.contains(
-btn
-)
-){
-return false;
-}
-
-if(
-btn.closest(
-".widget-draw-tools-menu"
-) ||
-btn.closest(
-".widget-draw-tools-toggle"
-)
-){
-return false;
-}
-
-e.preventDefault();
-e.stopPropagation();
-pickDrawTool(
-btn.dataset.drawTool,
-e.pointerType
-);
-return true;
-
 }
 
 const onToolsPointerDown =
@@ -4472,130 +4016,10 @@ const teardownPlacementPreview =
 setupPlacementPointerPreview();
 
 function setupTabletNativeSelectionBlock(){
-
-if(
-!isCoarseTouchViewport()
-){
-return ()=>{};
-}
-
-const cap = {
-capture:true
-};
-
-const touchCap = {
-capture:true,
-passive:false
-};
-
-const chartsStack =
-document.getElementById(
-"charts-stack"
+return setupTabletNativeSelectionBlockMoved(
+drawToolHost(),
+...arguments
 );
-
-const targets =
-[
-wrapEl,
-styleBar,
-tools,
-chartsStack
-].filter(
-Boolean
-);
-
-const onBlock =
-e=>{
-
-if(
-!shouldSuppressNativeSelection()
-){
-return;
-}
-
-e.preventDefault();
-
-};
-
-const onTouchBlock =
-e=>{
-
-if(
-!shouldSuppressNativeSelection()
-){
-return;
-}
-
-if(
-e.touches?.length >
-1
-){
-return;
-}
-
-e.preventDefault();
-
-};
-
-for(
-const el of
-targets
-){
-el.addEventListener(
-"selectstart",
-onBlock,
-cap
-);
-el.addEventListener(
-"contextmenu",
-onBlock,
-cap
-);
-el.addEventListener(
-"touchstart",
-onTouchBlock,
-touchCap
-);
-el.addEventListener(
-"touchmove",
-onTouchBlock,
-touchCap
-);
-}
-
-return ()=>{
-
-for(
-const el of
-targets
-){
-el.removeEventListener(
-"selectstart",
-onBlock,
-cap
-);
-el.removeEventListener(
-"contextmenu",
-onBlock,
-cap
-);
-el.removeEventListener(
-"touchstart",
-onTouchBlock,
-touchCap
-);
-el.removeEventListener(
-"touchmove",
-onTouchBlock,
-touchCap
-);
-}
-
-document.body.classList.remove(
-"tablet-chart-draw-mode"
-);
-
-};
-
 }
 
 const teardownTabletNativeSelectionBlock =
@@ -4943,7 +4367,7 @@ lastChartAlertsPullMs =
 Date.now();
 
 void import(
-"../alerts-cloud-sync.js?v=d1d13773"
+"../alerts-cloud-sync.js?v=ec1daf65"
 ).then(
 ({ pullRegistryFromCloudNow })=>
 pullRegistryFromCloudNow({

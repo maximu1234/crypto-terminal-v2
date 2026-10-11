@@ -758,6 +758,8 @@ rightOffset:
 rightMargin,
 fixRightEdge:
 false,
+shiftVisibleRangeOnNewBar:
+false,
 lockVisibleTimeRangeOnResize:
 false,
 minBarSpacing:

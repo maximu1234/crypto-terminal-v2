@@ -40,12 +40,12 @@ openChromeSurface
 
 import {
 resolveUrlExchangeDeepLink
-} from "./alert-deep-link-exchange.js?v=8032040c";
+} from "./alert-deep-link-exchange.js?v=97147625";
 
 import {
 defaultRsiPaneSettings,
 normalizeRsiPaneSettings
-} from "./indicators/rsi-pane.js?v=9e95c49b";
+} from "./indicators/rsi-pane.js?v=ae69864d";
 
 import {
 buildChartRsiPoints
@@ -66,18 +66,18 @@ seedWatchlistTfOnBlueFlag
 
 import {
 ensureCloudReady
-} from "./auth-ui.js?v=07dd607e";
+} from "./auth-ui.js?v=c8010a2e";
 
 import {
 getActiveAlerts,
 isMacdAlert,
 isRsiAlert
-} from "./alerts.js?v=8f0edf94";
+} from "./alerts.js?v=9df2851a";
 
 import {
 persistFavoritesToCloud,
 onFavoritesRemoteUpdate
-} from "./cloud-sync.js?v=2b118db6";
+} from "./cloud-sync.js?v=33cd7ae6";
 
 import {
 createCandlestickChart,
@@ -107,7 +107,7 @@ appendFutureWhitespaceBars,
 applyCoinsChartViewport,
 refreshCoinsChartBarSpacing,
 tfPeriodSec
-} from "./chart-import.js?v=c172cdf4";
+} from "./chart-import.js?v=544220a0";
 
 import {
 terminalVisibleBars,
@@ -121,7 +121,7 @@ TERMINAL_HISTORY_LAZY_BATCH_BARS
 
 import {
 mountCoinsTabletController
-} from "./terminal-tablet-controller.js?v=ac4c39f9";
+} from "./terminal-tablet-controller.js?v=8fd0b0ad";
 
 import {
 disconnectKlineStream
@@ -131,7 +131,7 @@ import {
 syncBackgroundAlertStreams,
 onMacdSeriesUpdate,
 onRsiSeriesUpdate
-} from "./alert-monitor.js?v=236d1c21";
+} from "./alert-monitor.js?v=706447ba";
 
 import {
 createSharedDrawUndoStack
@@ -199,7 +199,7 @@ mountCoinsScaleInvertMenu
 
 import {
 mountTerminalDrawChrome
-} from "./terminal/terminal-draw-chrome.js?v=0a5202d1";
+} from "./terminal/terminal-draw-chrome.js?v=bcdf7924";
 
 
 
@@ -210,7 +210,7 @@ stopTickerStream
 import {
 mountCoinsListRefreshControls,
 applyCoinsListRefreshInterval
-} from "./terminal-list-refresh.js?v=857523a6";
+} from "./terminal-list-refresh.js?v=f9e0e40a";
 
 import {
 readCoinsPrefs,
@@ -224,7 +224,7 @@ applyCoinsPrefs,
 applySortForCurrentMarket,
 readUrlParams,
 readLastViewForExchange
-} from "./terminal/terminal-prefs.js?v=8ac008bc";
+} from "./terminal/terminal-prefs.js?v=f3bd5578";
 
 import {
 mountDesktopOpenChartHandler
@@ -246,7 +246,7 @@ setCoinsTableHooks,
 syncCoinListFreezeFromFlagMenus,
 getExtraCoinMarkets,
 isExtraCoinMarket
-} from "./terminal/terminal-table.js?v=ba3f86ef";
+} from "./terminal/terminal-table.js?v=1c3b7a77";
 
 import {
 createCoinsChartSwitchVeil
@@ -261,7 +261,7 @@ syncCoinsChartLinkedViewports,
 resizeCharts,
 scheduleResizeCharts,
 applyDefaultZoom
-} from "./terminal/terminal-chart-layout.js?v=7c8289ee";
+} from "./terminal/terminal-chart-layout.js?v=df9a7a4d";
 
 import {
 placeCoinsTabletListNav
@@ -271,7 +271,7 @@ import {
 initTerminalMultiChart,
 syncPrimaryTfToLayout,
 isTerminalMultiChartLayout
-} from "./terminal-multi-chart.js?v=2812961c";
+} from "./terminal-multi-chart.js?v=df6cecf5";
 
 import {
 mountTerminalLayoutPicker
@@ -312,6 +312,14 @@ FEATURE_NAV_PREF_EVENT
 } from "./desktop-feature-nav-prefs.js?v=0fd2425e";
 
 /** @type {typeof import("./algo-trading/terminal-early-t3-list.js")|null} */
+import {
+loadSymbol as loadSymbolMoved,
+maybeLoadOlderTerminalHistory as maybeLoadOlderTerminalHistoryMoved,
+loadVisibleTerminalHistory as loadVisibleTerminalHistoryMoved,
+applyMergedTerminalCandles as applyMergedTerminalCandlesMoved,
+settleTerminalHistoryAfterPaint as settleTerminalHistoryAfterPaintMoved,
+bindTerminalHistoryLazyLoad as bindTerminalHistoryLazyLoadMoved
+} from "./terminal/terminal-history.js?v=a32d776a";
 let terminalAlgoEarlyT3ListMod =
 null;
 
@@ -730,275 +738,96 @@ null;
 
 }
 
+function terminalHistoryHost(){
+if(!terminalHistoryHost.current){
+terminalHistoryHost.current = {
+get TERMINAL_HISTORY_INITIAL_BARS(){ return TERMINAL_HISTORY_INITIAL_BARS; },
+get TERMINAL_HISTORY_LAZY_BATCH_BARS(){ return TERMINAL_HISTORY_LAZY_BATCH_BARS; },
+get TERMINAL_VISIBLE_BARS(){ return TERMINAL_VISIBLE_BARS; },
+get applyChartPriceFormat(){ return applyChartPriceFormat; },
+get applyDefaultZoom(){ return applyDefaultZoom; },
+get buildChartDisplayCandles(){ return buildChartDisplayCandles; },
+get candleSeries(){ return candleSeries; },
+get candles(){ return candles; },
+set candles(value){ candles = value; },
+get chart(){ return chart; },
+get chartCrosshairLink(){ return chartCrosshairLink; },
+get chartIndicators(){ return chartIndicators; },
+get chartSwitchVeil(){ return chartSwitchVeil; },
+get clearBybitNetworkIssue(){ return clearBybitNetworkIssue; },
+get coinsDrawOnSymbolChange(){ return coinsDrawOnSymbolChange; },
+get coinsState(){ return coinsState; },
+get currentDataset(){ return currentDataset; },
+get currentSymbol(){ return currentSymbol; },
+set currentSymbol(value){ currentSymbol = value; },
+get currentTF(){ return currentTF; },
+get disconnectKlineStream(){ return disconnectKlineStream; },
+get dispatchChartCandlesLoaded(){ return dispatchChartCandlesLoaded; },
+get dispatchChartSwitchCandlesApply(){ return dispatchChartSwitchCandlesApply; },
+get dispatchChartSwitchStart(){ return dispatchChartSwitchStart; },
+get formatCoinsSymbolLabel(){ return formatCoinsSymbolLabel; },
+get getActiveExchangeDefinition(){ return getActiveExchangeDefinition; },
+get getActiveExchangeId(){ return getActiveExchangeId; },
+get getTerminalHistoryDepth(){ return getTerminalHistoryDepth; },
+get highlightActiveSymbol(){ return highlightActiveSymbol; },
+get historyExhausted(){ return historyExhausted; },
+set historyExhausted(value){ historyExhausted = value; },
+get historyLoadingOlder(){ return historyLoadingOlder; },
+set historyLoadingOlder(value){ historyLoadingOlder = value; },
+get historyRangeUnsub(){ return historyRangeUnsub; },
+set historyRangeUnsub(value){ historyRangeUnsub = value; },
+get isActiveRealtimeMarketDataset(){ return isActiveRealtimeMarketDataset; },
+get isSlowHistoryLink(){ return isSlowHistoryLink; },
+get isTradePage(){ return isTradePage; },
+get loadMarketHistory(){ return loadMarketHistory; },
+get logicalIndexShift(){ return logicalIndexShift; },
+get mergeCandleRows(){ return mergeCandleRows; },
+get peekHistoryCache(){ return peekHistoryCache; },
+get persistCoinsPrefs(){ return persistCoinsPrefs; },
+get putHistoryCache(){ return putHistoryCache; },
+get rebuildRsiFromCandles(){ return rebuildRsiFromCandles; },
+get refreshCoinsChartBarSpacing(){ return refreshCoinsChartBarSpacing; },
+get refreshTerminalHistoryTail(){ return refreshTerminalHistoryTail; },
+get rememberTerminalHistory(){ return rememberTerminalHistory; },
+get replaceCoinsChartCandles(){ return replaceCoinsChartCandles; },
+get resetCoinsChartPriceScale(){ return resetCoinsChartPriceScale; },
+get rsiChart(){ return rsiChart; },
+get scheduleChartLayoutSettled(){ return scheduleChartLayoutSettled; },
+get scheduleCoinsDrawRedraw(){ return scheduleCoinsDrawRedraw; },
+get setChartLayoutReady(){ return setChartLayoutReady; },
+get setCoinsChartStatus(){ return setCoinsChartStatus; },
+get setCoinsChartSymbol(){ return setCoinsChartSymbol; },
+get settleCoinsChartViewport(){ return settleCoinsChartViewport; },
+get slowHistoryPageLimit(){ return slowHistoryPageLimit; },
+get startPriceHud(){ return startPriceHud; },
+get startRealtime(){ return startRealtime; },
+get stopLivePriceFallbacks(){ return stopLivePriceFallbacks; },
+get symbolLoadSeq(){ return symbolLoadSeq; },
+set symbolLoadSeq(value){ symbolLoadSeq = value; },
+get syncBackgroundAlertStreams(){ return syncBackgroundAlertStreams; },
+get syncCoinsChartLinkedViewports(){ return syncCoinsChartLinkedViewports; },
+get syncCoinsChartTurnover24(){ return syncCoinsChartTurnover24; },
+get terminalHistoryInitialRequests(){ return terminalHistoryInitialRequests; },
+get terminalMultiChartApi(){ return terminalMultiChartApi; },
+get unbindTerminalHistoryLazyLoad(){ return unbindTerminalHistoryLazyLoad; },
+get viewportSettleRaf(){ return viewportSettleRaf; }
+};
+}
+return terminalHistoryHost.current;
+}
+
 function bindTerminalHistoryLazyLoad(){
-
-unbindTerminalHistoryLazyLoad();
-
-if(
-!chart?.timeScale
-){
-return;
-}
-
-const onRange =
-range=>{
-
-if(
-!range ||
-historyLoadingOlder ||
-historyExhausted ||
-!candles.length
-){
-return;
-}
-
-if(
-candles.length >=
-getTerminalHistoryDepth()
-){
-return;
-}
-
-if(
-range.from >
-80
-){
-return;
-}
-
-void maybeLoadOlderTerminalHistory();
-
-};
-
-chart.timeScale().subscribeVisibleLogicalRangeChange(
-onRange
+return bindTerminalHistoryLazyLoadMoved(
+terminalHistoryHost(),
+...arguments
 );
-
-historyRangeUnsub =
-()=>{
-
-try{
-chart.timeScale().unsubscribeVisibleLogicalRangeChange(
-onRange
-);
-}catch{
-/* ignore */
-}
-
-};
-
 }
 
 async function maybeLoadOlderTerminalHistory(){
-
-if(
-historyLoadingOlder ||
-historyExhausted ||
-!candles.length ||
-!currentSymbol
-){
-return;
-}
-
-const depth =
-getTerminalHistoryDepth();
-
-if(
-candles.length >=
-depth
-){
-historyExhausted =
-true;
-return;
-}
-
-const remaining =
-depth -
-candles.length;
-const pageLimit =
-slowHistoryPageLimit();
-const requests =
-pageLimit <
-1000
-? 1
-: Math.max(
-1,
-Math.min(
-2,
-Math.ceil(
-remaining /
-TERMINAL_HISTORY_LAZY_BATCH_BARS
-)
-)
+return maybeLoadOlderTerminalHistoryMoved(
+terminalHistoryHost(),
+...arguments
 );
-const endMs =
-candles[0].time *
-1000 -
-1;
-const loadSeq =
-symbolLoadSeq;
-
-historyLoadingOlder =
-true;
-
-try{
-const older =
-await loadMarketHistory(
-currentSymbol,
-currentTF,
-requests,
-{
-parallel:
-true,
-batchGapMs:
-0,
-endMs,
-pageLimit
-}
-);
-
-if(
-loadSeq !==
-symbolLoadSeq
-){
-return;
-}
-
-if(
-!older?.length
-){
-historyExhausted =
-true;
-return;
-}
-
-const beforeLen =
-candles.length;
-const byTime =
-new Map();
-
-for(
-const row of older
-){
-
-if(
-row?.time !=
-null
-){
-byTime.set(
-row.time,
-row
-);
-}
-
-}
-
-for(
-const row of candles
-){
-
-if(
-row?.time !=
-null
-){
-byTime.set(
-row.time,
-row
-);
-}
-
-}
-
-let merged =
-Array.from(
-byTime.values()
-).sort(
-(
-a,
-b
-)=>
-a.time -
-b.time
-);
-
-if(
-merged.length >
-depth
-){
-merged =
-merged.slice(
-merged.length -
-depth
-);
-}
-
-const added =
-merged.length -
-beforeLen;
-
-if(
-added <=
-0
-){
-historyExhausted =
-true;
-return;
-}
-
-const range =
-chart?.timeScale?.().getVisibleLogicalRange?.();
-
-candles =
-merged;
-
-candleSeries?.setData(
-buildChartDisplayCandles()
-);
-
-rebuildRsiFromCandles();
-chartIndicators?.notifyCandlesUpdate?.();
-
-if(
-range &&
-chart
-){
-chart.timeScale().setVisibleLogicalRange(
-{
-from:
-range.from +
-added,
-to:
-range.to +
-added
-}
-);
-}
-
-scheduleCoinsDrawRedraw();
-
-if(
-older.length <
-requests *
-pageLimit *
-0.5
-){
-historyExhausted =
-true;
-}
-
-}catch(
-err
-){
-console.warn(
-"terminal history lazy load:",
-err?.message ||
-err
-);
-}finally{
-historyLoadingOlder =
-false;
-}
-
 }
 
 bindTerminalHistoryLazyLoad();
@@ -3802,81 +3631,12 @@ historyExhausted
 
 }
 
-function applyMergedTerminalCandles(
-merged,
-loadSeq
-){
-
-if(
-loadSeq !==
-symbolLoadSeq ||
-!merged?.length
-){
-return;
-}
-
-const previous =
-candles;
-const shift =
-logicalIndexShift(
-previous,
-merged
+function applyMergedTerminalCandles(merged,
+loadSeq){
+return applyMergedTerminalCandlesMoved(
+terminalHistoryHost(),
+...arguments
 );
-const range =
-chart?.timeScale?.().getVisibleLogicalRange?.();
-
-candles =
-merged;
-coinsState().chartCandlesSymbol =
-currentSymbol;
-
-candleSeries?.setData(
-buildChartDisplayCandles()
-);
-
-rebuildRsiFromCandles();
-chartIndicators?.notifyCandlesUpdate?.();
-
-if(
-range &&
-chart &&
-shift
-){
-chart.timeScale().setVisibleLogicalRange(
-{
-from:
-range.from +
-shift,
-to:
-range.to +
-shift
-}
-);
-}
-
-scheduleCoinsDrawRedraw();
-
-if(
-candles.length >=
-getTerminalHistoryDepth()
-){
-historyExhausted =
-true;
-}
-
-putHistoryCache(
-getActiveExchangeId(),
-currentSymbol,
-currentTF,
-candles,
-{
-coversVisible:
-candles.length >=
-TERMINAL_VISIBLE_BARS ||
-historyExhausted
-}
-);
-
 }
 
 async function refreshTerminalHistoryTail(
@@ -3929,517 +3689,27 @@ loadSeq
 
 }
 
-async function settleTerminalHistoryAfterPaint(
-loadSeq
-){
-
-try{
-await refreshTerminalHistoryTail(
-loadSeq
-);
-}catch(
-err
-){
-console.warn(
-"terminal history tail:",
-err?.message ||
-err
+async function settleTerminalHistoryAfterPaint(loadSeq){
+return settleTerminalHistoryAfterPaintMoved(
+terminalHistoryHost(),
+...arguments
 );
 }
 
-let guard =
-0;
-let guardMax =
-8;
-
-while(
-loadSeq ===
-symbolLoadSeq &&
-!historyExhausted &&
-candles.length <
-TERMINAL_HISTORY_INITIAL_BARS &&
-candles.length <
-getTerminalHistoryDepth() &&
-guard <
-guardMax
-){
-
-if(
-isSlowHistoryLink()
-){
-guardMax =
-48;
-}
-
-guard++;
-const before =
-candles.length;
-
-await maybeLoadOlderTerminalHistory();
-
-if(
-candles.length <=
-before
-){
-break;
-}
-
-}
-
-if(
-loadSeq ===
-symbolLoadSeq
-){
-rememberTerminalHistory(
-currentSymbol,
-currentTF
-);
-}
-
-}
-
-async function loadVisibleTerminalHistory(
-symbol,
+async function loadVisibleTerminalHistory(symbol,
 tf,
-loadSeq
-){
-
-const visibleRequests =
-Math.max(
-1,
-Math.ceil(
-TERMINAL_VISIBLE_BARS /
-TERMINAL_HISTORY_LAZY_BATCH_BARS
-)
+loadSeq){
+return loadVisibleTerminalHistoryMoved(
+terminalHistoryHost(),
+...arguments
 );
-let rows =
-await loadMarketHistory(
-symbol,
-tf,
-visibleRequests,
-{
-parallel:
-true,
-batchGapMs:
-0
-}
-);
-
-if(
-loadSeq !==
-symbolLoadSeq
-){
-return null;
-}
-
-let guard =
-0;
-
-while(
-rows.length <
-TERMINAL_VISIBLE_BARS &&
-rows.length &&
-guard <
-terminalHistoryInitialRequests()
-){
-
-guard++;
-const older =
-await loadMarketHistory(
-symbol,
-tf,
-1,
-{
-parallel:
-true,
-batchGapMs:
-0,
-endMs:
-rows[
-0
-].time *
-1000 -
-1
-}
-);
-
-if(
-loadSeq !==
-symbolLoadSeq
-){
-return null;
-}
-
-if(
-!older?.length
-){
-break;
-}
-
-const before =
-rows.length;
-
-rows =
-mergeCandleRows(
-rows,
-older
-);
-
-if(
-rows.length <=
-before
-){
-break;
-}
-
-}
-
-return rows;
-
 }
 
 async function loadSymbol(symbol){
-
-if(
-symbol !==
-currentSymbol
-){
-rememberTerminalHistory(
-currentSymbol,
-currentTF
+return loadSymbolMoved(
+terminalHistoryHost(),
+...arguments
 );
-}
-
-if(
-viewportSettleRaf.value
-){
-
-cancelAnimationFrame(
-viewportSettleRaf.value
-);
-
-viewportSettleRaf.value =
-0;
-
-}
-
-const loadSeq = ++symbolLoadSeq;
-historyExhausted =
-false;
-historyLoadingOlder =
-false;
-
-disconnectKlineStream();
-stopLivePriceFallbacks();
-coinsState().chartCandlesSymbol =
-"";
-chartSwitchVeil.startChartSwitchVeil();
-setChartLayoutReady(
-false
-);
-dispatchChartSwitchStart(
-symbol,
-loadSeq
-);
-
-chartCrosshairLink?.clearLinked?.();
-
-try{
-chart.clearCrosshairPosition();
-}catch{
-/* ignore */
-}
-
-try{
-rsiChart?.clearCrosshairPosition();
-}catch{
-/* ignore */
-}
-
-currentSymbol = symbol;
-setCoinsChartSymbol(symbol);
-highlightActiveSymbol();
-syncCoinsChartTurnover24(
-symbol
-);
-
-if(
-isTradePage
-){
-void import(
-"./trade-volume-presets.js?v=bd1a8814"
-).then(
-({
-switchTradeVolumeSymbol
-})=>{
-switchTradeVolumeSymbol(
-symbol
-);
-}
-).catch(
-()=>{
-/* ignore */
-}
-);
-}
-
-persistCoinsPrefs();
-
-setCoinsChartStatus(
-`Загрузка ${formatCoinsSymbolLabel(symbol)}…`,
-true
-);
-
-try{
-
-const cached =
-peekHistoryCache(
-getActiveExchangeId(),
-symbol,
-currentTF
-);
-let nextCandles =
-[];
-let fromCache =
-false;
-
-if(
-cached &&
-(
-cached.candles.length >=
-TERMINAL_VISIBLE_BARS ||
-cached.coversVisible
-)
-){
-nextCandles =
-cached.candles.slice();
-fromCache =
-true;
-}else{
-nextCandles =
-await loadVisibleTerminalHistory(
-symbol,
-currentTF,
-loadSeq
-);
-
-if(
-nextCandles ==
-null ||
-loadSeq !==
-symbolLoadSeq
-){
-return;
-}
-
-}
-
-candles = nextCandles;
-coinsState().chartCandlesSymbol =
-candles.length
-? symbol
-: "";
-historyExhausted =
-fromCache
-? (
-nextCandles.length >=
-getTerminalHistoryDepth() ||
-nextCandles.length <
-TERMINAL_VISIBLE_BARS
-)
-: (
-!nextCandles.length ||
-nextCandles.length <
-TERMINAL_VISIBLE_BARS
-);
-
-if(
-!candles.length &&
-isActiveRealtimeMarketDataset(
-currentDataset
-)
-){
-
-void import("./bybit-network-ui.js?v=3b530ded").then(m=>{
-m.showBybitNetworkIssue(
-new Error(
-`История свечей ${getActiveExchangeDefinition().name} пуста`
-)
-);
-});
-
-setChartLayoutReady(
-true
-);
-chartSwitchVeil.finishChartSwitchVeil(
-loadSeq
-);
-return;
-
-}
-
-clearBybitNetworkIssue();
-
-dispatchChartSwitchCandlesApply(
-currentSymbol,
-loadSeq
-);
-
-chartIndicators?.clearMainChartOverlays?.();
-
-const displayCandles =
-buildChartDisplayCandles();
-
-const refPrice =
-candles[candles.length - 1]?.close ?? 1;
-
-applyChartPriceFormat(
-candleSeries,
-refPrice
-);
-
-replaceCoinsChartCandles(
-candleSeries,
-displayCandles
-);
-
-resetCoinsChartPriceScale();
-
-rebuildRsiFromCandles();
-
-applyDefaultZoom({
-scheduleDrawingRedraw:
-false,
-skipViewportSettle:
-true
-});
-
-chartIndicators?.notifyMainChartOverlaysSync?.();
-
-coinsDrawOnSymbolChange({
-skipRedraw:
-true
-});
-
-scheduleChartLayoutSettled(
-()=>{
-
-if(
-loadSeq !==
-symbolLoadSeq
-){
-return;
-}
-
-setChartLayoutReady(
-true
-);
-
-chartIndicators?.notifySymbolChange?.();
-chartIndicators?.flushIndicatorDataRefreshNow?.();
-/*
- * Full viewport plan from candles (keeps future margin + rightOffset).
- * AO + RSI sync only copies main → panes and must not re-fit main.
- */
-settleCoinsChartViewport();
-syncCoinsChartLinkedViewports();
-refreshCoinsChartBarSpacing(
-chart,
-null
-);
-syncCoinsChartLinkedViewports();
-chartIndicators?.notifyLayoutSettled?.();
-
-scheduleCoinsDrawRedraw();
-
-requestAnimationFrame(
-()=>{
-requestAnimationFrame(
-()=>{
-
-if(
-loadSeq !==
-symbolLoadSeq
-){
-return;
-}
-
-/* Late AO/RSI/position overlay may change price-scale width. */
-settleCoinsChartViewport();
-syncCoinsChartLinkedViewports();
-refreshCoinsChartBarSpacing(
-chart,
-null
-);
-syncCoinsChartLinkedViewports();
-
-}
-);
-}
-);
-
-dispatchChartCandlesLoaded(
-currentSymbol,
-loadSeq
-);
-
-highlightActiveSymbol();
-
-startRealtime();
-startPriceHud();
-
-void terminalMultiChartApi?.scheduleSecondaryReload?.();
-
-syncBackgroundAlertStreams(
-currentSymbol,
-currentTF
-);
-
-persistCoinsPrefs();
-
-void settleTerminalHistoryAfterPaint(
-loadSeq
-);
-
-chartSwitchVeil.finishChartSwitchVeil(
-loadSeq
-);
-
-}
-);
-
-}catch(
-err
-){
-
-console.error(
-"loadSymbol:",
-err
-);
-
-if(
-loadSeq ===
-symbolLoadSeq
-){
-setChartLayoutReady(
-true
-);
-chartSwitchVeil.finishChartSwitchVeil(
-loadSeq
-);
-}
-
-}finally{
-
-if(loadSeq === symbolLoadSeq){
-setCoinsChartStatus(
-"",
-false
-);
-}
-
-}
-
 }
 
 window.addEventListener(
@@ -6231,7 +5501,7 @@ if(
 ){
 terminalAlgoEarlyT3ListMod =
 await import(
-"./algo-trading/terminal-early-t3-list.js?v=aa8ba010"
+"./algo-trading/terminal-early-t3-list.js?v=c1873845"
 );
 }
 terminalAlgoEarlyT3ListMod.mountTerminalAlgoEarlyT3List();

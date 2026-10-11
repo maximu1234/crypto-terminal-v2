@@ -17,9 +17,11 @@ applyChartPriceFormat,
 applyScreenerZoom,
 restoreScreenerViewport,
 linkPairedChartTimeScales,
+syncLinkedChartTimescales,
+equalizeLinkedPanePriceScales,
 SCREENER_VISIBLE_BARS,
 SCREENER_MAX_BARS
-} from "./chart-import.js?v=c172cdf4";
+} from "./chart-import.js?v=544220a0";
 
 import {
 isIpadWebViewport
@@ -42,7 +44,7 @@ paintLiveOhlcSeries
 import {
 SCREENER_WIDGET_OSCILLATOR_MACD,
 createScreenerMacdChart
-} from "./screener-widget-oscillator.js?v=e28bfde2";
+} from "./screener-widget-oscillator.js?v=62d04576";
 
 let deps = null;
 
@@ -1095,6 +1097,38 @@ chartEl.addEventListener("wheel", markUserZoom, { passive:true });
 chartEl.addEventListener("mousedown", markUserZoom);
 chartEl.addEventListener("touchstart", markUserZoom, { passive:true });
 
+function alignWidgetPaneScales(widget){
+
+if(!widget?.chart || !widget.rsiChart){
+return;
+}
+
+equalizeLinkedPanePriceScales(
+widget.chart,
+[widget.rsiChart]
+);
+
+syncLinkedChartTimescales(
+widget.chart,
+widget.rsiChart
+);
+
+try{
+const scaleW =
+widget.chart.priceScale("right").width();
+
+if(scaleW > 0){
+widget.rsiWrapEl?.style.setProperty(
+"--chart-scale-width",
+`${scaleW}px`
+);
+}
+}catch{
+/* ignore */
+}
+
+}
+
 function syncChartSize(){
 
 if(
@@ -1192,6 +1226,8 @@ widget
 
 }
 
+alignWidgetPaneScales(widget);
+
 if(!widget.candles.length){
 return 0;
 }
@@ -1244,6 +1280,7 @@ widget._lastZoomCandleLen =
 widget.candles.length;
 widget._lastVisibleBars =
 bars;
+alignWidgetPaneScales(widget);
 return bars;
 
 }catch{

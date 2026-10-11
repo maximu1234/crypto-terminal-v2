@@ -12,7 +12,7 @@ applyRsiFixedPriceScale,
 appendFutureWhitespaceBars,
 computeChartFutureMarginBars,
 syncLinkedChartTimescales
-} from "./chart-import.js?v=c172cdf4";
+} from "./chart-import.js?v=544220a0";
 
 import {
 applyLiveSeriesUpdate,
@@ -42,7 +42,7 @@ ALGO_TICKER_SCAN_HISTORY_REQUESTS
 import {
 defaultRsiPaneSettings,
 normalizeRsiPaneSettings
-} from "./indicators/rsi-pane.js?v=9e95c49b";
+} from "./indicators/rsi-pane.js?v=ae69864d";
 
 import {
 buildChartRsiPoints
@@ -61,7 +61,7 @@ bindLiveCandleCatchup
 import {
 mountAlgoTradingCoinList,
 refreshAlgoMarketListFromFlags
-} from "./algo-trading-list.js?v=7fca7eb6";
+} from "./algo-trading-list.js?v=daac6ed7";
 
 import {
 mountAlgoTickerScanUi
@@ -84,7 +84,7 @@ mountAlgoRuntimeUi
 
 import {
 mountAlgoBotStrategyUi
-} from "./algo-trading/bot-strategy-ui.js?v=ed0304d1";
+} from "./algo-trading/bot-strategy-ui.js?v=0e4aea34";
 
 import {
 ALGO_ANALYSIS_BOT_CHANGE_EVENT,
@@ -100,7 +100,7 @@ setActiveAnalysisBotId
 
 import {
 mountSessionLogServerSettings
-} from "./algo-trading/bot-session-log-server-ui.js?v=f43134f3";
+} from "./algo-trading/bot-session-log-server-ui.js?v=f15b5114";
 
 import {
 syncBotStrategiesToMain
@@ -108,15 +108,15 @@ syncBotStrategiesToMain
 
 import {
 mountAlgoTradeUi
-} from "./algo-trading/trade/boot.js?v=956e2d1c";
+} from "./algo-trading/trade/boot.js?v=899a76a8";
 
 import {
 mountAlgoTradingDrawings
-} from "./algo-trading/drawings.js?v=429b7297";
+} from "./algo-trading/drawings.js?v=6cc02103";
 
 import {
 mountAlgoTradingIndicators
-} from "./algo-trading/indicators.js?v=65859057";
+} from "./algo-trading/indicators.js?v=9a0b652a";
 
 import {
 mountAlgoPatternEntryOverlay
@@ -258,7 +258,7 @@ syncRsiLevelDom as syncRsiLevelDomEl,
 setRsiHud as setRsiHudEl,
 lastRsiValue as lastRsiValueFromCandles,
 layoutRsiPane
-} from "./algo-trading/page-rsi.js?v=8b96a174";
+} from "./algo-trading/page-rsi.js?v=9c244b19";
 
 import {
 bindAlgoStatsPanelResize
@@ -309,6 +309,17 @@ key
 import {
 loadSymbol as loadSymbolMoved
 } from "./algo-trading/chart-load-symbol.js?v=82c570a6";
+import {
+applyRsiData as applyRsiDataMoved,
+deepenAlgoHistoryIfNeeded as deepenAlgoHistoryIfNeededMoved,
+refreshAlgoHistoryTail as refreshAlgoHistoryTailMoved,
+applyCandleData as applyCandleDataMoved,
+schedulePatternAnalysis as schedulePatternAnalysisMoved,
+resizeAlgoCharts as resizeAlgoChartsMoved,
+fitViewport as fitViewportMoved,
+mergeOlderAlgoCandles as mergeOlderAlgoCandlesMoved,
+applyLiveCandleTick as applyLiveCandleTickMoved
+} from "./algo-trading/chart-data.js?v=e0ce79d2";
 export async function mountAlgoTradingPage(){
 
 setActiveAnalysisBotId(
@@ -1268,102 +1279,87 @@ rsiPaneSettings
 
 }
 
+function algoChartHost(){
+if(!algoChartHost.current){
+algoChartHost.current = {
+get ALGO_ANALYSIS_BOT_PATTERN_12(){ return ALGO_ANALYSIS_BOT_PATTERN_12; },
+get HISTORY_REQUESTS(){ return HISTORY_REQUESTS; },
+get PATTERN_ANALYSIS_LIVE_MS(){ return PATTERN_ANALYSIS_LIVE_MS; },
+get TERMINAL_HISTORY_LAZY_BATCH_BARS(){ return TERMINAL_HISTORY_LAZY_BATCH_BARS; },
+get TERMINAL_VISIBLE_BARS(){ return TERMINAL_VISIBLE_BARS; },
+get algoChartDbg(){ return algoChartDbg; },
+get appendFutureWhitespaceBars(){ return appendFutureWhitespaceBars; },
+get applyChartPriceFormat(){ return applyChartPriceFormat; },
+get applyCoinsChartViewport(){ return applyCoinsChartViewport; },
+get applyLiveSeriesUpdate(){ return applyLiveSeriesUpdate; },
+get applyRsiFixedPriceScale(){ return applyRsiFixedPriceScale; },
+get buildChartRsiPoints(){ return buildChartRsiPoints; },
+get buildDisplayCandles(){ return buildDisplayCandles; },
+get buildPatternAnalysisOpts(){ return buildPatternAnalysisOpts; },
+get candleSeries(){ return candleSeries; },
+get candles(){ return candles; },
+set candles(value){ candles = value; },
+get chart(){ return chart; },
+get chartIndicators(){ return chartIndicators; },
+get chartWrapEl(){ return chartWrapEl; },
+get computeChartFutureMarginBars(){ return computeChartFutureMarginBars; },
+get disposed(){ return disposed; },
+get drawingTools(){ return drawingTools; },
+get ensureOhlcRollover(){ return ensureOhlcRollover; },
+get entryOverlay(){ return entryOverlay; },
+get getActiveExchangeId(){ return getActiveExchangeId; },
+get historyStatsReady(){ return historyStatsReady; },
+get invalidatePreservedVisibleLogicalRange(){ return invalidatePreservedVisibleLogicalRange; },
+get isActiveAnalysisBot(){ return isActiveAnalysisBot; },
+get isAlgoStatsAnalysisPaused(){ return isAlgoStatsAnalysisPaused; },
+get isAnyAnalysisBotActive(){ return isAnyAnalysisBotActive; },
+get isChartLayoutReady(){ return isChartLayoutReady; },
+get lastPatternAnalysisAt(){ return lastPatternAnalysisAt; },
+set lastPatternAnalysisAt(value){ lastPatternAnalysisAt = value; },
+get lastRsiHudValue(){ return lastRsiHudValue; },
+set lastRsiHudValue(value){ lastRsiHudValue = value; },
+get layoutRsi(){ return layoutRsi; },
+get liveBarPeriodSec(){ return liveBarPeriodSec; },
+get loadMarketHistory(){ return loadMarketHistory; },
+get loadSeq(){ return loadSeq; },
+get logicalIndexShift(){ return logicalIndexShift; },
+get macdFlipTouchHost(){ return macdFlipTouchHost; },
+get markAlgoHistoryStatsReadyAndAnalyze(){ return markAlgoHistoryStatsReadyAndAnalyze; },
+get mergeCandleRows(){ return mergeCandleRows; },
+get patternAnalysisSeq(){ return patternAnalysisSeq; },
+set patternAnalysisSeq(value){ patternAnalysisSeq = value; },
+get patternAnalysisTimer(){ return patternAnalysisTimer; },
+set patternAnalysisTimer(value){ patternAnalysisTimer = value; },
+get pendingFitViewport(){ return pendingFitViewport; },
+set pendingFitViewport(value){ pendingFitViewport = value; },
+get putHistoryCache(){ return putHistoryCache; },
+get refreshAlgoPatternAnalysis(){ return refreshAlgoPatternAnalysis; },
+get refreshEntryFilterLines(){ return refreshEntryFilterLines; },
+get rsiChart(){ return rsiChart; },
+get rsiPaneActive(){ return rsiPaneActive; },
+get rsiPaneSettings(){ return rsiPaneSettings; },
+get rsiRebuildSeq(){ return rsiRebuildSeq; },
+set rsiRebuildSeq(value){ rsiRebuildSeq = value; },
+get rsiSeries(){ return rsiSeries; },
+get rsiTouchFlipHost(){ return rsiTouchFlipHost; },
+get rsiWrapEl(){ return rsiWrapEl; },
+get runWithPreservedVisibleLogicalRange(){ return runWithPreservedVisibleLogicalRange; },
+get setChartLayoutReady(){ return setChartLayoutReady; },
+get setRsiHud(){ return setRsiHud; },
+get symbol(){ return symbol; },
+get syncLinkedChartTimescales(){ return syncLinkedChartTimescales; },
+get terminalVisibleBars(){ return terminalVisibleBars; },
+get tf(){ return tf; }
+};
+}
+return algoChartHost.current;
+}
+
 function resizeAlgoCharts(){
-
-if(
-!chart ||
-!chartWrapEl
-){
-return;
-}
-
-const w =
-Math.max(
-chartWrapEl.clientWidth,
-1
+return resizeAlgoChartsMoved(
+algoChartHost(),
+...arguments
 );
-const chartH =
-Math.max(
-chartWrapEl.clientHeight,
-1
-);
-
-if(
-w <
-2 ||
-chartH <
-2
-){
-/* Cold-open: wrap ещё без layout — fit отложим до первого валидного resize. */
-if(
-candles.length
-){
-pendingFitViewport =
-true;
-}
-return;
-}
-
-chart.applyOptions(
-{
-width:
-w,
-height:
-chartH
-}
-);
-
-chartIndicators?.resizePanes?.(
-w
-);
-
-if(
-rsiChart &&
-rsiPaneActive &&
-rsiWrapEl
-){
-
-const rsiH =
-Math.max(
-rsiWrapEl.clientHeight,
-1
-);
-
-if(
-rsiH >=
-2
-){
-rsiChart.applyOptions(
-{
-width:
-w,
-height:
-rsiH
-}
-);
-}
-
-}
-
-layoutRsi();
-chartIndicators?.notifyLayoutChange?.();
-drawingTools?.resize?.();
-drawingTools?.scheduleRedraw?.();
-runWithPreservedVisibleLogicalRange(
-chart,
-()=>{
-chartIndicators?.notifyMainChartOverlaysSync?.();
-entryOverlay?.refreshPositions?.();
-}
-);
-
-if(
-pendingFitViewport &&
-candles.length
-){
-fitViewport();
-}
-
 }
 
 let algoResizeRaf =
@@ -1412,186 +1408,17 @@ rsiPaneSettings.period
 
 }
 
-function applyRsiData(
-{
+function applyRsiData({
 notifyIndicators =
 true,
 liveLastOnly =
 false
 } =
-{}
-){
-
-if(
-!rsiSeries
-){
-return;
-}
-
-if(
-!algoChartDbg(
-"rsi"
-) ||
-!rsiPaneActive
-){
-if(
-notifyIndicators &&
-algoChartDbg(
-"indicators"
-)
-){
-chartIndicators?.notifyCandlesUpdate?.();
-}
-return;
-}
-
-const rsiTf =
-String(
-rsiPaneSettings.tf ||
-""
-).trim();
-const chartTf =
-String(
-tf ||
-""
-).trim();
-
-if(
-liveLastOnly &&
-rsiTf &&
-rsiTf !==
-chartTf
-){
-return;
-}
-
-if(
-!candles.length
-){
-rsiSeries.setData(
-[]
+{}){
+return applyRsiDataMoved(
+algoChartHost(),
+...arguments
 );
-lastRsiHudValue =
-null;
-setRsiHud(
-null
-);
-if(
-notifyIndicators
-){
-chartIndicators?.notifyCandlesUpdate?.();
-}
-return;
-}
-
-const seq =
-++rsiRebuildSeq;
-const chartCandles =
-candles;
-
-void (
-async()=>{
-
-const points =
-await buildChartRsiPoints(
-{
-chartCandles,
-period:
-rsiPaneSettings.period,
-tf:
-rsiPaneSettings.tf,
-chartTf:
-tf,
-symbol,
-loadHistory:(
-histSymbol,
-histTf,
-requests
-)=>
-loadMarketHistory(
-histSymbol,
-histTf,
-requests ||
-HISTORY_REQUESTS,
-{
-parallel:
-true,
-batchGapMs:
-0
-}
-)
-}
-);
-
-if(
-seq !==
-rsiRebuildSeq ||
-!rsiPaneActive
-){
-return;
-}
-
-rsiSeries.setData(
-appendFutureWhitespaceBars(
-points,
-computeChartFutureMarginBars(
-terminalVisibleBars(
-candles.length
-)
-),
-tf
-)
-);
-applyRsiFixedPriceScale(
-rsiChart,
-rsiSeries
-);
-syncLinkedChartTimescales(
-chart,
-rsiChart
-);
-layoutRsi();
-
-let last =
-null;
-
-for(
-let i =
-points.length -
-1;
-i >=
-0;
-i--
-){
-
-if(
-Number.isFinite(
-points[i]?.value
-)
-){
-last =
-points[i];
-break;
-}
-
-}
-
-lastRsiHudValue =
-last?.value ??
-null;
-setRsiHud(
-lastRsiHudValue
-);
-
-if(
-notifyIndicators
-){
-chartIndicators?.notifyCandlesUpdate?.();
-}
-
-}
-)();
-
 }
 
 function buildDisplayCandles(){
@@ -1615,101 +1442,10 @@ tf
 }
 
 function fitViewport(){
-
-if(
-!chart ||
-!chartWrapEl
-){
-return;
-}
-
-const wrapW =
-Math.max(
-chartWrapEl.clientWidth,
-0
+return fitViewportMoved(
+algoChartHost(),
+...arguments
 );
-const wrapH =
-Math.max(
-chartWrapEl.clientHeight,
-0
-);
-
-if(
-wrapW <
-2 ||
-wrapH <
-2
-){
-if(
-candles.length
-){
-pendingFitViewport =
-true;
-}
-return;
-}
-
-/* #chart position:absolute — clientWidth часто 0; размер берём с wrap. */
-chart.applyOptions(
-{
-width:
-wrapW,
-height:
-wrapH
-}
-);
-
-if(
-rsiChart &&
-rsiPaneActive &&
-rsiWrapEl
-){
-
-const rsiH =
-Math.max(
-rsiWrapEl.clientHeight,
-1
-);
-
-if(
-rsiH >=
-2
-){
-rsiChart.applyOptions(
-{
-width:
-wrapW,
-height:
-rsiH
-}
-);
-}
-
-}
-
-const display =
-buildDisplayCandles();
-
-if(
-!display.length
-){
-return;
-}
-
-pendingFitViewport =
-false;
-invalidatePreservedVisibleLogicalRange();
-
-applyCoinsChartViewport(
-chart,
-rsiChart,
-display,
-tf,
-wrapW,
-candles.length,
-TERMINAL_VISIBLE_BARS
-);
-
 }
 
 function refreshEntryFilterLines(){
@@ -1740,107 +1476,18 @@ null;
 
 }
 
-function schedulePatternAnalysis(
-{
+function schedulePatternAnalysis({
 force =
 false
 } =
-{}
-){
-
-if(
-!algoChartDbg(
-"analysis"
-)
-){
-return;
-}
-
-if(
-!isActiveAnalysisBot(
-ALGO_ANALYSIS_BOT_PATTERN_12
-)
-){
-return;
-}
-
-if(
-!historyStatsReady
-){
-return;
-}
-
-if(
-!force &&
-isAlgoStatsAnalysisPaused()
-){
-return;
-}
-
-const seq =
-++patternAnalysisSeq;
-const runForced =
-!!force;
-
-if(
-patternAnalysisTimer
-){
-clearTimeout(
-patternAnalysisTimer
+{}){
+return schedulePatternAnalysisMoved(
+algoChartHost(),
+...arguments
 );
 }
 
-const delay =
-runForced
-? 0
-: Math.max(
-0,
-PATTERN_ANALYSIS_LIVE_MS -
-(
-Date.now() -
-lastPatternAnalysisAt
-)
-);
-
-patternAnalysisTimer =
-setTimeout(
-()=>{
-patternAnalysisTimer =
-0;
-
-if(
-disposed ||
-seq !==
-patternAnalysisSeq
-){
-return;
-}
-
-if(
-!runForced &&
-isAlgoStatsAnalysisPaused()
-){
-return;
-}
-
-lastPatternAnalysisAt =
-Date.now();
-
-refreshAlgoPatternAnalysis(
-candles,
-entryOverlay,
-buildPatternAnalysisOpts()
-);
-/* Paint filter applied in pattern-12 paint — достаточно redraw, без полного flush индикаторов. */
-drawingTools?.scheduleRedraw?.();
-},
-delay
-);
-
-}
-
-function applyCandleData(
-{
+function applyCandleData({
 fit =
 false,
 light =
@@ -1850,114 +1497,11 @@ false,
 forceAnalysis =
 false
 } =
-{}
-){
-
-if(
-!candleSeries
-){
-return;
-}
-
-const refPrice =
-candles[
-candles.length -
-1
-]?.close ??
-1;
-
-applyChartPriceFormat(
-candleSeries,
-refPrice
+{}){
+return applyCandleDataMoved(
+algoChartHost(),
+...arguments
 );
-
-const display =
-buildDisplayCandles();
-
-if(
-!light &&
-algoChartDbg(
-"indicators"
-)
-){
-chartIndicators?.clearMainChartOverlays?.();
-}
-
-candleSeries.setData(
-display
-);
-
-if(
-algoChartDbg(
-"rsi"
-)
-){
-applyRsiData(
-{
-notifyIndicators:
-!light
-}
-);
-}
-
-if(
-!light &&
-algoChartDbg(
-"filterLines"
-)
-){
-refreshEntryFilterLines();
-}
-
-if(
-!light &&
-algoChartDbg(
-"indicators"
-) &&
-(
-fit ||
-isChartLayoutReady()
-)
-){
-chartIndicators?.flushIndicatorDataRefreshNow?.();
-chartIndicators?.notifyMainChartOverlaysSync?.();
-}
-
-/* fit строго после оверлеев: иначе flush/ST перетирают viewport (мигание cold-open). */
-if(
-fit
-){
-fitViewport();
-
-if(
-!light
-){
-setChartLayoutReady(
-true
-);
-}
-
-}
-
-if(
-!skipAnalysis &&
-!light &&
-candles.length
-){
-schedulePatternAnalysis(
-{
-force:
-!!fit ||
-!!forceAnalysis
-}
-);
-}
-
-rsiTouchFlipHost?.refresh?.();
-macdFlipTouchHost?.refresh?.();
-
-drawingTools?.scheduleRedraw?.();
-
 }
 
 function buildPatternAnalysisOpts(){
@@ -1991,47 +1535,10 @@ symbol
 }
 
 function applyLiveCandleTick(){
-
-if(
-!candleSeries ||
-!algoChartDbg(
-"livePrice"
-) ||
-!candles.length
-){
-return;
-}
-
-ensureOhlcRollover(
-candles,
-liveBarPeriodSec(
-tf
-)
+return applyLiveCandleTickMoved(
+algoChartHost(),
+...arguments
 );
-
-const last =
-candles[
-candles.length -
-1
-];
-
-applyLiveSeriesUpdate(
-candleSeries,
-{
-time:
-last.time,
-open:
-last.open,
-high:
-last.high,
-low:
-last.low,
-close:
-last.close
-},
-buildDisplayCandles
-);
-
 }
 
 function stopKline(){
@@ -2066,305 +1573,25 @@ null;
 
 }
 
-function mergeOlderAlgoCandles(
-older
-){
-
-const byTime =
-new Map();
-
-for(
-const row of older ||
-[]
-){
-
-if(
-row?.time !=
-null
-){
-byTime.set(
-row.time,
-row
+function mergeOlderAlgoCandles(older){
+return mergeOlderAlgoCandlesMoved(
+algoChartHost(),
+...arguments
 );
 }
 
-}
-
-for(
-const row of candles
-){
-
-if(
-row?.time !=
-null
-){
-byTime.set(
-row.time,
-row
+async function deepenAlgoHistoryIfNeeded(seq){
+return deepenAlgoHistoryIfNeededMoved(
+algoChartHost(),
+...arguments
 );
 }
 
-}
-
-return Array.from(
-byTime.values()
-).sort(
-(
-a,
-b
-)=>
-a.time -
-b.time
+async function refreshAlgoHistoryTail(seq){
+return refreshAlgoHistoryTailMoved(
+algoChartHost(),
+...arguments
 );
-
-}
-
-async function deepenAlgoHistoryIfNeeded(
-seq
-){
-
-if(
-!isAnyAnalysisBotActive() ||
-!candles.length
-){
-return;
-}
-
-const havePages =
-Math.max(
-1,
-Math.ceil(
-candles.length /
-TERMINAL_HISTORY_LAZY_BATCH_BARS
-)
-);
-const extra =
-HISTORY_REQUESTS -
-havePages;
-
-if(
-extra <=
-0
-){
-return;
-}
-
-try{
-const older =
-await loadMarketHistory(
-symbol,
-tf,
-extra,
-{
-parallel:
-true,
-batchGapMs:
-0,
-endMs:
-candles[0].time *
-1000 -
-1
-}
-);
-
-if(
-disposed ||
-seq !==
-loadSeq ||
-!older?.length
-){
-return;
-}
-
-const beforeLen =
-candles.length;
-const range =
-chart?.timeScale?.().getVisibleLogicalRange?.();
-candles =
-mergeOlderAlgoCandles(
-older
-);
-const added =
-candles.length -
-beforeLen;
-
-if(
-added <=
-0
-){
-return;
-}
-
-applyCandleData(
-{
-light:
-true,
-skipAnalysis:
-true
-}
-);
-chartIndicators?.notifyCandlesUpdate?.();
-chartIndicators?.notifyMainChartOverlaysSync?.();
-
-if(
-range &&
-chart?.timeScale?.().setVisibleLogicalRange
-){
-chart.timeScale().setVisibleLogicalRange(
-{
-from:
-range.from +
-added,
-to:
-range.to +
-added
-}
-);
-}
-
-drawingTools?.scheduleRedraw?.();
-markAlgoHistoryStatsReadyAndAnalyze();
-putHistoryCache(
-getActiveExchangeId(),
-symbol,
-tf,
-candles,
-{
-coversVisible:
-candles.length <
-TERMINAL_VISIBLE_BARS ||
-candles.length >=
-HISTORY_REQUESTS *
-TERMINAL_HISTORY_LAZY_BATCH_BARS
-}
-);
-}catch{
-/* first paint already on screen */
-}
-
-}
-
-async function refreshAlgoHistoryTail(
-seq
-){
-
-if(
-disposed ||
-seq !==
-loadSeq ||
-!symbol ||
-!candles.length
-){
-return;
-}
-
-try{
-const latest =
-await loadMarketHistory(
-symbol,
-tf,
-1,
-{
-parallel:
-true,
-batchGapMs:
-0
-}
-);
-
-if(
-disposed ||
-seq !==
-loadSeq ||
-!latest?.length
-){
-return;
-}
-
-const merged =
-mergeCandleRows(
-candles,
-latest,
-{
-preferIncoming:
-true,
-limit:
-HISTORY_REQUESTS *
-TERMINAL_HISTORY_LAZY_BATCH_BARS
-}
-);
-const shift =
-logicalIndexShift(
-candles,
-merged
-);
-const sameEdge =
-shift ===
-0 &&
-merged.length ===
-candles.length &&
-merged[
-merged.length -
-1
-]?.close ===
-candles[
-candles.length -
-1
-]?.close;
-
-if(
-sameEdge
-){
-return;
-}
-
-const range =
-chart?.timeScale?.().getVisibleLogicalRange?.();
-candles =
-merged;
-applyCandleData(
-{
-light:
-true,
-skipAnalysis:
-true
-}
-);
-
-if(
-range &&
-chart?.timeScale?.().setVisibleLogicalRange
-){
-chart.timeScale().setVisibleLogicalRange(
-{
-from:
-range.from +
-shift,
-to:
-range.to +
-shift
-}
-);
-}
-
-putHistoryCache(
-getActiveExchangeId(),
-symbol,
-tf,
-candles,
-{
-coversVisible:
-candles.length <
-TERMINAL_VISIBLE_BARS ||
-candles.length >=
-HISTORY_REQUESTS *
-TERMINAL_HISTORY_LAZY_BATCH_BARS
-}
-);
-}catch{
-/* cached chart is already on screen */
-}
-
 }
 
 function algoSymbolHost(){
