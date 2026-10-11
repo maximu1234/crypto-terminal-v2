@@ -40,7 +40,7 @@ openChromeSurface
 
 import {
 resolveUrlExchangeDeepLink
-} from "./alert-deep-link-exchange.js?v=97147625";
+} from "./alert-deep-link-exchange.js?v=b496727a";
 
 import {
 defaultRsiPaneSettings,
@@ -66,18 +66,18 @@ seedWatchlistTfOnBlueFlag
 
 import {
 ensureCloudReady
-} from "./auth-ui.js?v=c8010a2e";
+} from "./auth-ui.js?v=90803a12";
 
 import {
 getActiveAlerts,
 isMacdAlert,
 isRsiAlert
-} from "./alerts.js?v=9df2851a";
+} from "./alerts.js?v=b37eed3c";
 
 import {
 persistFavoritesToCloud,
 onFavoritesRemoteUpdate
-} from "./cloud-sync.js?v=33cd7ae6";
+} from "./cloud-sync.js?v=bb07250d";
 
 import {
 createCandlestickChart,
@@ -131,7 +131,7 @@ import {
 syncBackgroundAlertStreams,
 onMacdSeriesUpdate,
 onRsiSeriesUpdate
-} from "./alert-monitor.js?v=706447ba";
+} from "./alert-monitor.js?v=57946b06";
 
 import {
 createSharedDrawUndoStack
@@ -199,7 +199,7 @@ mountCoinsScaleInvertMenu
 
 import {
 mountTerminalDrawChrome
-} from "./terminal/terminal-draw-chrome.js?v=bcdf7924";
+} from "./terminal/terminal-draw-chrome.js?v=2efde8a5";
 
 
 
@@ -210,7 +210,7 @@ stopTickerStream
 import {
 mountCoinsListRefreshControls,
 applyCoinsListRefreshInterval
-} from "./terminal-list-refresh.js?v=f9e0e40a";
+} from "./terminal-list-refresh.js?v=9a894107";
 
 import {
 readCoinsPrefs,
@@ -224,7 +224,7 @@ applyCoinsPrefs,
 applySortForCurrentMarket,
 readUrlParams,
 readLastViewForExchange
-} from "./terminal/terminal-prefs.js?v=f3bd5578";
+} from "./terminal/terminal-prefs.js?v=5f6694ac";
 
 import {
 mountDesktopOpenChartHandler
@@ -246,7 +246,7 @@ setCoinsTableHooks,
 syncCoinListFreezeFromFlagMenus,
 getExtraCoinMarkets,
 isExtraCoinMarket
-} from "./terminal/terminal-table.js?v=1c3b7a77";
+} from "./terminal/terminal-table.js?v=3cd2c98d";
 
 import {
 createCoinsChartSwitchVeil
@@ -271,7 +271,7 @@ import {
 initTerminalMultiChart,
 syncPrimaryTfToLayout,
 isTerminalMultiChartLayout
-} from "./terminal-multi-chart.js?v=df6cecf5";
+} from "./terminal-multi-chart.js?v=d3dd7085";
 
 import {
 mountTerminalLayoutPicker
@@ -319,7 +319,99 @@ loadVisibleTerminalHistory as loadVisibleTerminalHistoryMoved,
 applyMergedTerminalCandles as applyMergedTerminalCandlesMoved,
 settleTerminalHistoryAfterPaint as settleTerminalHistoryAfterPaintMoved,
 bindTerminalHistoryLazyLoad as bindTerminalHistoryLazyLoadMoved
-} from "./terminal/terminal-history.js?v=a32d776a";
+} from "./terminal/terminal-history.js?v=ab2cbdcd";
+import {
+allCoinsDrawTools as allCoinsDrawToolsMoved,
+scheduleCoinsDrawRedraw as scheduleCoinsDrawRedrawMoved,
+coinsDrawOnSymbolChange as coinsDrawOnSymbolChangeMoved,
+coinsDrawHasActiveInteraction as coinsDrawHasActiveInteractionMoved,
+unbindTerminalHistoryLazyLoad as unbindTerminalHistoryLazyLoadMoved,
+applyCoinsChartInversion as applyCoinsChartInversionMoved,
+persistCoinsChartInversion as persistCoinsChartInversionMoved,
+toggleCoinsChartInversion as toggleCoinsChartInversionMoved,
+applyCoinsRsiInversion as applyCoinsRsiInversionMoved,
+persistCoinsRsiInversion as persistCoinsRsiInversionMoved,
+toggleCoinsRsiInversion as toggleCoinsRsiInversionMoved,
+applyCoinsChartPriceScaleMode as applyCoinsChartPriceScaleModeMoved,
+persistCoinsChartPriceScaleMode as persistCoinsChartPriceScaleModeMoved,
+setCoinsChartPriceScaleMode as setCoinsChartPriceScaleModeMoved,
+isTabletCrosshairProbeLocked as isTabletCrosshairProbeLockedMoved,
+resetCoinsChartPriceScale as resetCoinsChartPriceScaleMoved,
+syncRsiHudPeriod as syncRsiHudPeriodMoved,
+syncRsiLevelDom as syncRsiLevelDomMoved,
+onRsiSettingsChange as onRsiSettingsChangeMoved,
+rsiCrosshairUnix as rsiCrosshairUnixMoved,
+formatRsiHud as formatRsiHudMoved,
+rsiLookupAtOrBefore as rsiLookupAtOrBeforeMoved,
+setRsiHudValue as setRsiHudValueMoved,
+syncCoinsFutureTimeAnchorSeries as syncCoinsFutureTimeAnchorSeriesMoved,
+buildRsiDisplayPoints as buildRsiDisplayPointsMoved,
+setRsiPaneActive as setRsiPaneActiveMoved,
+loadRsiHtfHistory as loadRsiHtfHistoryMoved,
+symbolHasMacdAlerts as symbolHasMacdAlertsMoved,
+publishMacdAlertValue as publishMacdAlertValueMoved,
+symbolHasRsiAlerts as symbolHasRsiAlertsMoved,
+publishRsiAlertValue as publishRsiAlertValueMoved,
+rebuildRsiFromCandles as rebuildRsiFromCandlesMoved,
+layoutRsiBand as layoutRsiBandMoved,
+candleCloseAtOrBefore as candleCloseAtOrBeforeMoved,
+updateRsiHudFromCrosshairTime as updateRsiHudFromCrosshairTimeMoved,
+extraIndicatorCrosshairPanes as extraIndicatorCrosshairPanesMoved,
+overlayStyleBarDelegateIfNeeded as overlayStyleBarDelegateIfNeededMoved,
+mountSharedDrawSelectionDismiss as mountSharedDrawSelectionDismissMoved,
+isVisibleDrawWrap as isVisibleDrawWrapMoved,
+resolveCoinsDrawPaneFromPointer as resolveCoinsDrawPaneFromPointerMoved,
+mountTerminalSharedDrawUndoKeyboard as mountTerminalSharedDrawUndoKeyboardMoved,
+drawToolsForPane as drawToolsForPaneMoved,
+setActiveDrawPane as setActiveDrawPaneMoved,
+getRsiCandlesForDraw as getRsiCandlesForDrawMoved,
+initSymbols as initSymbolsMoved,
+applyInstrumentLists as applyInstrumentListsMoved,
+isSelectableCoinsMarket as isSelectableCoinsMarketMoved,
+coinsMarketHasSymbols as coinsMarketHasSymbolsMoved,
+switchCoinsMarket as switchCoinsMarketMoved,
+restoreSymbolsFromStaleCache as restoreSymbolsFromStaleCacheMoved,
+reloadTerminalBybitData as reloadTerminalBybitDataMoved,
+normalizeChartEventSymbol as normalizeChartEventSymbolMoved,
+dispatchChartSwitchStart as dispatchChartSwitchStartMoved,
+dispatchChartSwitchCandlesApply as dispatchChartSwitchCandlesApplyMoved,
+dispatchChartCandlesLoaded as dispatchChartCandlesLoadedMoved,
+scheduleChartLayoutSettled as scheduleChartLayoutSettledMoved,
+setCoinsChartStatus as setCoinsChartStatusMoved,
+formatTurnover24Label as formatTurnover24LabelMoved,
+syncCoinsChartTurnover24 as syncCoinsChartTurnover24Moved,
+rememberTerminalHistory as rememberTerminalHistoryMoved,
+refreshTerminalHistoryTail as refreshTerminalHistoryTailMoved,
+wireCoinsLinkedDrawPanRedraw as wireCoinsLinkedDrawPanRedrawMoved,
+syncLinkedChartsLayout as syncLinkedChartsLayoutMoved,
+applyCoinsChartDisplayStyle as applyCoinsChartDisplayStyleMoved,
+startPriceHud as startPriceHudMoved,
+setCoinsTimeframe as setCoinsTimeframeMoved,
+bindCoinsTfHotkeys as bindCoinsTfHotkeysMoved,
+bindCoinsPositionDrawHotkeys as bindCoinsPositionDrawHotkeysMoved,
+closeAllCoinFlagMenus as closeAllCoinFlagMenusMoved,
+applyCoinFavoriteGroup as applyCoinFavoriteGroupMoved,
+updateCoinFlagButton as updateCoinFlagButtonMoved,
+getCoinsChartHeaderFlagBtn as getCoinsChartHeaderFlagBtnMoved,
+updateCoinsChartHeaderFlag as updateCoinsChartHeaderFlagMoved,
+mountCoinsChartHeaderFlag as mountCoinsChartHeaderFlagMoved,
+syncFavoriteButtonsFromStorage as syncFavoriteButtonsFromStorageMoved,
+syncCoinVolumeFilterInput as syncCoinVolumeFilterInputMoved,
+commitCoinVolumeFilterFromInput as commitCoinVolumeFilterFromInputMoved,
+mountCoinVolumeFilter as mountCoinVolumeFilterMoved,
+shouldIgnoreListKeyNav as shouldIgnoreListKeyNavMoved,
+navigateCoinsList as navigateCoinsListMoved,
+syncCoinsTabletListNav as syncCoinsTabletListNavMoved,
+formatCoinsSymbolLabel as formatCoinsSymbolLabelMoved,
+syncCoinsPageTitle as syncCoinsPageTitleMoved,
+setCoinsChartSymbol as setCoinsChartSymbolMoved,
+syncCoinsSymbolLabel as syncCoinsSymbolLabelMoved,
+applyUrlTimeframe as applyUrlTimeframeMoved,
+syncCoinsMarketFilterOptions as syncCoinsMarketFilterOptionsMoved,
+handleExchangeChanged as handleExchangeChangedMoved,
+refreshCoinsMarketUi as refreshCoinsMarketUiMoved,
+syncTerminalAlgoEarlyT3List as syncTerminalAlgoEarlyT3ListMoved
+} from "./terminal/terminal-coins-page.js?v=ef2268ce";
 let terminalAlgoEarlyT3ListMod =
 null;
 
@@ -345,51 +437,193 @@ null;
 let activeDrawPane =
 "chart";
 
+function terminalPageHost(){
+if(!terminalPageHost.current){
+terminalPageHost.current = {
+get COINS_POSITION_DRAW_HOTKEYS(){ return COINS_POSITION_DRAW_HOTKEYS; },
+get COINS_TF_HOTKEYS(){ return COINS_TF_HOTKEYS; },
+get COINS_TF_VALUES(){ return COINS_TF_VALUES; },
+get TERMINAL_VISIBLE_BARS(){ return TERMINAL_VISIBLE_BARS; },
+get activeDrawPane(){ return activeDrawPane; },
+set activeDrawPane(value){ activeDrawPane = value; },
+get allBybitSymbols(){ return allBybitSymbols; },
+get allListings(){ return allListings; },
+get appendFutureWhitespaceBars(){ return appendFutureWhitespaceBars; },
+get applyChartPriceFormat(){ return applyChartPriceFormat; },
+get applyChartPriceScaleMode(){ return applyChartPriceScaleMode; },
+get applyCoinsListRefreshInterval(){ return applyCoinsListRefreshInterval; },
+get applyMergedTerminalCandles(){ return applyMergedTerminalCandles; },
+get applyRsiFixedPriceScale(){ return applyRsiFixedPriceScale; },
+get applySortForCurrentMarket(){ return applySortForCurrentMarket; },
+get buildChartRsiPoints(){ return buildChartRsiPoints; },
+get buildMarketLists(){ return buildMarketLists; },
+get candleSeries(){ return candleSeries; },
+get candles(){ return candles; },
+get chart(){ return chart; },
+get chartIndicators(){ return chartIndicators; },
+get chartWrapEl(){ return chartWrapEl; },
+get coinElements(){ return coinElements; },
+get coinVolumeFilterMounted(){ return coinVolumeFilterMounted; },
+set coinVolumeFilterMounted(value){ coinVolumeFilterMounted = value; },
+get coinsFutureTimeAnchorSeries(){ return coinsFutureTimeAnchorSeries; },
+get coinsPriceScaleMode(){ return coinsPriceScaleMode; },
+set coinsPriceScaleMode(value){ coinsPriceScaleMode = value; },
+get coinsState(){ return coinsState; },
+get coinsTabletCtrl(){ return coinsTabletCtrl; },
+get computeChartFutureMarginBars(){ return computeChartFutureMarginBars; },
+get currentDataset(){ return currentDataset; },
+set currentDataset(value){ currentDataset = value; },
+get currentSymbol(){ return currentSymbol; },
+set currentSymbol(value){ currentSymbol = value; },
+get currentTF(){ return currentTF; },
+set currentTF(value){ currentTF = value; },
+get disconnectKlineStream(){ return disconnectKlineStream; },
+get displaySymbol(){ return displaySymbol; },
+set displaySymbol(value){ displaySymbol = value; },
+get drawingTools(){ return drawingTools; },
+get ensureActiveCoinVisible(){ return ensureActiveCoinVisible; },
+get favorites(){ return favorites; },
+set favorites(value){ favorites = value; },
+get flagSortActive(){ return flagSortActive; },
+get formatExchangeDisplayLabel(){ return formatExchangeDisplayLabel; },
+get generateMarketData(){ return generateMarketData; },
+get getActiveAlerts(){ return getActiveAlerts; },
+get getActiveCoinsMarkets(){ return getActiveCoinsMarkets; },
+get getActiveExchangeId(){ return getActiveExchangeId; },
+get getActiveExchangeMarkets(){ return getActiveExchangeMarkets; },
+get getCurrentSymbols(){ return getCurrentSymbols; },
+get getExtraCoinMarkets(){ return getExtraCoinMarkets; },
+get getFavoriteGroup(){ return getFavoriteGroup; },
+get getTerminalHistoryDepth(){ return getTerminalHistoryDepth; },
+get getVisibleSymbolList(){ return getVisibleSymbolList; },
+get hasUrlSymbol(){ return hasUrlSymbol; },
+set hasUrlSymbol(value){ hasUrlSymbol = value; },
+get highlightActiveSymbol(){ return highlightActiveSymbol; },
+get historyExhausted(){ return historyExhausted; },
+get historyRangeUnsub(){ return historyRangeUnsub; },
+set historyRangeUnsub(value){ historyRangeUnsub = value; },
+get isActiveRealtimeMarketDataset(){ return isActiveRealtimeMarketDataset; },
+get isAlgoTradingNavEnabled(){ return isAlgoTradingNavEnabled; },
+get isCoinsChartInverted(){ return isCoinsChartInverted; },
+set isCoinsChartInverted(value){ isCoinsChartInverted = value; },
+get isCoinsRsiInverted(){ return isCoinsRsiInverted; },
+set isCoinsRsiInverted(value){ isCoinsRsiInverted = value; },
+get isExtraCoinMarket(){ return isExtraCoinMarket; },
+get isMacdAlert(){ return isMacdAlert; },
+get isRsiAlert(){ return isRsiAlert; },
+get isTabletChartViewport(){ return isTabletChartViewport; },
+get isTerminalPage(){ return isTerminalPage; },
+get loadFavoritesGroups(){ return loadFavoritesGroups; },
+get loadMarketHistory(){ return loadMarketHistory; },
+get loadMarketSymbols(){ return loadMarketSymbols; },
+get loadSymbol(){ return loadSymbol; },
+get lwPriceScaleModeId(){ return lwPriceScaleModeId; },
+get macdDrawingTools(){ return macdDrawingTools; },
+get macdSetDrawTool(){ return macdSetDrawTool; },
+get macdWrapEl(){ return macdWrapEl; },
+get mainSetDrawTool(){ return mainSetDrawTool; },
+get marketMap(){ return marketMap; },
+get mergeCandleRows(){ return mergeCandleRows; },
+get mountChartPriceHud(){ return mountChartPriceHud; },
+get mountMinVolumeFilterInput(){ return mountMinVolumeFilterInput; },
+get normalizeChartPriceScaleMode(){ return normalizeChartPriceScaleMode; },
+get normalizeMinVolume(){ return normalizeMinVolume; },
+get normalizeRsiPaneSettings(){ return normalizeRsiPaneSettings; },
+get onMacdSeriesUpdate(){ return onMacdSeriesUpdate; },
+get onRsiSeriesUpdate(){ return onRsiSeriesUpdate; },
+get openChromeSurface(){ return openChromeSurface; },
+get parseMinVolumeFilter(){ return parseMinVolumeFilter; },
+get peekMarketSymbolsCache(){ return peekMarketSymbolsCache; },
+get persistCoinsPrefs(){ return persistCoinsPrefs; },
+get persistFavoritesToCloud(){ return persistFavoritesToCloud; },
+get placeCoinsTabletListNav(){ return placeCoinsTabletListNav; },
+get priceHudCtrl(){ return priceHudCtrl; },
+set priceHudCtrl(value){ priceHudCtrl = value; },
+get priceScaleTouchHooks(){ return priceScaleTouchHooks; },
+get primeTickerSnapshots(){ return primeTickerSnapshots; },
+get pulsePriceScaleAutoscale(){ return pulsePriceScaleAutoscale; },
+get putHistoryCache(){ return putHistoryCache; },
+get readCoinsPrefs(){ return readCoinsPrefs; },
+get renderList(){ return renderList; },
+get resizeCharts(){ return resizeCharts; },
+get resolveInitialSymbolAndTf(){ return resolveInitialSymbolAndTf; },
+get resolveSymbolForExchange(){ return resolveSymbolForExchange; },
+get rsiChart(){ return rsiChart; },
+get rsiDrawingTools(){ return rsiDrawingTools; },
+get rsiHudPeriodEl(){ return rsiHudPeriodEl; },
+get rsiHudValue(){ return rsiHudValue; },
+get rsiPaneActive(){ return rsiPaneActive; },
+set rsiPaneActive(value){ rsiPaneActive = value; },
+get rsiPaneSettings(){ return rsiPaneSettings; },
+set rsiPaneSettings(value){ rsiPaneSettings = value; },
+get rsiPointsCache(){ return rsiPointsCache; },
+set rsiPointsCache(value){ rsiPointsCache = value; },
+get rsiRebuildSeq(){ return rsiRebuildSeq; },
+set rsiRebuildSeq(value){ rsiRebuildSeq = value; },
+get rsiSeries(){ return rsiSeries; },
+get rsiSetDrawTool(){ return rsiSetDrawTool; },
+get rsiWrapEl(){ return rsiWrapEl; },
+get saveChartDisplayStyle(){ return saveChartDisplayStyle; },
+get saveFavoritesGroups(){ return saveFavoritesGroups; },
+get saveLastViewForExchange(){ return saveLastViewForExchange; },
+get searchQuery(){ return searchQuery; },
+set searchQuery(value){ searchQuery = value; },
+get seedWatchlistTfOnBlueFlag(){ return seedWatchlistTfOnBlueFlag; },
+get setChartLayoutReady(){ return setChartLayoutReady; },
+get setFavoriteGroup(){ return setFavoriteGroup; },
+get sharedDrawUndo(){ return sharedDrawUndo; },
+get shouldIgnoreTypingHotkey(){ return shouldIgnoreTypingHotkey; },
+get startTickerStream(){ return startTickerStream; },
+get stopTickerStream(){ return stopTickerStream; },
+get symbolLoadSeq(){ return symbolLoadSeq; },
+get syncCoinListFreezeFromFlagMenus(){ return syncCoinListFreezeFromFlagMenus; },
+get syncLinkedChartTimescales(){ return syncLinkedChartTimescales; },
+get syncMinVolumeFilterInput(){ return syncMinVolumeFilterInput; },
+get syncPrimaryTfToLayout(){ return syncPrimaryTfToLayout; },
+get tabletPriceScaleCtrl(){ return tabletPriceScaleCtrl; },
+get terminalAlgoEarlyT3ListMod(){ return terminalAlgoEarlyT3ListMod; },
+set terminalAlgoEarlyT3ListMod(value){ terminalAlgoEarlyT3ListMod = value; },
+get terminalBybitReloading(){ return terminalBybitReloading; },
+set terminalBybitReloading(value){ terminalBybitReloading = value; },
+get terminalHistoryInitialRequests(){ return terminalHistoryInitialRequests; },
+get terminalSharedDrawUndoMounted(){ return terminalSharedDrawUndoMounted; },
+set terminalSharedDrawUndoMounted(value){ terminalSharedDrawUndoMounted = value; },
+get terminalVisibleBars(){ return terminalVisibleBars; },
+get tfPeriodSec(){ return tfPeriodSec; },
+get updateRsiBandLayout(){ return updateRsiBandLayout; },
+get updateRsiLevelLinesLayout(){ return updateRsiLevelLinesLayout; },
+get writeCoinsPrefs(){ return writeCoinsPrefs; }
+};
+}
+return terminalPageHost.current;
+}
+
 function allCoinsDrawTools(){
-
-return [
-drawingTools,
-rsiDrawingTools,
-macdDrawingTools
-].filter(
-Boolean
+return allCoinsDrawToolsMoved(
+terminalPageHost(),
+...arguments
 );
-
 }
 
 function scheduleCoinsDrawRedraw(){
-
-for(
-const tools of
-allCoinsDrawTools()
-){
-tools.scheduleRedraw?.();
-}
-
-}
-
-function coinsDrawOnSymbolChange(
-opts
-){
-
-for(
-const tools of
-allCoinsDrawTools()
-){
-tools.onSymbolChange?.(
-opts
+return scheduleCoinsDrawRedrawMoved(
+terminalPageHost(),
+...arguments
 );
 }
 
+function coinsDrawOnSymbolChange(opts){
+return coinsDrawOnSymbolChangeMoved(
+terminalPageHost(),
+...arguments
+);
 }
 
 function coinsDrawHasActiveInteraction(){
-
-return allCoinsDrawTools().some(
-tools=>
-tools.hasActiveDrawInteraction?.()
+return coinsDrawHasActiveInteractionMoved(
+terminalPageHost(),
+...arguments
 );
-
 }
 const sharedDrawUndo =
 createSharedDrawUndoStack();
@@ -731,11 +965,10 @@ loadChartDisplayStyle()
 );
 
 function unbindTerminalHistoryLazyLoad(){
-
-historyRangeUnsub?.();
-historyRangeUnsub =
-null;
-
+return unbindTerminalHistoryLazyLoadMoved(
+terminalPageHost(),
+...arguments
+);
 }
 
 function terminalHistoryHost(){
@@ -880,197 +1113,69 @@ document.getElementById(
 "tablet-probe-touch-layer"
 );
 
-function applyCoinsChartInversion(
-inverted
-){
-
-isCoinsChartInverted =
-!!inverted;
-
-try{
-chart.priceScale(
-"right"
-).applyOptions({
-invertScale:
-isCoinsChartInverted
-});
-}catch{
-/* ignore */
-}
-
-drawingTools?.scheduleRedraw?.();
-
+function applyCoinsChartInversion(inverted){
+return applyCoinsChartInversionMoved(
+terminalPageHost(),
+...arguments
+);
 }
 
 function persistCoinsChartInversion(){
-
-if(
-!isTerminalPage
-){
-return;
-}
-
-const prefs =
-readCoinsPrefs();
-
-prefs.invertChart =
-isCoinsChartInverted;
-
-writeCoinsPrefs(prefs);
-
+return persistCoinsChartInversionMoved(
+terminalPageHost(),
+...arguments
+);
 }
 
 function toggleCoinsChartInversion(){
-
-if(
-!isTerminalPage
-){
-return;
-}
-
-applyCoinsChartInversion(
-!isCoinsChartInverted
+return toggleCoinsChartInversionMoved(
+terminalPageHost(),
+...arguments
 );
-persistCoinsChartInversion();
-
 }
 
-function applyCoinsRsiInversion(
-inverted
-){
-
-isCoinsRsiInverted =
-!!inverted;
-
-try{
-rsiChart?.priceScale?.(
-"right"
-)?.applyOptions?.({
-invertScale:
-isCoinsRsiInverted
-});
-}catch{
-/* ignore */
-}
-
+function applyCoinsRsiInversion(inverted){
+return applyCoinsRsiInversionMoved(
+terminalPageHost(),
+...arguments
+);
 }
 
 function persistCoinsRsiInversion(){
-
-if(
-!isTerminalPage
-){
-return;
-}
-
-const prefs =
-readCoinsPrefs();
-
-prefs.invertRsiChart =
-isCoinsRsiInverted;
-
-writeCoinsPrefs(prefs);
-
+return persistCoinsRsiInversionMoved(
+terminalPageHost(),
+...arguments
+);
 }
 
 function toggleCoinsRsiInversion(){
-
-if(
-!isTerminalPage
-){
-return;
-}
-
-applyCoinsRsiInversion(
-!isCoinsRsiInverted
+return toggleCoinsRsiInversionMoved(
+terminalPageHost(),
+...arguments
 );
-persistCoinsRsiInversion();
-
 }
 
-function applyCoinsChartPriceScaleMode(
-mode,
+function applyCoinsChartPriceScaleMode(mode,
 opts =
-{}
-){
-
-const next =
-normalizeChartPriceScaleMode(
-mode
+{}){
+return applyCoinsChartPriceScaleModeMoved(
+terminalPageHost(),
+...arguments
 );
-
-const changed =
-next !==
-coinsPriceScaleMode;
-
-coinsPriceScaleMode =
-next;
-
-try{
-applyChartPriceScaleMode(
-chart,
-next
-);
-candleSeries?.priceScale?.()?.applyOptions?.({
-mode:
-lwPriceScaleModeId(
-next
-)
-});
-}catch{
-/* ignore */
-}
-
-if(
-opts.recalc ===
-false ||
-!changed
-){
-return;
-}
-
-drawingTools?.endPriceScaleDragRedraw?.();
-rsiDrawingTools?.endPriceScaleDragRedraw?.();
-macdDrawingTools?.endPriceScaleDragRedraw?.();
-window.__tradeChartOverlay?.onPriceScaleDragEnd?.();
-scheduleCoinsDrawRedraw();
-priceHudCtrl?.refresh?.();
-
 }
 
 function persistCoinsChartPriceScaleMode(){
-
-if(
-!isTerminalPage
-){
-return;
-}
-
-const prefs =
-readCoinsPrefs();
-
-prefs.priceScaleMode =
-coinsPriceScaleMode;
-
-writeCoinsPrefs(prefs);
-
-}
-
-function setCoinsChartPriceScaleMode(
-mode
-){
-
-if(
-!isTerminalPage
-){
-return;
-}
-
-applyCoinsChartPriceScaleMode(
-mode
+return persistCoinsChartPriceScaleModeMoved(
+terminalPageHost(),
+...arguments
 );
-persistCoinsChartPriceScaleMode();
+}
 
+function setCoinsChartPriceScaleMode(mode){
+return setCoinsChartPriceScaleModeMoved(
+terminalPageHost(),
+...arguments
+);
 }
 
 
@@ -1121,9 +1226,10 @@ let unmountTabletCrosshair =
 
 /** iPad: true пока удержание probe (блокирует sync RSI pan) */
 function isTabletCrosshairProbeLocked(){
-
-return !!coinsTabletCtrl?.getProbeActive?.();
-
+return isTabletCrosshairProbeLockedMoved(
+terminalPageHost(),
+...arguments
+);
 }
 
 let abortTabletPan =
@@ -1189,28 +1295,10 @@ priceScaleTouchHooks
 );
 
 function resetCoinsChartPriceScale(){
-
-if(
-tabletPriceScaleCtrl?.resetPriceAutoScale
-){
-tabletPriceScaleCtrl.resetPriceAutoScale(
-{
-force:true
-}
+return resetCoinsChartPriceScaleMoved(
+terminalPageHost(),
+...arguments
 );
-}else{
-pulsePriceScaleAutoscale(
-chart,
-candleSeries
-);
-}
-
-priceScaleTouchHooks.onReset?.();
-drawingTools?.endPriceScaleDragRedraw?.();
-rsiDrawingTools?.endPriceScaleDragRedraw?.();
-macdDrawingTools?.endPriceScaleDragRedraw?.();
-window.__tradeChartOverlay?.onPriceScaleDragEnd?.();
-
 }
 
 applyTabletMainChartScroll(
@@ -1310,766 +1398,155 @@ defaultRsiPaneSettings()
 );
 
 function syncRsiHudPeriod(){
-
-if(
-rsiHudPeriodEl
-){
-rsiHudPeriodEl.textContent =
-String(
-rsiPaneSettings.period
+return syncRsiHudPeriodMoved(
+terminalPageHost(),
+...arguments
 );
-}
-
 }
 
 function syncRsiLevelDom(){
-
-const wrap =
-document.getElementById(
-"rsi-wrap"
-);
-
-if(
-!wrap
-){
-return;
-}
-
-const ob =
-wrap.querySelector(
-'[data-rsi-role="ob"]'
-);
-const os =
-wrap.querySelector(
-'[data-rsi-role="os"]'
-);
-
-if(
-ob
-){
-ob.setAttribute(
-"data-rsi-level",
-String(
-rsiPaneSettings.overbought
-)
+return syncRsiLevelDomMoved(
+terminalPageHost(),
+...arguments
 );
 }
 
-if(
-os
-){
-os.setAttribute(
-"data-rsi-level",
-String(
-rsiPaneSettings.oversold
-)
+function onRsiSettingsChange(next){
+return onRsiSettingsChangeMoved(
+terminalPageHost(),
+...arguments
 );
-}
-
-}
-
-function onRsiSettingsChange(
-next
-){
-
-rsiPaneSettings =
-normalizeRsiPaneSettings(
-next ||
-rsiPaneSettings
-);
-syncRsiHudPeriod();
-syncRsiLevelDom();
-rebuildRsiFromCandles();
-
 }
 
 syncRsiHudPeriod();
 syncRsiLevelDom();
 
 function rsiCrosshairUnix(t){
-
-if(
-t === null ||
-t === undefined
-){
-return null;
-}
-
-if(
-typeof t === "number"
-){
-return t;
-
-}
-
-if(
-typeof t === "object" &&
-t !== null
-){
-
-if(
-typeof t.timestamp ===
-"number"
-){
-return t.timestamp;
-
-}
-
-}
-
-return null;
-
+return rsiCrosshairUnixMoved(
+terminalPageHost(),
+...arguments
+);
 }
 
 function formatRsiHud(v){
-
-if(
-v === null ||
-v === undefined ||
-Number.isNaN(v)
-){
-
-return "—";
-
-}
-
-return v.toFixed(2);
-
+return formatRsiHudMoved(
+terminalPageHost(),
+...arguments
+);
 }
 
 function rsiLookupAtOrBefore(ts){
-
-for(
-let i =
-rsiPointsCache.length -
-1;
-i >=
-0;
-i--
-){
-
-if(
-rsiPointsCache[i].time <=
-ts
-){
-
-const v =
-rsiPointsCache[i].value;
-
-if(
-v !== undefined &&
-Number.isFinite(v)
-){
-
-return v;
-
-}
-
-}
-
-}
-
-return null;
-
+return rsiLookupAtOrBeforeMoved(
+terminalPageHost(),
+...arguments
+);
 }
 
 function setRsiHudValue(v){
-
-if(
-rsiHudValue
-){
-
-rsiHudValue.textContent =
-formatRsiHud(v);
-
-}
-
+return setRsiHudValueMoved(
+terminalPageHost(),
+...arguments
+);
 }
 
 function syncCoinsFutureTimeAnchorSeries(){
-
-if(
-!coinsFutureTimeAnchorSeries ||
-!candles.length
-){
-return;
-}
-
-const visibleBars =
-terminalVisibleBars(
-candles.length
+return syncCoinsFutureTimeAnchorSeriesMoved(
+terminalPageHost(),
+...arguments
 );
-
-const futureMargin =
-computeChartFutureMarginBars(
-visibleBars
-);
-
-if(
-futureMargin <
-1
-){
-
-coinsFutureTimeAnchorSeries.setData(
-[]
-);
-
-return;
-
-}
-
-const period =
-tfPeriodSec(
-currentTF
-);
-
-const lastTime =
-candles[
-candles.length -
-1
-].time;
-
-const anchor =
-[];
-
-for(
-let i =
-1;
-i <=
-futureMargin;
-i++
-){
-
-anchor.push({
-time:
-lastTime +
-period *
-i
-});
-
-}
-
-coinsFutureTimeAnchorSeries.setData(
-anchor
-);
-
 }
 
 function buildRsiDisplayPoints(){
-
-if(
-!rsiPointsCache?.length
-){
-return [];
-}
-
-const visibleBars =
-terminalVisibleBars(
-candles.length
+return buildRsiDisplayPointsMoved(
+terminalPageHost(),
+...arguments
 );
-
-const futureMargin =
-computeChartFutureMarginBars(
-visibleBars
-);
-
-return appendFutureWhitespaceBars(
-rsiPointsCache,
-futureMargin,
-currentTF
-);
-
 }
 
 let rsiPaneActive =
 true;
 
-function setRsiPaneActive(
-active
-){
-
-rsiPaneActive =
-!!active;
-
-if(
-rsiPaneActive
-){
-rebuildRsiFromCandles();
-return;
-}
-
-rsiSeries?.setData(
-[]
+function setRsiPaneActive(active){
+return setRsiPaneActiveMoved(
+terminalPageHost(),
+...arguments
 );
-syncCoinsFutureTimeAnchorSeries();
-layoutRsiBand();
-setRsiHudValue(
-null
-);
-
 }
 
 let rsiRebuildSeq =
 0;
 
-function loadRsiHtfHistory(
-symbol,
+function loadRsiHtfHistory(symbol,
 tf,
-requests
-){
-
-return loadMarketHistory(
-symbol,
-tf,
-requests ||
-terminalHistoryInitialRequests(),
-{
-parallel:
-true,
-batchGapMs:
-0
-}
+requests){
+return loadRsiHtfHistoryMoved(
+terminalPageHost(),
+...arguments
 );
-
 }
 
 function symbolHasMacdAlerts(){
-
-const sym =
-String(
-currentSymbol ||
-""
-).toUpperCase();
-
-return getActiveAlerts().some(
-alert=>
-isMacdAlert(
-alert
-) &&
-String(
-alert.symbol ||
-""
-).toUpperCase() ===
-sym
+return symbolHasMacdAlertsMoved(
+terminalPageHost(),
+...arguments
 );
-
 }
 
 function publishMacdAlertValue(){
-
-const rows =
-chartIndicators?.getIndicator?.(
-"macd"
-)?.getMacdDrawCandles?.() ||
-[];
-
-let last =
-null;
-
-for(
-const row of
-Array.isArray(
-rows
-)
-? rows
-: []
-){
-
-if(
-Number.isFinite(
-row?.close
-)
-){
-last =
-row.close;
-}
-
-}
-
-if(
-!Number.isFinite(
-last
-)
-){
-return;
-}
-
-onMacdSeriesUpdate(
-{
-symbol:
-currentSymbol,
-value:
-last
-}
+return publishMacdAlertValueMoved(
+terminalPageHost(),
+...arguments
 );
-
 }
 
 function symbolHasRsiAlerts(){
-
-const sym =
-String(
-currentSymbol ||
-""
-).toUpperCase();
-
-return getActiveAlerts().some(
-alert=>
-isRsiAlert(
-alert
-) &&
-String(
-alert.symbol ||
-""
-).toUpperCase() ===
-sym
+return symbolHasRsiAlertsMoved(
+terminalPageHost(),
+...arguments
 );
-
 }
 
-function publishRsiAlertValue(
-points
-){
-
-let last =
-null;
-
-for(
-const point of
-Array.isArray(
-points
-)
-? points
-: []
-){
-
-if(
-Number.isFinite(
-point?.value
-)
-){
-last =
-point.value;
-}
-
-}
-
-if(
-!Number.isFinite(
-last
-)
-){
-return;
-}
-
-onRsiSeriesUpdate(
-{
-symbol:
-currentSymbol,
-value:
-last
-}
+function publishRsiAlertValue(points){
+return publishRsiAlertValueMoved(
+terminalPageHost(),
+...arguments
 );
-
 }
 
-async function rebuildRsiFromCandles(
-opts =
-{}
-){
-
-const liveLastOnly =
-opts.liveLastOnly ===
-true;
-
-const watchRsiAlerts =
-symbolHasRsiAlerts();
-
-if(
-!rsiPaneActive &&
-!watchRsiAlerts
-){
-chartIndicators?.notifyCandlesUpdate?.();
-return;
-}
-
-const rsiTf =
-String(
-rsiPaneSettings.tf ||
-""
-).trim();
-const chartTf =
-String(
-currentTF ||
-""
-).trim();
-
-if(
-liveLastOnly &&
-rsiTf &&
-rsiTf !==
-chartTf
-){
-chartIndicators?.notifyCandlesUpdate?.();
-return;
-}
-
-const seq =
-++rsiRebuildSeq;
-const chartCandles =
-candles;
-const points =
-await buildChartRsiPoints(
-{
-chartCandles,
-period:
-rsiPaneSettings.period,
-tf:
-rsiPaneSettings.tf,
-chartTf:
-currentTF,
-symbol:
-currentSymbol,
-loadHistory:
-loadRsiHtfHistory
-}
+async function rebuildRsiFromCandles(opts =
+{}){
+return rebuildRsiFromCandlesMoved(
+terminalPageHost(),
+...arguments
 );
-
-if(
-seq !==
-rsiRebuildSeq
-){
-return;
-}
-
-if(
-rsiPaneActive
-){
-
-rsiPointsCache =
-points;
-
-rsiSeries.setData(
-buildRsiDisplayPoints()
-);
-
-syncCoinsFutureTimeAnchorSeries();
-
-applyRsiFixedPriceScale(
-rsiChart,
-rsiSeries
-);
-
-syncLinkedChartTimescales(
-chart,
-rsiChart
-);
-
-layoutRsiBand();
-
-let last =
-null;
-
-for(
-let i =
-rsiPointsCache.length -
-1;
-i >=
-0;
-i--
-){
-
-if(
-Number.isFinite(
-rsiPointsCache[i]?.value
-)
-){
-last =
-rsiPointsCache[i];
-break;
-}
-
-}
-
-setRsiHudValue(
-last?.value ??
-null
-);
-
-rsiDrawingTools?.scheduleRedraw?.();
-
-}
-
-chartIndicators?.notifyCandlesUpdate?.();
-publishRsiAlertValue(
-points
-);
-
 }
 
 function layoutRsiBand(){
-
-updateRsiBandLayout(
-rsiSeries,
-document.getElementById(
-"rsi-band"
-),
-{
-overbought:
-rsiPaneSettings.overbought,
-oversold:
-rsiPaneSettings.oversold
-}
+return layoutRsiBandMoved(
+terminalPageHost(),
+...arguments
 );
-
-updateRsiLevelLinesLayout(
-rsiSeries,
-document.getElementById(
-"rsi-wrap"
-)
-);
-
 }
 
 function candleCloseAtOrBefore(ts){
-
-for(
-let i =
-candles.length -
-1;
-i >=
-0;
-i--
-){
-
-if(
-candles[i].time <=
-ts
-){
-
-return candles[i].close;
-
-}
-
-}
-
-return null;
-
-}
-
-function updateRsiHudFromCrosshairTime(
-time
-){
-
-const ts =
-rsiCrosshairUnix(
-time
+return candleCloseAtOrBeforeMoved(
+terminalPageHost(),
+...arguments
 );
-
-if(
-ts === null
-){
-
-const tail =
-rsiPointsCache[
-rsiPointsCache.length -
-1
-];
-
-setRsiHudValue(
-tail
-? tail.value
-: null
-);
-
-return;
-
 }
 
-setRsiHudValue(
-rsiLookupAtOrBefore(ts)
+function updateRsiHudFromCrosshairTime(time){
+return updateRsiHudFromCrosshairTimeMoved(
+terminalPageHost(),
+...arguments
 );
-
 }
 
 function extraIndicatorCrosshairPanes(){
-
-const specs = [
-{
-id:
-"macd",
-wrapId:
-"macd-wrap",
-chartId:
-"macd-chart"
-},
-{
-id:
-"volume",
-wrapId:
-"volume-wrap",
-chartId:
-"volume-chart"
-},
-{
-id:
-"ao",
-wrapId:
-"ao-wrap",
-chartId:
-"ao-chart"
-}
-];
-
-const panes =
-[];
-
-for(
-const spec of
-specs
-){
-
-const wrapEl =
-document.getElementById(
-spec.wrapId
+return extraIndicatorCrosshairPanesMoved(
+terminalPageHost(),
+...arguments
 );
-const chartEl =
-document.getElementById(
-spec.chartId
-);
-
-if(
-!wrapEl ||
-wrapEl.classList.contains(
-"indicator-pane-hidden"
-) ||
-!chartEl
-){
-continue;
-}
-
-const paneChart =
-chartIndicators?.getIndicator?.(
-spec.id
-)?.getChart?.();
-
-if(
-!paneChart
-){
-continue;
-}
-
-panes.push({
-wrapEl,
-chartEl,
-chart:
-paneChart
-});
-
-}
-
-return panes;
-
 }
 
 const chartCrosshairLink =
@@ -2196,332 +1673,17 @@ null
 };
 
 function overlayStyleBarDelegateIfNeeded(){
-
-if(
-!drawingTools
-){
-return null;
-}
-
-const overlays =
-[
-{
-pane:
-"rsi",
-tools:
-rsiDrawingTools
-},
-{
-pane:
-"macd",
-tools:
-macdDrawingTools
-}
-];
-const ordered =
-[
-...overlays.filter(
-item=>
-item.pane ===
-activeDrawPane
-),
-...overlays.filter(
-item=>
-item.pane !==
-activeDrawPane
-)
-];
-
-for(
-const item of
-ordered
-){
-
-const delegate =
-item.tools?.getStyleBarDelegate?.();
-
-if(
-!delegate
-){
-continue;
-}
-
-const overlayTool =
-delegate.getTool?.() ??
-"cursor";
-const overlaySelId =
-delegate.getSelectedId?.() ??
-null;
-const overlayNeedsBar =
-overlayTool !==
-"cursor" ||
-!!overlaySelId;
-
-if(
-!overlayNeedsBar
-){
-continue;
-}
-
-const mainTool =
-drawingTools.getTool?.() ??
-"cursor";
-
-if(
-mainTool !==
-"cursor" &&
-activeDrawPane ===
-"chart"
-){
-return null;
-}
-
-return delegate;
-
-}
-
-return null;
-
+return overlayStyleBarDelegateIfNeededMoved(
+terminalPageHost(),
+...arguments
+);
 }
 
 function mountSharedDrawSelectionDismiss(){
-
-const stackPanes =
-document.getElementById(
-"charts-stack-panes"
+return mountSharedDrawSelectionDismissMoved(
+terminalPageHost(),
+...arguments
 );
-const indicatorsWrap =
-document.getElementById(
-"chart-indicators-wrap"
-);
-
-if(
-!stackPanes ||
-!drawingTools
-){
-return;
-}
-
-function shouldIgnoreDismissClick(
-e
-){
-
-if(
-indicatorsWrap?.contains(
-e.target
-)
-){
-return !!e.target.closest(
-".chart-indicators-menu"
-);
-}
-
-return (
-drawingTools.isDrawChromePointerEvent?.(
-e
-) ??
-false
-);
-
-}
-
-function onSharedDismissClick(
-e
-){
-
-if(
-e.button !==
-0 ||
-!e.isPrimary
-){
-return;
-}
-
-if(
-shouldIgnoreDismissClick(
-e
-)
-){
-return;
-}
-
-const mainTool =
-drawingTools.getTool?.() ??
-"cursor";
-const overlayTools =
-[
-rsiDrawingTools,
-macdDrawingTools
-].filter(
-Boolean
-);
-
-if(
-mainTool !==
-"cursor" ||
-overlayTools.some(
-tools=>
-(
-tools.getTool?.() ??
-"cursor"
-) !==
-"cursor"
-)
-){
-return;
-}
-
-if(
-drawingTools.hasActiveDrawInteraction?.() ||
-coinsDrawHasActiveInteraction()
-){
-return;
-}
-
-const chartWrap =
-document.getElementById(
-"chart-wrap"
-);
-const rsiWrap =
-document.getElementById(
-"rsi-wrap"
-);
-const macdWrap =
-document.getElementById(
-"macd-wrap"
-);
-const target =
-e.target;
-const panes =
-[
-{
-el:
-chartWrap,
-tools:
-drawingTools
-},
-{
-el:
-rsiWrap,
-tools:
-rsiDrawingTools
-},
-{
-el:
-macdWrap,
-tools:
-macdDrawingTools
-}
-];
-const onPane =
-panes.some(
-pane=>
-pane.el?.contains(
-target
-)
-);
-const onIndicators =
-indicatorsWrap?.contains(
-target
-);
-
-if(
-!onPane &&
-!onIndicators
-){
-return;
-}
-
-const anySelected =
-panes.some(
-pane=>
-pane.tools?.getStyleBarDelegate?.()?.getSelectedId?.()
-);
-
-if(
-!anySelected
-){
-return;
-}
-
-const hits =
-panes.map(
-pane=>{
-
-if(
-!pane.el?.contains(
-target
-)
-){
-return null;
-}
-
-return pane.tools?.hitTestAtClient?.(
-e.clientX,
-e.clientY
-) ||
-null;
-
-}
-);
-const hitCount =
-hits.filter(
-Boolean
-).length;
-
-if(
-hitCount ===
-1
-){
-
-panes.forEach(
-(
-pane,
-index
-)=>{
-
-if(
-!hits[
-index
-]
-){
-pane.tools?.clearDrawingSelection?.();
-}
-
-}
-);
-drawingTools.syncStyleBar?.();
-return;
-
-}
-
-if(
-hitCount >
-0
-){
-return;
-}
-
-panes.forEach(
-pane=>
-pane.tools?.clearDrawingSelection?.()
-);
-drawingTools.syncStyleBar?.();
-
-}
-
-stackPanes.addEventListener(
-"click",
-onSharedDismissClick,
-true
-);
-
-indicatorsWrap?.addEventListener(
-"click",
-onSharedDismissClick,
-true
-);
-
 }
 
 const rsiWrapEl =
@@ -2533,263 +1695,39 @@ document.getElementById(
 "macd-wrap"
 );
 
-function isVisibleDrawWrap(
-el
-){
-
-if(
-!el ||
-el.classList.contains(
-"indicator-pane-hidden"
-)
-){
-return false;
-}
-
-const rect =
-el.getBoundingClientRect?.();
-
-return !!(
-rect &&
-rect.height >=
-2
+function isVisibleDrawWrap(el){
+return isVisibleDrawWrapMoved(
+terminalPageHost(),
+...arguments
 );
-
 }
 
-function resolveCoinsDrawPaneFromPointer(
-clientY
-){
-
-if(
-isVisibleDrawWrap(
-macdWrapEl
-)
-){
-
-const macdRect =
-macdWrapEl.getBoundingClientRect();
-
-if(
-clientY >=
-macdRect.top &&
-clientY <=
-macdRect.bottom
-){
-return "macd";
-}
-
-}
-
-if(
-isVisibleDrawWrap(
-rsiWrapEl
-)
-){
-
-const rsiRect =
-rsiWrapEl.getBoundingClientRect();
-
-if(
-clientY >=
-rsiRect.top &&
-clientY <=
-rsiRect.bottom
-){
-return "rsi";
-}
-
-}
-
-const chartRect =
-chartWrapEl?.getBoundingClientRect?.();
-
-if(
-chartRect &&
-clientY >=
-chartRect.top &&
-clientY <=
-chartRect.bottom
-){
-return "chart";
-}
-
-return null;
-
+function resolveCoinsDrawPaneFromPointer(clientY){
+return resolveCoinsDrawPaneFromPointerMoved(
+terminalPageHost(),
+...arguments
+);
 }
 
 function mountTerminalSharedDrawUndoKeyboard(){
-
-if(
-terminalSharedDrawUndoMounted
-){
-return;
-}
-
-terminalSharedDrawUndoMounted =
-true;
-
-window.addEventListener(
-"keydown",
-e=>{
-
-if(
-!(
-(
-e.metaKey ||
-e.ctrlKey
-) &&
-e.key ===
-"z" &&
-!e.shiftKey
-)
-){
-return;
-}
-
-const ae =
-document.activeElement;
-const tag =
-ae?.tagName;
-
-if(
-tag ===
-"INPUT" ||
-tag ===
-"TEXTAREA" ||
-ae?.isContentEditable
-){
-return;
-}
-
-if(
-drawingTools?.hasActiveDrawInteraction?.() ||
-coinsDrawHasActiveInteraction()
-){
-return;
-}
-
-if(
-!sharedDrawUndo.canUndo()
-){
-return;
-}
-
-sharedDrawUndo.undo();
-e.preventDefault();
-
-},
-true
-);
-
-}
-
-function drawToolsForPane(
-pane
-){
-
-if(
-pane ===
-"rsi"
-){
-return rsiDrawingTools;
-}
-
-if(
-pane ===
-"macd"
-){
-return macdDrawingTools;
-}
-
-return drawingTools;
-
-}
-
-function setActiveDrawPane(
-pane
-){
-
-const next =
-pane ===
-"rsi" ||
-(
-pane ===
-"macd" &&
-macdDrawingTools
-)
-? pane
-: "chart";
-
-if(
-next ===
-activeDrawPane
-){
-return;
-}
-
-const prevTools =
-drawToolsForPane(
-activeDrawPane
-);
-
-const prevTool =
-prevTools?.getTool?.() ??
-"cursor";
-
-if(
-prevTool !==
-"cursor" &&
-prevTools?.blocksDrawPaneSwitch?.()
-){
-return;
-}
-
-activeDrawPane =
-next;
-
-if(
-prevTool ===
-"cursor" ||
-!mainSetDrawTool ||
-!rsiSetDrawTool
-){
-drawingTools?.syncStyleBar?.();
-return;
-}
-
-mainSetDrawTool(
-"cursor"
-);
-rsiSetDrawTool(
-"cursor"
-);
-macdSetDrawTool?.(
-"cursor"
-);
-
-if(
-next ===
-"rsi"
-){
-rsiSetDrawTool(
-prevTool
-);
-}else if(
-next ===
-"macd"
-){
-macdSetDrawTool?.(
-prevTool
-);
-}else{
-mainSetDrawTool(
-prevTool
+return mountTerminalSharedDrawUndoKeyboardMoved(
+terminalPageHost(),
+...arguments
 );
 }
 
-drawingTools?.syncStyleBar?.();
+function drawToolsForPane(pane){
+return drawToolsForPaneMoved(
+terminalPageHost(),
+...arguments
+);
+}
 
+function setActiveDrawPane(pane){
+return setActiveDrawPaneMoved(
+terminalPageHost(),
+...arguments
+);
 }
 
 const chartsStackEl =
@@ -2846,36 +1784,10 @@ true
 );
 
 function getRsiCandlesForDraw(){
-
-if(
-!Array.isArray(
-rsiPointsCache
-)
-){
-return [];
-}
-
-return rsiPointsCache.map(
-point=>({
-
-time:
-point.time,
-
-open:
-point.value,
-
-high:
-point.value,
-
-low:
-point.value,
-
-close:
-point.value
-
-})
+return getRsiCandlesForDrawMoved(
+terminalPageHost(),
+...arguments
 );
-
 }
 
 
@@ -2990,331 +1902,55 @@ err
    SYMBOLS
 ========================================================= */
 
-async function initSymbols(
-options = {}
-){
-
-const list =
-await loadMarketSymbols(
-options
-);
-
-applyInstrumentLists(
-list
-);
-
-}
-
-function applyInstrumentLists(
-list
-){
-
-const lists =
-buildMarketLists(
-list
-);
-
-coinsState().allListings =
-lists.all ||
-[];
-
-coinsState().allBybitSymbols =
-lists.crypto ||
-[];
-
-coinsState().usdcListings =
-lists.usdc ||
-[];
-
-coinsState().indicesListings =
-lists.indices ||
-[];
-
-coinsState().newListings =
-lists.new ||
-[];
-
-coinsState().innovationListings =
-lists.innovation ||
-[];
-
-coinsState().stockListings =
-lists.stocks ||
-[];
-
-coinsState().shareListings =
-lists.shares ||
-[];
-
-coinsState().etfListings =
-lists.etf ||
-[];
-
-coinsState().commodityListings =
-lists.commodities ||
-[];
-
-coinsState().forexListings =
-lists.forex ||
-[];
-
-coinsState().currencyListings =
-lists.currency ||
-[];
-
-}
-
-function isSelectableCoinsMarket(
-id
-){
-
-return getActiveCoinsMarkets().includes(
-id
-) ||
-isExtraCoinMarket(
-id
-);
-
-}
-
-function coinsMarketHasSymbols(
-market
-){
-
-if(
-isExtraCoinMarket(
-market
-)
-){
-return true;
-}
-
-const map = {
-all:coinsState().allListings,
-crypto:coinsState().allBybitSymbols,
-new:coinsState().newListings,
-innovation:coinsState().innovationListings,
-usdc:coinsState().usdcListings,
-stocks:coinsState().stockListings,
-shares:coinsState().shareListings,
-etf:coinsState().etfListings,
-indices:coinsState().indicesListings,
-commodities:coinsState().commodityListings,
-forex:coinsState().forexListings,
-currency:coinsState().currencyListings
-};
-
-return !!(
-map[
-market
-]?.length
-);
-
-}
-
-async function switchCoinsMarket(
-nextMarket
-){
-
-if(
-!isSelectableCoinsMarket(
-nextMarket
-)
-){
-return;
-}
-
-disconnectKlineStream();
-
-coinsState().currentDataset =
-nextMarket;
-
-applySortForCurrentMarket();
-persistCoinsPrefs();
-
-coinsState().searchQuery =
-"";
-searchQuery =
-"";
-
-const searchInput =
-document.getElementById(
-"coin-search"
-);
-
-if(
-searchInput
-){
-searchInput.value =
-"";
-}
-
-if(
-!coinsMarketHasSymbols(
-nextMarket
-)
-){
-
-const cached =
-peekMarketSymbolsCache();
-
-if(
-cached?.length
-){
-applyInstrumentLists(
-cached
+async function initSymbols(options = {}){
+return initSymbolsMoved(
+terminalPageHost(),
+...arguments
 );
 }
 
-}
-
-generateMarketData();
-renderList();
-
-resolveInitialSymbolAndTf();
-
-applyUrlTimeframe();
-setCoinsChartSymbol(
-currentSymbol
-);
-syncCoinsChartTurnover24(
-currentSymbol
-);
-
-if(
-currentSymbol
-){
-void loadSymbol(
-currentSymbol
+function applyInstrumentLists(list){
+return applyInstrumentListsMoved(
+terminalPageHost(),
+...arguments
 );
 }
 
-if(
-isActiveRealtimeMarketDataset(
-nextMarket
-) &&
-!coinsMarketHasSymbols(
-nextMarket
-)
-){
-
-void initSymbols({
-forceNetwork:true
-}).then(
-()=>{
-
-if(
-coinsState().currentDataset !==
-nextMarket
-){
-return;
-}
-
-generateMarketData();
-renderList();
-
-}
-).catch(
-err=>{
-console.warn(
-"Terminal market symbols:",
-err?.message ||
-err
+function isSelectableCoinsMarket(id){
+return isSelectableCoinsMarketMoved(
+terminalPageHost(),
+...arguments
 );
 }
+
+function coinsMarketHasSymbols(market){
+return coinsMarketHasSymbolsMoved(
+terminalPageHost(),
+...arguments
 );
-
-return;
-
 }
 
-void primeTickerSnapshots().then(
-()=>{
-
-if(
-coinsState().currentDataset !==
-nextMarket
-){
-return;
-}
-
-renderList();
-
-}
+async function switchCoinsMarket(nextMarket){
+return switchCoinsMarketMoved(
+terminalPageHost(),
+...arguments
 );
-
 }
 
 function restoreSymbolsFromStaleCache(){
-
-if(
-allListings.length ||
-allBybitSymbols.length
-){
-return true;
-}
-
-const stale =
-peekMarketSymbolsCache();
-
-if(
-!stale?.length
-){
-return false;
-}
-
-applyInstrumentLists(
-stale
+return restoreSymbolsFromStaleCacheMoved(
+terminalPageHost(),
+...arguments
 );
-
-return (
-allListings.length >
-0 ||
-allBybitSymbols.length >
-0
-);
-
 }
 
 let terminalBybitReloading = false;
 
 async function reloadTerminalBybitData(){
-
-if(
-terminalBybitReloading
-){
-return;
-}
-
-terminalBybitReloading = true;
-
-try{
-
-await initSymbols();
-
-await primeTickerSnapshots();
-
-generateMarketData();
-
-renderList();
-
-resizeCharts();
-
-await loadSymbol(
-currentSymbol || "BTCUSDT"
+return reloadTerminalBybitDataMoved(
+terminalPageHost(),
+...arguments
 );
-
-}catch(err){
-
-console.error(
-"Terminal Bybit reload:",
-err
-);
-
-}
-
-terminalBybitReloading = false;
-
 }
 
 window.addEventListener(
@@ -3396,239 +2032,77 @@ renderList();
 );
 
 
-function normalizeChartEventSymbol(
-symbol
-){
-
-return String(
-symbol ||
-""
-).trim().toUpperCase();
-
-}
-
-function dispatchChartSwitchStart(
-symbol,
-loadSeq
-){
-
-setChartLayoutReady(
-false
-);
-
-window.dispatchEvent(
-new CustomEvent(
-"chart-switch-start",
-{
-detail:{
-symbol:
-normalizeChartEventSymbol(
-symbol
-),
-loadSeq:
-Number(
-loadSeq
-) ||
-0
-}
-}
-)
-);
-
-}
-
-function dispatchChartSwitchCandlesApply(
-symbol,
-loadSeq
-){
-
-window.dispatchEvent(
-new CustomEvent(
-"chart-switch-candles-apply",
-{
-detail:{
-symbol:
-normalizeChartEventSymbol(
-symbol
-),
-loadSeq:
-Number(
-loadSeq
-) ||
-0
-}
-}
-)
-);
-
-}
-
-function dispatchChartCandlesLoaded(
-symbol,
-loadSeq
-){
-
-window.dispatchEvent(
-new CustomEvent(
-"chart-candles-loaded",
-{
-detail:{
-symbol:
-normalizeChartEventSymbol(
-symbol
-),
-loadSeq:
-Number(
-loadSeq
-) ||
-0
-}
-}
-)
-);
-
-}
-
-function scheduleChartLayoutSettled(
-callback
-){
-
-requestAnimationFrame(
-()=>{
-requestAnimationFrame(
-callback
+function normalizeChartEventSymbol(symbol){
+return normalizeChartEventSymbolMoved(
+terminalPageHost(),
+...arguments
 );
 }
-);
 
+function dispatchChartSwitchStart(symbol,
+loadSeq){
+return dispatchChartSwitchStartMoved(
+terminalPageHost(),
+...arguments
+);
+}
+
+function dispatchChartSwitchCandlesApply(symbol,
+loadSeq){
+return dispatchChartSwitchCandlesApplyMoved(
+terminalPageHost(),
+...arguments
+);
+}
+
+function dispatchChartCandlesLoaded(symbol,
+loadSeq){
+return dispatchChartCandlesLoadedMoved(
+terminalPageHost(),
+...arguments
+);
+}
+
+function scheduleChartLayoutSettled(callback){
+return scheduleChartLayoutSettledMoved(
+terminalPageHost(),
+...arguments
+);
 }
 
 /* =========================================================
    LOAD SYMBOL
 ========================================================= */
 
-function setCoinsChartStatus(
-text,
-visible
-){
-
-const el =
-document.getElementById(
-"coins-chart-status"
-);
-
-if(!el){
-return;
-}
-
-el.textContent = text;
-
-el.classList.toggle(
-"hidden",
-!visible
-);
-
-}
-
-function formatTurnover24Label(
-value
-){
-
-const n =
-Number(
-value
-);
-
-if(
-!Number.isFinite(
-n
-) ||
-n <=
-0
-){
-return "";
-}
-
-let compact;
-
-if(
-n >=
-1e6
-){
-compact =
-`${Number((n / 1e6).toFixed(2))}M`;
-}else if(
-n >=
-1e3
-){
-compact =
-`${Number((n / 1e3).toFixed(2))}K`;
-}else{
-compact =
-String(
-Math.round(
-n
-)
+function setCoinsChartStatus(text,
+visible){
+return setCoinsChartStatusMoved(
+terminalPageHost(),
+...arguments
 );
 }
 
-return `Объем 24ч: ${compact}`;
-
-}
-
-function syncCoinsChartTurnover24(
-symbol =
-currentSymbol
-){
-
-const el =
-document.getElementById(
-"coins-chart-turnover24"
+function formatTurnover24Label(value){
+return formatTurnover24LabelMoved(
+terminalPageHost(),
+...arguments
 );
-
-if(
-!el
-){
-return;
 }
 
-const item =
-marketMap.get(
-symbol
+function syncCoinsChartTurnover24(symbol =
+currentSymbol){
+return syncCoinsChartTurnover24Moved(
+terminalPageHost(),
+...arguments
 );
-el.textContent =
-formatTurnover24Label(
-item?.volume24
+}
+
+function rememberTerminalHistory(symbol,
+tf){
+return rememberTerminalHistoryMoved(
+terminalPageHost(),
+...arguments
 );
-
-}
-
-function rememberTerminalHistory(
-symbol,
-tf
-){
-
-if(
-!symbol ||
-!tf ||
-!candles.length
-){
-return;
-}
-
-putHistoryCache(
-getActiveExchangeId(),
-symbol,
-tf,
-candles,
-{
-coversVisible:
-candles.length >=
-TERMINAL_VISIBLE_BARS ||
-historyExhausted
-}
-);
-
 }
 
 function applyMergedTerminalCandles(merged,
@@ -3639,54 +2113,11 @@ terminalHistoryHost(),
 );
 }
 
-async function refreshTerminalHistoryTail(
-loadSeq
-){
-
-if(
-loadSeq !==
-symbolLoadSeq ||
-!currentSymbol ||
-!candles.length
-){
-return;
-}
-
-const latest =
-await loadMarketHistory(
-currentSymbol,
-currentTF,
-1,
-{
-parallel:
-true,
-batchGapMs:
-0
-}
+async function refreshTerminalHistoryTail(loadSeq){
+return refreshTerminalHistoryTailMoved(
+terminalPageHost(),
+...arguments
 );
-
-if(
-loadSeq !==
-symbolLoadSeq ||
-!latest?.length
-){
-return;
-}
-
-applyMergedTerminalCandles(
-mergeCandleRows(
-candles,
-latest,
-{
-preferIncoming:
-true,
-limit:
-getTerminalHistoryDepth()
-}
-),
-loadSeq
-);
-
 }
 
 async function settleTerminalHistoryAfterPaint(loadSeq){
@@ -3774,97 +2205,17 @@ scheduleResizeCharts
 ========================================================= */
 
 function wireCoinsLinkedDrawPanRedraw(){
-
-const stackEl =
-document.getElementById(
-"charts-stack"
+return wireCoinsLinkedDrawPanRedrawMoved(
+terminalPageHost(),
+...arguments
 );
-
-if(
-!stackEl
-){
-return;
-}
-
-const drawToolPeers =
-()=>
-allCoinsDrawTools();
-
-const holdPeers =
-()=>{
-for(
-const tools of
-drawToolPeers()
-){
-tools.holdChartPanRedraw?.();
-}
-};
-
-const bumpPeers =
-()=>{
-for(
-const tools of
-drawToolPeers()
-){
-tools.bumpChartPanRedraw?.();
-}
-};
-
-const onLinkedPanDown =
-e=>{
-
-if(
-e.button !==
-0 &&
-e.button !==
-1
-){
-return;
-}
-
-if(
-drawingTools?.blocksTabletChartPan?.() ||
-rsiDrawingTools?.blocksTabletChartPan?.() ||
-macdDrawingTools?.blocksTabletChartPan?.()
-){
-return;
-}
-
-holdPeers();
-
-};
-
-const onLinkedPanWheel =
-()=>{
-bumpPeers();
-};
-
-stackEl.addEventListener(
-"mousedown",
-onLinkedPanDown
-);
-stackEl.addEventListener(
-"wheel",
-onLinkedPanWheel,
-{
-passive:true
-}
-);
-window.addEventListener(
-"mouseup",
-bumpPeers
-);
-window.addEventListener(
-"blur",
-bumpPeers
-);
-
 }
 
 function syncLinkedChartsLayout(){
-
-layoutRsiBand();
-
+return syncLinkedChartsLayoutMoved(
+terminalPageHost(),
+...arguments
+);
 }
 
 linkPairedChartTimeScales(
@@ -3902,208 +2253,46 @@ scheduleCoinsDrawRedraw();
 
 }
 
-function applyCoinsChartDisplayStyle(
-style
-){
-
-const next =
-saveChartDisplayStyle(
-style
+function applyCoinsChartDisplayStyle(style){
+return applyCoinsChartDisplayStyleMoved(
+terminalPageHost(),
+...arguments
 );
-
-candleSeries?.applyDisplayStyle?.(
-next
-);
-
-const refPrice =
-candles[candles.length - 1]?.close ?? 1;
-
-applyChartPriceFormat(
-candleSeries,
-refPrice
-);
-
-drawingTools?.scheduleRedraw?.();
-chartIndicators?.notifyMainChartOverlaysSync?.();
-priceHudCtrl.refresh?.();
-
 }
 
 function startPriceHud(){
-
-priceHudCtrl.stop?.();
-
-priceHudCtrl =
-mountChartPriceHud({
-chart,
-series: candleSeries,
-wrapEl: chartWrapEl,
-getTf: ()=> currentTF,
-getLastCandle: ()=>
-candles[candles.length - 1]
-});
-
+return startPriceHudMoved(
+terminalPageHost(),
+...arguments
+);
 }
 
 /* =========================================================
    TF
 ========================================================= */
 
-async function setCoinsTimeframe(
-tf
-){
-
-if(
-!tf ||
-tf === currentTF
-){
-return;
-}
-
-rememberTerminalHistory(
-currentSymbol,
-currentTF
+async function setCoinsTimeframe(tf){
+return setCoinsTimeframeMoved(
+terminalPageHost(),
+...arguments
 );
-
-currentTF = tf;
-syncPrimaryTfToLayout(
-currentTF
-);
-
-document
-.querySelectorAll(".tf-btn")
-.forEach(b=>{
-b.classList.toggle(
-"active",
-b.dataset.tf === currentTF
-);
-});
-
-await loadSymbol(currentSymbol);
-
-persistCoinsPrefs();
-
 }
 
 const COINS_POSITION_DRAW_HOTKEYS =
 DRAW_TOOL_HOTKEYS;
 
 function bindCoinsTfHotkeys(){
-
-window.addEventListener(
-"keydown",
-e=>{
-
-if(
-e.defaultPrevented
-){
-return;
-}
-
-if(
-e.metaKey ||
-e.ctrlKey ||
-e.altKey ||
-e.shiftKey
-){
-return;
-}
-
-if(
-shouldIgnoreTypingHotkey(
-e
-)
-){
-return;
-}
-
-const tf =
-COINS_TF_HOTKEYS[
-e.key
-];
-
-if(
-!tf ||
-!COINS_TF_VALUES.has(
-tf
-)
-){
-return;
-}
-
-e.preventDefault();
-void setCoinsTimeframe(
-tf
+return bindCoinsTfHotkeysMoved(
+terminalPageHost(),
+...arguments
 );
-
-}
-);
-
 }
 
 function bindCoinsPositionDrawHotkeys(){
-
-window.addEventListener(
-"keydown",
-e=>{
-
-if(
-!isTerminalPage
-){
-return;
-}
-
-if(
-e.defaultPrevented
-){
-return;
-}
-
-if(
-e.metaKey ||
-e.ctrlKey ||
-e.altKey ||
-e.shiftKey
-){
-return;
-}
-
-if(
-shouldIgnoreListKeyNav(
-e
-)
-){
-return;
-}
-
-if(
-shouldIgnoreTypingHotkey(
-e
-)
-){
-return;
-}
-
-const tool =
-COINS_POSITION_DRAW_HOTKEYS.get(
-e.code
+return bindCoinsPositionDrawHotkeysMoved(
+terminalPageHost(),
+...arguments
 );
-
-if(
-!tool ||
-!drawingTools?.pickDrawTool
-){
-return;
-}
-
-e.preventDefault();
-drawingTools.pickDrawTool(
-tool
-);
-
-}
-);
-
 }
 
 document
@@ -4188,341 +2377,55 @@ e.target.blur();
 ========================================================= */
 
 
-function closeAllCoinFlagMenus(
-exceptWrap = null
-){
-
-document.querySelectorAll(".coin-flag-wrap").forEach(wrap=>{
-
-if(wrap === exceptWrap){
-return;
-}
-
-wrap.querySelector(".coin-flag-menu")?.classList.add("hidden");
-
-wrap.querySelector("[data-coin-flag-trigger]")?.setAttribute(
-"aria-expanded",
-"false"
-);
-
-});
-
-syncCoinListFreezeFromFlagMenus();
-
-}
-
-function applyCoinFavoriteGroup(
-symbol,
-group
-){
-
-if(!symbol){
-return;
-}
-
-const before =
-JSON.stringify(
-favorites
-);
-
-if(
-group === "clear" ||
-group === null
-){
-favorites =
-setFavoriteGroup(symbol, null, favorites);
-}else{
-favorites =
-setFavoriteGroup(symbol, group, favorites);
-}
-
-if(
-JSON.stringify(
-favorites
-) ===
-before
-){
-return;
-}
-
-saveFavoritesGroups(favorites);
-persistFavoritesToCloud(favorites);
-
-if(
-group ===
-"blue"
-){
-seedWatchlistTfOnBlueFlag(
-symbol,
-currentTF
+function closeAllCoinFlagMenus(exceptWrap = null){
+return closeAllCoinFlagMenusMoved(
+terminalPageHost(),
+...arguments
 );
 }
 
-const row =
-coinElements.get(symbol);
-const btn =
-row?.querySelector("[data-coin-flag-trigger]");
-
-if(btn){
-updateCoinFlagButton(btn, symbol);
-}
-
-if(
-symbol === (
-currentSymbol ||
-displaySymbol
-)
-){
-updateCoinsChartHeaderFlag(
-symbol
+function applyCoinFavoriteGroup(symbol,
+group){
+return applyCoinFavoriteGroupMoved(
+terminalPageHost(),
+...arguments
 );
-}
-
-if(flagSortActive){
-renderList();
-}
-
 }
 
 function updateCoinFlagButton(btn, symbol){
-
-const group =
-getFavoriteGroup(symbol, favorites);
-
-btn.className =
-"flag coin-flag-btn screener-flag-btn";
-
-if(group){
-btn.classList.add(
-"favorite",
-`flag--${group}`
+return updateCoinFlagButtonMoved(
+terminalPageHost(),
+...arguments
 );
-}
-
-btn.title =
-group
-? "Снять флаг"
-: "Выбрать флаг";
-
-btn.setAttribute(
-"aria-pressed",
-group ? "true" : "false"
-);
-
 }
 
 function getCoinsChartHeaderFlagBtn(){
-
-return document.querySelector(
-"[data-chart-header-flag]"
+return getCoinsChartHeaderFlagBtnMoved(
+terminalPageHost(),
+...arguments
 );
-
 }
 
-function updateCoinsChartHeaderFlag(
-symbol
-){
-
-const sym =
-String(
-symbol ||
-currentSymbol ||
-displaySymbol ||
-""
-).trim().toUpperCase();
-
-const btn =
-getCoinsChartHeaderFlagBtn();
-
-if(
-!btn ||
-!sym
-){
-return;
-}
-
-updateCoinFlagButton(
-btn,
-sym
+function updateCoinsChartHeaderFlag(symbol){
+return updateCoinsChartHeaderFlagMoved(
+terminalPageHost(),
+...arguments
 );
-
 }
 
 function mountCoinsChartHeaderFlag(){
-
-const flagWrap =
-document.getElementById(
-"coins-chart-flag-wrap"
+return mountCoinsChartHeaderFlagMoved(
+terminalPageHost(),
+...arguments
 );
-
-const flagTrigger =
-flagWrap?.querySelector(
-"[data-coin-flag-trigger]"
-);
-
-const flagMenu =
-flagWrap?.querySelector(
-".coin-flag-menu"
-);
-
-if(
-!flagWrap ||
-!flagTrigger ||
-!flagMenu
-){
-return;
-}
-
-flagTrigger.addEventListener(
-"click",
-e=>{
-
-e.stopPropagation();
-
-const sym =
-String(
-currentSymbol ||
-displaySymbol ||
-""
-).trim().toUpperCase();
-
-if(
-!sym
-){
-return;
-}
-
-if(
-getFavoriteGroup(
-sym,
-favorites
-)
-){
-closeAllCoinFlagMenus(
-flagWrap
-);
-flagMenu.classList.add(
-"hidden"
-);
-flagTrigger.setAttribute(
-"aria-expanded",
-"false"
-);
-applyCoinFavoriteGroup(
-sym,
-"clear"
-);
-syncCoinListFreezeFromFlagMenus();
-return;
-}
-
-const open =
-!flagMenu.classList.contains(
-"hidden"
-);
-
-closeAllCoinFlagMenus(
-flagWrap
-);
-
-if(
-open
-){
-flagMenu.classList.add(
-"hidden"
-);
-flagTrigger.setAttribute(
-"aria-expanded",
-"false"
-);
-}else{
-openChromeSurface(
-flagMenu
-);
-flagTrigger.setAttribute(
-"aria-expanded",
-"true"
-);
-}
-
-syncCoinListFreezeFromFlagMenus();
-
-}
-);
-
-flagMenu.querySelectorAll(
-"[data-flag-group]"
-).forEach(
-btn=>{
-
-btn.addEventListener(
-"click",
-e=>{
-
-e.stopPropagation();
-
-const sym =
-currentSymbol ||
-displaySymbol;
-
-if(
-!sym
-){
-return;
-}
-
-flagMenu.classList.add(
-"hidden"
-);
-flagTrigger.setAttribute(
-"aria-expanded",
-"false"
-);
-syncCoinListFreezeFromFlagMenus();
-
-applyCoinFavoriteGroup(
-sym,
-btn.dataset.flagGroup
-);
-
-}
-);
-
-}
-);
-
-updateCoinsChartHeaderFlag(
-currentSymbol ||
-displaySymbol
-);
-
 }
 
 
 function syncFavoriteButtonsFromStorage(){
-
-favorites =
-loadFavoritesGroups();
-
-coinElements.forEach((el, symbol)=>{
-
-const group =
-getFavoriteGroup(symbol, favorites);
-
-const btn =
-el.querySelector("[data-coin-flag-trigger]");
-
-if(btn){
-updateCoinFlagButton(btn, symbol);
-}
-
-});
-
-updateCoinsChartHeaderFlag(
-currentSymbol ||
-displaySymbol
+return syncFavoriteButtonsFromStorageMoved(
+terminalPageHost(),
+...arguments
 );
-
 }
 
 onFavoritesRemoteUpdate(()=>{
@@ -4634,191 +2537,38 @@ let coinVolumeFilterMounted =
 false;
 
 function syncCoinVolumeFilterInput(){
-
-syncMinVolumeFilterInput(
-document.getElementById(
-"coin-volume-filter"
-),
-coinsState().minVolumeFilter
+return syncCoinVolumeFilterInputMoved(
+terminalPageHost(),
+...arguments
 );
-
 }
 
 function commitCoinVolumeFilterFromInput(){
-
-const el =
-document.getElementById(
-"coin-volume-filter"
+return commitCoinVolumeFilterFromInputMoved(
+terminalPageHost(),
+...arguments
 );
-
-if(
-!el
-){
-return;
-}
-
-const n =
-normalizeMinVolume(
-parseMinVolumeFilter(
-el.value
-)
-);
-
-if(
-n ===
-normalizeMinVolume(
-coinsState().minVolumeFilter
-)
-){
-return;
-}
-
-coinsState().minVolumeFilter =
-n;
-
 }
 
 function mountCoinVolumeFilter(){
-
-const coinVolumeFilterEl =
-document.getElementById(
-"coin-volume-filter"
+return mountCoinVolumeFilterMoved(
+terminalPageHost(),
+...arguments
 );
-
-if(
-!coinVolumeFilterEl
-){
-return;
-}
-
-syncCoinVolumeFilterInput();
-
-if(
-coinVolumeFilterMounted
-){
-return;
-}
-
-coinVolumeFilterMounted =
-true;
-
-mountMinVolumeFilterInput(
-coinVolumeFilterEl,
-{
-onCommit(
-next
-){
-
-const n =
-normalizeMinVolume(
-next
-);
-
-if(
-n ===
-normalizeMinVolume(
-coinsState().minVolumeFilter
-)
-){
-return;
-}
-
-coinsState().minVolumeFilter =
-n;
-persistCoinsPrefs();
-renderList();
-
-}
-}
-);
-
 }
 
 function shouldIgnoreListKeyNav(e){
-
-const target =
-e.target;
-
-if(!target){
-return false;
-}
-
-const tag =
-target.tagName?.toLowerCase();
-
-if(
-tag === "input" ||
-tag === "textarea" ||
-tag === "select" ||
-tag === "button"
-){
-return true;
-}
-
-if(target.isContentEditable){
-return true;
-}
-
-return false;
-
-}
-
-async function navigateCoinsList(
-direction
-){
-
-const symbols =
-getVisibleSymbolList();
-
-if(
-!symbols.length
-){
-return;
-}
-
-const goDown =
-direction >
-0;
-
-let index =
-symbols.indexOf(
-currentSymbol
+return shouldIgnoreListKeyNavMoved(
+terminalPageHost(),
+...arguments
 );
-
-if(
-index <
-0
-){
-index = goDown ? -1 : 0;
 }
 
-if(goDown){
-index = (index + 1) % symbols.length;
-}else{
-index = (index - 1 + symbols.length) % symbols.length;
-}
-
-const next =
-symbols[index];
-
-if(
-!next ||
-next === currentSymbol
-){
-return;
-}
-
-currentSymbol =
-next;
-setCoinsChartSymbol(
-next
+async function navigateCoinsList(direction){
+return navigateCoinsListMoved(
+terminalPageHost(),
+...arguments
 );
-highlightActiveSymbol();
-ensureActiveCoinVisible();
-await loadSymbol(
-next
-);
-
 }
 
 document.addEventListener(
@@ -4849,104 +2599,10 @@ goDown ? 1 : -1
 });
 
 function syncCoinsTabletListNav(){
-
-const show =
-isTerminalPage &&
-isTabletChartViewport();
-
-document.body.classList.toggle(
-"coins-tablet-list-nav-on",
-show
+return syncCoinsTabletListNavMoved(
+terminalPageHost(),
+...arguments
 );
-
-if(
-!show
-){
-return;
-}
-
-const list =
-document.getElementById(
-"list"
-);
-
-if(
-!list
-){
-return;
-}
-
-let nav =
-document.getElementById(
-"coins-list-tablet-nav"
-);
-
-if(
-!nav
-){
-
-nav =
-document.createElement(
-"div"
-);
-
-nav.id = "coins-list-tablet-nav";
-nav.className = "coins-list-tablet-nav";
-nav.setAttribute(
-"aria-label",
-"Листание списка монет"
-);
-
-const up =
-document.createElement(
-"button"
-);
-
-up.type = "button";
-up.className = "coins-list-scroll-btn coins-list-scroll-btn--up";
-up.id = "coins-list-scroll-up";
-up.textContent = "▲ Вверх по списку";
-
-const down =
-document.createElement(
-"button"
-);
-
-down.type = "button";
-down.className = "coins-list-scroll-btn coins-list-scroll-btn--down";
-down.id = "coins-list-scroll-down";
-down.textContent = "▼ Вниз по списку";
-
-up.addEventListener(
-"click",
-()=>{
-void navigateCoinsList(
--1
-);
-}
-);
-
-down.addEventListener(
-"click",
-()=>{
-void navigateCoinsList(
-1
-);
-}
-);
-
-nav.append(
-up,
-down
-);
-
-}
-
-placeCoinsTabletListNav(
-nav,
-list
-);
-
 }
 
 window.addEventListener(
@@ -4967,116 +2623,39 @@ syncCoinsTabletListNav
 ========================================================= */
 
 
-function formatCoinsSymbolLabel(
-symbol
-){
-
-const sym =
-symbol ||
-displaySymbol ||
-currentSymbol;
-
-if(
-!sym
-){
-return "—";
-}
-
-return formatExchangeDisplayLabel(
-getActiveExchangeId(),
-sym
+function formatCoinsSymbolLabel(symbol){
+return formatCoinsSymbolLabelMoved(
+terminalPageHost(),
+...arguments
 );
-
 }
 
 function syncCoinsPageTitle(){
-
-if(
-!isTerminalPage
-){
-return;
-}
-
-const label =
-formatCoinsSymbolLabel();
-
-document.title =
-label &&
-label !==
-"—"
-? `${label} — Multichart`
-:"Multichart";
-
-}
-
-function setCoinsChartSymbol(
-symbol
-){
-
-const sym =
-symbol
-? String(symbol).trim().toUpperCase()
-: "";
-
-if(!sym){
-return;
-}
-
-displaySymbol = sym;
-
-const el =
-document.getElementById(
-"current-symbol"
+return syncCoinsPageTitleMoved(
+terminalPageHost(),
+...arguments
 );
-
-if(!el){
-return;
 }
 
-el.textContent =
-formatCoinsSymbolLabel(sym);
-
-window.dispatchEvent(
-new CustomEvent(
-"coins-chart-symbol-changed",
-{
-detail:{
-symbol:
-sym
-}
-}
-)
+function setCoinsChartSymbol(symbol){
+return setCoinsChartSymbolMoved(
+terminalPageHost(),
+...arguments
 );
-
-updateCoinsChartHeaderFlag(
-sym
-);
-
-syncCoinsPageTitle();
-
 }
 
 function syncCoinsSymbolLabel(){
-
-setCoinsChartSymbol(
-currentSymbol
+return syncCoinsSymbolLabelMoved(
+terminalPageHost(),
+...arguments
 );
-
 }
 
 function applyUrlTimeframe(){
-
-document
-.querySelectorAll(".tf-btn")
-.forEach(btn=>{
-
-btn.classList.toggle(
-"active",
-btn.dataset.tf === currentTF
+return applyUrlTimeframeMoved(
+terminalPageHost(),
+...arguments
 );
-
-});
-
 }
 
 /* =========================================================
@@ -5096,174 +2675,17 @@ closeAllCoinFlagMenus();
 });
 
 function syncCoinsMarketFilterOptions(){
-
-const marketFilter =
-document.getElementById(
-"market-filter"
-);
-
-if(
-!marketFilter
-){
-return;
-}
-
-const markets =
-[
-...getActiveExchangeMarkets(),
-...getExtraCoinMarkets()
-];
-const prev =
-marketFilter.value;
-
-marketFilter.innerHTML =
-markets.map(
-m=>
-`<option value="${m.id}">${m.label}</option>`
-).join(
-""
-);
-
-const allowed =
-markets.map(
-m=>
-m.id
-);
-
-if(
-allowed.includes(
-prev
-)
-){
-marketFilter.value =
-prev;
-}else if(
-allowed.includes(
-currentDataset
-)
-){
-marketFilter.value =
-currentDataset;
-}else{
-marketFilter.value =
-"all";
-currentDataset =
-"all";
-}
-
-}
-
-async function handleExchangeChanged(
-e
-){
-
-const prevExchangeId =
-String(
-e?.detail?.previousExchangeId ||
-""
-).trim().toLowerCase();
-
-if(
-prevExchangeId &&
-currentSymbol
-){
-saveLastViewForExchange(
-prevExchangeId,
-currentSymbol,
-currentTF
+return syncCoinsMarketFilterOptionsMoved(
+terminalPageHost(),
+...arguments
 );
 }
 
-stopTickerStream();
-disconnectKlineStream();
-
-favorites =
-loadFavoritesGroups();
-
-syncCoinsMarketFilterOptions();
-
-coinsState().allListings =
-[];
-coinsState().allBybitSymbols =
-[];
-coinsState().usdcListings =
-[];
-coinsState().indicesListings =
-[];
-coinsState().newListings =
-[];
-coinsState().innovationListings =
-[];
-coinsState().stockListings =
-[];
-coinsState().shareListings =
-[];
-coinsState().etfListings =
-[];
-coinsState().commodityListings =
-[];
-coinsState().forexListings =
-[];
-coinsState().currencyListings =
-[];
-
-if(
-!isSelectableCoinsMarket(
-currentDataset
-)
-){
-currentDataset =
-"all";
-}
-
-const cachedSymbols =
-peekMarketSymbolsCache();
-
-if(
-cachedSymbols?.length
-){
-applyInstrumentLists(
-cachedSymbols
+async function handleExchangeChanged(e){
+return handleExchangeChangedMoved(
+terminalPageHost(),
+...arguments
 );
-generateMarketData();
-renderList();
-}
-
-await refreshCoinsMarketUi().catch(
-err=>{
-console.warn(
-"Terminal exchange switch:",
-err
-);
-}
-);
-
-if(
-hasUrlSymbol &&
-currentSymbol &&
-getCurrentSymbols().includes(
-currentSymbol
-)
-){
-applyUrlTimeframe();
-await loadSymbol(
-currentSymbol
-);
-return;
-}
-
-hasUrlSymbol = false;
-
-resolveSymbolForExchange(
-getActiveExchangeId()
-);
-
-applyUrlTimeframe();
-
-await loadSymbol(
-currentSymbol
-);
-
 }
 
 window.addEventListener(
@@ -5384,138 +2806,17 @@ highlightActiveSymbol();
 );
 
 async function refreshCoinsMarketUi(){
-
-try{
-
-await initSymbols();
-
-}catch(
-err
-){
-
-console.warn(
-"Terminal symbols:",
-err
+return refreshCoinsMarketUiMoved(
+terminalPageHost(),
+...arguments
 );
-
-restoreSymbolsFromStaleCache();
-
-}
-
-if(
-isActiveRealtimeMarketDataset(
-currentDataset
-) &&
-!coinsMarketHasSymbols(
-currentDataset
-)
-){
-
-try{
-
-await initSymbols({
-forceNetwork:true
-});
-
-}catch(
-retryErr
-){
-
-console.warn(
-"Terminal symbols retry:",
-retryErr
-);
-
-restoreSymbolsFromStaleCache();
-
-}
-
-}
-
-if(
-hasUrlSymbol &&
-currentSymbol &&
-!getCurrentSymbols().includes(currentSymbol)
-){
-hasUrlSymbol = false;
-}
-
-generateMarketData();
-
-renderList();
-
-try{
-
-await primeTickerSnapshots();
-
-}catch(
-err
-){
-
-console.warn(
-"Terminal tickers:",
-err
-);
-
-}
-
-syncCoinsChartTurnover24(
-currentSymbol
-);
-
-renderList();
-
-resizeCharts();
-
-stopTickerStream();
-applyCoinsListRefreshInterval();
-startTickerStream();
-
 }
 
 async function syncTerminalAlgoEarlyT3List(){
-
-if(
-!(
-window.cryptoTerminalDesktop?.isDesktop ||
-window.cryptoTerminalDesktop?.webTrading
-) ||
-!isAlgoTradingNavEnabled()
-){
-terminalAlgoEarlyT3ListMod?.unmountTerminalAlgoEarlyT3List?.();
-if(
-!isSelectableCoinsMarket(
-currentDataset
-)
-){
-currentDataset =
-"all";
-}
-syncCoinsMarketFilterOptions();
-return;
-}
-
-try{
-if(
-!terminalAlgoEarlyT3ListMod
-){
-terminalAlgoEarlyT3ListMod =
-await import(
-"./algo-trading/terminal-early-t3-list.js?v=c1873845"
+return syncTerminalAlgoEarlyT3ListMoved(
+terminalPageHost(),
+...arguments
 );
-}
-terminalAlgoEarlyT3ListMod.mountTerminalAlgoEarlyT3List();
-}catch(
-err
-){
-console.warn(
-"[terminal] algo early t3 list:",
-err
-);
-}
-
-syncCoinsMarketFilterOptions();
-
 }
 
 async function init(){

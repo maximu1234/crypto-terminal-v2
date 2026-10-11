@@ -59,13 +59,13 @@ calcPositionVolumeUsd
 
 import {
 applyPositionVolumeFromDrawing
-} from "../trade-volume-presets.js?v=10eba9f8";
+} from "../trade-volume-presets.js?v=87c3d5c8";
 
 import {
 stashDrawingStopsFromDrawing,
 clearDrawingStopsPending,
 hasDrawingStopsPending
-} from "../trade-auto-stops.js?v=87d8bd69";
+} from "../trade-auto-stops.js?v=ae161c24";
 
 import {
 touchShapeRevision
@@ -180,6 +180,98 @@ openRectColorMenu as openRectColorMenuMoved,
 openElliottChannelColorMenu as openElliottChannelColorMenuMoved,
 openChannelColorMenu as openChannelColorMenuMoved
 } from "./draw-style-panels.js?v=2e6e7cc6";
+import {
+styleCtx as styleCtxMoved,
+isStyleBarContextActive as isStyleBarContextActiveMoved,
+isTradeVolumeUiActive as isTradeVolumeUiActiveMoved,
+ensureChromePortal as ensureChromePortalMoved,
+portalDrawChrome as portalDrawChromeMoved,
+syncDrawChromeLayout as syncDrawChromeLayoutMoved,
+activeFibType as activeFibTypeMoved,
+fibDefaultsVersionFor as fibDefaultsVersionForMoved,
+migrateActiveFibDefaults as migrateActiveFibDefaultsMoved,
+getFibEditShape as getFibEditShapeMoved,
+resolveFibStyleTarget as resolveFibStyleTargetMoved,
+rememberFibSettingsTarget as rememberFibSettingsTargetMoved,
+isFibContext as isFibContextMoved,
+isRectContext as isRectContextMoved,
+isFvpContext as isFvpContextMoved,
+isChannelContext as isChannelContextMoved,
+isElliottContext as isElliottContextMoved,
+candlesForCoords as candlesForCoordsMoved,
+tfForCoords as tfForCoordsMoved,
+getCoordEditShape as getCoordEditShapeMoved,
+isCoordContext as isCoordContextMoved,
+isCoordSettingsOpen as isCoordSettingsOpenMoved,
+canApplyCoordPanel as canApplyCoordPanelMoved,
+persistCoordChange as persistCoordChangeMoved,
+syncCoordSettingsIfIdle as syncCoordSettingsIfIdleMoved,
+composeSettingsHtml as composeSettingsHtmlMoved,
+attachCoordUi as attachCoordUiMoved,
+pinCoordSettingsShape as pinCoordSettingsShapeMoved,
+typeShowsSettingsBtn as typeShowsSettingsBtnMoved,
+settingsOpenMatchesType as settingsOpenMatchesTypeMoved,
+ensureCoordSettingsPanel as ensureCoordSettingsPanelMoved,
+resetSettingsPanelListeners as resetSettingsPanelListenersMoved,
+settingsPopoverHasPanel as settingsPopoverHasPanelMoved,
+isFibSettingsOpen as isFibSettingsOpenMoved,
+isRectSettingsOpen as isRectSettingsOpenMoved,
+isFvpSettingsOpen as isFvpSettingsOpenMoved,
+isChannelSettingsOpen as isChannelSettingsOpenMoved,
+isElliottSettingsOpen as isElliottSettingsOpenMoved,
+getFvpEditShape as getFvpEditShapeMoved,
+getRectEditShape as getRectEditShapeMoved,
+fillRectSettingsPanel as fillRectSettingsPanelMoved,
+readRectPanelFromDOM as readRectPanelFromDOMMoved,
+canApplyRectPanel as canApplyRectPanelMoved,
+canApplyFvpPanel as canApplyFvpPanelMoved,
+ensureFvpSettingsPanel as ensureFvpSettingsPanelMoved,
+fillFvpSettingsFromContext as fillFvpSettingsFromContextMoved,
+applyFvpSettingsFromPanel as applyFvpSettingsFromPanelMoved,
+getChannelEditShape as getChannelEditShapeMoved,
+canApplyChannelPanel as canApplyChannelPanelMoved,
+fillChannelSettingsPanel as fillChannelSettingsPanelMoved,
+readChannelPanelFromDOM as readChannelPanelFromDOMMoved,
+scheduleChannelApplyImmediate as scheduleChannelApplyImmediateMoved,
+scheduleChannelApplyDebounced as scheduleChannelApplyDebouncedMoved,
+getElliottEditType as getElliottEditTypeMoved,
+getElliottEditShape as getElliottEditShapeMoved,
+canApplyElliottPanel as canApplyElliottPanelMoved,
+fillElliottSettingsFromContext as fillElliottSettingsFromContextMoved,
+canApplyFibPanel as canApplyFibPanelMoved,
+readFibDefaultsForStyle as readFibDefaultsForStyleMoved,
+getStyleTargetType as getStyleTargetTypeMoved,
+applyFibSettingsFromPanel as applyFibSettingsFromPanelMoved,
+closeFibColorMenu as closeFibColorMenuMoved,
+openFibColorMenu as openFibColorMenuMoved,
+ensureFibColorMenuPortal as ensureFibColorMenuPortalMoved,
+scheduleFibApplyImmediate as scheduleFibApplyImmediateMoved,
+scheduleFibApplyDebounced as scheduleFibApplyDebouncedMoved,
+readFibPanelFromDOM as readFibPanelFromDOMMoved,
+applyFibGlobalColorFromToolbar as applyFibGlobalColorFromToolbarMoved,
+applyFibGlobalWidthFromToolbar as applyFibGlobalWidthFromToolbarMoved,
+fillFibSettingsPanel as fillFibSettingsPanelMoved,
+readStyleFromUI as readStyleFromUIMoved,
+updateColorStripe as updateColorStripeMoved,
+setActiveWidth as setActiveWidthMoved,
+setActiveTextSize as setActiveTextSizeMoved,
+resolvePositionRiskTarget as resolvePositionRiskTargetMoved,
+getPositionEntryVolumeUsd as getPositionEntryVolumeUsdMoved,
+applyPositionRiskUsd as applyPositionRiskUsdMoved,
+submitPositionVolumeApply as submitPositionVolumeApplyMoved,
+validatePositionDrawingStops as validatePositionDrawingStopsMoved,
+resolveTradeSymbol as resolveTradeSymbolMoved,
+syncPositionApplyStopsArmed as syncPositionApplyStopsArmedMoved,
+submitPositionVolumeApplyWithStops as submitPositionVolumeApplyWithStopsMoved,
+isUnrelatedFormFieldFocused as isUnrelatedFormFieldFocusedMoved,
+isEnterKey as isEnterKeyMoved,
+isPositionApplyEnterHotkey as isPositionApplyEnterHotkeyMoved,
+onPositionApplyEnterHotkey as onPositionApplyEnterHotkeyMoved,
+isPositionRiskInputFocused as isPositionRiskInputFocusedMoved,
+captureCurrentStyleSnapshot as captureCurrentStyleSnapshotMoved,
+applyDefaultStyleToTarget as applyDefaultStyleToTargetMoved,
+applyNamedTemplate as applyNamedTemplateMoved
+} from "./draw-style-controls.js?v=b4e5fd0a";
 export function createDrawStyleBar(
 deps
 ){
@@ -246,102 +338,185 @@ getStyleDelegate = null
 } =
 deps;
 
-function styleCtx(){
-
-const delegate =
-getStyleDelegate?.();
-
-if(
-!delegate
-){
-return {
-getTool,
-getSelectedId,
-getSelectedIds,
-getSelected,
-getPlacement,
-getDrawings,
-saveDrawings,
-redraw,
-saveToolDefaults,
-saveGlobalStyle,
-baseDefaultStyle,
-getDesktopEdit,
-deleteSelected,
-getCandles,
-getTf
+function styleControlsHost(){
+if(!styleControlsHost.current){
+styleControlsHost.current = {
+get CHANNEL_DEFAULT_COLOR(){ return CHANNEL_DEFAULT_COLOR; },
+get ELLIOTT_TOOL_DEFAULTS_VERSION(){ return ELLIOTT_TOOL_DEFAULTS_VERSION; },
+get FIB_EXT_TOOL_DEFAULTS_VERSION(){ return FIB_EXT_TOOL_DEFAULTS_VERSION; },
+get FIB_TOOL_DEFAULTS_VERSION(){ return FIB_TOOL_DEFAULTS_VERSION; },
+get FVP_TOOL_DEFAULTS_VERSION(){ return FVP_TOOL_DEFAULTS_VERSION; },
+get STROKE(){ return STROKE; },
+get TEXT_DEFAULT_SIZE(){ return TEXT_DEFAULT_SIZE; },
+get activeColor(){ return activeColor; },
+set activeColor(value){ activeColor = value; },
+get applyPositionVolumeFromDrawing(){ return applyPositionVolumeFromDrawing; },
+get barOffset(){ return barOffset; },
+get baseDefaultStyle(){ return baseDefaultStyle; },
+get bindCoordSettingsPanel(){ return bindCoordSettingsPanel; },
+get bindDrawSettingsTabs(){ return bindDrawSettingsTabs; },
+get bindFvpSettingsPanel(){ return bindFvpSettingsPanel; },
+get buildFactoryDefaultSnapshot(){ return buildFactoryDefaultSnapshot; },
+get calcPositionVolumeUsd(){ return calcPositionVolumeUsd; },
+get channelApplyTimer(){ return channelApplyTimer; },
+set channelApplyTimer(value){ channelApplyTimer = value; },
+get channelPanelBuilt(){ return channelPanelBuilt; },
+set channelPanelBuilt(value){ channelPanelBuilt = value; },
+get channelPanelSyncing(){ return channelPanelSyncing; },
+set channelPanelSyncing(value){ channelPanelSyncing = value; },
+get channelSettingsShapeId(){ return channelSettingsShapeId; },
+get chromePortal(){ return chromePortal; },
+set chromePortal(value){ chromePortal = value; },
+get clampTextFontSize(){ return clampTextFontSize; },
+get clearDrawingStopsPending(){ return clearDrawingStopsPending; },
+get colorPopover(){ return colorPopover; },
+get colorStripe(){ return colorStripe; },
+get commitChannelPanelToShape(){ return commitChannelPanelToShape; },
+get commitFibPanelToShape(){ return commitFibPanelToShape; },
+get coordPanelSyncing(){ return coordPanelSyncing; },
+set coordPanelSyncing(value){ coordPanelSyncing = value; },
+get coordSettingsHtml(){ return coordSettingsHtml; },
+get coordSettingsShapeId(){ return coordSettingsShapeId; },
+set coordSettingsShapeId(value){ coordSettingsShapeId = value; },
+get coordSettingsType(){ return coordSettingsType; },
+set coordSettingsType(value){ coordSettingsType = value; },
+get coordsOnlyPanelBuilt(){ return coordsOnlyPanelBuilt; },
+set coordsOnlyPanelBuilt(value){ coordsOnlyPanelBuilt = value; },
+get copyFvpStyleToShape(){ return copyFvpStyleToShape; },
+get createFvpToolDefaults(){ return createFvpToolDefaults; },
+get deleteSelected(){ return deleteSelected; },
+get drawSettingsTabsHtml(){ return drawSettingsTabsHtml; },
+get elliottPanelBuilt(){ return elliottPanelBuilt; },
+set elliottPanelBuilt(value){ elliottPanelBuilt = value; },
+get elliottPanelSyncing(){ return elliottPanelSyncing; },
+set elliottPanelSyncing(value){ elliottPanelSyncing = value; },
+get elliottSettingsShapeId(){ return elliottSettingsShapeId; },
+get ensureChannelSettingsPanel(){ return ensureChannelSettingsPanel; },
+get ensureElliottSettingsPanel(){ return ensureElliottSettingsPanel; },
+get ensureFibLevelsVisible(){ return ensureFibLevelsVisible; },
+get ensureFibSettingsPanel(){ return ensureFibSettingsPanel; },
+get ensureRectSettingsPanel(){ return ensureRectSettingsPanel; },
+get extractStyleSnapshot(){ return extractStyleSnapshot; },
+get fibApplyTimer(){ return fibApplyTimer; },
+set fibApplyTimer(value){ fibApplyTimer = value; },
+get fibColorMenuAnchor(){ return fibColorMenuAnchor; },
+set fibColorMenuAnchor(value){ fibColorMenuAnchor = value; },
+get fibColorMenuPortal(){ return fibColorMenuPortal; },
+set fibColorMenuPortal(value){ fibColorMenuPortal = value; },
+get fibPanelBuilt(){ return fibPanelBuilt; },
+set fibPanelBuilt(value){ fibPanelBuilt = value; },
+get fibPanelSyncing(){ return fibPanelSyncing; },
+set fibPanelSyncing(value){ fibPanelSyncing = value; },
+get fibSettingsShapeId(){ return fibSettingsShapeId; },
+set fibSettingsShapeId(value){ fibSettingsShapeId = value; },
+get fillChannelSettingsPanelDom(){ return fillChannelSettingsPanelDom; },
+get fillCoordSettingsPanel(){ return fillCoordSettingsPanel; },
+get fillElliottSettingsPanelDom(){ return fillElliottSettingsPanelDom; },
+get fillFibSettingsPanelDom(){ return fillFibSettingsPanelDom; },
+get fillFvpSettingsPanel(){ return fillFvpSettingsPanel; },
+get fillRectSettingsPanelDom(){ return fillRectSettingsPanelDom; },
+get fvpPanelBuilt(){ return fvpPanelBuilt; },
+set fvpPanelBuilt(value){ fvpPanelBuilt = value; },
+get fvpPanelSyncing(){ return fvpPanelSyncing; },
+set fvpPanelSyncing(value){ fvpPanelSyncing = value; },
+get fvpSettingsHtml(){ return fvpSettingsHtml; },
+get fvpSettingsShapeId(){ return fvpSettingsShapeId; },
+get getAlive(){ return getAlive; },
+get getCandles(){ return getCandles; },
+get getDesktopEdit(){ return getDesktopEdit; },
+get getDrawings(){ return getDrawings; },
+get getPlacement(){ return getPlacement; },
+get getSelected(){ return getSelected; },
+get getSelectedId(){ return getSelectedId; },
+get getSelectedIds(){ return getSelectedIds; },
+get getStyleDelegate(){ return getStyleDelegate; },
+get getSymbol(){ return getSymbol; },
+get getTf(){ return getTf; },
+get getTool(){ return getTool; },
+get getToolDefaults(){ return getToolDefaults; },
+get hasCoordSettings(){ return hasCoordSettings; },
+get hasDrawingStopsPending(){ return hasDrawingStopsPending; },
+get isActive(){ return isActive; },
+get isCoordInputFocused(){ return isCoordInputFocused; },
+get isElliottType(){ return isElliottType; },
+get isFibExtType(){ return isFibExtType; },
+get isFibType(){ return isFibType; },
+get isFvpType(){ return isFvpType; },
+get isPositionType(){ return isPositionType; },
+get isTemplateEligibleType(){ return isTemplateEligibleType; },
+get listTemplatesForType(){ return listTemplatesForType; },
+get loadUserPrefs(){ return loadUserPrefs; },
+get mergeFibLevelsAfterGlobalChange(){ return mergeFibLevelsAfterGlobalChange; },
+get mergeStyleSnapshot(){ return mergeStyleSnapshot; },
+get migrateFibExtToolDefaults(){ return migrateFibExtToolDefaults; },
+get migrateFibToolDefaults(){ return migrateFibToolDefaults; },
+get mountTvColorPicker(){ return mountTvColorPicker; },
+get parseDrawColor(){ return parseDrawColor; },
+get parseMoneyInput(){ return parseMoneyInput; },
+get persistStyleSnapshotToTarget(){ return persistStyleSnapshotToTarget; },
+get positionApplyBtn(){ return positionApplyBtn; },
+get positionApplyStopsBtn(){ return positionApplyStopsBtn; },
+get positionEntryPrice(){ return positionEntryPrice; },
+get positionPopover(){ return positionPopover; },
+get positionRiskEditing(){ return positionRiskEditing; },
+get positionRiskInput(){ return positionRiskInput; },
+get positionRiskShapeId(){ return positionRiskShapeId; },
+get positionRiskWrap(){ return positionRiskWrap; },
+get readChannelSettingsPanel(){ return readChannelSettingsPanel; },
+get readElliottSettingsPanel(){ return readElliottSettingsPanel; },
+get readFibSettingsPanel(){ return readFibSettingsPanel; },
+get readFvpSettingsPanel(){ return readFvpSettingsPanel; },
+get readRectSettingsPanel(){ return readRectSettingsPanel; },
+get rectPanelBuilt(){ return rectPanelBuilt; },
+set rectPanelBuilt(value){ rectPanelBuilt = value; },
+get rectPanelSyncing(){ return rectPanelSyncing; },
+set rectPanelSyncing(value){ rectPanelSyncing = value; },
+get rectSettingsShapeId(){ return rectSettingsShapeId; },
+get redraw(){ return redraw; },
+get resolveFibTrendLineColor(){ return resolveFibTrendLineColor; },
+get saveDrawings(){ return saveDrawings; },
+get saveGlobalStyle(){ return saveGlobalStyle; },
+get saveToolDefaults(){ return saveToolDefaults; },
+get saveUserPrefs(){ return saveUserPrefs; },
+get setFibLevelColorButton(){ return setFibLevelColorButton; },
+get settingsPanelAbort(){ return settingsPanelAbort; },
+set settingsPanelAbort(value){ settingsPanelAbort = value; },
+get settingsPopover(){ return settingsPopover; },
+get stashDrawingStopsFromDrawing(){ return stashDrawingStopsFromDrawing; },
+get styleBar(){ return styleBar; },
+get templateMenu(){ return templateMenu; },
+get templateSaveModal(){ return templateSaveModal; },
+get textSizeLabel(){ return textSizeLabel; },
+get textSizePopover(){ return textSizePopover; },
+get touchShapeRevisionFn(){ return touchShapeRevisionFn; },
+get widthLabel(){ return widthLabel; },
+get widthPopover(){ return widthPopover; },
+get widthPreview(){ return widthPreview; },
+get wrapEl(){ return wrapEl; }
 };
 }
+return styleControlsHost.current;
+}
 
-return {
-getTool:
-delegate.getTool ||
-getTool,
-getSelectedId:
-delegate.getSelectedId ||
-getSelectedId,
-getSelectedIds:
-delegate.getSelectedIds ||
-getSelectedIds,
-getSelected:
-delegate.getSelected ||
-getSelected,
-getPlacement:
-delegate.getPlacement ||
-getPlacement,
-getDrawings:
-delegate.getDrawings ||
-getDrawings,
-saveDrawings:
-delegate.saveDrawings ||
-saveDrawings,
-redraw:
-delegate.redraw ||
-redraw,
-saveToolDefaults:
-delegate.saveToolDefaults ||
-saveToolDefaults,
-saveGlobalStyle:
-delegate.saveGlobalStyle ||
-saveGlobalStyle,
-baseDefaultStyle:
-delegate.baseDefaultStyle ||
-baseDefaultStyle,
-getDesktopEdit:
-delegate.getDesktopEdit ||
-getDesktopEdit,
-deleteSelected:
-delegate.deleteSelected ||
-deleteSelected,
-getCandles:
-delegate.getCandles ||
-getCandles,
-getTf:
-delegate.getTf ||
-getTf
-};
-
+function styleCtx(){
+return styleCtxMoved(
+styleControlsHost(),
+...arguments
+);
 }
 
 function isStyleBarContextActive(){
-
-return (
-isActive() ||
-!!getStyleDelegate?.()
+return isStyleBarContextActiveMoved(
+styleControlsHost(),
+...arguments
 );
-
 }
 
 function isTradeVolumeUiActive(){
-
-return (
-typeof document !==
-"undefined" &&
-document.body.classList.contains(
-"trade-page"
-)
+return isTradeVolumeUiActiveMoved(
+styleControlsHost(),
+...arguments
 );
-
 }
 
 const touchShapeRevisionFn =
@@ -391,848 +566,264 @@ let templateNameInput =
 null;
 
 function ensureChromePortal(){
-
-if(chromePortal){
-return chromePortal;
-}
-
-const el =
-document.createElement("div");
-
-el.className = "draw-chrome-portal";
-document.body.appendChild(el);
-chromePortal = el;
-return el;
-
+return ensureChromePortalMoved(
+styleControlsHost(),
+...arguments
+);
 }
 
 function portalDrawChrome(){
-
-const portal =
-ensureChromePortal();
-
-[
-styleBar,
-colorPopover,
-widthPopover,
-settingsPopover,
-templateMenu,
-templateSaveModal
-].forEach(node=>{
-
-if(!node){
-return;
-}
-
-node.style.pointerEvents = "auto";
-portal.appendChild(node);
-
-});
-
+return portalDrawChromeMoved(
+styleControlsHost(),
+...arguments
+);
 }
 
 function syncDrawChromeLayout(){
-
-if(
-!styleBar ||
-!wrapEl
-){
-return;
-}
-
-const wrap =
-wrapEl.getBoundingClientRect();
-
-styleBar.style.position = "fixed";
-styleBar.style.left =
-`${wrap.left + barOffset.x}px`;
-styleBar.style.top =
-`${wrap.top + barOffset.y}px`;
-styleBar.style.zIndex = "10050";
-
-if(
-settingsPopover &&
-!settingsPopover.classList.contains("hidden")
-){
-positionPopover(
-settingsPopover,
-44
+return syncDrawChromeLayoutMoved(
+styleControlsHost(),
+...arguments
 );
-}
-
 }
 function activeFibType(){
-
-const sel =
-getSelected();
-
-if(
-isFibType(
-sel?.type
-)
-){
-return sel.type;
-}
-
-const tool =
-getTool();
-
-if(
-isFibType(
-tool
-)
-){
-return tool;
-}
-
-return "fib";
-
-}
-
-function fibDefaultsVersionFor(
-type
-){
-
-return isFibExtType(
-type
-)
-? FIB_EXT_TOOL_DEFAULTS_VERSION
-: FIB_TOOL_DEFAULTS_VERSION;
-
-}
-
-function migrateActiveFibDefaults(
-type,
-saved
-){
-
-return isFibExtType(
-type
-)
-? migrateFibExtToolDefaults(
-saved
-)
-: migrateFibToolDefaults(
-saved
+return activeFibTypeMoved(
+styleControlsHost(),
+...arguments
 );
+}
 
+function fibDefaultsVersionFor(type){
+return fibDefaultsVersionForMoved(
+styleControlsHost(),
+...arguments
+);
+}
+
+function migrateActiveFibDefaults(type,
+saved){
+return migrateActiveFibDefaultsMoved(
+styleControlsHost(),
+...arguments
+);
 }
 
 function getFibEditShape(){
-
-const wanted =
-activeFibType();
-
-if(fibSettingsShapeId){
-
-const pinned =
-getDrawings().find(
-d=>
-d.id === fibSettingsShapeId &&
-isFibType(
-d.type
-)
+return getFibEditShapeMoved(
+styleControlsHost(),
+...arguments
 );
-
-if(
-pinned &&
-pinned.type ===
-wanted
-){
-return pinned;
-}
-
-}
-
-const sel =
-getSelected();
-
-if(
-isFibType(
-sel?.type
-)
-){
-return sel;
-}
-
-return null;
-
 }
 
 function resolveFibStyleTarget(){
-
-if(
-isFibSettingsOpen() &&
-!getFibEditShape()
-){
-rememberFibSettingsTarget();
-}
-
-return getFibEditShape();
-
+return resolveFibStyleTargetMoved(
+styleControlsHost(),
+...arguments
+);
 }
 
 function rememberFibSettingsTarget(){
-
-const sel =
-getSelected();
-
-if(
-isFibType(
-sel?.type
-)
-){
-fibSettingsShapeId = sel.id;
-return;
-}
-
-const fibs =
-getDrawings().filter(d=>isFibType(d.type));
-
-if(fibs.length === 1){
-fibSettingsShapeId = fibs[0].id;
-}
-
+return rememberFibSettingsTargetMoved(
+styleControlsHost(),
+...arguments
+);
 }
 
 function isFibContext(){
-
-const sel =
-getSelected();
-
-if(
-isFibType(
-sel?.type
-)
-){
-return true;
-}
-
-return isFibType(
-getTool()
+return isFibContextMoved(
+styleControlsHost(),
+...arguments
 );
-
 }
 
 function isRectContext(){
-
-const sel =
-getSelected();
-
-if(
-sel?.type ===
-"rectangle"
-){
-return true;
-}
-
-return getTool() ===
-"rectangle";
-
+return isRectContextMoved(
+styleControlsHost(),
+...arguments
+);
 }
 
 function isFvpContext(){
-
-const sel =
-getSelected();
-
-if(
-isFvpType(
-sel?.type
-)
-){
-return true;
-}
-
-return getTool() ===
-"fvp";
-
+return isFvpContextMoved(
+styleControlsHost(),
+...arguments
+);
 }
 
 function isChannelContext(){
-
-const sel =
-getSelected();
-
-if(
-sel?.type ===
-"channel"
-){
-return true;
-}
-
-return getTool() ===
-"channel";
-
+return isChannelContextMoved(
+styleControlsHost(),
+...arguments
+);
 }
 
 function isElliottContext(){
-
-const sel =
-getSelected();
-
-if(
-isElliottType(
-sel?.type
-)
-){
-return true;
-}
-
-return isElliottType(
-getTool()
+return isElliottContextMoved(
+styleControlsHost(),
+...arguments
 );
-
 }
 
 function candlesForCoords(){
-
-return styleCtx().getCandles?.() ||
-[];
-
+return candlesForCoordsMoved(
+styleControlsHost(),
+...arguments
+);
 }
 
 function tfForCoords(){
-
-return styleCtx().getTf?.() ||
-"";
-
+return tfForCoordsMoved(
+styleControlsHost(),
+...arguments
+);
 }
 
 function getCoordEditShape(){
-
-const {
-getSelected: selectedForStyle,
-getDrawings: drawingsForStyle
-} =
-styleCtx();
-
-if(
-coordSettingsShapeId
-){
-
-const pinned =
-drawingsForStyle().find(
-d=>
-d.id ===
-coordSettingsShapeId
+return getCoordEditShapeMoved(
+styleControlsHost(),
+...arguments
 );
-
-if(
-pinned &&
-hasCoordSettings(
-pinned.type
-)
-){
-
-const sel =
-selectedForStyle();
-const tool =
-styleCtx().getTool?.();
-
-if(
-sel?.id ===
-pinned.id
-){
-return pinned;
-}
-
-if(
-sel &&
-hasCoordSettings(
-sel.type
-)
-){
-return sel;
-}
-
-if(
-!tool ||
-tool ===
-"cursor" ||
-pinned.type ===
-tool
-){
-return pinned;
-}
-
-}
-
-}
-
-const sel =
-selectedForStyle();
-
-return hasCoordSettings(
-sel?.type
-)
-? sel
-: null;
-
 }
 
 function isCoordContext(){
-
-return hasCoordSettings(
-styleCtx().getSelected?.()?.type
+return isCoordContextMoved(
+styleControlsHost(),
+...arguments
 );
-
 }
 
 function isCoordSettingsOpen(){
-
-return !!(
-settingsPopover &&
-!settingsPopover.classList.contains(
-"hidden"
-) &&
-settingsPopover.querySelector(
-".draw-coord-settings"
-)
+return isCoordSettingsOpenMoved(
+styleControlsHost(),
+...arguments
 );
-
 }
 
 function canApplyCoordPanel(){
-
-return (
-getAlive() &&
-isCoordSettingsOpen() &&
-!coordPanelSyncing &&
-!!getCoordEditShape()
+return canApplyCoordPanelMoved(
+styleControlsHost(),
+...arguments
 );
-
 }
 
 function persistCoordChange(){
-
-const {
-saveDrawings: saveDrawingsForStyle,
-redraw: redrawForStyle
-} =
-styleCtx();
-const shape =
-getCoordEditShape();
-
-if(
-!shape
-){
-return;
-}
-
-touchShapeRevisionFn(
-shape
+return persistCoordChangeMoved(
+styleControlsHost(),
+...arguments
 );
-saveDrawingsForStyle();
-redrawForStyle();
-
 }
 
 function syncCoordSettingsIfIdle(){
-
-if(
-!settingsPopover?.querySelector(
-".draw-coord-settings"
-)
-){
-return;
-}
-
-if(
-coordPanelSyncing ||
-isCoordInputFocused(
-settingsPopover
-)
-){
-return;
-}
-
-const shape =
-getCoordEditShape();
-
-if(
-!shape
-){
-return;
-}
-
-coordPanelSyncing = true;
-
-try{
-
-fillCoordSettingsPanel(
-settingsPopover,
-shape,
-candlesForCoords(),
-tfForCoords()
+return syncCoordSettingsIfIdleMoved(
+styleControlsHost(),
+...arguments
 );
-
-}finally{
-coordPanelSyncing = false;
 }
 
-}
-
-function composeSettingsHtml(
-type,
-styleHtml
-){
-
-return drawSettingsTabsHtml({
-styleHtml,
-coordsHtml: coordSettingsHtml(
-type
-),
-activeTab: "style"
-});
-
-}
-
-function attachCoordUi(
-type,
-signal
-){
-
-coordSettingsType =
-type;
-bindDrawSettingsTabs(
-settingsPopover,
-signal
+function composeSettingsHtml(type,
+styleHtml){
+return composeSettingsHtmlMoved(
+styleControlsHost(),
+...arguments
 );
-bindCoordSettingsPanel(
-settingsPopover,
-{
-getAlive,
-getShape: getCoordEditShape,
-getCandles: candlesForCoords,
-getTf: tfForCoords,
-canApply: canApplyCoordPanel,
-onApply: persistCoordChange,
-signal
 }
-);
 
+function attachCoordUi(type,
+signal){
+return attachCoordUiMoved(
+styleControlsHost(),
+...arguments
+);
 }
 
 function pinCoordSettingsShape(){
-
-coordSettingsShapeId =
-styleCtx().getSelected?.()?.id ||
-null;
-
-}
-
-function typeShowsSettingsBtn(
-type
-){
-
-if(
-isFibType(
-type
-) ||
-type ===
-"rectangle" ||
-type ===
-"fvp" ||
-type ===
-"channel" ||
-isElliottType(
-type
-)
-){
-return true;
-}
-
-const sel =
-styleCtx().getSelected?.();
-
-return !!(
-hasCoordSettings(
-type
-) &&
-sel &&
-sel.type ===
-type
+return pinCoordSettingsShapeMoved(
+styleControlsHost(),
+...arguments
 );
-
 }
 
-function settingsOpenMatchesType(
-type
-){
-
-if(
-isFibType(
-type
-)
-){
-return isFibSettingsOpen();
-}
-
-if(
-type ===
-"rectangle"
-){
-return isRectSettingsOpen();
-}
-
-if(
-type ===
-"fvp"
-){
-return isFvpSettingsOpen();
-}
-
-if(
-type ===
-"channel"
-){
-return isChannelSettingsOpen();
-}
-
-if(
-isElliottType(
-type
-)
-){
-return isElliottSettingsOpen();
-}
-
-return !!(
-hasCoordSettings(
-type
-) &&
-isCoordSettingsOpen() &&
-coordSettingsType ===
-type
+function typeShowsSettingsBtn(type){
+return typeShowsSettingsBtnMoved(
+styleControlsHost(),
+...arguments
 );
-
 }
 
-function ensureCoordSettingsPanel(
-type
-){
-
-if(
-!settingsPopover ||
-!hasCoordSettings(
-type
-)
-){
-return;
+function settingsOpenMatchesType(type){
+return settingsOpenMatchesTypeMoved(
+styleControlsHost(),
+...arguments
+);
 }
 
-const already =
-coordsOnlyPanelBuilt &&
-coordSettingsType ===
-type &&
-!!settingsPopover.querySelector(
-".draw-coord-settings"
-) &&
-!settingsPopover.querySelector(
-".draw-settings-tabs"
+function ensureCoordSettingsPanel(type){
+return ensureCoordSettingsPanelMoved(
+styleControlsHost(),
+...arguments
 );
-
-if(
-already
-){
-return;
-}
-
-coordsOnlyPanelBuilt = true;
-fibPanelBuilt = false;
-rectPanelBuilt = false;
-fvpPanelBuilt = false;
-channelPanelBuilt = false;
-elliottPanelBuilt = false;
-
-const signal =
-resetSettingsPanelListeners();
-
-settingsPopover.classList.remove(
-"draw-settings-popover--fvp"
-);
-settingsPopover.classList.add(
-"draw-settings-popover--coords"
-);
-settingsPopover.innerHTML =
-coordSettingsHtml(
-type
-);
-attachCoordUi(
-type,
-signal
-);
-
 }
 
 function resetSettingsPanelListeners(){
-
-settingsPanelAbort?.abort();
-settingsPanelAbort =
-new AbortController();
-
-return settingsPanelAbort.signal;
-
-}
-
-function settingsPopoverHasPanel(
-kind
-){
-
-if(
-!settingsPopover
-){
-return false;
-}
-
-return !!settingsPopover.querySelector(
-kind ===
-"fib"
-? ".fib-settings"
-: kind ===
-"fvp"
-? ".fvp-settings"
-: kind ===
-"channel"
-? ".channel-settings"
-: kind ===
-"elliott"
-? ".elliott-settings"
-: ".rect-settings"
+return resetSettingsPanelListenersMoved(
+styleControlsHost(),
+...arguments
 );
+}
 
+function settingsPopoverHasPanel(kind){
+return settingsPopoverHasPanelMoved(
+styleControlsHost(),
+...arguments
+);
 }
 
 function isFibSettingsOpen(){
-
-return !!(
-settingsPopover &&
-!settingsPopover.classList.contains("hidden") &&
-fibPanelBuilt &&
-settingsPopover.querySelector(
-".fib-settings"
-)
+return isFibSettingsOpenMoved(
+styleControlsHost(),
+...arguments
 );
-
 }
 
 function isRectSettingsOpen(){
-
-return !!(
-settingsPopover &&
-!settingsPopover.classList.contains("hidden") &&
-rectPanelBuilt &&
-settingsPopover.querySelector(
-".rect-settings"
-)
+return isRectSettingsOpenMoved(
+styleControlsHost(),
+...arguments
 );
-
 }
 
 function isFvpSettingsOpen(){
-
-return !!(
-settingsPopover &&
-!settingsPopover.classList.contains("hidden") &&
-fvpPanelBuilt &&
-settingsPopover.querySelector(
-".fvp-settings"
-)
+return isFvpSettingsOpenMoved(
+styleControlsHost(),
+...arguments
 );
-
 }
 
 function isChannelSettingsOpen(){
-
-return !!(
-settingsPopover &&
-!settingsPopover.classList.contains("hidden") &&
-channelPanelBuilt &&
-settingsPopover.querySelector(
-".channel-settings"
-)
+return isChannelSettingsOpenMoved(
+styleControlsHost(),
+...arguments
 );
-
 }
 
 function isElliottSettingsOpen(){
-
-return !!(
-settingsPopover &&
-!settingsPopover.classList.contains("hidden") &&
-elliottPanelBuilt &&
-settingsPopover.querySelector(
-".elliott-settings"
-)
+return isElliottSettingsOpenMoved(
+styleControlsHost(),
+...arguments
 );
-
 }
 
 function getFvpEditShape(){
-
-if(
-fvpSettingsShapeId
-){
-
-const pinned =
-getDrawings().find(
-item=>
-item.id ===
-fvpSettingsShapeId
+return getFvpEditShapeMoved(
+styleControlsHost(),
+...arguments
 );
-
-if(
-isFvpType(
-pinned?.type
-)
-){
-return pinned;
-}
-
-}
-
-const sel =
-getSelected();
-
-return isFvpType(
-sel?.type
-)
-? sel
-: null;
-
 }
 
 function getRectEditShape(){
-
-if(
-rectSettingsShapeId
-){
-
-const pinned =
-getDrawings().find(
-d=>
-d.id === rectSettingsShapeId &&
-d.type ===
-"rectangle"
+return getRectEditShapeMoved(
+styleControlsHost(),
+...arguments
 );
-
-if(
-pinned
-){
-return pinned;
-}
-
-}
-
-const sel =
-getSelected();
-
-return sel?.type ===
-"rectangle"
-? sel
-: null;
-
 }
 
 function stylePanelHost(){
@@ -1335,51 +926,25 @@ stylePanelHost(),
 );
 }
 
-function fillRectSettingsPanel(
-shape
-){
-
-ensureRectSettingsPanel();
-
-if(
-!settingsPopover
-){
-return;
-}
-
-rectPanelSyncing = true;
-
-try{
-
-fillRectSettingsPanelDom(
-settingsPopover,
-shape
+function fillRectSettingsPanel(shape){
+return fillRectSettingsPanelMoved(
+styleControlsHost(),
+...arguments
 );
-
-}finally{
-rectPanelSyncing = false;
-}
-
-syncCoordSettingsIfIdle();
-
 }
 
 function readRectPanelFromDOM(){
-
-return readRectSettingsPanel(
-settingsPopover
+return readRectPanelFromDOMMoved(
+styleControlsHost(),
+...arguments
 );
-
 }
 
 function canApplyRectPanel(){
-
-return (
-getAlive() &&
-isRectSettingsOpen() &&
-!rectPanelSyncing
+return canApplyRectPanelMoved(
+styleControlsHost(),
+...arguments
 );
-
 }
 
 function applyRectSettingsFromPanel(){
@@ -1390,164 +955,45 @@ stylePanelHost(),
 }
 
 function canApplyFvpPanel(){
-
-return (
-getAlive() &&
-isFvpSettingsOpen() &&
-!fvpPanelSyncing
+return canApplyFvpPanelMoved(
+styleControlsHost(),
+...arguments
 );
-
 }
 
 function ensureFvpSettingsPanel(){
-
-if(
-!settingsPopover
-){
-return;
-}
-
-if(
-fvpPanelBuilt &&
-settingsPopoverHasPanel(
-"fvp"
-)
-){
-return;
-}
-
-fvpPanelBuilt = true;
-fibPanelBuilt = false;
-rectPanelBuilt = false;
-channelPanelBuilt = false;
-elliottPanelBuilt = false;
-coordsOnlyPanelBuilt = false;
-
-resetSettingsPanelListeners();
-settingsPopover.classList.remove(
-"draw-settings-popover--coords"
+return ensureFvpSettingsPanelMoved(
+styleControlsHost(),
+...arguments
 );
-settingsPopover.classList.add(
-"draw-settings-popover--fvp"
-);
-settingsPopover.innerHTML =
-fvpSettingsHtml();
-
-bindFvpSettingsPanel(
-settingsPopover,
-{
-canApply: canApplyFvpPanel,
-onApply: applyFvpSettingsFromPanel
-}
-);
-
 }
 
 function fillFvpSettingsFromContext(){
-
-ensureFvpSettingsPanel();
-fvpPanelSyncing = true;
-
-try{
-
-fillFvpSettingsPanel(
-settingsPopover,
-getFvpEditShape() ||
-baseDefaultStyle(
-"fvp"
-)
+return fillFvpSettingsFromContextMoved(
+styleControlsHost(),
+...arguments
 );
-
-}finally{
-fvpPanelSyncing = false;
-}
-
 }
 
 function applyFvpSettingsFromPanel(){
-
-if(
-!canApplyFvpPanel()
-){
-return;
-}
-
-const shape =
-getFvpEditShape();
-const panel =
-readFvpSettingsPanel(
-settingsPopover
+return applyFvpSettingsFromPanelMoved(
+styleControlsHost(),
+...arguments
 );
-
-if(
-shape
-){
-
-copyFvpStyleToShape(
-shape,
-panel
-);
-touchShapeRevisionFn(
-shape
-);
-saveDrawings();
-redraw();
-
-}
-
-saveToolDefaults(
-"fvp",
-{
-...createFvpToolDefaults(),
-...getToolDefaults().fvp,
-...panel,
-fvpDefaultsVersion:
-FVP_TOOL_DEFAULTS_VERSION
-}
-);
-
 }
 
 function getChannelEditShape(){
-
-if(
-channelSettingsShapeId
-){
-
-const pinned =
-getDrawings().find(
-d=>
-d.id === channelSettingsShapeId &&
-d.type ===
-"channel"
+return getChannelEditShapeMoved(
+styleControlsHost(),
+...arguments
 );
-
-if(
-pinned
-){
-return pinned;
-}
-
-}
-
-const sel =
-getSelected();
-
-return sel?.type ===
-"channel"
-? sel
-: null;
-
 }
 
 function canApplyChannelPanel(){
-
-return (
-getAlive() &&
-isChannelSettingsOpen() &&
-!channelPanelSyncing
+return canApplyChannelPanelMoved(
+styleControlsHost(),
+...arguments
 );
-
 }
 
 function ensureChannelSettingsPanel(){
@@ -1557,45 +1003,18 @@ stylePanelHost(),
 );
 }
 
-function fillChannelSettingsPanel(
-shape
-){
-
-ensureChannelSettingsPanel();
-
-if(
-!settingsPopover
-){
-return;
-}
-
-channelPanelSyncing = true;
-
-try{
-
-fillChannelSettingsPanelDom(
-settingsPopover,
-shape?.channelLevels,
-shape?.color ||
-CHANNEL_DEFAULT_COLOR
+function fillChannelSettingsPanel(shape){
+return fillChannelSettingsPanelMoved(
+styleControlsHost(),
+...arguments
 );
-
-}finally{
-channelPanelSyncing = false;
-}
-
-syncCoordSettingsIfIdle();
-
 }
 
 function readChannelPanelFromDOM(){
-
-ensureChannelSettingsPanel();
-
-return readChannelSettingsPanel(
-settingsPopover
+return readChannelPanelFromDOMMoved(
+styleControlsHost(),
+...arguments
 );
-
 }
 
 function commitChannelPanelToShape(){
@@ -1606,142 +1025,38 @@ stylePanelHost(),
 }
 
 function scheduleChannelApplyImmediate(){
-
-if(
-!isChannelSettingsOpen() ||
-channelPanelSyncing
-){
-return;
-}
-
-if(
-channelApplyTimer
-){
-clearTimeout(
-channelApplyTimer
+return scheduleChannelApplyImmediateMoved(
+styleControlsHost(),
+...arguments
 );
-channelApplyTimer =
-null;
-}
-
-commitChannelPanelToShape();
-
 }
 
 function scheduleChannelApplyDebounced(){
-
-if(
-!isChannelSettingsOpen() ||
-channelPanelSyncing
-){
-return;
-}
-
-if(
-channelApplyTimer
-){
-clearTimeout(
-channelApplyTimer
+return scheduleChannelApplyDebouncedMoved(
+styleControlsHost(),
+...arguments
 );
-}
-
-channelApplyTimer =
-setTimeout(
-()=>{
-
-channelApplyTimer =
-null;
-
-if(
-!isChannelSettingsOpen() ||
-channelPanelSyncing
-){
-return;
-}
-
-commitChannelPanelToShape();
-
-},
-320
-);
-
 }
 
 function getElliottEditType(){
-
-const sel =
-getSelected();
-
-if(
-isElliottType(
-sel?.type
-)
-){
-return sel.type;
-}
-
-const tool =
-getTool();
-
-return isElliottType(
-tool
-)
-? tool
-: null;
-
+return getElliottEditTypeMoved(
+styleControlsHost(),
+...arguments
+);
 }
 
 function getElliottEditShape(){
-
-const type =
-getElliottEditType();
-
-if(
-!type
-){
-return null;
-}
-
-if(
-elliottSettingsShapeId
-){
-
-const pinned =
-getDrawings().find(
-d=>
-d.id === elliottSettingsShapeId &&
-isElliottType(
-d.type
-)
+return getElliottEditShapeMoved(
+styleControlsHost(),
+...arguments
 );
-
-if(
-pinned
-){
-return pinned;
-}
-
-}
-
-const sel =
-getSelected();
-
-return isElliottType(
-sel?.type
-)
-? sel
-: null;
-
 }
 
 function canApplyElliottPanel(){
-
-return (
-getAlive() &&
-isElliottSettingsOpen() &&
-!elliottPanelSyncing
+return canApplyElliottPanelMoved(
+styleControlsHost(),
+...arguments
 );
-
 }
 
 function ensureElliottSettingsPanel(){
@@ -1752,35 +1067,10 @@ stylePanelHost(),
 }
 
 function fillElliottSettingsFromContext(){
-
-ensureElliottSettingsPanel();
-elliottPanelSyncing = true;
-
-try{
-
-const type =
-getElliottEditType() ||
-"elliott-impulse";
-const shape =
-getElliottEditShape() ||
-baseDefaultStyle(
-type
+return fillElliottSettingsFromContextMoved(
+styleControlsHost(),
+...arguments
 );
-
-fillElliottSettingsPanelDom(
-settingsPopover,
-{
-...shape,
-type:
-shape.type ||
-type
-}
-);
-
-}finally{
-elliottPanelSyncing = false;
-}
-
 }
 
 function applyElliottSettingsFromPanel(){
@@ -1791,76 +1081,24 @@ stylePanelHost(),
 }
 
 function canApplyFibPanel(){
-
-return (
-getAlive() &&
-isFibSettingsOpen() &&
-!fibPanelSyncing
+return canApplyFibPanelMoved(
+styleControlsHost(),
+...arguments
 );
-
 }
 
 function readFibDefaultsForStyle(){
-
-const type =
-activeFibType();
-const fibStore =
-migrateActiveFibDefaults(
-type,
-getToolDefaults()[
-type
-]
+return readFibDefaultsForStyleMoved(
+styleControlsHost(),
+...arguments
 );
-
-return {
-fibLevels: JSON.parse(
-JSON.stringify(
-ensureFibLevelsVisible(
-fibStore.fibLevels,
-type
-)
-)
-),
-fibShowTrendLine:
-typeof fibStore.fibShowTrendLine ===
-"boolean"
-? fibStore.fibShowTrendLine
-: isFibExtType(
-type
-),
-fibShowLabels:
-typeof fibStore.fibShowLabels ===
-"boolean"
-? fibStore.fibShowLabels
-: true,
-fibTrendLineColor: resolveFibTrendLineColor(
-fibStore.fibTrendLineColor
-)
-};
-
 }
 
 function getStyleTargetType(){
-
-const {
-getTool: toolForStyle,
-getSelected: selectedForStyle
-} =
-styleCtx();
-
-const sel =
-selectedForStyle();
-
-if(sel){
-return sel.type;
-}
-if(
-toolForStyle() !==
-"cursor"
-){
-return toolForStyle();
-}
-return null;
+return getStyleTargetTypeMoved(
+styleControlsHost(),
+...arguments
+);
 }
 
 function ensureFibSettingsPanel(){
@@ -1913,20 +1151,18 @@ commitFibPanelToShape();
 });
 
 function applyFibSettingsFromPanel(){
-
-commitFibPanelToShape();
-
+return applyFibSettingsFromPanelMoved(
+styleControlsHost(),
+...arguments
+);
 }
 
 
 function closeFibColorMenu(){
-
-if(fibColorMenuPortal){
-fibColorMenuPortal.classList.add("hidden");
-}
-
-fibColorMenuAnchor = null;
-
+return closeFibColorMenuMoved(
+styleControlsHost(),
+...arguments
+);
 }
 
 function openRectColorMenu(anchorBtn,
@@ -1938,59 +1174,10 @@ stylePanelHost(),
 }
 
 function openFibColorMenu(anchorBtn, fallbackColor){
-
-const portal =
-ensureFibColorMenuPortal();
-
-fibColorMenuAnchor = anchorBtn;
-
-const active =
-anchorBtn.dataset.customColor ||
-fallbackColor ||
-STROKE;
-
-mountTvColorPicker(
-portal,
-{
-activeColor: active,
-onChange: color=>{
-
-setFibLevelColorButton(
-anchorBtn,
-color,
-fallbackColor
+return openFibColorMenuMoved(
+styleControlsHost(),
+...arguments
 );
-
-rememberFibSettingsTarget();
-commitFibPanelToShape();
-
-},
-onSelect: color=>{
-
-setFibLevelColorButton(
-anchorBtn,
-color,
-fallbackColor
-);
-
-rememberFibSettingsTarget();
-closeFibColorMenu();
-commitFibPanelToShape();
-
-}
-}
-);
-
-portal.classList.remove("hidden");
-
-const rect =
-anchorBtn.getBoundingClientRect();
-
-portal.style.position = "fixed";
-portal.style.left = `${Math.round(rect.left)}px`;
-portal.style.top = `${Math.round(rect.bottom + 4)}px`;
-portal.style.zIndex = "20000";
-
 }
 
 function openElliottChannelColorMenu(anchorBtn,
@@ -2010,1030 +1197,178 @@ stylePanelHost(),
 }
 
 function ensureFibColorMenuPortal(){
-
-if(fibColorMenuPortal){
-return fibColorMenuPortal;
-}
-
-const el =
-document.createElement("div");
-
-el.className =
-"draw-popover tv-color-popover fib-level-color-menu hidden";
-
-document.body.appendChild(el);
-
-el.addEventListener("mousedown", e=>{
-e.stopPropagation();
-});
-
-el.addEventListener("keydown", e=>{
-e.stopPropagation();
-});
-
-document.addEventListener("mousedown", e=>{
-
-if(
-e.target.closest(
-".fib-level-color-btn, .fib-level-color-menu, .channel-level-color-btn, .rect-fill-color-btn, .rect-median-color-btn, .tv-color-picker"
-)
-){
-return;
-}
-
-closeFibColorMenu();
-
-});
-
-window.addEventListener("scroll", closeFibColorMenu, true);
-window.addEventListener("resize", closeFibColorMenu);
-
-fibColorMenuPortal = el;
-return el;
-
+return ensureFibColorMenuPortalMoved(
+styleControlsHost(),
+...arguments
+);
 }
 
 function scheduleFibApplyImmediate(){
-
-if(
-!isFibSettingsOpen() ||
-fibPanelSyncing
-){
-return;
-}
-
-if(fibApplyTimer){
-clearTimeout(fibApplyTimer);
-fibApplyTimer = null;
-}
-
-applyFibSettingsFromPanel();
-
+return scheduleFibApplyImmediateMoved(
+styleControlsHost(),
+...arguments
+);
 }
 
 function scheduleFibApplyDebounced(){
-
-if(
-!isFibSettingsOpen() ||
-fibPanelSyncing
-){
-return;
-}
-
-if(fibApplyTimer){
-clearTimeout(fibApplyTimer);
-}
-
-fibApplyTimer =
-setTimeout(()=>{
-
-fibApplyTimer = null;
-
-if(
-!isFibSettingsOpen() ||
-fibPanelSyncing
-){
-return;
-}
-
-applyFibSettingsFromPanel();
-
-},320);
-
+return scheduleFibApplyDebouncedMoved(
+styleControlsHost(),
+...arguments
+);
 }
 
 function readFibPanelFromDOM(){
-
-ensureFibSettingsPanel();
-
-return readFibSettingsPanel(
-settingsPopover
+return readFibPanelFromDOMMoved(
+styleControlsHost(),
+...arguments
 );
-
 }
 
 
 
 function applyFibGlobalColorFromToolbar(shape, color){
-
-shape.color = color;
-
-const panel =
-isFibSettingsOpen()
-? readFibPanelFromDOM()
-: null;
-
-mergeFibLevelsAfterGlobalChange(
-shape,
-panel,
-{ clearColors: true, clearWidths: false }
+return applyFibGlobalColorFromToolbarMoved(
+styleControlsHost(),
+...arguments
 );
-
-if(
-fibPanelBuilt &&
-isFibSettingsOpen()
-){
-fillFibSettingsPanel(
-shape.fibLevels,
-shape.fibShowTrendLine,
-shape.color,
-shape.lineWidth,
-shape.fibTrendLineColor,
-shape.fibShowLabels
-);
-}
-
 }
 
 function applyFibGlobalWidthFromToolbar(shape, lineWidth){
-
-shape.lineWidth = lineWidth;
-
-const panel =
-isFibSettingsOpen()
-? readFibPanelFromDOM()
-: null;
-
-mergeFibLevelsAfterGlobalChange(
-shape,
-panel,
-{ clearColors: false, clearWidths: true }
-);
-
-if(
-fibPanelBuilt &&
-isFibSettingsOpen()
-){
-fillFibSettingsPanel(
-shape.fibLevels,
-shape.fibShowTrendLine,
-shape.color,
-shape.lineWidth,
-shape.fibTrendLineColor,
-shape.fibShowLabels
+return applyFibGlobalWidthFromToolbarMoved(
+styleControlsHost(),
+...arguments
 );
 }
 
-}
-
-function fillFibSettingsPanel(
-fibLevels,
+function fillFibSettingsPanel(fibLevels,
 fibShowTrendLine,
 fallbackColor,
 fallbackWidth,
 fibTrendLineColor,
-fibShowLabels = true
-){
-
-ensureFibSettingsPanel();
-
-fibPanelSyncing = true;
-
-try{
-
-fillFibSettingsPanelDom(
-settingsPopover,
-fibLevels,
-fibShowTrendLine,
-fallbackColor,
-fallbackWidth,
-fibTrendLineColor,
-fibShowLabels
+fibShowLabels = true){
+return fillFibSettingsPanelMoved(
+styleControlsHost(),
+...arguments
 );
-
-}finally{
-fibPanelSyncing = false;
-}
-
-syncCoordSettingsIfIdle();
-
 }
 
 function readStyleFromUI(){
-
-const widthActive =
-widthPopover?.querySelector(".width-option.active");
-
-const base =
-{
-color: activeColor ||
-STROKE,
-lineWidth: Number(
-widthActive?.dataset.width || 1
-),
-fontSize:
-clampTextFontSize(
-textSizePopover?.querySelector(".text-size-option.active")?.dataset.size ||
-textSizeLabel?.textContent ||
-TEXT_DEFAULT_SIZE
-)
-};
-
-const tgt =
-getStyleTargetType();
-
-if(
-isFibSettingsOpen()
-){
-
-Object.assign(
-base,
-readFibPanelFromDOM()
+return readStyleFromUIMoved(
+styleControlsHost(),
+...arguments
 );
-
-}else if(
-isRectSettingsOpen()
-){
-
-Object.assign(
-base,
-readRectPanelFromDOM()
-);
-
-}else if(
-isChannelSettingsOpen()
-){
-
-Object.assign(
-base,
-readChannelPanelFromDOM()
-);
-
-}else if(
-isFibType(
-tgt
-) ||
-isFibType(
-getTool()
-)
-){
-
-Object.assign(
-base,
-readFibDefaultsForStyle()
-);
-
-}
-
-return base;
-
 }
 
 function updateColorStripe(color){
-
-activeColor = color;
-
-if(colorStripe){
-colorStripe.style.setProperty("--active-color", color);
-}
-
-colorPopover?.querySelectorAll(".tv-color-swatch").forEach(btn=>{
-
-const activeParsed =
-parseDrawColor(
-color
+return updateColorStripeMoved(
+styleControlsHost(),
+...arguments
 );
-
-const swatchParsed =
-parseDrawColor(
-btn.dataset.color
-);
-
-btn.classList.toggle(
-"active",
-!!activeParsed &&
-!!swatchParsed &&
-activeParsed.hex.toLowerCase() ===
-swatchParsed.hex.toLowerCase()
-);
-
-});
-
 }
 
 function setActiveWidth(lineWidth){
-
-widthPopover?.querySelectorAll(".width-option").forEach(btn=>{
-btn.classList.toggle(
-"active",
-Number(btn.dataset.width) === lineWidth
-);
-});
-
-if(widthLabel){
-widthLabel.textContent = `${lineWidth}px`;
-}
-
-if(widthPreview){
-widthPreview.style.height = `${lineWidth}px`;
-}
-
-}
-
-function setActiveTextSize(
-fontSize
-){
-
-const size =
-clampTextFontSize(
-fontSize
-);
-
-textSizePopover?.querySelectorAll(".text-size-option").forEach(btn=>{
-btn.classList.toggle(
-"active",
-Number(btn.dataset.size) ===
-size
-);
-});
-
-if(
-textSizeLabel
-){
-textSizeLabel.textContent =
-String(
-size
+return setActiveWidthMoved(
+styleControlsHost(),
+...arguments
 );
 }
 
+function setActiveTextSize(fontSize){
+return setActiveTextSizeMoved(
+styleControlsHost(),
+...arguments
+);
 }
 
 function resolvePositionRiskTarget(){
-
-const sel =
-getSelected();
-
-if(
-sel &&
-isPositionType(
-sel.type
-)
-){
-return sel;
-}
-
-if(
-positionRiskShapeId
-){
-
-const pinned =
-getDrawings().find(
-d=>
-d.id ===
-positionRiskShapeId &&
-isPositionType(
-d.type
-)
+return resolvePositionRiskTargetMoved(
+styleControlsHost(),
+...arguments
 );
-
-if(
-pinned
-){
-return pinned;
 }
 
-}
-
-return null;
-
-}
-
-function getPositionEntryVolumeUsd(
-shape
-){
-
-if(
-!shape ||
-!isPositionType(
-shape.type
-)
-){
-return null;
-}
-
-const entry =
-positionEntryPrice(
-shape
+function getPositionEntryVolumeUsd(shape){
+return getPositionEntryVolumeUsdMoved(
+styleControlsHost(),
+...arguments
 );
-
-if(
-!Number.isFinite(entry) ||
-entry <= 0
-){
-return null;
-}
-
-const slPrice =
-Number(shape.slPrice);
-
-if(
-!Number.isFinite(slPrice)
-){
-return null;
-}
-
-const slPct =
-Math.abs(
-slPrice - entry
-) / entry * 100;
-
-if(
-!Number.isFinite(slPct) ||
-slPct <= 0
-){
-return null;
-}
-
-const riskUsd =
-parseMoneyInput(
-shape.riskUsd
-);
-
-if(
-riskUsd == null
-){
-return null;
-}
-
-return calcPositionVolumeUsd(
-riskUsd,
-slPct
-);
-
 }
 
 function applyPositionRiskUsd(){
-
-const parsed =
-parseMoneyInput(
-positionRiskInput?.value ?? ""
+return applyPositionRiskUsdMoved(
+styleControlsHost(),
+...arguments
 );
-
-const sel =
-resolvePositionRiskTarget();
-const styleType =
-getStyleTargetType();
-
-if(
-sel &&
-isPositionType(sel.type)
-){
-
-if(parsed){
-sel.riskUsd = parsed;
-}else{
-delete sel.riskUsd;
-}
-
-touchShapeRevisionFn(
-sel
-);
-saveDrawings();
-
-}
-
-if(
-isPositionType(styleType)
-){
-
-saveToolDefaults(
-styleType,
-{
-riskUsd: parsed
-}
-);
-
-const prefs =
-loadUserPrefs();
-
-if(parsed){
-prefs.positionRiskUsd = parsed;
-}else{
-delete prefs.positionRiskUsd;
-}
-
-saveUserPrefs(prefs);
-
-}
-
-redraw();
-
 }
 
 function submitPositionVolumeApply(){
-
-if(
-!isTradeVolumeUiActive()
-){
-return;
-}
-
-applyPositionRiskUsd();
-
-const shape =
-resolvePositionRiskTarget();
-const volumeUsdt =
-getPositionEntryVolumeUsd(
-shape
+return submitPositionVolumeApplyMoved(
+styleControlsHost(),
+...arguments
 );
+}
 
-if(
-!Number.isFinite(volumeUsdt) ||
-volumeUsdt <= 0
-){
-window.alert(
-"Не удалось применить объём: укажите стоп-лосс ($) и проверьте границы позиции."
+function validatePositionDrawingStops(shape){
+return validatePositionDrawingStopsMoved(
+styleControlsHost(),
+...arguments
 );
-return;
-}
-
-const symbol =
-String(
-getSymbol?.() ||
-""
-).replace(
-/\.P$/i,
-""
-).trim().toUpperCase();
-
-applyPositionVolumeFromDrawing(
-{
-symbol,
-volumeUsdt
-}
-);
-
-window.dispatchEvent(
-new CustomEvent(
-"trade-apply-position-volume",
-{
-detail:{
-volumeUsdt,
-symbol
-}
-}
-)
-);
-
-}
-
-function validatePositionDrawingStops(
-shape
-){
-
-if(
-!shape ||
-!isPositionType(
-shape.type
-)
-){
-return {
-ok:
-false,
-message:
-"Выберите объект Позиция Long/Short."
-};
-}
-
-const entry =
-positionEntryPrice(
-shape
-);
-const slPrice =
-Number(
-shape.slPrice
-);
-const tpPrice =
-Number(
-shape.tpPrice
-);
-
-if(
-!Number.isFinite(entry) ||
-entry <=
-0
-){
-return {
-ok:
-false,
-message:
-"Некорректная цена входа на объекте Позиция."
-};
-}
-
-if(
-!Number.isFinite(slPrice) ||
-slPrice <=
-0 ||
-!Number.isFinite(tpPrice) ||
-tpPrice <=
-0
-){
-return {
-ok:
-false,
-message:
-"Укажите СЛ и ТП на объекте Позиция."
-};
-}
-
-const isLong =
-shape.type ===
-"long";
-
-if(
-isLong
-){
-if(
-slPrice >=
-entry
-){
-return {
-ok:
-false,
-message:
-"Для Long стоп-лосс должен быть ниже входа."
-};
-}
-if(
-tpPrice <=
-entry
-){
-return {
-ok:
-false,
-message:
-"Для Long тейк-профит должен быть выше входа."
-};
-}
-}else{
-if(
-slPrice <=
-entry
-){
-return {
-ok:
-false,
-message:
-"Для Short стоп-лосс должен быть выше входа."
-};
-}
-if(
-tpPrice >=
-entry
-){
-return {
-ok:
-false,
-message:
-"Для Short тейк-профит должен быть ниже входа."
-};
-}
-}
-
-return {
-ok:
-true,
-side:
-isLong
-? "long"
-: "short",
-slPrice,
-tpPrice
-};
-
 }
 
 function resolveTradeSymbol(){
-
-return String(
-getSymbol?.() ||
-""
-).replace(
-/\.P$/i,
-""
-).trim().toUpperCase();
-
+return resolveTradeSymbolMoved(
+styleControlsHost(),
+...arguments
+);
 }
 
 function syncPositionApplyStopsArmed(){
-
-if(
-!positionApplyStopsBtn
-){
-return;
-}
-
-const symbol =
-resolveTradeSymbol();
-const armed =
-isTradeVolumeUiActive() &&
-hasDrawingStopsPending(
-symbol
+return syncPositionApplyStopsArmedMoved(
+styleControlsHost(),
+...arguments
 );
-
-positionApplyStopsBtn.classList.toggle(
-"is-armed",
-armed
-);
-positionApplyStopsBtn.setAttribute(
-"aria-pressed",
-armed
-? "true"
-: "false"
-);
-positionApplyStopsBtn.title =
-armed
-? "Ожидание сделки с СЛ/ТП с объекта — нажмите ещё раз, чтобы отменить"
-: "Объём + СЛ/ТП с объекта на следующее открытие (авто-СЛ/ТП пропускаются)";
-
 }
 
 function submitPositionVolumeApplyWithStops(){
-
-if(
-!isTradeVolumeUiActive()
-){
-return;
-}
-
-const symbol =
-resolveTradeSymbol();
-
-/* Toggle off while armed for this symbol only. */
-if(
-hasDrawingStopsPending(
-symbol
-)
-){
-clearDrawingStopsPending(
-symbol
-);
-syncPositionApplyStopsArmed();
-return;
-}
-
-applyPositionRiskUsd();
-
-const shape =
-resolvePositionRiskTarget();
-const volumeUsdt =
-getPositionEntryVolumeUsd(
-shape
-);
-
-if(
-!Number.isFinite(volumeUsdt) ||
-volumeUsdt <= 0
-){
-window.alert(
-"Не удалось применить объём: укажите стоп-лосс ($) и проверьте границы позиции."
-);
-return;
-}
-
-const stops =
-validatePositionDrawingStops(
-shape
-);
-
-if(
-!stops.ok
-){
-window.alert(
-stops.message
-);
-return;
-}
-
-applyPositionVolumeFromDrawing(
-{
-symbol,
-volumeUsdt
-}
-);
-
-window.dispatchEvent(
-new CustomEvent(
-"trade-apply-position-volume",
-{
-detail:{
-volumeUsdt,
-symbol
-}
-}
-)
-);
-
-const stashed =
-stashDrawingStopsFromDrawing(
-{
-symbol,
-side:
-stops.side,
-slPrice:
-stops.slPrice,
-tpPrice:
-stops.tpPrice
-}
-);
-
-if(
-!stashed
-){
-window.alert(
-"Объём применён, но СЛ/ТП не сохранены для следующего входа."
+return submitPositionVolumeApplyWithStopsMoved(
+styleControlsHost(),
+...arguments
 );
 }
 
-syncPositionApplyStopsArmed();
-
-}
-
-function isUnrelatedFormFieldFocused(
-active
-){
-
-if(
-!active
-){
-return false;
-}
-
-const tag =
-active.tagName?.toLowerCase();
-
-if(
-tag ===
-"textarea" ||
-tag ===
-"select"
-){
-return true;
-}
-
-if(
-tag ===
-"input"
-){
-
-const inputEl =
-positionRiskInput ||
-positionRiskWrap?.querySelector(
-".draw-position-risk-input"
+function isUnrelatedFormFieldFocused(active){
+return isUnrelatedFormFieldFocusedMoved(
+styleControlsHost(),
+...arguments
 );
-
-if(
-active ===
-inputEl ||
-positionRiskWrap?.contains(
-active
-)
-){
-return false;
 }
 
-return true;
-}
-
-if(
-active.isContentEditable
-){
-return true;
-}
-
-return false;
-
-}
-
-function isEnterKey(
-event
-){
-
-return (
-event.key ===
-"Enter" ||
-event.key ===
-"Go" ||
-event.code ===
-"Enter" ||
-event.code ===
-"NumpadEnter" ||
-event.keyCode ===
-13
+function isEnterKey(event){
+return isEnterKeyMoved(
+styleControlsHost(),
+...arguments
 );
-
 }
 
-function isPositionApplyEnterHotkey(
-event
-){
-
-if(
-!isEnterKey(
-event
-)
-){
-return false;
-}
-
-if(
-!isTradeVolumeUiActive()
-){
-return false;
-}
-
-if(
-positionRiskWrap?.classList.contains(
-"hidden"
-)
-){
-return false;
-}
-
-if(
-positionApplyBtn?.classList.contains(
-"hidden"
-)
-){
-return false;
-}
-
-const sel =
-getSelected();
-
-if(
-!sel ||
-!isPositionType(
-sel.type
-)
-){
-return false;
-}
-
-if(
-isUnrelatedFormFieldFocused(
-document.activeElement
-)
-){
-return false;
-}
-
-return true;
-
-}
-
-function onPositionApplyEnterHotkey(
-event
-){
-
-if(
-!isPositionApplyEnterHotkey(
-event
-)
-){
-return;
-}
-
-event.preventDefault();
-event.stopPropagation();
-
-submitPositionVolumeApply();
-
-const inputEl =
-positionRiskInput ||
-positionRiskWrap?.querySelector(
-".draw-position-risk-input"
+function isPositionApplyEnterHotkey(event){
+return isPositionApplyEnterHotkeyMoved(
+styleControlsHost(),
+...arguments
 );
-const active =
-document.activeElement;
-
-if(
-inputEl &&
-(
-active ===
-inputEl ||
-positionRiskWrap?.contains(
-active
-)
-)
-){
-inputEl.blur();
 }
 
+function onPositionApplyEnterHotkey(event){
+return onPositionApplyEnterHotkeyMoved(
+styleControlsHost(),
+...arguments
+);
 }
 
 function isPositionRiskInputFocused(){
-
-return (
-positionRiskEditing ||
-document.activeElement ===
-positionRiskInput ||
-positionRiskInput?.contains?.(
-document.activeElement
-)
+return isPositionRiskInputFocusedMoved(
+styleControlsHost(),
+...arguments
 );
-
 }
 
 function styleFillHost(){
@@ -3150,140 +1485,10 @@ styleFillHost(),
 }
 
 function captureCurrentStyleSnapshot(){
-
-const type =
-getStyleTargetType();
-
-if(
-!isTemplateEligibleType(
-type
-)
-){
-return null;
-}
-
-const sel =
-getSelected();
-const widthActive =
-widthPopover?.querySelector(
-".width-option.active"
+return captureCurrentStyleSnapshotMoved(
+styleControlsHost(),
+...arguments
 );
-
-let snapshot =
-extractStyleSnapshot(
-sel ||
-{
-color:
-activeColor ||
-STROKE,
-lineWidth: Number(
-widthActive?.dataset.width ||
-1
-)
-},
-type
-);
-
-const ui =
-readStyleFromUI();
-
-snapshot = mergeStyleSnapshot(
-{
-...snapshot,
-...ui
-},
-type
-);
-
-if(
-type ===
-"rectangle" &&
-isRectSettingsOpen()
-){
-
-Object.assign(
-snapshot,
-readRectPanelFromDOM()
-);
-
-snapshot =
-mergeStyleSnapshot(
-snapshot,
-type
-);
-
-}
-
-if(
-type ===
-"fvp" &&
-isFvpSettingsOpen()
-){
-
-Object.assign(
-snapshot,
-readFvpSettingsPanel(
-settingsPopover
-)
-);
-
-snapshot =
-mergeStyleSnapshot(
-snapshot,
-type
-);
-
-}
-
-if(
-isFibType(
-type
-) &&
-isFibSettingsOpen()
-){
-
-Object.assign(
-snapshot,
-readFibPanelFromDOM()
-);
-
-snapshot =
-mergeStyleSnapshot(
-snapshot,
-type
-);
-
-}
-
-if(
-isElliottType(
-type
-) &&
-isElliottSettingsOpen()
-){
-
-Object.assign(
-snapshot,
-readElliottSettingsPanel(
-settingsPopover,
-type
-),
-{
-elliottDefaultsVersion:
-ELLIOTT_TOOL_DEFAULTS_VERSION
-}
-);
-
-snapshot =
-mergeStyleSnapshot(
-snapshot,
-type
-);
-
-}
-
-return snapshot;
-
 }
 
 function persistStyleSnapshotToTarget(snapshot,
@@ -3297,65 +1502,17 @@ styleFillHost(),
 }
 
 function applyDefaultStyleToTarget(){
-
-const type =
-getStyleTargetType();
-
-if(
-!isTemplateEligibleType(
-type
-)
-){
-return;
+return applyDefaultStyleToTargetMoved(
+styleControlsHost(),
+...arguments
+);
 }
 
-const snapshot =
-buildFactoryDefaultSnapshot(
-type
+function applyNamedTemplate(idx){
+return applyNamedTemplateMoved(
+styleControlsHost(),
+...arguments
 );
-
-if(
-!snapshot
-){
-return;
-}
-
-persistStyleSnapshotToTarget(
-snapshot
-);
-
-}
-
-function applyNamedTemplate(
-idx
-){
-
-const type =
-getStyleTargetType();
-const list =
-listTemplatesForType(
-type
-);
-const entry =
-list[
-Number(
-idx
-)
-];
-
-if(
-!entry
-){
-return;
-}
-
-persistStyleSnapshotToTarget(
-mergeStyleSnapshot(
-entry.data,
-type
-)
-);
-
 }
 
 function refreshTemplateMenu(){

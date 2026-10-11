@@ -774,19 +774,22 @@ series,
 loaded[loaded.length - 1].close
 );
 
-deps.updateWidgetRsiData(
-widget
-);
-
 }catch{
 chartEl.classList.remove(
 "loading"
+);
+widget.rsiWrapEl?.classList.remove(
+"screener-rsi-pending"
 );
 return;
 }
 
 widget._lastZoomCandleLen =
 0;
+widget._stableScaleW =
+0;
+widget._rsiPlaced =
+false;
 
 const runZoom =
 ()=>{
@@ -807,24 +810,135 @@ widget.syncChartSize?.();
 
 };
 
-runZoom();
-requestAnimationFrame(
-()=>{
-runZoom();
-requestAnimationFrame(
-()=>{
+function revealWidgetCharts(){
+
 if(
-loadId ===
+loadId !==
 deps.renderToken
 ){
+return;
+}
+
 chartEl.classList.remove(
 "loading"
 );
+widget.rsiWrapEl?.classList.remove(
+"screener-rsi-pending"
+);
+
 }
-}
+
+if(
+!widget.rsiWrapEl
+){
+
+runZoom();
+requestAnimationFrame(
+()=>{
+runZoom();
+requestAnimationFrame(
+revealWidgetCharts
 );
 }
 );
+
+}else{
+
+/*
+  RSI остаётся скрытым, пока ширина правой шкалы
+  не совпадёт со свечами. Иначе первый кадр рисует
+  линию в старом месте и она подскакивает.
+*/
+let settleTries =
+0;
+
+function settleWidgetRsi(){
+
+if(
+loadId !==
+deps.renderToken ||
+!deps.isScreenerWidgetCurrent(
+widget
+)
+){
+return;
+}
+
+runZoom();
+
+if(
+!widget._rsiPlaced &&
+widget.candles.length &&
+widget._lastZoomCandleLen
+){
+
+try{
+deps.updateWidgetRsiData(
+widget
+);
+widget._rsiPlaced =
+true;
+}catch{
+revealWidgetCharts();
+return;
+}
+
+runZoom();
+
+}
+
+let scaleW =
+0;
+
+try{
+scaleW =
+widget.chart.priceScale(
+"right"
+).width() ||
+0;
+}catch{
+scaleW =
+0;
+}
+
+settleTries +=
+1;
+
+const stable =
+widget._stableScaleW >
+0 &&
+scaleW >
+0 &&
+Math.abs(
+scaleW -
+widget._stableScaleW
+) <=
+1 &&
+widget._rsiPlaced;
+
+widget._stableScaleW =
+scaleW;
+
+if(
+stable ||
+settleTries >=
+5
+){
+requestAnimationFrame(
+revealWidgetCharts
+);
+return;
+}
+
+requestAnimationFrame(
+settleWidgetRsi
+);
+
+}
+
+settleWidgetRsi();
+
+}
 
 attachWidgetKlineStream(
 widget
@@ -851,6 +965,9 @@ deps.renderToken &&
 ){
 chartEl.classList.remove(
 "loading"
+);
+widget.rsiWrapEl?.classList.remove(
+"screener-rsi-pending"
 );
 }
 

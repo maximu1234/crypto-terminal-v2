@@ -61,7 +61,7 @@ bindLiveCandleCatchup
 import {
 mountAlgoTradingCoinList,
 refreshAlgoMarketListFromFlags
-} from "./algo-trading-list.js?v=daac6ed7";
+} from "./algo-trading-list.js?v=21fb3b7e";
 
 import {
 mountAlgoTickerScanUi
@@ -84,7 +84,7 @@ mountAlgoRuntimeUi
 
 import {
 mountAlgoBotStrategyUi
-} from "./algo-trading/bot-strategy-ui.js?v=0e4aea34";
+} from "./algo-trading/bot-strategy-ui.js?v=942b6150";
 
 import {
 ALGO_ANALYSIS_BOT_CHANGE_EVENT,
@@ -100,7 +100,7 @@ setActiveAnalysisBotId
 
 import {
 mountSessionLogServerSettings
-} from "./algo-trading/bot-session-log-server-ui.js?v=f15b5114";
+} from "./algo-trading/bot-session-log-server-ui.js?v=b2f737c7";
 
 import {
 syncBotStrategiesToMain
@@ -108,11 +108,11 @@ syncBotStrategiesToMain
 
 import {
 mountAlgoTradeUi
-} from "./algo-trading/trade/boot.js?v=899a76a8";
+} from "./algo-trading/trade/boot.js?v=ef464e3b";
 
 import {
 mountAlgoTradingDrawings
-} from "./algo-trading/drawings.js?v=6cc02103";
+} from "./algo-trading/drawings.js?v=70a3c210";
 
 import {
 mountAlgoTradingIndicators
@@ -320,6 +320,62 @@ fitViewport as fitViewportMoved,
 mergeOlderAlgoCandles as mergeOlderAlgoCandlesMoved,
 applyLiveCandleTick as applyLiveCandleTickMoved
 } from "./algo-trading/chart-data.js?v=e0ce79d2";
+import {
+rsiPaneSettingsFromFlipPrefs as rsiPaneSettingsFromFlipPrefsMoved,
+readFlipPanePatchFromDom as readFlipPanePatchFromDomMoved,
+applyEffectiveRsiPaneSettings as applyEffectiveRsiPaneSettingsMoved,
+getRsiPaneSettings as getRsiPaneSettingsMoved,
+commitRsiPaneSettings as commitRsiPaneSettingsMoved,
+syncRsiHudPeriod as syncRsiHudPeriodMoved,
+syncRsiLevelDom as syncRsiLevelDomMoved,
+onRsiSettingsChange as onRsiSettingsChangeMoved,
+algoGate as algoGateMoved,
+chartStrategyId as chartStrategyIdMoved,
+chartGate as chartGateMoved,
+buildTradeOpts as buildTradeOptsMoved,
+isAlgoStatsAnalysisPaused as isAlgoStatsAnalysisPausedMoved,
+markAlgoHistoryStatsPending as markAlgoHistoryStatsPendingMoved,
+markAlgoHistoryStatsReadyAndAnalyze as markAlgoHistoryStatsReadyAndAnalyzeMoved,
+dispatchAlgoChartCandlesLoaded as dispatchAlgoChartCandlesLoadedMoved,
+ensureAlgoPattern12Enabled as ensureAlgoPattern12EnabledMoved,
+applyActiveAnalysisBotChartUi as applyActiveAnalysisBotChartUiMoved,
+syncChartMacdPaneFromFlip as syncChartMacdPaneFromFlipMoved,
+setRsiPaneActive as setRsiPaneActiveMoved,
+setSymbolLabel as setSymbolLabelMoved,
+syncAlgoChartTurnover24 as syncAlgoChartTurnover24Moved,
+setActiveTfButton as setActiveTfButtonMoved,
+setRsiHud as setRsiHudMoved,
+layoutRsi as layoutRsiMoved,
+scheduleResizeAlgoCharts as scheduleResizeAlgoChartsMoved,
+lastRsiValue as lastRsiValueMoved,
+buildDisplayCandles as buildDisplayCandlesMoved,
+refreshEntryFilterLines as refreshEntryFilterLinesMoved,
+refreshSupertrendFilterLines as refreshSupertrendFilterLinesMoved,
+destroySupertrendFilterLines as destroySupertrendFilterLinesMoved,
+buildPatternAnalysisOpts as buildPatternAnalysisOptsMoved,
+stopKline as stopKlineMoved,
+bindStrategyGateUi as bindStrategyGateUiMoved,
+strategyPrefKeys as strategyPrefKeysMoved,
+strategyPatchFromState as strategyPatchFromStateMoved,
+applyStrategyPatchToMemory as applyStrategyPatchToMemoryMoved,
+syncStrategyDomFromMemory as syncStrategyDomFromMemoryMoved,
+restoreStrategyMemoryFromPrefs as restoreStrategyMemoryFromPrefsMoved,
+hydrateTickerStrategyUi as hydrateTickerStrategyUiMoved,
+applyOptimizedPatchesToTickers as applyOptimizedPatchesToTickersMoved,
+persistAlgoSettings as persistAlgoSettingsMoved,
+getStatsModeForStrategy as getStatsModeForStrategyMoved,
+setStatsModeForStrategy as setStatsModeForStrategyMoved,
+applyStatsModeButtons as applyStatsModeButtonsMoved,
+applyChartPositionChecks as applyChartPositionChecksMoved,
+bindPartialTpInput as bindPartialTpInputMoved,
+bindTrailSlXInput as bindTrailSlXInputMoved,
+bindTrailSlCheck as bindTrailSlCheckMoved,
+reclampTrailSlX2 as reclampTrailSlX2Moved,
+bindTpShareInputs as bindTpShareInputsMoved,
+bindSide as bindSideMoved,
+setNum as setNumMoved,
+setCheck as setCheckMoved
+} from "./algo-trading/page-controls.js?v=3b6df78e";
 export async function mountAlgoTradingPage(){
 
 setActiveAnalysisBotId(
@@ -415,199 +471,177 @@ null;
 let rsiRebuildSeq =
 0;
 
-function rsiPaneSettingsFromFlipPrefs(
-raw
-){
-
-const fromColumn =
-raw &&
-typeof raw ===
-"object" &&
-(
-raw.rsiLen !=
-null ||
-raw.osLevel !=
-null ||
-raw.obLevel !=
-null ||
-raw.rsiTf !=
-null
-);
-const prefs =
-fromColumn
-? raw
-: loadRsiTouchFlipPrefs();
-
-return {
-period:
-prefs.rsiLen,
-overbought:
-prefs.obLevel,
-oversold:
-prefs.osLevel,
-tf:
-prefs.rsiTf ||
-""
+function algoPageHost(){
+if(!algoPageHost.current){
+algoPageHost.current = {
+get ALGO_ANALYSIS_BOT_MACD_FLIP_TOUCH(){ return ALGO_ANALYSIS_BOT_MACD_FLIP_TOUCH; },
+get ALGO_ANALYSIS_BOT_PATTERN_12(){ return ALGO_ANALYSIS_BOT_PATTERN_12; },
+get ALGO_ANALYSIS_BOT_RSI_TOUCH_FLIP(){ return ALGO_ANALYSIS_BOT_RSI_TOUCH_FLIP; },
+get ALGO_PREFS_KEY(){ return ALGO_PREFS_KEY; },
+get ALGO_STRATEGY_IDS(){ return ALGO_STRATEGY_IDS; },
+get Event(){ return Event; },
+get algoChartDbg(){ return algoChartDbg; },
+get algoGateFromMemory(){ return algoGateFromMemory; },
+get algoPattern12EnabledOnce(){ return algoPattern12EnabledOnce; },
+set algoPattern12EnabledOnce(value){ algoPattern12EnabledOnce = value; },
+get algoResizeRaf(){ return algoResizeRaf; },
+set algoResizeRaf(value){ algoResizeRaf = value; },
+get algoStatsPanelCollapsed(){ return algoStatsPanelCollapsed; },
+get appendFutureWhitespaceBars(){ return appendFutureWhitespaceBars; },
+get applyRsiData(){ return applyRsiData; },
+get applyStrategyPatchToMemoryFromMemory(){ return applyStrategyPatchToMemoryFromMemory; },
+get bindAlgoNumericField(){ return bindAlgoNumericField; },
+get buildAlgoPrefsSnapshot(){ return buildAlgoPrefsSnapshot; },
+get buildTradeOptsFromMemory(){ return buildTradeOptsFromMemory; },
+get candles(){ return candles; },
+get chartGateFromMemory(){ return chartGateFromMemory; },
+get chartIndicators(){ return chartIndicators; },
+get chartPositionChecks(){ return chartPositionChecks; },
+get chartStrategyIdFromMemory(){ return chartStrategyIdFromMemory; },
+get clampAlgoSupertrendAtr(){ return clampAlgoSupertrendAtr; },
+get clampAlgoSupertrendFactor(){ return clampAlgoSupertrendFactor; },
+get clampPartialTpX(){ return clampPartialTpX; },
+get clampPullbackBeforeArmPct(){ return clampPullbackBeforeArmPct; },
+get clampSlPctOfX(){ return clampSlPctOfX; },
+get clearAlgoPatternAnalysisUi(){ return clearAlgoPatternAnalysisUi; },
+get coinsState(){ return coinsState; },
+get computeChartFutureMarginBars(){ return computeChartFutureMarginBars; },
+get displaySymbol(){ return displaySymbol; },
+get disposed(){ return disposed; },
+get drawingTools(){ return drawingTools; },
+get entryOverlay(){ return entryOverlay; },
+get formatTurnover24Label(){ return formatTurnover24Label; },
+get getActiveAnalysisBotId(){ return getActiveAnalysisBotId; },
+get getTickerStrategyOverlay(){ return getTickerStrategyOverlay; },
+get hasTickerStrategyOverlay(){ return hasTickerStrategyOverlay; },
+get historyStatsReady(){ return historyStatsReady; },
+set historyStatsReady(value){ historyStatsReady = value; },
+get ignoreNextRsiSettingsCapture(){ return ignoreNextRsiSettingsCapture; },
+set ignoreNextRsiSettingsCapture(value){ ignoreNextRsiSettingsCapture = value; },
+get isActiveAnalysisBot(){ return isActiveAnalysisBot; },
+get isAlgoBotLiteMode(){ return isAlgoBotLiteMode; },
+get lastRsiHudValue(){ return lastRsiHudValue; },
+get lastRsiValueFromCandles(){ return lastRsiValueFromCandles; },
+get layoutRsiPane(){ return layoutRsiPane; },
+get liveBarRollTimer(){ return liveBarRollTimer; },
+set liveBarRollTimer(value){ liveBarRollTimer = value; },
+get loadMacdFlipTouchPrefs(){ return loadMacdFlipTouchPrefs; },
+get loadRsiTouchFlipPrefs(){ return loadRsiTouchFlipPrefs; },
+get macdFlipTouchHost(){ return macdFlipTouchHost; },
+get marketMap(){ return marketMap; },
+get mem(){ return mem; },
+get normalizeAlgoStatsMode(){ return normalizeAlgoStatsMode; },
+get normalizeAlgoSupertrendTf(){ return normalizeAlgoSupertrendTf; },
+get normalizeRsiPaneSettings(){ return normalizeRsiPaneSettings; },
+get normalizeSymbol(){ return normalizeSymbol; },
+get patternAnalysisSeq(){ return patternAnalysisSeq; },
+set patternAnalysisSeq(value){ patternAnalysisSeq = value; },
+get patternAnalysisTimer(){ return patternAnalysisTimer; },
+set patternAnalysisTimer(value){ patternAnalysisTimer = value; },
+get readAlgoPattern12Settings(){ return readAlgoPattern12Settings; },
+get readPrefs(){ return readPrefs; },
+get rebalanceTpShares(){ return rebalanceTpShares; },
+get recaptureAlgoStatsPanelHeight(){ return recaptureAlgoStatsPanelHeight; },
+get refreshAlgoPatternAnalysis(){ return refreshAlgoPatternAnalysis; },
+get resizeAlgoCharts(){ return resizeAlgoCharts; },
+get restoreStrategyMemoryFromPrefsFromMemory(){ return restoreStrategyMemoryFromPrefsFromMemory; },
+get rsiHudPeriodEl(){ return rsiHudPeriodEl; },
+get rsiHudValueEl(){ return rsiHudValueEl; },
+get rsiPaneActive(){ return rsiPaneActive; },
+set rsiPaneActive(value){ rsiPaneActive = value; },
+get rsiPaneSettings(){ return rsiPaneSettings; },
+set rsiPaneSettings(value){ rsiPaneSettings = value; },
+get rsiSeries(){ return rsiSeries; },
+get rsiTouchFlipHost(){ return rsiTouchFlipHost; },
+get rsiWrapEl(){ return rsiWrapEl; },
+get saveRsiTouchFlipPrefs(){ return saveRsiTouchFlipPrefs; },
+get schedulePatternAnalysis(){ return schedulePatternAnalysis; },
+get setRsiHudEl(){ return setRsiHudEl; },
+get setTickerStrategyOverlay(){ return setTickerStrategyOverlay; },
+get statsModeRoots(){ return statsModeRoots; },
+get strategyPatchFromStateFromMemory(){ return strategyPatchFromStateFromMemory; },
+get strategyPrefKeysFromMemory(){ return strategyPrefKeysFromMemory; },
+get supertrendFilterOverlay(){ return supertrendFilterOverlay; },
+set supertrendFilterOverlay(value){ supertrendFilterOverlay = value; },
+get symbol(){ return symbol; },
+get symbolEl(){ return symbolEl; },
+get syncRsiHudPeriodEl(){ return syncRsiHudPeriodEl; },
+get syncRsiLevelDomEl(){ return syncRsiLevelDomEl; },
+get syncStrategyDomFromMemoryFromMemory(){ return syncStrategyDomFromMemoryFromMemory; },
+get terminalVisibleBars(){ return terminalVisibleBars; },
+get tf(){ return tf; },
+get tfBar(){ return tfBar; },
+get tickerScanUi(){ return tickerScanUi; },
+get unbindLiveCatchup(){ return unbindLiveCatchup; },
+set unbindLiveCatchup(value){ unbindLiveCatchup = value; },
+get unsubKline(){ return unsubKline; },
+set unsubKline(value){ unsubKline = value; },
+get userRsiPaneSettings(){ return userRsiPaneSettings; },
+set userRsiPaneSettings(value){ userRsiPaneSettings = value; },
+get writePrefs(){ return writePrefs; },
+get writeTickerStrategyOverlays(){ return writeTickerStrategyOverlays; }
 };
+}
+return algoPageHost.current;
+}
 
+function rsiPaneSettingsFromFlipPrefs(raw){
+return rsiPaneSettingsFromFlipPrefsMoved(
+algoPageHost(),
+...arguments
+);
 }
 
 function readFlipPanePatchFromDom(){
-
-const lenEl =
-document.getElementById(
-"algo-rsi-flip-len"
+return readFlipPanePatchFromDomMoved(
+algoPageHost(),
+...arguments
 );
-
-if(
-!lenEl
-){
-return loadRsiTouchFlipPrefs();
-}
-
-return {
-rsiLen:
-lenEl.value,
-osLevel:
-document.getElementById(
-"algo-rsi-flip-os"
-)?.value,
-obLevel:
-document.getElementById(
-"algo-rsi-flip-ob"
-)?.value,
-rsiTf:
-document.getElementById(
-"algo-rsi-flip-tf"
-)?.value
-};
-
 }
 
 let ignoreNextRsiSettingsCapture =
 false;
 
-function applyEffectiveRsiPaneSettings(
-flipPatch
-){
-
-if(
-isActiveAnalysisBot(
-ALGO_ANALYSIS_BOT_RSI_TOUCH_FLIP
-)
-){
-rsiPaneSettings =
-normalizeRsiPaneSettings(
-rsiPaneSettingsFromFlipPrefs(
-flipPatch ||
-readFlipPanePatchFromDom()
-)
+function applyEffectiveRsiPaneSettings(flipPatch){
+return applyEffectiveRsiPaneSettingsMoved(
+algoPageHost(),
+...arguments
 );
-}else{
-rsiPaneSettings =
-userRsiPaneSettings;
-}
-
-syncRsiHudPeriod();
-syncRsiLevelDom();
-applyRsiData();
-
 }
 
 function getRsiPaneSettings(){
-
-if(
-!isActiveAnalysisBot(
-ALGO_ANALYSIS_BOT_RSI_TOUCH_FLIP
-)
-){
-return null;
-}
-
-return normalizeRsiPaneSettings(
-rsiPaneSettingsFromFlipPrefs(
-readFlipPanePatchFromDom()
-)
+return getRsiPaneSettingsMoved(
+algoPageHost(),
+...arguments
 );
-
 }
 
-function commitRsiPaneSettings(
-next
-){
-
-if(
-!isActiveAnalysisBot(
-ALGO_ANALYSIS_BOT_RSI_TOUCH_FLIP
-)
-){
-return false;
-}
-
-saveRsiTouchFlipPrefs(
-{
-rsiLen:
-next?.period,
-osLevel:
-next?.oversold,
-obLevel:
-next?.overbought,
-rsiTf:
-next?.tf ||
-""
-}
+function commitRsiPaneSettings(next){
+return commitRsiPaneSettingsMoved(
+algoPageHost(),
+...arguments
 );
-rsiTouchFlipHost?.applyColumnFromPrefs?.();
-applyEffectiveRsiPaneSettings();
-void rsiTouchFlipHost?.refresh?.();
-ignoreNextRsiSettingsCapture =
-true;
-return true;
-
 }
 
 function syncRsiHudPeriod(){
-
-syncRsiHudPeriodEl(
-rsiHudPeriodEl,
-rsiPaneSettings.period
+return syncRsiHudPeriodMoved(
+algoPageHost(),
+...arguments
 );
-
 }
 
 function syncRsiLevelDom(){
-
-syncRsiLevelDomEl(
-rsiWrapEl,
-rsiPaneSettings
-);
-
-}
-
-function onRsiSettingsChange(
-next
-){
-
-if(
-ignoreNextRsiSettingsCapture
-){
-ignoreNextRsiSettingsCapture =
-false;
-applyEffectiveRsiPaneSettings();
-return;
-}
-
-if(
-next
-){
-userRsiPaneSettings =
-normalizeRsiPaneSettings(
-next
+return syncRsiLevelDomMoved(
+algoPageHost(),
+...arguments
 );
 }
 
-applyEffectiveRsiPaneSettings();
-
+function onRsiSettingsChange(next){
+return onRsiSettingsChangeMoved(
+algoPageHost(),
+...arguments
+);
 }
 
 syncRsiHudPeriod();
@@ -715,48 +749,32 @@ rsi.series;
 const mem =
 createAlgoStrategyMemory();
 
-function algoGate(
-id
-){
-
-return algoGateFromMemory(
-mem,
-id
+function algoGate(id){
+return algoGateMoved(
+algoPageHost(),
+...arguments
 );
-
 }
 
 function chartStrategyId(){
-
-return chartStrategyIdFromMemory(
-mem
+return chartStrategyIdMoved(
+algoPageHost(),
+...arguments
 );
-
 }
 
 function chartGate(){
-
-return chartGateFromMemory(
-mem
+return chartGateMoved(
+algoPageHost(),
+...arguments
 );
-
 }
 
-function buildTradeOpts(
-strategyId
-){
-
-return buildTradeOptsFromMemory(
-mem,
-strategyId,
-{
-chartTf:
-tf,
-patternSettings:
-readAlgoPattern12Settings()
-}
+function buildTradeOpts(strategyId){
+return buildTradeOptsMoved(
+algoPageHost(),
+...arguments
 );
-
 }
 
 let tickerScanUi =
@@ -816,157 +834,38 @@ let historyStatsReady =
 false;
 
 function isAlgoStatsAnalysisPaused(){
-
-return algoStatsPanelCollapsed;
-
+return isAlgoStatsAnalysisPausedMoved(
+algoPageHost(),
+...arguments
+);
 }
 
 function markAlgoHistoryStatsPending(){
-
-historyStatsReady =
-false;
-patternAnalysisSeq++;
-
-if(
-patternAnalysisTimer
-){
-clearTimeout(
-patternAnalysisTimer
+return markAlgoHistoryStatsPendingMoved(
+algoPageHost(),
+...arguments
 );
-patternAnalysisTimer =
-0;
-}
-
-clearAlgoPatternAnalysisUi(
-entryOverlay
-);
-
 }
 
 function markAlgoHistoryStatsReadyAndAnalyze(){
-
-historyStatsReady =
-true;
-
-if(
-!algoChartDbg(
-"analysis"
-)
-){
-return;
-}
-
-ensureAlgoPattern12Enabled();
-schedulePatternAnalysis(
-{
-force:
-true
-}
+return markAlgoHistoryStatsReadyAndAnalyzeMoved(
+algoPageHost(),
+...arguments
 );
-drawingTools?.scheduleRedraw?.();
-rsiTouchFlipHost?.refresh?.();
-macdFlipTouchHost?.refresh?.();
-
 }
 
-function dispatchAlgoChartCandlesLoaded(
-loadId
-){
-
-try{
-window.dispatchEvent(
-new CustomEvent(
-"chart-candles-loaded",
-{
-detail:{
-symbol:
-String(
-symbol ||
-""
-).replace(
-/\.P$/i,
-""
-).trim().toUpperCase(),
-loadSeq:
-Number(
-loadId
-) ||
-0
-}
-}
-)
+function dispatchAlgoChartCandlesLoaded(loadId){
+return dispatchAlgoChartCandlesLoadedMoved(
+algoPageHost(),
+...arguments
 );
-}catch{
-/* ignore */
-}
-
 }
 
 function ensureAlgoPattern12Enabled(){
-
-if(
-!algoChartDbg(
-"indicators"
-) ||
-!algoChartDbg(
-"analysis"
-)
-){
-return;
-}
-
-if(
-algoPattern12EnabledOnce ||
-disposed
-){
-return;
-}
-
-if(
-!isActiveAnalysisBot(
-ALGO_ANALYSIS_BOT_PATTERN_12
-)
-){
-return;
-}
-
-algoPattern12EnabledOnce =
-true;
-
-if(
-isAlgoBotLiteMode()
-){
-return;
-}
-
-const root =
-document.getElementById(
-"chart-indicators-wrap"
+return ensureAlgoPattern12EnabledMoved(
+algoPageHost(),
+...arguments
 );
-const input =
-root?.querySelector?.(
-'input[data-indicator-id="pattern-12"]'
-);
-
-if(
-!input ||
-input.checked
-){
-return;
-}
-
-input.checked =
-true;
-input.dispatchEvent(
-new Event(
-"change",
-{
-bubbles:
-true
-}
-)
-);
-
 }
 
 /**
@@ -974,309 +873,60 @@ true
  * pattern-12 / rsi-touch-flip — свой блок data-algo-analysis-bot + оверлей.
  */
 function applyActiveAnalysisBotChartUi(){
-
-const botId =
-getActiveAnalysisBotId();
-
-document.body?.setAttribute(
-"data-algo-analysis-bot",
-botId
-);
-
-const pattern12 =
-botId ===
-ALGO_ANALYSIS_BOT_PATTERN_12;
-
-if(
-!pattern12
-){
-patternAnalysisSeq++;
-if(
-patternAnalysisTimer
-){
-clearTimeout(
-patternAnalysisTimer
-);
-patternAnalysisTimer =
-0;
-}
-tickerScanUi?.stopAll?.();
-entryOverlay?.setEvents?.(
-[]
-);
-entryOverlay?.refreshPositions?.();
-algoPattern12EnabledOnce =
-false;
-refreshSupertrendFilterLines();
-rsiTouchFlipHost?.refresh?.();
-macdFlipTouchHost?.refresh?.();
-applyEffectiveRsiPaneSettings();
-if(
-isActiveAnalysisBot(
-ALGO_ANALYSIS_BOT_MACD_FLIP_TOUCH
-)
-){
-syncChartMacdPaneFromFlip();
-}else{
-chartIndicators?.setIndicatorEnabled?.(
-"macd",
-false
-);
-}
-requestAnimationFrame(
-()=>{
-recaptureAlgoStatsPanelHeight();
-}
-);
-return;
-}
-
-if(
-historyStatsReady &&
-!disposed
-){
-algoPattern12EnabledOnce =
-false;
-requestAnimationFrame(
-()=>{
-
-if(
-disposed ||
-!isActiveAnalysisBot(
-ALGO_ANALYSIS_BOT_PATTERN_12
-)
-){
-return;
-}
-
-ensureAlgoPattern12Enabled();
-refreshSupertrendFilterLines();
-schedulePatternAnalysis(
-{
-force:
-true
-}
-);
-
-}
+return applyActiveAnalysisBotChartUiMoved(
+algoPageHost(),
+...arguments
 );
 }
 
-applyEffectiveRsiPaneSettings();
-requestAnimationFrame(
-()=>{
-recaptureAlgoStatsPanelHeight();
-}
-);
-
-}
-
-function syncChartMacdPaneFromFlip(
-flipPatch
-){
-
-if(
-!isActiveAnalysisBot(
-ALGO_ANALYSIS_BOT_MACD_FLIP_TOUCH
-)
-){
-return;
-}
-
-const prefs =
-flipPatch &&
-typeof flipPatch ===
-"object"
-? flipPatch
-: loadMacdFlipTouchPrefs();
-const macdInd =
-chartIndicators?.getIndicator?.(
-"macd"
-);
-
-if(
-!macdInd
-){
-return;
-}
-
-chartIndicators?.setIndicatorEnabled?.(
-"macd",
-true
-);
-macdInd.applySettings?.(
-{
-fastLength:
-prefs.fastLength,
-slowLength:
-prefs.slowLength,
-signalLength:
-prefs.signalLength,
-tf:
-prefs.macdTf ||
-""
-}
-);
-chartIndicators?.notifyCandlesUpdate?.();
-
-}
-
-function setRsiPaneActive(
-active
-){
-
-rsiPaneActive =
-!!active;
-
-if(
-rsiPaneActive
-){
-applyRsiData();
-return;
-}
-
-rsiSeries?.setData(
-[]
-);
-layoutRsi();
-setRsiHud(
-null
-);
-
-}
-
-function setSymbolLabel(
-previewSymbol
-){
-
-const labelSymbol =
-previewSymbol !=
-null &&
-String(
-previewSymbol
-).trim()
-? normalizeSymbol(
-previewSymbol
-)
-: symbol;
-
-if(
-symbolEl
-){
-symbolEl.textContent =
-displaySymbol(
-labelSymbol
+function syncChartMacdPaneFromFlip(flipPatch){
+return syncChartMacdPaneFromFlipMoved(
+algoPageHost(),
+...arguments
 );
 }
 
-document.title =
-`${displaySymbol(
-labelSymbol
-)} — АлгоТрейдинг`;
-
-coinsState().currentSymbol =
-normalizeSymbol(
-labelSymbol
+function setRsiPaneActive(active){
+return setRsiPaneActiveMoved(
+algoPageHost(),
+...arguments
 );
-
-syncAlgoChartTurnover24(
-labelSymbol
-);
-
 }
 
-function syncAlgoChartTurnover24(
-nextSymbol =
-symbol
-){
-
-const el =
-document.getElementById(
-"coins-chart-turnover24"
+function setSymbolLabel(previewSymbol){
+return setSymbolLabelMoved(
+algoPageHost(),
+...arguments
 );
-
-if(
-!el
-){
-return;
 }
 
-const item =
-marketMap.get(
-normalizeSymbol(
-nextSymbol
-)
+function syncAlgoChartTurnover24(nextSymbol =
+symbol){
+return syncAlgoChartTurnover24Moved(
+algoPageHost(),
+...arguments
 );
-
-el.textContent =
-formatTurnover24Label(
-item?.volume24
-);
-
 }
 
 function setActiveTfButton(){
-
-tfBar?.querySelectorAll(
-".tf-btn"
-).forEach(
-btn=>{
-btn.classList.toggle(
-"active",
-btn.dataset.tf ===
-tf
+return setActiveTfButtonMoved(
+algoPageHost(),
+...arguments
 );
 }
+
+function setRsiHud(value){
+return setRsiHudMoved(
+algoPageHost(),
+...arguments
 );
-
-const chartTfSel =
-document.getElementById(
-"algo-rsi-flip-chart-tf"
-);
-
-if(
-chartTfSel &&
-document.activeElement !==
-chartTfSel &&
-[
-...chartTfSel.options
-].some(
-opt=>
-opt.value ===
-tf
-)
-){
-chartTfSel.value =
-tf;
-}
-
-}
-
-function setRsiHud(
-value
-){
-
-setRsiHudEl(
-rsiHudValueEl,
-value
-);
-
 }
 
 function layoutRsi(){
-
-if(
-!rsiSeries
-){
-return;
-}
-
-layoutRsiPane(
-rsiSeries,
-rsiWrapEl,
-rsiPaneSettings
+return layoutRsiMoved(
+algoPageHost(),
+...arguments
 );
-
 }
 
 function algoChartHost(){
@@ -1369,43 +1019,17 @@ let pendingFitViewport =
 false;
 
 function scheduleResizeAlgoCharts(){
-
-if(
-algoResizeRaf
-){
-cancelAnimationFrame(
-algoResizeRaf
+return scheduleResizeAlgoChartsMoved(
+algoPageHost(),
+...arguments
 );
-}
-
-algoResizeRaf =
-requestAnimationFrame(
-()=>{
-algoResizeRaf =
-0;
-resizeAlgoCharts();
-}
-);
-
 }
 
 function lastRsiValue(){
-
-if(
-lastRsiHudValue !=
-null &&
-Number.isFinite(
-lastRsiHudValue
-)
-){
-return lastRsiHudValue;
-}
-
-return lastRsiValueFromCandles(
-candles,
-rsiPaneSettings.period
+return lastRsiValueMoved(
+algoPageHost(),
+...arguments
 );
-
 }
 
 function applyRsiData({
@@ -1422,23 +1046,10 @@ algoChartHost(),
 }
 
 function buildDisplayCandles(){
-
-if(
-!candles.length
-){
-return [];
-}
-
-return appendFutureWhitespaceBars(
-candles,
-computeChartFutureMarginBars(
-terminalVisibleBars(
-candles.length
-)
-),
-tf
+return buildDisplayCandlesMoved(
+algoPageHost(),
+...arguments
 );
-
 }
 
 function fitViewport(){
@@ -1449,31 +1060,24 @@ algoChartHost(),
 }
 
 function refreshEntryFilterLines(){
-
-if(
-!algoChartDbg(
-"filterLines"
-)
-){
-return;
-}
-
-supertrendFilterOverlay?.refresh?.();
-
+return refreshEntryFilterLinesMoved(
+algoPageHost(),
+...arguments
+);
 }
 
 function refreshSupertrendFilterLines(){
-
-refreshEntryFilterLines();
-
+return refreshSupertrendFilterLinesMoved(
+algoPageHost(),
+...arguments
+);
 }
 
 function destroySupertrendFilterLines(){
-
-supertrendFilterOverlay?.destroy?.();
-supertrendFilterOverlay =
-null;
-
+return destroySupertrendFilterLinesMoved(
+algoPageHost(),
+...arguments
+);
 }
 
 function schedulePatternAnalysis({
@@ -1505,33 +1109,10 @@ algoChartHost(),
 }
 
 function buildPatternAnalysisOpts(){
-
-return {
-...buildTradeOpts(
-"st1"
-),
-gates:{
-st1:{
-...mem.strategyGates.st1
-},
-st2:{
-...mem.strategyGates.st2
-},
-st3:{
-...mem.strategyGates.st3
-}
-},
-statsMode:
-mem.statsMode,
-statsModeSt2:
-mem.statsModeSt2,
-statsModeSt3:
-mem.statsModeSt3,
-chartPositionsStrategy:
-mem.chartPositionsStrategy,
-symbol
-};
-
+return buildPatternAnalysisOptsMoved(
+algoPageHost(),
+...arguments
+);
 }
 
 function applyLiveCandleTick(){
@@ -1542,35 +1123,10 @@ algoChartHost(),
 }
 
 function stopKline(){
-
-try{
-unbindLiveCatchup?.();
-}catch{
-/* ignore */
-}
-
-unbindLiveCatchup =
-null;
-
-try{
-unsubKline?.();
-}catch{
-/* ignore */
-}
-
-unsubKline =
-null;
-
-if(
-liveBarRollTimer
-){
-clearInterval(
-liveBarRollTimer
+return stopKlineMoved(
+algoPageHost(),
+...arguments
 );
-liveBarRollTimer =
-null;
-}
-
 }
 
 function mergeOlderAlgoCandles(older){
@@ -2333,287 +1889,11 @@ commitMaxPt1Pt4Bars
 
 
 
-function bindStrategyGateUi(
-id
-){
-
-function gate(){
-
-return algoGate(
-id
+function bindStrategyGateUi(id){
+return bindStrategyGateUiMoved(
+algoPageHost(),
+...arguments
 );
-
-}
-
-const g =
-gate();
-const slEl =
-document.getElementById(
-`algo-sl-pct-of-x-${id}`
-);
-const pbEl =
-document.getElementById(
-`algo-pullback-before-arm-${id}`
-);
-const pbPctEl =
-document.getElementById(
-`algo-pullback-before-arm-pct-${id}`
-);
-
-if(
-slEl
-){
-slEl.value =
-String(
-g.slPctOfX
-);
-const commit =
-()=>{
-const live =
-gate();
-const next =
-clampSlPctOfX(
-slEl.value
-);
-slEl.value =
-String(
-next
-);
-if(
-next ===
-live.slPctOfX
-){
-return;
-}
-live.slPctOfX =
-next;
-persistAlgoSettings();
-};
-bindAlgoNumericField(
-slEl,
-commit
-);
-}
-
-if(
-pbPctEl
-){
-pbPctEl.value =
-String(
-g.pullbackBeforeArmPct
-);
-const commit =
-()=>{
-const live =
-gate();
-const next =
-clampPullbackBeforeArmPct(
-pbPctEl.value
-);
-pbPctEl.value =
-String(
-next
-);
-if(
-next ===
-live.pullbackBeforeArmPct
-){
-return;
-}
-live.pullbackBeforeArmPct =
-next;
-persistAlgoSettings();
-};
-bindAlgoNumericField(
-pbPctEl,
-commit
-);
-}
-
-if(
-pbEl
-){
-pbEl.checked =
-g.pullbackBeforeArm;
-pbEl.addEventListener(
-"change",
-()=>{
-gate().pullbackBeforeArm =
-!!pbEl.checked;
-persistAlgoSettings();
-}
-);
-}
-
-function bindStSide(
-side
-){
-
-const cap =
-side ===
-"long"
-? "Long"
-: "Short";
-const filterKey =
-side ===
-"long"
-? "supertrendLongFilter"
-: "supertrendShortFilter";
-const atrKey =
-side ===
-"long"
-? "supertrendLongAtr"
-: "supertrendShortAtr";
-const factorKey =
-side ===
-"long"
-? "supertrendLongFactor"
-: "supertrendShortFactor";
-const tfKey =
-side ===
-"long"
-? "supertrendLongTf"
-: "supertrendShortTf";
-const filterEl =
-document.getElementById(
-`algo-st-${id}-${side}-filter`
-);
-const atrEl =
-document.getElementById(
-`algo-st-${id}-${side}-atr`
-);
-const factorEl =
-document.getElementById(
-`algo-st-${id}-${side}-factor`
-);
-const tfEl =
-document.getElementById(
-`algo-st-${id}-${side}-tf`
-);
-
-if(
-filterEl
-){
-filterEl.checked =
-g[
-filterKey
-];
-filterEl.addEventListener(
-"change",
-()=>{
-gate()[
-filterKey
-] =
-!!filterEl.checked;
-persistAlgoSettings();
-refreshEntryFilterLines();
-}
-);
-}
-
-if(
-atrEl
-){
-atrEl.value =
-String(
-g[
-atrKey
-]
-);
-atrEl.addEventListener(
-"change",
-()=>{
-const live =
-gate();
-const next =
-clampAlgoSupertrendAtr(
-atrEl.value
-);
-atrEl.value =
-String(
-next
-);
-live[
-atrKey
-] =
-next;
-persistAlgoSettings();
-refreshEntryFilterLines();
-}
-);
-}
-
-if(
-factorEl
-){
-factorEl.value =
-String(
-g[
-factorKey
-]
-);
-factorEl.addEventListener(
-"change",
-()=>{
-const live =
-gate();
-const next =
-clampAlgoSupertrendFactor(
-factorEl.value
-);
-factorEl.value =
-String(
-next
-);
-live[
-factorKey
-] =
-next;
-persistAlgoSettings();
-refreshEntryFilterLines();
-}
-);
-}
-
-if(
-tfEl
-){
-tfEl.value =
-g[
-tfKey
-];
-tfEl.addEventListener(
-"change",
-()=>{
-const live =
-gate();
-const next =
-normalizeAlgoSupertrendTf(
-tfEl.value
-);
-tfEl.value =
-next;
-live[
-tfKey
-] =
-next;
-persistAlgoSettings();
-refreshEntryFilterLines();
-}
-);
-}
-
-void cap;
-
-}
-
-bindStSide(
-"long"
-);
-bindStSide(
-"short"
-);
-
 }
 
 for(
@@ -2638,266 +1918,63 @@ document.getElementById(
 );
 
 
-function strategyPrefKeys(
-id
-){
-
-return strategyPrefKeysFromMemory(
-id
+function strategyPrefKeys(id){
+return strategyPrefKeysMoved(
+algoPageHost(),
+...arguments
 );
-
 }
 
-function strategyPatchFromState(
-strategyId
-){
-
-return strategyPatchFromStateFromMemory(
-mem,
-strategyId
+function strategyPatchFromState(strategyId){
+return strategyPatchFromStateMoved(
+algoPageHost(),
+...arguments
 );
-
 }
 
-function applyStrategyPatchToMemory(
-strategyId,
-patch
-){
-
-return applyStrategyPatchToMemoryFromMemory(
-mem,
-strategyId,
-patch
+function applyStrategyPatchToMemory(strategyId,
+patch){
+return applyStrategyPatchToMemoryMoved(
+algoPageHost(),
+...arguments
 );
-
 }
 
 function syncStrategyDomFromMemory(){
-
-return syncStrategyDomFromMemoryFromMemory(
-mem
+return syncStrategyDomFromMemoryMoved(
+algoPageHost(),
+...arguments
 );
-
 }
 
 function restoreStrategyMemoryFromPrefs(){
-
-return restoreStrategyMemoryFromPrefsFromMemory(
-mem
-);
-
-}
-
-function hydrateTickerStrategyUi(
-opts =
-{}
-){
-
-restoreStrategyMemoryFromPrefs();
-
-for(
-const id of ALGO_STRATEGY_IDS
-){
-const overlay =
-getTickerStrategyOverlay(
-id,
-symbol
-);
-
-if(
-overlay
-){
-applyStrategyPatchToMemory(
-id,
-overlay
+return restoreStrategyMemoryFromPrefsMoved(
+algoPageHost(),
+...arguments
 );
 }
 
-}
-
-syncStrategyDomFromMemory();
-
-if(
-opts.refreshFilters !==
-false
-){
-refreshEntryFilterLines();
-}
-
-}
-
-function applyOptimizedPatchesToTickers(
-strategyId,
-entries
-){
-
-const written =
-writeTickerStrategyOverlays(
-strategyId,
-entries
-);
-const overlay =
-getTickerStrategyOverlay(
-strategyId,
-symbol
-);
-
-if(
-overlay
-){
-applyStrategyPatchToMemory(
-strategyId,
-overlay
+function hydrateTickerStrategyUi(opts =
+{}){
+return hydrateTickerStrategyUiMoved(
+algoPageHost(),
+...arguments
 );
 }
 
-syncStrategyDomFromMemory();
-refreshEntryFilterLines();
-persistAlgoSettings(
-{
-writeOverlays:
-false
-}
-);
-return written;
-
-}
-
-function persistAlgoSettings(
-opts
-){
-
-const overlaySymbol =
-opts &&
-opts.overlaySymbol !=
-null
-? normalizeSymbol(
-opts.overlaySymbol
-)
-: symbol;
-const writeOverlays =
-!opts ||
-opts.writeOverlays !==
-false;
-const prev =
-readPrefs();
-let prevStored =
-{};
-
-try{
-const raw =
-JSON.parse(
-localStorage.getItem(
-ALGO_PREFS_KEY
-) ||
-"{}"
-);
-if(
-raw &&
-typeof raw ===
-"object" &&
-!Array.isArray(
-raw
-)
-){
-prevStored =
-raw;
-}
-}catch{
-prevStored =
-{};
-}
-const snapshot =
-buildAlgoPrefsSnapshot(
-mem,
-{
-symbol,
-tf
-}
-);
-
-for(
-const id of ALGO_STRATEGY_IDS
-){
-
-if(
-writeOverlays &&
-hasTickerStrategyOverlay(
-id,
-overlaySymbol
-)
-){
-setTickerStrategyOverlay(
-id,
-overlaySymbol,
-strategyPatchFromState(
-id
-)
+function applyOptimizedPatchesToTickers(strategyId,
+entries){
+return applyOptimizedPatchesToTickersMoved(
+algoPageHost(),
+...arguments
 );
 }
 
-if(
-!hasTickerStrategyOverlay(
-id,
-symbol
-)
-){
-continue;
-}
-
-for(
-const key of strategyPrefKeys(
-id
-)
-){
-if(
-Object.prototype.hasOwnProperty.call(
-prevStored,
-key
-) &&
-prevStored[
-key
-] !=
-null
-){
-snapshot[
-key
-] =
-prevStored[
-key
-];
-continue;
-}
-
-if(
-Object.prototype.hasOwnProperty.call(
-prev,
-key
-)
-){
-snapshot[
-key
-] =
-prev[
-key
-];
-}
-}
-
-}
-
-writePrefs(
-snapshot
+function persistAlgoSettings(opts){
+return persistAlgoSettingsMoved(
+algoPageHost(),
+...arguments
 );
-entryOverlay?.refreshPositions?.();
-drawingTools?.scheduleRedraw?.();
-refreshAlgoPatternAnalysis(
-candles,
-entryOverlay,
-buildPatternAnalysisOpts()
-);
-chartIndicators?.flushIndicatorDataRefreshNow?.();
-drawingTools?.scheduleRedraw?.();
 }
 
 const statsModeRoots =
@@ -2916,107 +1993,26 @@ document.querySelector(
 )
 };
 
-function getStatsModeForStrategy(
-strategy
-){
-
-if(
-strategy ===
-"partial-tp"
-){
-return mem.statsModeSt2;
-}
-
-if(
-strategy ===
-"partial-tp-y"
-){
-return mem.statsModeSt3;
-}
-
-return mem.statsMode;
-
-}
-
-function setStatsModeForStrategy(
-strategy,
-mode
-){
-
-const next =
-normalizeAlgoStatsMode(
-mode
+function getStatsModeForStrategy(strategy){
+return getStatsModeForStrategyMoved(
+algoPageHost(),
+...arguments
 );
-
-if(
-strategy ===
-"partial-tp"
-){
-mem.statsModeSt2 =
-next;
-}else if(
-strategy ===
-"partial-tp-y"
-){
-mem.statsModeSt3 =
-next;
-}else{
-mem.statsMode =
-next;
 }
 
+function setStatsModeForStrategy(strategy,
+mode){
+return setStatsModeForStrategyMoved(
+algoPageHost(),
+...arguments
+);
 }
 
 function applyStatsModeButtons(){
-
-for(
-const [
-strategy,
-root
-] of Object.entries(
-statsModeRoots
-)
-){
-
-if(
-!root
-){
-continue;
-}
-
-const current =
-getStatsModeForStrategy(
-strategy
+return applyStatsModeButtonsMoved(
+algoPageHost(),
+...arguments
 );
-
-for(
-const btn of root.querySelectorAll(
-"[data-algo-stats-mode]"
-)
-){
-const mode =
-normalizeAlgoStatsMode(
-btn.getAttribute(
-"data-algo-stats-mode"
-)
-);
-const active =
-mode ===
-current;
-btn.classList.toggle(
-"active",
-active
-);
-btn.setAttribute(
-"aria-selected",
-active
-? "true"
-: "false"
-);
-}
-
-}
-
 }
 
 applyStatsModeButtons();
@@ -3082,19 +2078,10 @@ const chartPositionChecks =
 ];
 
 function applyChartPositionChecks(){
-
-for(
-const input of chartPositionChecks
-){
-const strategy =
-input.getAttribute(
-"data-algo-chart-positions"
+return applyChartPositionChecksMoved(
+algoPageHost(),
+...arguments
 );
-input.checked =
-strategy ===
-mem.chartPositionsStrategy;
-}
-
 }
 
 applyChartPositionChecks();
@@ -3219,52 +2206,13 @@ commitRiskUsd
 );
 }
 
-function bindPartialTpInput(
-input,
+function bindPartialTpInput(input,
 getValue,
 setValue,
-fallback
-){
-
-if(
-!input
-){
-return;
-}
-
-input.value =
-String(
-getValue()
-);
-
-const commit =
-()=>{
-const next =
-clampPartialTpX(
-input.value,
-fallback
-);
-input.value =
-String(
-next
-);
-
-if(
-next ===
-getValue()
-){
-return;
-}
-
-setValue(
-next
-);
-persistAlgoSettings();
-};
-
-bindAlgoNumericField(
-input,
-commit
+fallback){
+return bindPartialTpInputMoved(
+algoPageHost(),
+...arguments
 );
 }
 
@@ -3343,88 +2291,23 @@ next;
 DEFAULT_PARTIAL_TP3_X
 );
 
-function bindTrailSlXInput(
-input,
+function bindTrailSlXInput(input,
 getValue,
 setValue,
-clamp
-){
-
-if(
-!input
-){
-return;
-}
-
-input.value =
-String(
-getValue()
-);
-
-const commit =
-()=>{
-const next =
-clamp(
-input.value
-);
-input.value =
-String(
-next
-);
-
-if(
-next ===
-getValue()
-){
-return;
-}
-
-setValue(
-next
-);
-persistAlgoSettings();
-};
-
-bindAlgoNumericField(
-input,
-commit
+clamp){
+return bindTrailSlXInputMoved(
+algoPageHost(),
+...arguments
 );
 }
 
-function bindTrailSlCheck(
-input,
+function bindTrailSlCheck(input,
 getValue,
-setValue
-){
-
-if(
-!input
-){
-return;
-}
-
-input.checked =
-!!getValue();
-input.addEventListener(
-"change",
-()=>{
-const next =
-!!input.checked;
-
-if(
-next ===
-!!getValue()
-){
-return;
-}
-
-setValue(
-next
+setValue){
+return bindTrailSlCheckMoved(
+algoPageHost(),
+...arguments
 );
-persistAlgoSettings();
-}
-);
-
 }
 
 const trailSlX1St2Input =
@@ -3476,36 +2359,14 @@ mem.tp3Y
 );
 
 /** Подъём трейлинга после ТП1 может поднять и нижнюю границу для ТП2. */
-function reclampTrailSlX2(
-input,
+function reclampTrailSlX2(input,
 clamp,
 getValue,
-setValue
-){
-
-const next =
-clamp(
-getValue()
+setValue){
+return reclampTrailSlX2Moved(
+algoPageHost(),
+...arguments
 );
-
-if(
-input
-){
-input.value =
-String(
-next
-);
-}
-
-if(
-next !==
-getValue()
-){
-setValue(
-next
-);
-}
-
 }
 
 bindTrailSlXInput(
@@ -3593,119 +2454,13 @@ next;
  * @param {()=>number[]} getShares
  * @param {(shares: number[])=>void} setShares
  */
-function bindTpShareInputs(
-span,
+function bindTpShareInputs(span,
 getShares,
-setShares
-){
-
-const inputs =
-[
-1,
-2,
-3
-].map(
-n=>
-document.getElementById(
-`algo-share${n}-${span}`
-)
+setShares){
+return bindTpShareInputsMoved(
+algoPageHost(),
+...arguments
 );
-
-const render =
-()=>{
-const shares =
-getShares();
-
-inputs.forEach(
-(
-input,
-i
-)=>{
-if(
-input
-){
-input.value =
-String(
-shares[
-i
-]
-);
-}
-}
-);
-};
-
-render();
-
-inputs.forEach(
-(
-input,
-index
-)=>{
-
-if(
-!input
-){
-return;
-}
-
-const commit =
-()=>{
-const cur =
-getShares();
-const next =
-rebalanceTpShares(
-index ===
-0
-? input.value
-: cur[
-0
-],
-index ===
-1
-? input.value
-: cur[
-1
-],
-index ===
-2
-? input.value
-: cur[
-2
-],
-index
-);
-
-if(
-next.every(
-(
-value,
-i
-)=>
-value ===
-cur[
-i
-]
-)
-){
-render();
-return;
-}
-
-setShares(
-next
-);
-render();
-persistAlgoSettings();
-};
-
-bindAlgoNumericField(
-input,
-commit
-);
-}
-);
-
 }
 
 bindTpShareInputs(
@@ -3755,161 +2510,13 @@ next[
 
 (function bindSupertrendFilter(){
 
-function bindSide(
-prefix,
+function bindSide(prefix,
 getState,
-setState
-){
-
-const filterEl =
-document.getElementById(
-`algo-st-${prefix}-filter`
+setState){
+return bindSideMoved(
+algoPageHost(),
+...arguments
 );
-const atrEl =
-document.getElementById(
-`algo-st-${prefix}-atr`
-);
-const factorEl =
-document.getElementById(
-`algo-st-${prefix}-factor`
-);
-const tfEl =
-document.getElementById(
-`algo-st-${prefix}-tf`
-);
-const state =
-getState();
-
-if(
-filterEl
-){
-filterEl.checked =
-state.filter;
-filterEl.addEventListener(
-"change",
-()=>{
-setState(
-{
-filter:
-!!filterEl.checked
-}
-);
-persistAlgoSettings();
-refreshEntryFilterLines();
-schedulePatternAnalysis(
-{
-force:
-true
-}
-);
-}
-);
-}
-
-if(
-atrEl
-){
-atrEl.value =
-String(
-state.atr
-);
-atrEl.addEventListener(
-"change",
-()=>{
-const next =
-clampAlgoSupertrendAtr(
-atrEl.value
-);
-atrEl.value =
-String(
-next
-);
-setState(
-{
-atr:
-next
-}
-);
-persistAlgoSettings();
-refreshEntryFilterLines();
-schedulePatternAnalysis(
-{
-force:
-true
-}
-);
-}
-);
-}
-
-if(
-factorEl
-){
-factorEl.value =
-String(
-state.factor
-);
-factorEl.addEventListener(
-"change",
-()=>{
-const next =
-clampAlgoSupertrendFactor(
-factorEl.value
-);
-factorEl.value =
-String(
-next
-);
-setState(
-{
-factor:
-next
-}
-);
-persistAlgoSettings();
-refreshEntryFilterLines();
-schedulePatternAnalysis(
-{
-force:
-true
-}
-);
-}
-);
-}
-
-if(
-tfEl
-){
-tfEl.value =
-state.tf;
-tfEl.addEventListener(
-"change",
-()=>{
-const next =
-normalizeAlgoSupertrendTf(
-tfEl.value
-);
-tfEl.value =
-next;
-setState(
-{
-tf:
-next
-}
-);
-persistAlgoSettings();
-refreshEntryFilterLines();
-schedulePatternAnalysis(
-{
-force:
-true
-}
-);
-}
-);
-}
-
 }
 
 (function bindSupertrendLinesVisible(){
@@ -4332,42 +2939,20 @@ algoGate(
 gateId
 );
 
-function setNum(
-id,
-value
-){
-const el =
-document.getElementById(
-id
-);
-
-if(
-el
-){
-el.value =
-String(
-value
+function setNum(id,
+value){
+return setNumMoved(
+algoPageHost(),
+...arguments
 );
 }
 
-}
-
-function setCheck(
-id,
-value
-){
-const el =
-document.getElementById(
-id
+function setCheck(id,
+value){
+return setCheckMoved(
+algoPageHost(),
+...arguments
 );
-
-if(
-el
-){
-el.checked =
-!!value;
-}
-
 }
 
 if(

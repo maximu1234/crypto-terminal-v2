@@ -1203,9 +1203,157 @@ state.rsiWrapEl?.style.setProperty(
 
 }
 
+function revealZoomCharts(
+state
+){
+
+if(
+!state ||
+state.disposed
+){
+return;
+}
+
+state.chartEl?.classList.remove(
+"loading"
+);
+state.rsiWrapEl?.classList.remove(
+"screener-rsi-pending"
+);
+
+}
+
+function settleZoomRsi(
+state
+){
+
+if(
+!state ||
+state.disposed
+){
+return;
+}
+
+state._rsiPlaced =
+false;
+state._stableScaleW =
+0;
+let settleTries =
+0;
+
+function step(){
+
+if(
+state.disposed
+){
+return;
+}
+
+const placedBefore =
+state._rsiPlaced;
+
+syncZoomChartSize(
+state
+);
+
+if(
+!state._rsiPlaced &&
+state.candles.length &&
+state.fittedOnce
+){
+
+updateZoomRsiData(
+state
+);
+state._rsiPlaced =
+true;
+state.fittedOnce =
+false;
+syncZoomChartSize(
+state
+);
+
+}
+
+let scaleW =
+0;
+
+try{
+scaleW =
+state.chart.priceScale(
+"right"
+).width() ||
+0;
+}catch{
+scaleW =
+0;
+}
+
+settleTries +=
+1;
+
+const justPlaced =
+!placedBefore &&
+state._rsiPlaced;
+
+const stable =
+state._rsiPlaced &&
+!justPlaced &&
+state._stableScaleW >
+0 &&
+scaleW >
+0 &&
+Math.abs(
+scaleW -
+state._stableScaleW
+) <=
+1;
+
+state._stableScaleW =
+scaleW;
+
+if(
+stable ||
+settleTries >=
+6
+){
+requestAnimationFrame(
+()=>{
+if(
+state.disposed
+){
+return;
+}
+syncZoomChartSize(
+state
+);
+revealZoomCharts(
+state
+);
+}
+);
+return;
+}
+
+requestAnimationFrame(
+step
+);
+
+}
+
+step();
+
+}
+
 function syncZoomChartSize(
 state
 ){
+
+if(
+state?.disposed
+){
+return;
+}
 
 const chartEl =
 state.chartEl;
@@ -1340,9 +1488,6 @@ state
 );
 state.fittedOnce =
 true;
-state.chartEl.classList.remove(
-"loading"
-);
 
 applyZoomInversion(
 state,
@@ -1653,6 +1798,9 @@ tf
 state.chartEl.classList.add(
 "loading"
 );
+state.rsiWrapEl?.classList.add(
+"screener-rsi-pending"
+);
 
 try{
 const candles =
@@ -1674,16 +1822,17 @@ candles.length -
 1
 ].close
 );
-updateZoomRsiData(
-state
-);
 updateZoomPatternData(
 state
 );
-syncZoomChartSize(
+refreshZoomPriceHud(
 state
 );
-refreshZoomPriceHud(
+settleZoomRsi(
+state
+);
+}else{
+revealZoomCharts(
 state
 );
 }
@@ -1694,10 +1843,8 @@ state
 );
 
 }catch{
-/* ignore */
-}finally{
-state.chartEl.classList.remove(
-"loading"
+revealZoomCharts(
+state
 );
 }
 
@@ -1830,10 +1977,10 @@ ${zoomMountOptions?.flagWrapHtml || ""}
 <div class="linked-crosshair-vert hidden" aria-hidden="true"></div>
 <div class="screener-chart screener-widget-zoom-main-chart"></div>
 ${showMacd
-? `<div class="screener-rsi-wrap">
+? `<div class="screener-rsi-wrap screener-rsi-pending">
 <div class="screener-rsi-chart"></div>
 </div>`
-: `<div class="screener-rsi-wrap">
+: `<div class="screener-rsi-wrap screener-rsi-pending">
 <div class="screener-rsi-band"></div>
 <div class="rsi-level-line hidden" data-rsi-level="70" aria-hidden="true"></div>
 <div class="rsi-level-line hidden" data-rsi-level="50" aria-hidden="true"></div>
@@ -2296,10 +2443,9 @@ candles.length -
 1
 ].close
 );
-updateZoomRsiData(
+settleZoomRsi(
 state
 );
-runSize();
 void mountZoomPattern(
 state
 );
@@ -2307,8 +2453,8 @@ refreshZoomPriceHud(
 state
 );
 }else{
-chartEl.classList.remove(
-"loading"
+revealZoomCharts(
+state
 );
 }
 

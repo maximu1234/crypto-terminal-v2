@@ -240,14 +240,18 @@ test("algo RSI Flip column drives the chart RSI pane and lists OB before OS", ()
     assert.doesNotMatch(src, /getRsiPaneSettings/, rel);
     assert.doesNotMatch(src, /commitRsiPaneSettings/, rel);
   }
-  const getLive = page.indexOf("function getRsiPaneSettings");
-  const getLiveEnd = page.indexOf("function commitRsiPaneSettings", getLive);
+  const controls = fs.readFileSync(
+    path.join(root, "js/algo-trading/page-controls.js"),
+    "utf8"
+  );
+  const getLive = controls.indexOf("export function getRsiPaneSettings");
+  const getLiveEnd = controls.indexOf("export function commitRsiPaneSettings", getLive);
   assert.ok(getLive > 0 && getLiveEnd > getLive);
-  const getLiveFn = page.slice(getLive, getLiveEnd);
+  const getLiveFn = controls.slice(getLive, getLiveEnd);
   assert.match(getLiveFn, /ALGO_ANALYSIS_BOT_RSI_TOUCH_FLIP/);
   assert.match(getLiveFn, /return null/);
-  const onChange = page.indexOf("function onRsiSettingsChange");
-  const onChangeFn = page.slice(onChange, onChange + 800);
+  const onChange = controls.indexOf("export function onRsiSettingsChange");
+  const onChangeFn = controls.slice(onChange, onChange + 800);
   assert.match(onChangeFn, /userRsiPaneSettings/);
   assert.match(page, /ignoreNextRsiSettingsCapture/);
 });

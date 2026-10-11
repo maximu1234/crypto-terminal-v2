@@ -3,7 +3,7 @@
  */
 import {
 TERMINAL_ENTRY
-} from "./asset-manifest.js?v=26688919";
+} from "./asset-manifest.js?v=8662ed92";
 
 await import(
 TERMINAL_ENTRY

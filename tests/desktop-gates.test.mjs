@@ -240,12 +240,14 @@ test("site-header does not statically import script-terminal-status", () => {
 
 test("terminal Early T3 list and script status require desktop shell", () => {
   const source = read("js/terminal.js");
-  const earlyT3 = source.slice(
-    source.indexOf("async function syncTerminalAlgoEarlyT3List")
+  const coins = read("js/terminal/terminal-coins-page.js");
+  const earlyT3 = coins.slice(
+    coins.indexOf("export async function syncTerminalAlgoEarlyT3List")
   );
   assert.match(earlyT3, /cryptoTerminalDesktop\?\.isDesktop/);
   assert.match(earlyT3, /isAlgoTradingNavEnabled/);
-  assert.match(source, /algo-trading\/terminal-early-t3-list\.js/);
+  assert.match(coins, /algo-trading\/terminal-early-t3-list\.js/);
+  assert.match(source, /syncTerminalAlgoEarlyT3ListMoved/);
   assert.doesNotMatch(source, /from\s+"\.\/script-terminal-status/);
   assert.match(source, /import\(\s*\n"\.\/script-terminal-status\.js/);
 });

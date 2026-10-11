@@ -35,7 +35,7 @@ getTradeConfig
 
 import {
 mountTradeChartMarkersToggle
-} from "./chart-execution-markers.js?v=9aeaf36e";
+} from "./chart-execution-markers.js?v=198e44f2";
 
 const REFRESH_MS =
 1500;

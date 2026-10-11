@@ -103,7 +103,7 @@ FAVORITES_BY_EXCHANGE_KEY
 
 import {
 ensureCloudReady
-} from "./auth-ui.js?v=c8010a2e";
+} from "./auth-ui.js?v=90803a12";
 
 import {
 ensureSettled,
@@ -113,7 +113,7 @@ withTimeout
 import {
 persistFavoritesToCloud,
 onFavoritesRemoteUpdate
-} from "./cloud-sync.js?v=33cd7ae6";
+} from "./cloud-sync.js?v=bb07250d";
 
 import {
 attachSymbolAutocomplete,
@@ -172,7 +172,7 @@ if(
 ){
 screenerZoomMountPromise =
 import(
-"./screener-widget-zoom.js?v=cdfc4716"
+"./screener-widget-zoom.js?v=f8440f25"
 ).then(
 mod=>{
 refreshZoomFavoriteUi =
@@ -967,7 +967,7 @@ SCREENER_WIDGET_OSCILLATOR_MACD
 return `
 <div class="screener-widget-body">
 <div class="screener-chart"></div>
-<div class="screener-rsi-wrap">
+<div class="screener-rsi-wrap screener-rsi-pending">
 <div class="screener-rsi-chart"></div>
 </div>
 </div>`;
@@ -976,7 +976,7 @@ return `
 return `
 <div class="screener-widget-body">
 <div class="screener-chart"></div>
-<div class="screener-rsi-wrap">
+<div class="screener-rsi-wrap screener-rsi-pending">
 <div class="screener-rsi-band"></div>
 <div class="rsi-level-line hidden" data-rsi-level="70" aria-hidden="true"></div>
 <div class="rsi-level-line hidden" data-rsi-level="50" aria-hidden="true"></div>
@@ -1414,7 +1414,7 @@ destroyWidgets,
 loadWidgetChart,
 observeWidgetKlineVisibility,
 updateWidgetMeta
-} from "./screener-widgets.js?v=b822158c";
+} from "./screener-widgets.js?v=9748bc8a";
 
 bindScreenerWidgets({
 get activeWidgets(){ return activeWidgets; },
