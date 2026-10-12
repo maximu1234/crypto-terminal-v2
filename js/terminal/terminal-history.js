@@ -46,6 +46,56 @@ host.stopLivePriceFallbacks();
 host.coinsState().chartCandlesSymbol =
 "";
 host.chartSwitchVeil.startChartSwitchVeil();
+host.initialHistoryReady =
+null;
+host.markTerminalRsiPending(
+loadSeq,
+()=>{
+const finish =
+()=>{
+
+if(
+loadSeq !==
+host.symbolLoadSeq
+){
+return;
+}
+
+host.chartSwitchVeil.finishChartSwitchVeil(
+loadSeq
+);
+
+};
+const ready =
+host.initialHistoryReady;
+
+if(
+ready &&
+typeof ready.then ===
+"function"
+){
+void Promise.race(
+[
+ready,
+new Promise(
+resolve=>{
+setTimeout(
+resolve,
+8000
+);
+}
+)
+]
+).then(
+finish,
+finish
+);
+return;
+}
+
+finish();
+}
+);
 host.setChartLayoutReady(
 false
 );
@@ -79,7 +129,7 @@ if(
 host.isTradePage
 ){
 void import(
-"../trade-volume-presets.js?v=5f674712"
+"../trade-volume-presets.js?v=b4584426"
 ).then(
 ({
 switchTradeVolumeSymbol
@@ -183,6 +233,7 @@ new Error(
 host.setChartLayoutReady(
 true
 );
+host.revealTerminalRsiPane();
 host.chartSwitchVeil.finishChartSwitchVeil(
 loadSeq
 );
@@ -284,6 +335,9 @@ host.chart,
 null
 );
 host.syncCoinsChartLinkedViewports();
+host.noteTerminalRsiViewportReady(
+loadSeq
+);
 
 }
 );
@@ -309,13 +363,26 @@ host.currentTF
 
 host.persistCoinsPrefs();
 
-void settleTerminalHistoryAfterPaint(host, 
+const historyTask =
+settleTerminalHistoryAfterPaint(host, 
 loadSeq
 );
+const deepenHistory =
+!host.historyExhausted &&
+host.candles.length <
+host.TERMINAL_HISTORY_INITIAL_BARS &&
+host.candles.length <
+host.getTerminalHistoryDepth();
 
-host.chartSwitchVeil.finishChartSwitchVeil(
-loadSeq
-);
+/*
+ * У части монет первая пачка короче начальной глубины.
+ * Хвост доезжает уже после открытия и пересчитывает шкалу AO.
+ * Держим крышку, пока эта догрузка не встала.
+ */
+host.initialHistoryReady =
+deepenHistory
+? historyTask
+: null;
 
 }
 );
@@ -336,6 +403,7 @@ host.symbolLoadSeq
 host.setChartLayoutReady(
 true
 );
+host.revealTerminalRsiPane();
 host.chartSwitchVeil.finishChartSwitchVeil(
 loadSeq
 );
@@ -805,6 +873,18 @@ if(
 loadSeq ===
 host.symbolLoadSeq
 ){
+host.chartIndicators?.flushIndicatorDataRefreshNow?.();
+await new Promise(
+resolve=>{
+requestAnimationFrame(
+()=>{
+requestAnimationFrame(
+resolve
+);
+}
+);
+}
+);
 host.rememberTerminalHistory(
 host.currentSymbol,
 host.currentTF

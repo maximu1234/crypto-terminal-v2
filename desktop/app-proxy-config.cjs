@@ -6,16 +6,23 @@
 
 /**
  * Chromium session.setProxy гоняет весь renderer через SOCKS.
- * Bybit REST/private WS в main и так идут через relay; публичные хосты Bybit
- * в обходе — иначе ломается kline WS. Облако (Supabase / Railway worker)
- * тоже должно идти напрямую: кафе-SOCKS часто режет auth refresh, и алерты
- * нельзя поставить, хотя шестерёнка ещё показывает сохранённый email.
+ * «Только тики» (по умолчанию): REST Bybit в обходе, история свечей напрямую,
+ * тики на stream.bybit.com идут через прокси. Без галочки REST-хосты тоже
+ * идут через прокси — для страны, где закрыт весь Bybit.
+ * Облако (Supabase / Railway) всегда напрямую: кафе-SOCKS часто режет auth.
  */
-const PROXY_BYPASS_RULES =
+const PROXY_BYPASS_ALWAYS =
 "<-loopback>,localhost,127.0.0.1,::1,<local>," +
-"api.bybit.com,api.bytick.com,api-testnet.bybit.com," +
 "*.supabase.co,.supabase.co,*.supabase.in," +
 "*.up.railway.app,.up.railway.app";
+
+const PROXY_BYBIT_REST_HOSTS =
+"api.bybit.com,api.bytick.com,api-testnet.bybit.com";
+
+const PROXY_BYPASS_RULES =
+PROXY_BYBIT_REST_HOSTS +
+"," +
+PROXY_BYPASS_ALWAYS;
 
 function normalizeProxyType(
 raw
@@ -323,6 +330,9 @@ src.port
 return {
 enabled:
 !!src.enabled,
+ticksOnly:
+src.ticksOnly !==
+false,
 type:
 normalizeProxyType(
 src.type
@@ -340,6 +350,21 @@ normalizePassword(
 src.password
 )
 };
+
+}
+
+function buildProxyBypassRules(
+cfg
+){
+
+if(
+cfg?.ticksOnly !==
+false
+){
+return PROXY_BYPASS_RULES;
+}
+
+return PROXY_BYPASS_ALWAYS;
 
 }
 
@@ -439,6 +464,8 @@ value
 module.exports =
 {
 PROXY_BYPASS_RULES,
+PROXY_BYPASS_ALWAYS,
+buildProxyBypassRules,
 normalizeProxySettings,
 isProxyConfigReady,
 buildProxyRules,

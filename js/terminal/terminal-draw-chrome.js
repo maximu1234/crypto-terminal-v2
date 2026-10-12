@@ -7,7 +7,7 @@ import {
 positionTabletProbeCrosshair,
 hideTabletProbeCrosshair,
 isTabletChartViewport
-} from "../chart-import.js?v=544220a0";
+} from "../chart-import.js?v=45dccc88";
 
 import {
 TERMINAL_VISIBLE_BARS,
@@ -31,7 +31,7 @@ import {
 buildChartDisplayCandles,
 settleCoinsChartViewport,
 scheduleResizeCharts
-} from "./terminal-chart-layout.js?v=df9a7a4d";
+} from "./terminal-chart-layout.js?v=afd824f0";
 
 import {
 replayVisibleCandles
@@ -52,13 +52,13 @@ const {
 initWidgetDrawings
 } =
 await import(
-"../chart-widget-host.js?v=ab6cbf5f"
+"../chart-widget-host.js?v=63111815"
 );
 const {
 initChartIndicators
 } =
 await import(
-"../chart-indicators.js?v=e1502405"
+"../chart-indicators.js?v=f00bd388"
 );
 const {
 createPattern12EarlyT3Indicator
@@ -189,6 +189,7 @@ true,
 clearPeerSelections: ()=>{
 deps.drawingTools?.clearDrawingSelection?.();
 deps.rsiDrawingTools?.clearDrawingSelection?.();
+deps.aoDrawingTools?.clearDrawingSelection?.();
 deps.drawingTools?.syncStyleBar?.();
 }
 
@@ -210,7 +211,7 @@ deps.drawingTools?.getTool?.() ??
 );
 
 void import(
-"../price-alert-ui.js?v=b96b5642"
+"../price-alert-ui.js?v=4c6ef499"
 ).then(
 ({
 mountPriceAlertUi
@@ -288,6 +289,165 @@ return;
 }
 
 teardownMacdDrawingTools();
+
+}
+
+function teardownAoDrawingTools(){
+
+if(
+deps.activeDrawPane ===
+"ao"
+){
+deps.activeDrawPane =
+"chart";
+}
+
+deps.aoDrawingTools?.destroy?.();
+deps.aoDrawingTools =
+null;
+deps.aoSetDrawTool =
+null;
+
+}
+
+function mountAoDrawingTools(){
+
+if(
+deps.aoDrawingTools
+){
+return;
+}
+
+const ind =
+deps.chartIndicators?.getIndicator?.(
+"ao"
+);
+const aoChart =
+ind?.getChart?.();
+const aoSeries =
+ind?.getAoSeries?.();
+
+if(
+!ind?.isEnabled?.() ||
+!aoChart ||
+!aoSeries ||
+!deps.aoWrapEl
+){
+return;
+}
+
+deps.aoDrawingTools =
+initWidgetDrawings({
+
+chart:
+aoChart,
+
+timeChart:
+deps.chart,
+
+series:
+aoSeries,
+
+wrapEl:
+deps.aoWrapEl,
+
+uiRoot:
+null,
+
+toolsRoot:
+document.getElementById(
+"charts-stack"
+),
+
+bindToolbar:
+false,
+
+styleBar:
+false,
+
+mountStyleBar:
+false,
+
+sharedStyleBarSync: ()=>{
+deps.drawingTools?.syncStyleBar?.();
+},
+
+storageKeySuffix:
+"_ao",
+
+drawPriceAlerts:
+false,
+
+enableMagnet:
+false,
+
+getSymbol: ()=>
+deps.currentSymbol,
+
+getTf: ()=>
+deps.currentTF,
+
+getCandles:()=>
+ind.getAoDrawCandles?.() ||
+[],
+
+isActive: ()=>
+deps.activeDrawPane ===
+"ao",
+
+barPosKey:
+"draw_bar_pos_ao",
+
+abortTabletChartGesture:()=>{
+deps.cancelTabletPanGesture?.();
+},
+
+sharedDrawUndo: deps.sharedDrawUndo,
+deferKeyboardUndo:
+true,
+clearPeerSelections: ()=>{
+deps.drawingTools?.clearDrawingSelection?.();
+deps.rsiDrawingTools?.clearDrawingSelection?.();
+deps.macdDrawingTools?.clearDrawingSelection?.();
+deps.drawingTools?.syncStyleBar?.();
+}
+
+});
+
+if(
+!deps.aoDrawingTools
+){
+return;
+}
+
+deps.aoSetDrawTool =
+deps.aoDrawingTools.setTool.bind(
+deps.aoDrawingTools
+);
+deps.aoSetDrawTool(
+deps.drawingTools?.getTool?.() ??
+"cursor"
+);
+
+}
+
+function syncAoDrawingTools(){
+
+const ind =
+deps.chartIndicators?.getIndicator?.(
+"ao"
+);
+
+if(
+ind?.isEnabled?.() &&
+ind.getChart?.() &&
+ind.getAoSeries?.()
+){
+mountAoDrawingTools();
+return;
+}
+
+teardownAoDrawingTools();
 
 }
 
@@ -416,6 +576,7 @@ true,
 clearPeerSelections: ()=>{
 deps.rsiDrawingTools?.clearDrawingSelection?.();
 deps.macdDrawingTools?.clearDrawingSelection?.();
+deps.aoDrawingTools?.clearDrawingSelection?.();
 deps.drawingTools?.syncStyleBar?.();
 }
 
@@ -497,6 +658,7 @@ true,
 clearPeerSelections: ()=>{
 deps.drawingTools?.clearDrawingSelection?.();
 deps.macdDrawingTools?.clearDrawingSelection?.();
+deps.aoDrawingTools?.clearDrawingSelection?.();
 deps.drawingTools?.syncStyleBar?.();
 }
 
@@ -534,12 +696,16 @@ next
 deps.macdSetDrawTool?.(
 next
 );
+deps.aoSetDrawTool?.(
+next
+);
 };
 
 deps.drawClearAllPeers.call =
 ()=>{
 deps.rsiDrawingTools?.clearAllDrawings?.();
 deps.macdDrawingTools?.clearAllDrawings?.();
+deps.aoDrawingTools?.clearAllDrawings?.();
 };
 
 deps.mountSharedDrawSelectionDismiss();
@@ -608,6 +774,13 @@ id ===
 ){
 deps.macdDrawingTools?.scheduleRedraw?.();
 deps.publishMacdAlertValue();
+}
+
+if(
+id ===
+"ao"
+){
+deps.aoDrawingTools?.scheduleRedraw?.();
 }
 
 },
@@ -682,6 +855,13 @@ id ===
 syncMacdDrawingTools();
 }
 
+if(
+id ===
+"ao"
+){
+syncAoDrawingTools();
+}
+
 }
 })
 ,
@@ -692,6 +872,7 @@ createPattern12EarlyT3Indicator
 );
 
 syncMacdDrawingTools();
+syncAoDrawingTools();
 
 mountChartSymbolFullName({
 getSymbol(){
@@ -862,7 +1043,7 @@ const {
 createTradePlusMenuHandler
 } =
 await import(
-"../trade-order-plus-ui.js?v=a8451d70"
+"../trade-order-plus-ui.js?v=7a8f9706"
 );
 
 tradePlusHandler =
@@ -893,7 +1074,7 @@ const {
 mountPriceAlertUi
 } =
 await import(
-"../price-alert-ui.js?v=b96b5642"
+"../price-alert-ui.js?v=4c6ef499"
 );
 
 let disposeAlertUi =
@@ -953,7 +1134,7 @@ const {
 mountPriceAlertUi: mountRsiPriceAlertUi
 } =
 await import(
-"../price-alert-ui.js?v=b96b5642"
+"../price-alert-ui.js?v=4c6ef499"
 );
 
 mountRsiPriceAlertUi(

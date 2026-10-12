@@ -17,7 +17,7 @@ mountChartPriceHud,
 applyTabletMainChartScroll,
 applyTabletRsiChartOptions,
 SCREENER_MAX_BARS
-} from "./chart-import.js?v=544220a0";
+} from "./chart-import.js?v=45dccc88";
 
 import {
 isIpadWebViewport
@@ -47,11 +47,15 @@ paintLiveOhlcSeries
 } from "./chart/live-bar-roll.js?v=6ff2b718";
 
 import {
+SCREENER_WIDGET_OSCILLATOR_AO,
 SCREENER_WIDGET_OSCILLATOR_CHANGED,
 SCREENER_WIDGET_OSCILLATOR_MACD,
+createScreenerAoChart,
 createScreenerMacdChart,
+isScreenerHistogramOscillator,
+setScreenerAoData,
 setScreenerMacdData
-} from "./screener-widget-oscillator.js?v=62d04576";
+} from "./screener-widget-oscillator.js?v=22d098fd";
 
 import {
 shouldIgnoreTypingHotkey
@@ -81,10 +85,24 @@ if(
 typeof zoomMountOptions?.getOscillatorKind ===
 "function"
 ){
-return zoomMountOptions.getOscillatorKind() ===
+const kind =
+zoomMountOptions.getOscillatorKind();
+
+if(
+kind ===
 SCREENER_WIDGET_OSCILLATOR_MACD
-? SCREENER_WIDGET_OSCILLATOR_MACD
-: "rsi";
+){
+return SCREENER_WIDGET_OSCILLATOR_MACD;
+}
+
+if(
+kind ===
+SCREENER_WIDGET_OSCILLATOR_AO
+){
+return SCREENER_WIDGET_OSCILLATOR_AO;
+}
+
+return "rsi";
 }
 
 return "rsi";
@@ -889,8 +907,9 @@ state
 ){
 
 if(
-state?.oscKind ===
-SCREENER_WIDGET_OSCILLATOR_MACD ||
+isScreenerHistogramOscillator(
+state?.oscKind
+) ||
 !state?.rsiSeries ||
 !state?.rsiWrapEl
 ){
@@ -941,6 +960,25 @@ state.rsiSeries,
 signalSeries:
 state.macdSignalSeries
 },
+state.candles
+);
+return;
+
+}
+
+if(
+state.oscKind ===
+SCREENER_WIDGET_OSCILLATOR_AO
+){
+
+if(
+!state.rsiSeries
+){
+return;
+}
+
+setScreenerAoData(
+state.rsiSeries,
 state.candles
 );
 return;
@@ -1121,7 +1159,7 @@ const {
 mountWidgetTabletChart
 } =
 await import(
-"./tablet-widget-chart.js?v=84516367"
+"./tablet-widget-chart.js?v=8d1b668a"
 );
 
 if(
@@ -1219,6 +1257,9 @@ state.chartEl?.classList.remove(
 );
 state.rsiWrapEl?.classList.remove(
 "screener-rsi-pending"
+);
+state.panel?.classList.remove(
+"screener-osc-settling"
 );
 
 }
@@ -1324,11 +1365,21 @@ state.disposed
 ){
 return;
 }
+state.fittedOnce =
+false;
 syncZoomChartSize(
 state
 );
+requestAnimationFrame(
+()=>{
+requestAnimationFrame(
+()=>{
 revealZoomCharts(
 state
+);
+}
+);
+}
 );
 }
 );
@@ -1592,8 +1643,9 @@ if(
 isNewBar ||
 kind ===
 "hist" ||
-state.oscKind ===
-SCREENER_WIDGET_OSCILLATOR_MACD
+isScreenerHistogramOscillator(
+state.oscKind
+)
 ){
 updateZoomRsiData(
 state
@@ -1798,6 +1850,9 @@ tf
 state.chartEl.classList.add(
 "loading"
 );
+state.panel?.classList.add(
+"screener-osc-settling"
+);
 state.rsiWrapEl?.classList.add(
 "screener-rsi-pending"
 );
@@ -1882,6 +1937,9 @@ zoomOscillatorKind();
 const showMacd =
 oscKind ===
 SCREENER_WIDGET_OSCILLATOR_MACD;
+const showAo =
+oscKind ===
+SCREENER_WIDGET_OSCILLATOR_AO;
 
 const override =
 zoomMountOptions?._zoomWidgetsOverride;
@@ -1959,7 +2017,7 @@ document.createElement(
 "div"
 );
 panel.className =
-"screener-widget-zoom-panel";
+"screener-widget-zoom-panel screener-osc-settling";
 panel.innerHTML =
 `
 <div class="screener-widget-zoom-header">
@@ -1976,7 +2034,8 @@ ${zoomMountOptions?.flagWrapHtml || ""}
 <div class="screener-widget-zoom-body screener-widget-body">
 <div class="linked-crosshair-vert hidden" aria-hidden="true"></div>
 <div class="screener-chart screener-widget-zoom-main-chart"></div>
-${showMacd
+${showMacd ||
+showAo
 ? `<div class="screener-rsi-wrap screener-rsi-pending">
 <div class="screener-rsi-chart"></div>
 </div>`
@@ -2034,16 +2093,25 @@ showMacd
 rsiChartEl
 )
 : null;
+const aoPair =
+showAo
+? createScreenerAoChart(
+rsiChartEl
+)
+: null;
 const rsiPair =
-showMacd
+showMacd ||
+showAo
 ? null
 : createRSIChart(
 rsiChartEl
 );
 const oscChart =
+aoPair?.chart ||
 macdPair?.chart ||
 rsiPair.chart;
 const oscPrimarySeries =
+aoPair?.series ||
 macdPair?.macdSeries ||
 rsiPair.series;
 

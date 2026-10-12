@@ -173,7 +173,7 @@ try{
 const {
 ensureCloudLoginResolved
 } =
-await import("./cloud-sync.js?v=d861e774");
+await import("./cloud-sync.js?v=4a874d16");
 
 const ctx =
 await ensureCloudLoginResolved(

@@ -2,9 +2,11 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import net from "node:net";
 import {
+buildProxyBypassRules,
 buildProxyRules,
 isProxyConfigReady,
 normalizeProxySettings,
+PROXY_BYPASS_ALWAYS,
 PROXY_BYPASS_RULES,
 shouldProxyBybitRestUrl
 } from "../desktop/app-proxy-config.cjs";
@@ -18,6 +20,7 @@ stopSocksAuthRelay
 test("normalizeProxySettings defaults to SOCKS5 off", () => {
   const cfg = normalizeProxySettings({});
   assert.equal(cfg.enabled, false);
+  assert.equal(cfg.ticksOnly, true);
   assert.equal(cfg.type, "socks5");
   assert.equal(cfg.host, "");
   assert.equal(cfg.port, 0);
@@ -208,5 +211,31 @@ test("Bybit REST from main goes through SOCKS; candle history stays direct; publ
   assert.match(
     PROXY_BYPASS_RULES,
     /\*\.up\.railway\.app/
+  );
+});
+
+test("ticks only keeps Bybit REST direct; full mode sends history through the proxy", () => {
+  const ticksOnly = buildProxyBypassRules(
+    normalizeProxySettings({})
+  );
+  const full = buildProxyBypassRules(
+    normalizeProxySettings({
+      ticksOnly: false
+    })
+  );
+
+  assert.equal(ticksOnly, PROXY_BYPASS_RULES);
+  assert.match(ticksOnly, /api\.bybit\.com/);
+  assert.match(ticksOnly, /api\.bytick\.com/);
+  assert.match(ticksOnly, /api-testnet\.bybit\.com/);
+  assert.equal(full, PROXY_BYPASS_ALWAYS);
+  assert.doesNotMatch(full, /api\.bybit\.com/);
+  assert.doesNotMatch(full, /api\.bytick\.com/);
+  assert.match(full, /\*\.supabase\.co/);
+  assert.match(full, /\*\.up\.railway\.app/);
+  assert.match(full, /<-loopback>/);
+  assert.equal(
+    normalizeProxySettings({ ticksOnly: false }).ticksOnly,
+    false
   );
 });

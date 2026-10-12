@@ -11,7 +11,8 @@ export function allCoinsDrawTools(host){
 return [
 host.drawingTools,
 host.rsiDrawingTools,
-host.macdDrawingTools
+host.macdDrawingTools,
+host.aoDrawingTools
 ].filter(
 Boolean
 );
@@ -213,6 +214,7 @@ return;
 host.drawingTools?.endPriceScaleDragRedraw?.();
 host.rsiDrawingTools?.endPriceScaleDragRedraw?.();
 host.macdDrawingTools?.endPriceScaleDragRedraw?.();
+host.aoDrawingTools?.endPriceScaleDragRedraw?.();
 window.__tradeChartOverlay?.onPriceScaleDragEnd?.();
 scheduleCoinsDrawRedraw(host);
 host.priceHudCtrl?.refresh?.();
@@ -281,6 +283,7 @@ host.priceScaleTouchHooks.onReset?.();
 host.drawingTools?.endPriceScaleDragRedraw?.();
 host.rsiDrawingTools?.endPriceScaleDragRedraw?.();
 host.macdDrawingTools?.endPriceScaleDragRedraw?.();
+host.aoDrawingTools?.endPriceScaleDragRedraw?.();
 window.__tradeChartOverlay?.onPriceScaleDragEnd?.();
 
 }
@@ -757,6 +760,15 @@ if(
 !watchRsiAlerts
 ){
 host.chartIndicators?.notifyCandlesUpdate?.();
+
+if(
+terminalRsiPending &&
+host.symbolLoadSeq ===
+terminalRsiPending.seq
+){
+revealTerminalRsiPane();
+}
+
 return;
 }
 
@@ -835,6 +847,7 @@ host.rsiChart
 );
 
 layoutRsiBand(host);
+noteTerminalRsiDataPlaced(host);
 
 let last =
 null;
@@ -875,6 +888,293 @@ publishRsiAlertValue(host,
 points
 );
 }
+
+}
+
+const RSI_PANE_PENDING_CLASS =
+"rsi-pane-pending";
+
+let terminalRsiPending =
+null;
+
+export function markTerminalRsiPending(
+loadSeq,
+onReveal
+){
+
+terminalRsiPending =
+{
+seq:
+loadSeq,
+dataReady:
+false,
+viewportReady:
+false,
+host:
+null,
+running:
+false,
+onReveal
+};
+
+document.getElementById(
+"rsi-wrap"
+)?.classList.add(
+RSI_PANE_PENDING_CLASS
+);
+
+}
+
+export function revealTerminalRsiPane(){
+
+const job =
+terminalRsiPending;
+
+terminalRsiPending =
+null;
+
+document.getElementById(
+"rsi-wrap"
+)?.classList.remove(
+RSI_PANE_PENDING_CLASS
+);
+
+try{
+job?.onReveal?.();
+}catch{
+/* ignore */
+}
+
+}
+
+function armTerminalRsiReveal(
+loadSeq
+){
+
+const job =
+terminalRsiPending;
+
+if(
+!job ||
+job.seq !==
+loadSeq ||
+job.running ||
+!job.dataReady ||
+!job.viewportReady ||
+!job.host
+){
+return;
+}
+
+job.running =
+true;
+
+const host =
+job.host;
+let tries =
+0;
+let prevScaleW =
+0;
+
+function step(){
+
+if(
+terminalRsiPending !==
+job
+){
+return;
+}
+
+let scaleW =
+0;
+
+try{
+scaleW =
+host.chart?.priceScale?.(
+"right"
+)?.width?.() ||
+0;
+}catch{
+scaleW =
+0;
+}
+
+tries +=
+1;
+
+const stable =
+prevScaleW >
+0 &&
+scaleW >
+0 &&
+Math.abs(
+scaleW -
+prevScaleW
+) <=
+1;
+
+prevScaleW =
+scaleW;
+
+if(
+stable ||
+tries >=
+6
+){
+requestAnimationFrame(
+()=>{
+
+if(
+terminalRsiPending !==
+job
+){
+return;
+}
+
+try{
+host.syncLinkedChartTimescales?.(
+host.chart,
+host.rsiChart
+);
+layoutRsiBand(
+host
+);
+}catch{
+/* chart disposed */
+}
+
+requestAnimationFrame(
+()=>{
+
+if(
+terminalRsiPending ===
+job
+){
+revealTerminalRsiPane();
+}
+
+}
+);
+
+}
+);
+return;
+}
+
+requestAnimationFrame(
+step
+);
+
+}
+
+step();
+
+}
+
+export function noteTerminalRsiDataPlaced(
+host
+){
+
+const job =
+terminalRsiPending;
+
+if(
+!job ||
+host?.symbolLoadSeq !==
+job.seq
+){
+return;
+}
+
+job.host =
+host;
+job.dataReady =
+true;
+armTerminalRsiReveal(
+job.seq
+);
+
+}
+
+export function noteTerminalRsiViewportReady(
+loadSeq
+){
+
+const job =
+terminalRsiPending;
+
+if(
+!job ||
+job.seq !==
+loadSeq
+){
+return;
+}
+
+const wrap =
+document.getElementById(
+"rsi-wrap"
+);
+
+if(
+wrap?.classList.contains(
+"indicator-pane-hidden"
+)
+){
+revealTerminalRsiPane();
+return;
+}
+
+job.viewportReady =
+true;
+armTerminalRsiReveal(
+loadSeq
+);
+
+if(
+job.dataReady ||
+terminalRsiPending !==
+job
+){
+return;
+}
+
+const started =
+Date.now();
+
+function waitForData(){
+
+if(
+terminalRsiPending !==
+job
+){
+return;
+}
+
+if(
+job.dataReady
+){
+return;
+}
+
+if(
+Date.now() -
+started >
+2000
+){
+revealTerminalRsiPane();
+return;
+}
+
+requestAnimationFrame(
+waitForData
+);
+
+}
+
+requestAnimationFrame(
+waitForData
+);
 
 }
 
@@ -1030,11 +1330,21 @@ if(
 continue;
 }
 
+const series =
+spec.id ===
+"ao"
+? host.chartIndicators?.getIndicator?.(
+spec.id
+)?.getAoSeries?.() ||
+null
+: null;
+
 panes.push({
 wrapEl,
 chartEl,
 chart:
-paneChart
+paneChart,
+series
 });
 
 }
@@ -1064,6 +1374,12 @@ pane:
 "macd",
 tools:
 host.macdDrawingTools
+},
+{
+pane:
+"ao",
+tools:
+host.aoDrawingTools
 }
 ];
 const ordered =
@@ -1199,7 +1515,8 @@ host.drawingTools.getTool?.() ??
 const overlayTools =
 [
 host.rsiDrawingTools,
-host.macdDrawingTools
+host.macdDrawingTools,
+host.aoDrawingTools
 ].filter(
 Boolean
 );
@@ -1238,6 +1555,10 @@ const macdWrap =
 document.getElementById(
 "macd-wrap"
 );
+const aoWrap =
+document.getElementById(
+"ao-wrap"
+);
 const target =
 e.target;
 const panes =
@@ -1259,6 +1580,12 @@ el:
 macdWrap,
 tools:
 host.macdDrawingTools
+},
+{
+el:
+aoWrap,
+tools:
+host.aoDrawingTools
 }
 ];
 const onPane =
@@ -1422,6 +1749,26 @@ return "macd";
 
 if(
 isVisibleDrawWrap(host, 
+host.aoWrapEl
+)
+){
+
+const aoRect =
+host.aoWrapEl.getBoundingClientRect();
+
+if(
+clientY >=
+aoRect.top &&
+clientY <=
+aoRect.bottom
+){
+return "ao";
+}
+
+}
+
+if(
+isVisibleDrawWrap(host, 
 host.rsiWrapEl
 )
 ){
@@ -1541,6 +1888,13 @@ pane ===
 return host.macdDrawingTools;
 }
 
+if(
+pane ===
+"ao"
+){
+return host.aoDrawingTools;
+}
+
 return host.drawingTools;
 
 }
@@ -1556,6 +1910,11 @@ pane ===
 pane ===
 "macd" &&
 host.macdDrawingTools
+) ||
+(
+pane ===
+"ao" &&
+host.aoDrawingTools
 )
 ? pane
 : "chart";
@@ -1606,6 +1965,9 @@ host.rsiSetDrawTool(
 host.macdSetDrawTool?.(
 "cursor"
 );
+host.aoSetDrawTool?.(
+"cursor"
+);
 
 if(
 next ===
@@ -1619,6 +1981,13 @@ next ===
 "macd"
 ){
 host.macdSetDrawTool?.(
+prevTool
+);
+}else if(
+next ===
+"ao"
+){
+host.aoSetDrawTool?.(
 prevTool
 );
 }else{
@@ -2322,7 +2691,8 @@ return;
 if(
 host.drawingTools?.blocksTabletChartPan?.() ||
 host.rsiDrawingTools?.blocksTabletChartPan?.() ||
-host.macdDrawingTools?.blocksTabletChartPan?.()
+host.macdDrawingTools?.blocksTabletChartPan?.() ||
+host.aoDrawingTools?.blocksTabletChartPan?.()
 ){
 return;
 }
@@ -3587,7 +3957,7 @@ if(
 ){
 host.terminalAlgoEarlyT3ListMod =
 await import(
-"../algo-trading/terminal-early-t3-list.js?v=c302e698"
+"../algo-trading/terminal-early-t3-list.js?v=2de7f50f"
 );
 }
 host.terminalAlgoEarlyT3ListMod.mountTerminalAlgoEarlyT3List();

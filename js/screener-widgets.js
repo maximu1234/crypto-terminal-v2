@@ -21,7 +21,7 @@ syncLinkedChartTimescales,
 equalizeLinkedPanePriceScales,
 SCREENER_VISIBLE_BARS,
 SCREENER_MAX_BARS
-} from "./chart-import.js?v=544220a0";
+} from "./chart-import.js?v=45dccc88";
 
 import {
 isIpadWebViewport
@@ -42,9 +42,12 @@ paintLiveOhlcSeries
 } from "./chart/live-bar-roll.js?v=6ff2b718";
 
 import {
+SCREENER_WIDGET_OSCILLATOR_AO,
 SCREENER_WIDGET_OSCILLATOR_MACD,
-createScreenerMacdChart
-} from "./screener-widget-oscillator.js?v=62d04576";
+createScreenerAoChart,
+createScreenerMacdChart,
+isScreenerHistogramOscillator
+} from "./screener-widget-oscillator.js?v=22d098fd";
 
 let deps = null;
 
@@ -96,8 +99,9 @@ widget.rsiSeries &&
 isNewBar ||
 kind ===
 "hist" ||
-widget.oscKind ===
-SCREENER_WIDGET_OSCILLATOR_MACD
+isScreenerHistogramOscillator(
+widget.oscKind
+)
 )
 ){
 deps.updateWidgetRsiData(
@@ -781,6 +785,9 @@ chartEl.classList.remove(
 widget.rsiWrapEl?.classList.remove(
 "screener-rsi-pending"
 );
+widget.root?.classList.remove(
+"screener-osc-settling"
+);
 return;
 }
 
@@ -825,6 +832,9 @@ chartEl.classList.remove(
 widget.rsiWrapEl?.classList.remove(
 "screener-rsi-pending"
 );
+widget.root?.classList.remove(
+"screener-osc-settling"
+);
 
 }
 
@@ -835,9 +845,15 @@ if(
 runZoom();
 requestAnimationFrame(
 ()=>{
+widget._lastZoomCandleLen =
+0;
 runZoom();
 requestAnimationFrame(
+()=>{
+requestAnimationFrame(
 revealWidgetCharts
+);
+}
 );
 }
 );
@@ -924,8 +940,15 @@ stable ||
 settleTries >=
 5
 ){
+widget._lastZoomCandleLen =
+0;
+runZoom();
+requestAnimationFrame(
+()=>{
 requestAnimationFrame(
 revealWidgetCharts
+);
+}
 );
 return;
 }
@@ -955,6 +978,15 @@ widget
 }catch(err){
 
 console.error("Screener chart:", symbol, err);
+chartEl.classList.remove(
+"loading"
+);
+widget.rsiWrapEl?.classList.remove(
+"screener-rsi-pending"
+);
+widget.root?.classList.remove(
+"screener-osc-settling"
+);
 
 }finally{
 
@@ -968,6 +1000,9 @@ chartEl.classList.remove(
 );
 widget.rsiWrapEl?.classList.remove(
 "screener-rsi-pending"
+);
+widget.root?.classList.remove(
+"screener-osc-settling"
 );
 }
 
@@ -985,16 +1020,22 @@ const showMacd =
 showOscillator &&
 oscKind ===
 SCREENER_WIDGET_OSCILLATOR_MACD;
+const showAo =
+showOscillator &&
+oscKind ===
+SCREENER_WIDGET_OSCILLATOR_AO;
 
 const root =
 document.createElement("article");
 
 root.className =
-showMacd
-? "screener-widget has-macd"
+showAo
+? "screener-widget has-ao screener-osc-settling"
+: showMacd
+? "screener-widget has-macd screener-osc-settling"
 : showOscillator
-? "screener-widget has-rsi"
-: "screener-widget";
+? "screener-widget has-rsi screener-osc-settling"
+: "screener-widget screener-osc-settling";
 root.dataset.symbol = symbol;
 
 root.innerHTML = `
@@ -1142,6 +1183,20 @@ widget.macdHistSeries =
 macdPair.histSeries;
 widget.macdSignalSeries =
 macdPair.signalSeries;
+
+}else if(
+showAo
+){
+
+const aoPair =
+createScreenerAoChart(
+rsiChartEl
+);
+
+widget.rsiChart =
+aoPair.chart;
+widget.rsiSeries =
+aoPair.series;
 
 }else{
 

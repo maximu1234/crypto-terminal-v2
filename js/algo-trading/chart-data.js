@@ -1,6 +1,10 @@
 /**
  * Closure slice. `host` is the surrounding function's bindings.
  */
+import {
+noteAlgoRsiPlaced
+} from "./chart-pane-settle.js?v=3ecfb41d";
+
 export function applyRsiData(host, 
 {
 notifyIndicators =
@@ -23,6 +27,9 @@ if(
 ) ||
 !host.rsiPaneActive
 ){
+noteAlgoRsiPlaced(
+host.loadSeq
+);
 if(
 notifyIndicators &&
 host.algoChartDbg(
@@ -64,6 +71,9 @@ host.lastRsiHudValue =
 null;
 host.setRsiHud(
 null
+);
+noteAlgoRsiPlaced(
+host.loadSeq
 );
 if(
 notifyIndicators
@@ -117,6 +127,13 @@ seq !==
 host.rsiRebuildSeq ||
 !host.rsiPaneActive
 ){
+if(
+!host.rsiPaneActive
+){
+noteAlgoRsiPlaced(
+host.loadSeq
+);
+}
 return;
 }
 
@@ -140,6 +157,9 @@ host.chart,
 host.rsiChart
 );
 host.layoutRsi();
+noteAlgoRsiPlaced(
+host.loadSeq
+);
 
 let last =
 null;

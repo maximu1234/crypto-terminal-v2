@@ -1594,7 +1594,7 @@ body.terminal-replay-pick #ao-wrap .chart-dom-crosshair-vert{
   background:#2962ff;
 }
 
-/* Переключение монеты: затемнение всего стека (свечи + Vol + RSI) на время загрузки (до 1s). */
+/* Переключение монеты: сплошная крышка стека, пока свечи и индикаторы не встали. */
 #charts-stack-panes{
   position:relative;
 }

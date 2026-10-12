@@ -480,7 +480,8 @@ flex-direction:column;
 }
 
 .screener-widget.has-rsi .screener-chart,
-.screener-widget.has-macd .screener-chart{
+.screener-widget.has-macd .screener-chart,
+.screener-widget.has-ao .screener-chart{
 flex:1 1 74%;
 max-height:74%;
 }
@@ -549,12 +550,15 @@ inset:0;
 z-index:1;
 }
 
-.screener-chart.loading{
-opacity:0;
+.screener-widget.screener-osc-settling .screener-widget-body,
+.screener-widget-zoom-panel.screener-osc-settling .screener-widget-zoom-body{
+  position:relative;
+  background:var(--app-chart-bg, #131722);
 }
 
-.screener-rsi-wrap.screener-rsi-pending{
-opacity:0;
+.screener-widget.screener-osc-settling .screener-widget-body > *,
+.screener-widget-zoom-panel.screener-osc-settling .screener-widget-zoom-body > *{
+  opacity:0;
 }
 
 #pagination{

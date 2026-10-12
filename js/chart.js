@@ -44,12 +44,12 @@ hideTabletProbeHorizInStack,
 hideTabletProbeCrosshair,
 formatCrosshairTimeLabel,
 isUserCrosshairEvent
-} from "./chart/chart-dom-crosshair.js?v=da851dcb";
+} from "./chart/chart-dom-crosshair.js?v=0730674e";
 
 import {
 TABLET_LW_NATIVE_PRICE_SCALE,
 clearTabletProbeCrosshairForChart
-} from "./chart/chart-factory.js?v=6cb6f194";
+} from "./chart/chart-factory.js?v=d9770b28";
 
 import {
 shouldHandleTabletPriceScalePointer
@@ -93,7 +93,7 @@ coinsTfVisibleBars,
 applyCoinsChartViewport,
 computeCoinsChartViewportPlan,
 refreshCoinsChartBarSpacing
-} from "./chart/chart-factory.js?v=6cb6f194";
+} from "./chart/chart-factory.js?v=d9770b28";
 
 /* Tablet gestures: import ./chart-tablet-gestures.js only from tablet paths
    (tablet-widget-chart / terminal-tablet-controller) — never re-export here. */

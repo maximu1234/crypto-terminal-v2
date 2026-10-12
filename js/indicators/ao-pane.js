@@ -8,13 +8,14 @@ linkPairedChartTimeScales,
 appendFutureWhitespaceBars,
 computeChartFutureMarginBars,
 coinsTfVisibleBars
-} from "../chart-import.js?v=544220a0";
+} from "../chart-import.js?v=45dccc88";
 
 import {
 calculateAwesomeOscillator,
 aoBarColor,
-formatAoLegendValue
-} from "./ao-math.js?v=b685b6e6";
+formatAoLegendValue,
+formatAoNumber
+} from "./ao-math.js?v=601925a0";
 
 import {
 isChartLayoutReady
@@ -30,10 +31,45 @@ isBottomIndicatorPane
 
 import {
 syncPaneViewportAfterData
-} from "./indicator-pane-viewport.js?v=95a78181";
+} from "./indicator-pane-viewport.js?v=efc01e0e";
 
 export const AO_PANE_ID =
 "ao";
+
+function aoPriceFormat(
+reference
+){
+
+const abs =
+Math.abs(
+Number(
+reference
+)
+);
+const minMove =
+!Number.isFinite(
+abs
+) ||
+abs >=
+10
+? 1
+: abs >=
+1
+? 0.01
+: abs >=
+0.01
+? 0.001
+: 0.0001;
+
+return {
+type:
+"custom",
+minMove,
+formatter:
+formatAoNumber
+};
+
+}
 
 function buildAoDisplayPoints(
 candles,
@@ -126,6 +162,12 @@ null;
 let unbindTimeSync =
 null;
 let lastAoValue =
+null;
+let lastAoDrawCandles =
+[];
+let lastAoSeriesData =
+[];
+let lastAoMinMove =
 null;
 
 function wrapEl(){
@@ -265,14 +307,14 @@ series.applyOptions(
 {
 base:
 0,
-priceFormat:{
-type:
-"price",
-precision:
-4,
-minMove:
-0.0001
-}
+lastValueVisible:
+true,
+priceLineVisible:
+false,
+priceFormat:
+aoPriceFormat(
+null
+)
 }
 );
 
@@ -301,6 +343,12 @@ null;
 series =
 null;
 lastAoValue =
+null;
+lastAoDrawCandles =
+[];
+lastAoSeriesData =
+[];
+lastAoMinMove =
 null;
 
 }
@@ -390,6 +438,86 @@ updateTimeScaleVisibility
 
 }
 
+function aoPointEqual(
+a,
+b
+){
+
+return a?.time ===
+b?.time &&
+a?.value ===
+b?.value &&
+a?.color ===
+b?.color;
+
+}
+
+function aoSeriesUnchanged(
+next
+){
+
+if(
+lastAoSeriesData.length !==
+next.length
+){
+return false;
+}
+
+for(
+let i =
+0;
+i <
+next.length;
+i++
+){
+
+if(
+!aoPointEqual(
+lastAoSeriesData[i],
+next[i]
+)
+){
+return false;
+}
+
+}
+
+return true;
+
+}
+
+function aoTimesMatch(
+next
+){
+
+if(
+lastAoSeriesData.length !==
+next.length
+){
+return false;
+}
+
+for(
+let i =
+0;
+i <
+next.length;
+i++
+){
+
+if(
+lastAoSeriesData[i]?.time !==
+next[i]?.time
+){
+return false;
+}
+
+}
+
+return true;
+
+}
+
 function refreshData(){
 
 if(
@@ -398,8 +526,6 @@ if(
 ){
 return;
 }
-
-ensurePaneChartSized();
 
 const host =
 getHost?.();
@@ -419,14 +545,20 @@ tf,
 host?.getVisibleBarsCap?.()
 );
 
+const paintedValue =
+lastAoValue;
+
 let prev =
 null;
 lastAoValue =
 null;
 
 const data =
-points.map(
-bar=>{
+[];
+
+for(
+const bar of points
+){
 
 if(
 bar.value ==
@@ -435,14 +567,11 @@ null ||
 bar.value
 )
 ){
-return {
+data.push({
 time:
-bar.time,
-value:
-0,
-color:
-"rgba(120,123,134,0.2)"
-};
+bar.time
+});
+continue;
 }
 
 const color =
@@ -456,22 +585,77 @@ bar.value;
 lastAoValue =
 bar.value;
 
-return {
+data.push({
 time:
 bar.time,
 value:
 bar.value,
 color
-};
+});
 
 }
+
+/*
+ * Повторный refresh после догрузки хвоста приходит с теми же барами.
+ * setData на гистограмме гасит её на кадр — AO мигает уже после
+ * того, как график и RSI стоят.
+ */
+if(
+aoSeriesUnchanged(
+data
+) ||
+aoTimesMatch(
+data
+)
+){
+lastAoValue =
+paintedValue;
+return;
+}
+
+ensurePaneChartSized();
+
+const fmt =
+aoPriceFormat(
+lastAoValue
 );
+lastAoMinMove =
+fmt.minMove;
+series.applyOptions({
+priceFormat:
+fmt
+});
 
 series.setData(
 data
 );
+lastAoSeriesData =
+data;
+lastAoDrawCandles =
+points.filter(
+bar=>
+Number.isFinite(
+bar?.value
+)
+).map(
+bar=>({
+time:
+bar.time,
+open:
+bar.value,
+high:
+bar.value,
+low:
+bar.value,
+close:
+bar.value
+})
+);
 syncAoAfterData();
 updateHud();
+getHost?.()?.onIndicatorDataReady?.(
+"ao"
+);
 
 }
 
@@ -521,6 +705,12 @@ series.setData(
 }
 
 lastAoValue =
+null;
+lastAoDrawCandles =
+[];
+lastAoSeriesData =
+[];
+lastAoMinMove =
 null;
 updateHud();
 applyVisibility();
@@ -639,6 +829,12 @@ getChart:()=>
 enabled
 ? chart
 : null,
+getAoSeries:()=>
+enabled
+? series
+: null,
+getAoDrawCandles:()=>
+lastAoDrawCandles,
 getLegendLabel:()=>
 lastAoValue !=
 null

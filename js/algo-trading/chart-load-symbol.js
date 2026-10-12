@@ -1,6 +1,47 @@
 /**
  * Closure slice. `host` is the surrounding function's bindings.
  */
+import {
+beginAlgoChartPaneSettle,
+finishAlgoChartPaneSettle,
+noteAlgoChartViewportReady
+} from "./chart-pane-settle.js?v=3ecfb41d";
+
+function algoRsiPaneWaiting(host){
+
+const wrap =
+document.getElementById(
+"rsi-wrap"
+);
+
+if(
+!wrap ||
+wrap.classList.contains(
+"indicator-pane-hidden"
+)
+){
+return false;
+}
+
+if(
+!host.rsiPaneActive
+){
+return false;
+}
+
+if(
+host.algoChartDbg &&
+!host.algoChartDbg(
+"rsi"
+)
+){
+return false;
+}
+
+return true;
+
+}
+
 export async function loadSymbol(host, 
 nextSymbol,
 nextTf
@@ -125,6 +166,16 @@ return;
 }
 
 /* Индикаторы обновим после полной истории — не flush на пустых/старых свечах. */
+beginAlgoChartPaneSettle(
+seq,
+{
+waitForRsi:
+algoRsiPaneWaiting(
+host
+)
+}
+);
+
 try{
 host.chartIndicators?.clearMainChartOverlays?.();
 }catch{
@@ -179,6 +230,15 @@ host.disposed ||
 seq !==
 host.loadSeq
 ){
+if(
+host.disposed &&
+seq ===
+host.loadSeq
+){
+finishAlgoChartPaneSettle(
+seq
+);
+}
 return;
 }
 
@@ -413,6 +473,15 @@ host.disposed ||
 seq !==
 host.loadSeq
 ){
+if(
+host.disposed &&
+seq ===
+host.loadSeq
+){
+finishAlgoChartPaneSettle(
+seq
+);
+}
 return;
 }
 
@@ -454,6 +523,12 @@ host.chartIndicators?.notifyMainChartOverlaysSync?.();
 }
 );
 host.fitViewport();
+noteAlgoChartViewportReady(
+seq,
+host.chart,
+()=>
+host.layoutRsi?.()
+);
 host.markAlgoHistoryStatsReadyAndAnalyze();
 host.dispatchAlgoChartCandlesLoaded(
 seq
@@ -487,6 +562,9 @@ if(
 seq ===
 host.loadSeq
 ){
+finishAlgoChartPaneSettle(
+seq
+);
 host.candles =
 [];
 host.applyCandleData(

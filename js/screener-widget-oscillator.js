@@ -1,10 +1,10 @@
 /**
- * Осциллятор в виджетах Скринера (4/6) и в окне увеличения: RSI или MACD.
+ * Осциллятор в виджетах Скринера (4/6) и в окне увеличения: RSI, MACD или AO.
  * Одновременно включён только один; по умолчанию RSI.
  */
 import {
 createVolumeChart
-} from "./chart-import.js?v=544220a0";
+} from "./chart-import.js?v=45dccc88";
 
 import {
 calculateMacd,
@@ -12,6 +12,12 @@ macdHistColor,
 MACD_LINE_COLOR,
 MACD_SIGNAL_COLOR
 } from "./indicators/macd-math.js?v=ca060ff4";
+
+import {
+aoBarColor,
+calculateAwesomeOscillator,
+formatAoNumber
+} from "./indicators/ao-math.js?v=601925a0";
 
 export const SCREENER_WIDGET_OSCILLATOR_KEY =
 "multichart_screener_widget_oscillator_v1";
@@ -25,14 +31,39 @@ export const SCREENER_WIDGET_OSCILLATOR_RSI =
 export const SCREENER_WIDGET_OSCILLATOR_MACD =
 "macd";
 
+export const SCREENER_WIDGET_OSCILLATOR_AO =
+"ao";
+
 export function normalizeScreenerWidgetOscillator(
 value
 ){
 
-return value ===
+if(
+value ===
 SCREENER_WIDGET_OSCILLATOR_MACD
-? SCREENER_WIDGET_OSCILLATOR_MACD
-: SCREENER_WIDGET_OSCILLATOR_RSI;
+){
+return SCREENER_WIDGET_OSCILLATOR_MACD;
+}
+
+if(
+value ===
+SCREENER_WIDGET_OSCILLATOR_AO
+){
+return SCREENER_WIDGET_OSCILLATOR_AO;
+}
+
+return SCREENER_WIDGET_OSCILLATOR_RSI;
+
+}
+
+export function isScreenerHistogramOscillator(
+kind
+){
+
+return kind ===
+SCREENER_WIDGET_OSCILLATOR_MACD ||
+kind ===
+SCREENER_WIDGET_OSCILLATOR_AO;
 
 }
 
@@ -302,5 +333,174 @@ macdData
 macdChart.signalSeries.setData(
 signalData
 );
+
+}
+
+function screenerAoPriceFormat(
+reference
+){
+
+const abs =
+Math.abs(
+Number(
+reference
+)
+);
+const minMove =
+!Number.isFinite(
+abs
+) ||
+abs >=
+10
+? 1
+: abs >=
+1
+? 0.01
+: abs >=
+0.01
+? 0.001
+: 0.0001;
+
+return {
+type:
+"custom",
+minMove,
+formatter:
+formatAoNumber
+};
+
+}
+
+export function createScreenerAoChart(
+container
+){
+
+const created =
+createVolumeChart(
+container
+);
+const chart =
+created.chart;
+const series =
+created.series;
+
+series.applyOptions(
+{
+base:
+0,
+lastValueVisible:
+true,
+priceLineVisible:
+false,
+priceFormat:
+screenerAoPriceFormat(
+1
+)
+}
+);
+
+return {
+chart,
+series
+};
+
+}
+
+export function setScreenerAoData(
+series,
+candles
+){
+
+if(
+!series ||
+!candles?.length
+){
+return;
+}
+
+const points =
+calculateAwesomeOscillator(
+candles
+);
+const byTime =
+new Map();
+
+for(
+const point of points
+){
+byTime.set(
+point.time,
+point.value
+);
+}
+
+const data =
+[];
+let prev =
+null;
+let last =
+null;
+
+for(
+const bar of candles
+){
+
+const value =
+byTime.get(
+bar.time
+);
+
+if(
+value ==
+null ||
+!Number.isFinite(
+value
+)
+){
+data.push(
+{
+time:
+bar.time
+}
+);
+continue;
+}
+
+data.push(
+{
+time:
+bar.time,
+value,
+color:
+aoBarColor(
+value,
+prev
+)
+}
+);
+prev =
+value;
+last =
+value;
+
+}
+
+series.setData(
+data
+);
+
+if(
+last !=
+null
+){
+series.applyOptions(
+{
+priceFormat:
+screenerAoPriceFormat(
+last
+)
+}
+);
+}
 
 }

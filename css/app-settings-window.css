@@ -241,6 +241,10 @@ line-height:1.35;
 color:#9ca3af;
 }
 
+.app-settings-proxy-ticks{
+margin:8px 0 12px;
+}
+
 .app-settings-proxy-actions{
 display:flex;
 flex-wrap:wrap;

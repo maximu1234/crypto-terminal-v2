@@ -40,12 +40,12 @@ openChromeSurface
 
 import {
 resolveUrlExchangeDeepLink
-} from "./alert-deep-link-exchange.js?v=b76dbb2a";
+} from "./alert-deep-link-exchange.js?v=e5048fde";
 
 import {
 defaultRsiPaneSettings,
 normalizeRsiPaneSettings
-} from "./indicators/rsi-pane.js?v=ae69864d";
+} from "./indicators/rsi-pane.js?v=cfe3bc1e";
 
 import {
 buildChartRsiPoints
@@ -66,18 +66,18 @@ seedWatchlistTfOnBlueFlag
 
 import {
 ensureCloudReady
-} from "./auth-ui.js?v=90492704";
+} from "./auth-ui.js?v=bd4bda2d";
 
 import {
 getActiveAlerts,
 isMacdAlert,
 isRsiAlert
-} from "./alerts.js?v=c853225f";
+} from "./alerts.js?v=96b850e2";
 
 import {
 persistFavoritesToCloud,
 onFavoritesRemoteUpdate
-} from "./cloud-sync.js?v=d861e774";
+} from "./cloud-sync.js?v=4a874d16";
 
 import {
 createCandlestickChart,
@@ -107,7 +107,7 @@ appendFutureWhitespaceBars,
 applyCoinsChartViewport,
 refreshCoinsChartBarSpacing,
 tfPeriodSec
-} from "./chart-import.js?v=544220a0";
+} from "./chart-import.js?v=45dccc88";
 
 import {
 terminalVisibleBars,
@@ -121,7 +121,7 @@ TERMINAL_HISTORY_LAZY_BATCH_BARS
 
 import {
 mountCoinsTabletController
-} from "./terminal-tablet-controller.js?v=8fd0b0ad";
+} from "./terminal-tablet-controller.js?v=9dbef7d1";
 
 import {
 disconnectKlineStream
@@ -131,7 +131,7 @@ import {
 syncBackgroundAlertStreams,
 onMacdSeriesUpdate,
 onRsiSeriesUpdate
-} from "./alert-monitor.js?v=2b31b421";
+} from "./alert-monitor.js?v=2d5fb5fa";
 
 import {
 createSharedDrawUndoStack
@@ -199,7 +199,7 @@ mountCoinsScaleInvertMenu
 
 import {
 mountTerminalDrawChrome
-} from "./terminal/terminal-draw-chrome.js?v=70675e04";
+} from "./terminal/terminal-draw-chrome.js?v=4f1e2163";
 
 
 
@@ -210,7 +210,7 @@ stopTickerStream
 import {
 mountCoinsListRefreshControls,
 applyCoinsListRefreshInterval
-} from "./terminal-list-refresh.js?v=5c7ed0e5";
+} from "./terminal-list-refresh.js?v=eeb51451";
 
 import {
 readCoinsPrefs,
@@ -224,7 +224,7 @@ applyCoinsPrefs,
 applySortForCurrentMarket,
 readUrlParams,
 readLastViewForExchange
-} from "./terminal/terminal-prefs.js?v=b44820f2";
+} from "./terminal/terminal-prefs.js?v=25746aaf";
 
 import {
 mountDesktopOpenChartHandler
@@ -246,11 +246,11 @@ setCoinsTableHooks,
 syncCoinListFreezeFromFlagMenus,
 getExtraCoinMarkets,
 isExtraCoinMarket
-} from "./terminal/terminal-table.js?v=ac3a3c39";
+} from "./terminal/terminal-table.js?v=98db7b7f";
 
 import {
 createCoinsChartSwitchVeil
-} from "./terminal/terminal-chart-switch-veil.js?v=1c588e96";
+} from "./terminal/terminal-chart-switch-veil.js?v=a93ba7fd";
 
 import {
 registerCoinsChartLayoutContext,
@@ -261,7 +261,7 @@ syncCoinsChartLinkedViewports,
 resizeCharts,
 scheduleResizeCharts,
 applyDefaultZoom
-} from "./terminal/terminal-chart-layout.js?v=df9a7a4d";
+} from "./terminal/terminal-chart-layout.js?v=afd824f0";
 
 import {
 isTerminalReplayActive,
@@ -277,7 +277,7 @@ import {
 initTerminalMultiChart,
 syncPrimaryTfToLayout,
 isTerminalMultiChartLayout
-} from "./terminal-multi-chart.js?v=1186dcf5";
+} from "./terminal-multi-chart.js?v=837e614d";
 
 import {
 mountTerminalLayoutPicker
@@ -325,7 +325,7 @@ loadVisibleTerminalHistory as loadVisibleTerminalHistoryMoved,
 applyMergedTerminalCandles as applyMergedTerminalCandlesMoved,
 settleTerminalHistoryAfterPaint as settleTerminalHistoryAfterPaintMoved,
 bindTerminalHistoryLazyLoad as bindTerminalHistoryLazyLoadMoved
-} from "./terminal/terminal-history.js?v=5805727f";
+} from "./terminal/terminal-history.js?v=3aac55ba";
 import {
 allCoinsDrawTools as allCoinsDrawToolsMoved,
 scheduleCoinsDrawRedraw as scheduleCoinsDrawRedrawMoved,
@@ -359,6 +359,9 @@ publishMacdAlertValue as publishMacdAlertValueMoved,
 symbolHasRsiAlerts as symbolHasRsiAlertsMoved,
 publishRsiAlertValue as publishRsiAlertValueMoved,
 rebuildRsiFromCandles as rebuildRsiFromCandlesMoved,
+markTerminalRsiPending as markTerminalRsiPendingMoved,
+noteTerminalRsiViewportReady as noteTerminalRsiViewportReadyMoved,
+revealTerminalRsiPane as revealTerminalRsiPaneMoved,
 layoutRsiBand as layoutRsiBandMoved,
 candleCloseAtOrBefore as candleCloseAtOrBeforeMoved,
 updateRsiHudFromCrosshairTime as updateRsiHudFromCrosshairTimeMoved,
@@ -417,7 +420,7 @@ syncCoinsMarketFilterOptions as syncCoinsMarketFilterOptionsMoved,
 handleExchangeChanged as handleExchangeChangedMoved,
 refreshCoinsMarketUi as refreshCoinsMarketUiMoved,
 syncTerminalAlgoEarlyT3List as syncTerminalAlgoEarlyT3ListMoved
-} from "./terminal/terminal-coins-page.js?v=cc23f1bb";
+} from "./terminal/terminal-coins-page.js?v=3dda857d";
 let terminalAlgoEarlyT3ListMod =
 null;
 
@@ -437,6 +440,8 @@ null;
 let rsiDrawingTools =
 null;
 let macdDrawingTools =
+null;
+let aoDrawingTools =
 null;
 let disposeMacdAlertUi =
 null;
@@ -527,6 +532,9 @@ get lwPriceScaleModeId(){ return lwPriceScaleModeId; },
 get macdDrawingTools(){ return macdDrawingTools; },
 get macdSetDrawTool(){ return macdSetDrawTool; },
 get macdWrapEl(){ return macdWrapEl; },
+get aoDrawingTools(){ return aoDrawingTools; },
+get aoSetDrawTool(){ return aoSetDrawTool; },
+get aoWrapEl(){ return aoWrapEl; },
 get mainSetDrawTool(){ return mainSetDrawTool; },
 get marketMap(){ return marketMap; },
 get mergeCandleRows(){ return mergeCandleRows; },
@@ -1025,6 +1033,9 @@ get peekHistoryCache(){ return peekHistoryCache; },
 get persistCoinsPrefs(){ return persistCoinsPrefs; },
 get putHistoryCache(){ return putHistoryCache; },
 get rebuildRsiFromCandles(){ return rebuildRsiFromCandles; },
+get markTerminalRsiPending(){ return markTerminalRsiPendingMoved; },
+get noteTerminalRsiViewportReady(){ return noteTerminalRsiViewportReadyMoved; },
+get revealTerminalRsiPane(){ return revealTerminalRsiPaneMoved; },
 get refreshCoinsChartBarSpacing(){ return refreshCoinsChartBarSpacing; },
 get refreshTerminalHistoryTail(){ return refreshTerminalHistoryTail; },
 get rememberTerminalHistory(){ return rememberTerminalHistory; },
@@ -1672,6 +1683,8 @@ let rsiSetDrawTool =
 null;
 let macdSetDrawTool =
 null;
+let aoSetDrawTool =
+null;
 const drawClearAllPeers =
 {
 call:
@@ -1699,6 +1712,10 @@ document.getElementById(
 const macdWrapEl =
 document.getElementById(
 "macd-wrap"
+);
+const aoWrapEl =
+document.getElementById(
+"ao-wrap"
 );
 
 function isVisibleDrawWrap(el){
@@ -1789,6 +1806,15 @@ setActiveDrawPane(
 true
 );
 
+aoWrapEl?.addEventListener(
+"pointerenter",
+()=>
+setActiveDrawPane(
+"ao"
+),
+true
+);
+
 function getRsiCandlesForDraw(){
 return getRsiCandlesForDrawMoved(
 terminalPageHost(),
@@ -1827,7 +1853,8 @@ drawingTools,
 getLinkedDrawingTools:()=>
 [
 rsiDrawingTools,
-macdDrawingTools
+macdDrawingTools,
+aoDrawingTools
 ].filter(
 Boolean
 ),
@@ -2857,6 +2884,11 @@ set macdDrawingTools(value){ macdDrawingTools = value; },
 get macdSetDrawTool(){ return macdSetDrawTool; },
 set macdSetDrawTool(value){ macdSetDrawTool = value; },
 get macdWrapEl(){ return macdWrapEl; },
+get aoDrawingTools(){ return aoDrawingTools; },
+set aoDrawingTools(value){ aoDrawingTools = value; },
+get aoSetDrawTool(){ return aoSetDrawTool; },
+set aoSetDrawTool(value){ aoSetDrawTool = value; },
+get aoWrapEl(){ return aoWrapEl; },
 get mainSetDrawTool(){ return mainSetDrawTool; },
 set mainSetDrawTool(value){ mainSetDrawTool = value; },
 get mountSharedDrawSelectionDismiss(){ return mountSharedDrawSelectionDismiss; },

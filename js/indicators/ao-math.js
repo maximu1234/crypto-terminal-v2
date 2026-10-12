@@ -148,6 +148,88 @@ prevValue
 
 }
 
+export function formatAoNumber(
+value
+){
+
+const n =
+Number(
+value
+);
+
+if(
+!Number.isFinite(
+n
+) ||
+Math.abs(
+n
+) <
+1e-12
+){
+return "0";
+}
+
+const abs =
+Math.abs(
+n
+);
+let decimals =
+0;
+
+if(
+abs <
+10
+){
+
+const exp =
+Math.floor(
+Math.log10(
+abs
+)
+);
+
+decimals =
+abs >=
+1
+? 2
+: Math.min(
+4,
+Math.max(
+2,
+-exp +
+1
+)
+);
+
+}
+
+let text =
+n.toFixed(
+decimals
+);
+
+text =
+text
+.replace(
+/(\.\d*?)0+$/,
+"$1"
+)
+.replace(
+/\.$/,
+""
+);
+
+if(
+text ===
+"-0"
+){
+return "0";
+}
+
+return text;
+
+}
+
 export function formatAoLegendValue(
 value
 ){
@@ -162,40 +244,8 @@ value
 return "—";
 }
 
-const abs =
-Math.abs(
+return formatAoNumber(
 value
-);
-
-if(
-abs >=
-100
-){
-return value.toFixed(
-2
-);
-}
-
-if(
-abs >=
-1
-){
-return value.toFixed(
-2
-);
-}
-
-if(
-abs >=
-0.01
-){
-return value.toFixed(
-4
-);
-}
-
-return value.toFixed(
-6
 );
 
 }

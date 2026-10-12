@@ -19,7 +19,7 @@ sideToneClass
 import {
 closeTradeDetail,
 openTradeDetail
-} from "../../../trade-diary-detail.js?v=bdd93417";
+} from "../../../trade-diary-detail.js?v=d7020850";
 
 import {
 mountTradeDiaryPeriodPicker
@@ -72,7 +72,7 @@ import {
 getLoadedTradeExchangeModules,
 loadTradeExchangeModules,
 resetTradeExchangeModules
-} from "../../module-router.js?v=0f1da6c3";
+} from "../../module-router.js?v=438abbf9";
 
 const EXCHANGE_ID =
 "bybit";

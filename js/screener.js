@@ -48,7 +48,7 @@ updateRsiLevelLinesLayout,
 linkPairedChartTimeScales,
 SCREENER_VISIBLE_BARS,
 SCREENER_MAX_BARS
-} from "./chart-import.js?v=544220a0";
+} from "./chart-import.js?v=45dccc88";
 
 import {
 isIpadWebViewport
@@ -84,7 +84,7 @@ createTickerUiBatcher
 
 import {
 mountReleaseMarker
-} from "./release-marker.js?v=7ece7bc6";
+} from "./release-marker.js?v=00179cf5";
 
 import {
 saveScreenerState,
@@ -103,7 +103,7 @@ FAVORITES_BY_EXCHANGE_KEY
 
 import {
 ensureCloudReady
-} from "./auth-ui.js?v=90492704";
+} from "./auth-ui.js?v=bd4bda2d";
 
 import {
 ensureSettled,
@@ -113,7 +113,7 @@ withTimeout
 import {
 persistFavoritesToCloud,
 onFavoritesRemoteUpdate
-} from "./cloud-sync.js?v=d861e774";
+} from "./cloud-sync.js?v=4a874d16";
 
 import {
 attachSymbolAutocomplete,
@@ -135,12 +135,15 @@ perfMeasure
 } from "./perf-marks.js?v=6857dee5";
 
 import {
+SCREENER_WIDGET_OSCILLATOR_AO,
 SCREENER_WIDGET_OSCILLATOR_CHANGED,
 SCREENER_WIDGET_OSCILLATOR_MACD,
 createScreenerMacdChart,
 getScreenerWidgetOscillator,
+isScreenerHistogramOscillator,
+setScreenerAoData,
 setScreenerMacdData
-} from "./screener-widget-oscillator.js?v=62d04576";
+} from "./screener-widget-oscillator.js?v=22d098fd";
 
 const SCREENER_MAX_CONCURRENT_CHART_LOADS =
 4;
@@ -172,7 +175,7 @@ if(
 ){
 screenerZoomMountPromise =
 import(
-"./screener-widget-zoom.js?v=f8440f25"
+"./screener-widget-zoom.js?v=33ec3ace"
 ).then(
 mod=>{
 refreshZoomFavoriteUi =
@@ -850,8 +853,9 @@ widget
 ){
 
 if(
-widget?.oscKind ===
-SCREENER_WIDGET_OSCILLATOR_MACD ||
+isScreenerHistogramOscillator(
+widget?.oscKind
+) ||
 !widget?.rsiSeries ||
 !widget?.rsiWrapEl
 ){
@@ -917,6 +921,30 @@ return;
 }
 
 if(
+widget.oscKind ===
+SCREENER_WIDGET_OSCILLATOR_AO
+){
+
+if(
+!widget.rsiSeries
+){
+return;
+}
+
+try{
+setScreenerAoData(
+widget.rsiSeries,
+widget.candles
+);
+}catch{
+/* chart disposed during page change */
+}
+
+return;
+
+}
+
+if(
 !widget?.rsiSeries
 ){
 return;
@@ -961,8 +989,9 @@ return `<div class="screener-chart"></div>`;
 }
 
 if(
-oscKind ===
-SCREENER_WIDGET_OSCILLATOR_MACD
+isScreenerHistogramOscillator(
+oscKind
+)
 ){
 return `
 <div class="screener-widget-body">
@@ -1414,7 +1443,7 @@ destroyWidgets,
 loadWidgetChart,
 observeWidgetKlineVisibility,
 updateWidgetMeta
-} from "./screener-widgets.js?v=9748bc8a";
+} from "./screener-widgets.js?v=8385ed32";
 
 bindScreenerWidgets({
 get activeWidgets(){ return activeWidgets; },

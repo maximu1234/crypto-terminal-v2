@@ -13,12 +13,12 @@ hideDomChartCrosshairVert,
 positionDomChartCrosshairHorz,
 positionTabletProbeHorizInStack,
 hideTabletProbeHorizInStack
-} from "./chart-dom-crosshair.js?v=da851dcb";
+} from "./chart-dom-crosshair.js?v=0730674e";
 
 import {
 chartPlotMetrics,
 isClientOnChartPriceScale
-} from "./chart-factory.js?v=6cb6f194";
+} from "./chart-factory.js?v=d9770b28";
 
 export function linkChartsCrosshair({
 mainChart,
@@ -484,7 +484,8 @@ priceLabelEl:crosshairPriceLabelEl,
 snappedX:x,
 plotY,
 mainSeries,
-mainChart
+mainChart,
+labelWrapEl:chartWrapEl
 });
 
 if(
@@ -946,9 +947,17 @@ y: hit.plot.y
 timeLabelEl:crosshairTimeLabelEl,
 priceLabelEl:crosshairPriceLabelEl,
 snappedX:hit.plot.x,
-plotY:null,
-mainSeries:null,
-mainChart:null
+plotY:hit.pane.series
+? hit.plot.y
+: null,
+mainSeries:hit.pane.series ||
+null,
+mainChart:hit.pane.series
+? hit.pane.chart
+: null,
+labelWrapEl:hit.pane.series
+? hit.pane.wrapEl
+: null
 });
 
 return true;
@@ -1243,7 +1252,8 @@ wrapEl,
 targetChartEl,
 targetChart,
 {
-showMainPriceLabel = false
+showMainPriceLabel = false,
+series = null
 } = {}
 ){
 
@@ -1320,7 +1330,26 @@ timeLabelEl:crosshairTimeLabelEl,
 priceLabelEl:crosshairPriceLabelEl,
 plotY,
 mainSeries,
-mainChart
+mainChart,
+labelWrapEl:chartWrapEl
+});
+}else if(
+series
+){
+updateCrosshairAxisLabels({
+param:{
+time:null,
+point:{
+x:0,
+y:plotY
+}
+},
+timeLabelEl:crosshairTimeLabelEl,
+priceLabelEl:crosshairPriceLabelEl,
+plotY,
+mainSeries:series,
+mainChart:targetChart,
+labelWrapEl:wrapEl
 });
 }else if(
 crosshairPriceLabelEl
@@ -1393,7 +1422,12 @@ extraHit
 paintScaleHorz(
 extraHit.wrapEl,
 extraHit.chartEl,
-extraHit.chart
+extraHit.chart,
+{
+series:
+extraHit.series ||
+null
+}
 );
 return true;
 }
@@ -1524,7 +1558,8 @@ priceLabelEl:crosshairPriceLabelEl,
 snappedX:snappedLabelX,
 plotY:py,
 mainSeries,
-mainChart
+mainChart,
+labelWrapEl:chartWrapEl
 });
 
 if(
