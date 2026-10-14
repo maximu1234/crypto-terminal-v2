@@ -5,7 +5,7 @@
 import {
 isScalpingDomEnabled,
 setScalpingDomEnabled
-} from "./prefs.js?v=ca9722ad";
+} from "./prefs.js?v=f20149d0";
 
 const WRAP_CLASS =
 "scalping-dom-header-toggle-wrap";

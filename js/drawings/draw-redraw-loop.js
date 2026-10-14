@@ -38,8 +38,9 @@ elliottSelectionHandlePoints
 } from "./elliott-spec.js?v=3fb92981";
 
 import {
-shapeMissesViewport
-} from "./draw-viewport-cull.js?v=5d4da798";
+shapeMissesViewport,
+shapeProjectsOnPlot
+} from "./draw-viewport-cull.js?v=a90e62ab";
 
 export function createDrawRedrawLoop(
 deps
@@ -516,6 +517,8 @@ const plotW =
 getPlotWidth();
 
 ctx.setTransform(1, 0, 0, 1, 0, 0);
+ctx.globalAlpha = 1;
+ctx.globalCompositeOperation = "source-over";
 ctx.clearRect(0, 0, canvas.width, canvas.height);
 ctx.scale(dpr, dpr);
 
@@ -547,6 +550,12 @@ d.id
 shapeMissesViewport(
 d,
 drawView
+) &&
+!shapeProjectsOnPlot(
+d,
+toXY,
+plotW,
+h
 )
 ){
 return;

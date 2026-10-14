@@ -2,7 +2,7 @@ import {
 getSupabaseUsagePrefs,
 setSupabaseUsagePref,
 syncAlertsCloudPauseToServer
-} from "./supabase-usage-prefs.js?v=b6bf20c3";
+} from "./supabase-usage-prefs.js?v=03610395";
 
 const BANDWIDTH_CUT_NOTE =
 "Realtime и автозагрузка рисунков при фокусе отключены в коде (экономия лимитов Supabase Free). " +

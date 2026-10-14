@@ -169,11 +169,11 @@ createDrawingsPersist
 
 import {
 createDrawStyleBar
-} from "./draw-style-bar.js?v=133e7862";
+} from "./draw-style-bar.js?v=88ddf132";
 
 import {
 createDrawAlertsChart
-} from "./draw-alerts-chart.js?v=7354751d";
+} from "./draw-alerts-chart.js?v=dce23363";
 
 import {
 createDrawPlacement
@@ -218,7 +218,7 @@ createDrawPriceScale
 
 import {
 createDrawRedrawLoop
-} from "./draw-redraw-loop.js?v=03c020ca";
+} from "./draw-redraw-loop.js?v=d07c9e6a";
 
 import {
 isAlgoReducedCloudClient
@@ -3380,7 +3380,7 @@ lastChartAlertsPullMs =
 Date.now();
 
 void import(
-"../alerts-cloud-sync.js?v=4d6df436"
+"../alerts-cloud-sync.js?v=72fcebd7"
 ).then(
 ({ pullRegistryFromCloudNow })=>
 pullRegistryFromCloudNow({

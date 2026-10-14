@@ -3,7 +3,7 @@
  */
 import {
 jsUrl
-} from "../asset-manifest.js?v=d838d90f";
+} from "../asset-manifest.js?v=715865da";
 
 import {
 loadMarketOrderbook
@@ -28,12 +28,12 @@ applyPositionOverlays,
 applySlTpHighlights,
 resolvePositionOverlays,
 resolveSlTpPrices
-} from "./position-overlay.js?v=5bad8f0a";
+} from "./position-overlay.js?v=4e14eef0";
 
 import {
 applyAlertUnderlines,
 resolveAlertPrices
-} from "./alert-overlay.js?v=5168ea60";
+} from "./alert-overlay.js?v=c5671c6c";
 
 import {
 applyTriggerUnderlines,
@@ -50,7 +50,7 @@ resolveHorizDrawingLevels
 import {
 getScalpingDomAutocenterPct,
 getScalpingDomPriceScale
-} from "./prefs.js?v=ca9722ad";
+} from "./prefs.js?v=f20149d0";
 
 import {
 BYBIT_DOM_DEPTH
@@ -104,6 +104,7 @@ function decodeFrame(data){
     tick: data.tick,
     nativeTick: data.nativeTick,
     maxSize: data.maxSize,
+    bookMaxSize: data.bookMaxSize,
     recentered: data.recentered,
     viewOffset: data.viewOffset,
     updatedAt: Date.now()

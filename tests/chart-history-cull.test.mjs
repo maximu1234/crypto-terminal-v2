@@ -15,7 +15,8 @@ historyCacheKey
 } from "../js/market-history-cache.js";
 
 import {
-shapeMissesViewport
+shapeMissesViewport,
+shapeProjectsOnPlot
 } from "../js/drawings/draw-viewport-cull.js";
 
 test("packCandles round-trips OHLC", ()=>{
@@ -115,5 +116,34 @@ price: 15
 assert.equal(shapeMissesViewport({
 type: "mystery"
 }, view), false);
+
+});
+
+test("on-plot anchors survive a time-range miss", ()=>{
+
+const shape = {
+type: "long",
+p1: { time: 900, price: 15 },
+p2: { time: 940, price: 15 },
+tpPrice: 18,
+slPrice: 12
+};
+const view = {
+timeFrom: 100,
+timeTo: 200,
+priceFrom: 10,
+priceTo: 20
+};
+
+assert.equal(shapeMissesViewport(shape, view), true);
+assert.equal(shapeProjectsOnPlot(shape, point=>({
+x: point.time === 900 ? 40 : 80,
+y: 50
+}), 200, 100), true);
+assert.equal(shapeProjectsOnPlot(shape, ()=>({
+x: -400,
+y: -400
+}), 200, 100), false);
+assert.equal(shapeProjectsOnPlot(shape, ()=>null, 200, 100), false);
 
 });

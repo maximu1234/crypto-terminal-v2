@@ -52,7 +52,7 @@ const {
 initWidgetDrawings
 } =
 await import(
-"../chart-widget-host.js?v=63111815"
+"../chart-widget-host.js?v=c765e91e"
 );
 const {
 initChartIndicators
@@ -211,7 +211,7 @@ deps.drawingTools?.getTool?.() ??
 );
 
 void import(
-"../price-alert-ui.js?v=4c6ef499"
+"../price-alert-ui.js?v=dc82f271"
 ).then(
 ({
 mountPriceAlertUi
@@ -1043,7 +1043,7 @@ const {
 createTradePlusMenuHandler
 } =
 await import(
-"../trade-order-plus-ui.js?v=7a8f9706"
+"../trade-order-plus-ui.js?v=a31cf033"
 );
 
 tradePlusHandler =
@@ -1074,7 +1074,7 @@ const {
 mountPriceAlertUi
 } =
 await import(
-"../price-alert-ui.js?v=4c6ef499"
+"../price-alert-ui.js?v=dc82f271"
 );
 
 let disposeAlertUi =
@@ -1134,7 +1134,7 @@ const {
 mountPriceAlertUi: mountRsiPriceAlertUi
 } =
 await import(
-"../price-alert-ui.js?v=4c6ef499"
+"../price-alert-ui.js?v=dc82f271"
 );
 
 mountRsiPriceAlertUi(

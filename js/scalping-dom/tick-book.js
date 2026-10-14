@@ -313,6 +313,45 @@ export function createTickBook(){
     return sum;
   }
 
+  /**
+   * Largest display-row notional in the whole book (both sides, every
+   * level we have), using the same buckets as the painted ladder.
+   * @param {number} scale
+   */
+  function maxDisplayNotional(scale){
+    const s = Math.max(1, Math.round(Number(scale) || 1));
+    /** @type {Map<number, number>} */
+    const askBuckets = new Map();
+    /** @type {Map<number, number>} */
+    const bidBuckets = new Map();
+    const fill = (map, buckets) => {
+      for(const [idx, qty] of map){
+        if(!(qty > 0)){
+          continue;
+        }
+        const bucket = s <= 1 ? idx : Math.floor(idx / s);
+        const notion = notionalAtNativeIndex(map, idx);
+        buckets.set(bucket, (buckets.get(bucket) || 0) + notion);
+      }
+    };
+    fill(asks, askBuckets);
+    fill(bids, bidBuckets);
+    let max = 0;
+    const keys = new Set(askBuckets.keys());
+    for(const key of bidBuckets.keys()){
+      keys.add(key);
+    }
+    for(const key of keys){
+      const ask = askBuckets.get(key) || 0;
+      const bid = bidBuckets.get(key) || 0;
+      const size = ask > 0 && bid > 0 ? ask + bid : ask || bid;
+      if(size > max){
+        max = size;
+      }
+    }
+    return max;
+  }
+
   function bestBid(){
     if(bestBidIdx == null || !(nativeTick > 0)){
       return 0;
@@ -371,6 +410,7 @@ export function createTickBook(){
     applyDelta,
     replaceBook,
     notionalAtDisplay,
+    maxDisplayNotional,
     bestBid,
     bestAsk,
     bestBidIdx: () => bestBidIdx,

@@ -350,8 +350,11 @@ options =
     dec
   );
 
-  /* Empty window (hover freeze / leftover offset) — snap back to the book. */
+  /* Empty window with the pointer away — snap back. While the pointer is
+   * over the ladder, keep the scrolled prices so the user can look past
+   * the last order without the camera jumping home. */
   if(
+    options.hover !== true &&
     built.maxSize <= 0 &&
     mid > 0 &&
     displayTick > 0 &&
@@ -385,6 +388,9 @@ options =
 
   const rows = built.rows;
   const maxSize = built.maxSize;
+  const bookMaxSize = typeof book.maxDisplayNotional === "function"
+    ? book.maxDisplayNotional(scale)
+    : maxSize;
 
   return {
     rows,
@@ -397,6 +403,7 @@ options =
     nativeTick,
     priceScale,
     maxSize,
+    bookMaxSize,
     recentered: stepped.recentered,
     sticky,
     viewOffset,

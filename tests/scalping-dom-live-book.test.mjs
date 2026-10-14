@@ -38,6 +38,11 @@ applyHorizDrawingUnderlines,
 resolveHorizDrawingLevels
 } from "../js/scalping-dom/drawing-overlay.js";
 
+import {
+getScalpingDomVolumeInput,
+setScalpingDomVolumeInput
+} from "../js/scalping-dom/prefs.js";
+
 test("tick-book delta is O(1) and resyncs on sequence gap", () => {
   const book = createLiveBook();
   book.setNativeTick(1);
@@ -505,24 +510,43 @@ test("resolveHorizDrawingLevels reads hline/hray from drawings storage", () => {
   }
 });
 
-test("empty visible window recenters onto the book even while hovered", () => {
+test("hover keeps a scrolled window even when it leaves the book", () => {
   const book = createLiveBook();
   book.setNativeTick(1);
   fillBookAround(book, 100, 40);
 
-  const slice = buildVisibleSliceFromTickBook(book, {
+  const first = buildVisibleSliceFromTickBook(book, {
     priceScale: 1,
+    viewRows: 20,
+    viewOffset: 0,
+    hover: true,
+    autocenterPct: 85
+  });
+  const held = buildVisibleSliceFromTickBook(book, {
+    priceScale: 1,
+    sticky: first.sticky,
     viewRows: 20,
     viewOffset: 400,
     hover: true,
     autocenterPct: 85
   });
 
-  assert.equal(slice.recentered, true);
-  assert.equal(slice.viewOffset, 0);
-  assert.ok(slice.rows.some((row) => row.size > 0 && row.side !== "hole"));
-  const midRow = slice.rows[Math.floor(slice.rows.length / 2)];
-  assert.ok(Math.abs(midRow.price - slice.mid) <= 1);
+  assert.equal(held.recentered, false);
+  assert.equal(held.viewOffset, 400);
+  assert.equal(held.maxSize, 0);
+  assert.ok(Math.abs(held.rows[0].price - (first.rows[0].price + 400)) <= 1);
+
+  const released = buildVisibleSliceFromTickBook(book, {
+    priceScale: 1,
+    sticky: first.sticky,
+    viewRows: 20,
+    viewOffset: 400,
+    hover: false,
+    autocenterPct: 85
+  });
+  assert.equal(released.recentered, true);
+  assert.equal(released.viewOffset, 0);
+  assert.ok(released.rows.some((row) => row.size > 0 && row.side !== "hole"));
 });
 
 test("Bybit DOM subscribes to orderbook.1000, not a shallow 200 book", () => {
@@ -1103,5 +1127,94 @@ test("clear() drops native tick so the next snapshot can infer a new one", () =>
   assert.ok(book.getNativeTick() > 0);
   assert.ok(book.getNativeTick() <= 1e-6);
   assert.equal(book.bestBid(), 0.2036568);
+});
+
+test("volume scale uses the full book, including levels outside the window", () => {
+  const book = createLiveBook();
+  book.setNativeTick(1);
+  const bids = [["20", "1000"]];
+  const asks = [];
+  for(let i = 0; i < 40; i++){
+    asks.push([String(101 + i), "1"]);
+    bids.push([String(100 - i), "1"]);
+  }
+  book.applySnapshot({ bids, asks });
+
+  const center = buildVisibleSliceFromTickBook(book, {
+    priceScale: 1,
+    viewRows: 20,
+    viewOffset: 0,
+    hover: true,
+    autocenterPct: 85
+  });
+  const visibleMax = center.rows.reduce(
+    (max, row) => Math.max(max, row.size),
+    0
+  );
+  const scrolled = buildVisibleSliceFromTickBook(book, {
+    priceScale: 1,
+    sticky: center.sticky,
+    viewRows: 20,
+    viewOffset: 8,
+    hover: true,
+    autocenterPct: 85
+  });
+
+  assert.equal(center.bookMaxSize, 20000);
+  assert.ok(center.bookMaxSize > visibleMax);
+  assert.equal(scrolled.bookMaxSize, center.bookMaxSize);
+  assert.ok(!center.rows.some((row) => row.price === 20));
+});
+
+test("compressed scale sums a display bucket into the book max", () => {
+  const book = createLiveBook();
+  book.setNativeTick(1);
+  book.applySnapshot({
+    bids: [["100", "10"], ["101", "10"]],
+    asks: [["110", "1"]]
+  });
+
+  const slice = buildVisibleSliceFromTickBook(book, {
+    priceScale: 2,
+    viewRows: 20,
+    viewOffset: 0,
+    autocenterPct: 85
+  });
+
+  assert.equal(slice.bookMaxSize, 100 * 10 + 101 * 10);
+});
+
+test("manual book volume is stored per symbol", () => {
+  const prev = globalThis.localStorage;
+  const store = new Map();
+  globalThis.localStorage = {
+    getItem(key){
+      return store.has(key) ? store.get(key) : null;
+    },
+    setItem(key, value){
+      store.set(key, String(value));
+    },
+    removeItem(key){
+      store.delete(key);
+    }
+  };
+
+  try{
+    assert.equal(getScalpingDomVolumeInput("BTCUSDT"), 0);
+    assert.equal(setScalpingDomVolumeInput("BTCUSDT", "1,000,000"), 1000000);
+    assert.equal(setScalpingDomVolumeInput("ETHUSDT", ""), 0);
+    assert.equal(getScalpingDomVolumeInput("BTCUSDT"), 1000000);
+    assert.equal(getScalpingDomVolumeInput("ethusdt"), 0);
+    assert.equal(getScalpingDomVolumeInput("ETHUSDT"), 0);
+    setScalpingDomVolumeInput("ETHUSDT", "25000");
+    assert.equal(getScalpingDomVolumeInput("ETHUSDT"), 25000);
+    assert.equal(getScalpingDomVolumeInput("BTCUSDT"), 1000000);
+  }finally{
+    if(prev === undefined){
+      delete globalThis.localStorage;
+    }else{
+      globalThis.localStorage = prev;
+    }
+  }
 });
 

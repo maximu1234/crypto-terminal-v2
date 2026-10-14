@@ -1,7 +1,7 @@
 import {
 destroyDiaryTradeChart,
 mountDiaryTradeChart
-} from "./trade-diary-chart.js?v=58323ab5";
+} from "./trade-diary-chart.js?v=33f487e6";
 
 import {
 executionSideLabel,
@@ -19,7 +19,7 @@ sideToneClass
 import {
 getLoadedTradeExchangeModules,
 loadTradeExchangeModules
-} from "./trade/module-router.js?v=438abbf9";
+} from "./trade/module-router.js?v=d490af10";
 
 function diaryMod() {
   return getLoadedTradeExchangeModules();

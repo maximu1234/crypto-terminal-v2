@@ -3,7 +3,7 @@
  */
 import {
 getActiveTradeVolumeUsdt
-} from "./trade-volume-presets.js?v=b4584426";
+} from "./trade-volume-presets.js?v=8091f3e3";
 
 import {
 formatPrice
@@ -11,19 +11,19 @@ formatPrice
 
 import {
 createPriceAlert
-} from "./alerts.js?v=96b850e2";
+} from "./alerts.js?v=d9d41a91";
 
 import {
 isCloudLoggedInEffective
-} from "./cloud-sync.js?v=4a874d16";
+} from "./cloud-sync.js?v=7b80fe2a";
 
 import {
 getTelegramChatId
-} from "./alerts-cloud-sync.js?v=4d6df436";
+} from "./alerts-cloud-sync.js?v=72fcebd7";
 
 import {
 getActiveTradeConfig
-} from "./trade/module-router.js?v=438abbf9";
+} from "./trade/module-router.js?v=d490af10";
 
 import {
 computePlusMenuPosition

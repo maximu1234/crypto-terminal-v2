@@ -7,11 +7,11 @@ getScalpingDomVolumeInput,
 SCALPING_DOM_PRICE_SCALE_OPTIONS,
 setScalpingDomPriceScale,
 setScalpingDomVolumeInput
-} from "./prefs.js?v=ca9722ad";
+} from "./prefs.js?v=f20149d0";
 
 import {
 compressedBboPaintMode
-} from "./ladder-slice.js?v=d43ffbec";
+} from "./ladder-slice.js?v=bad84c8d";
 
 const ROW_H =
 14;
@@ -129,9 +129,12 @@ function slTpWashColor(mark){
   return "";
 }
 
-function resolveVolumeRefMax(rows, userMax){
+function resolveVolumeRefMax(rows, userMax, bookMax){
   if(Number.isFinite(userMax) && userMax > 0){
     return userMax;
+  }
+  if(Number.isFinite(bookMax) && bookMax > 0){
+    return bookMax;
   }
   let max = 0;
   for(const row of rows){
@@ -154,7 +157,7 @@ function drawDashedLine(ctx, y, width, color){
   ctx.restore();
 }
 
-function paintLadder(canvas, ladder){
+function paintLadder(canvas, ladder, userMax){
   const ctx = canvas.getContext("2d");
   if(!ctx){
     return;
@@ -179,7 +182,11 @@ function paintLadder(canvas, ladder){
   }
 
   const tick = ladder.tick || 0;
-  const refMax = resolveVolumeRefMax(rows, getScalpingDomVolumeInput());
+  const refMax = resolveVolumeRefMax(
+    rows,
+    userMax,
+    ladder?.bookMaxSize
+  );
   const sizeW = cssW * (1.7 / 2.55);
   const font = `10px system-ui, -apple-system, sans-serif`;
   const fontMajor = `700 10px system-ui, -apple-system, sans-serif`;
@@ -298,7 +305,7 @@ function paintLadder(canvas, ladder){
 export function createLadderUi(root, options = {}){
   root.innerHTML =
     `<div class="scalping-dom-header">` +
-    `<input type="text" class="scalping-dom-input scalping-dom-input--volume" data-role="volume-input" inputmode="decimal" spellcheck="false" title="Объём" aria-label="Объём" />` +
+    `<input type="text" class="scalping-dom-input scalping-dom-input--volume" data-role="volume-input" inputmode="decimal" spellcheck="false" title="Макс. объём полосы для этой монеты. Пусто — по всему стакану" aria-label="Макс. объём полосы для этой монеты" />` +
     `<select class="scalping-dom-input scalping-dom-input--scale" data-role="scale-select" title="Сжатие цены (scale)" aria-label="Сжатие цены">` +
     buildScaleSelectOptionsHtml() +
     `</select>` +
@@ -311,8 +318,18 @@ export function createLadderUi(root, options = {}){
   const canvas = root.querySelector('[data-role="ladder"]');
   const statusEl = root.querySelector('[data-role="status"]');
 
-  if(volumeInput){
-    volumeInput.value = formatVolumeInput(getScalpingDomVolumeInput());
+  let symbol = "";
+
+  function paintCurrent(){
+    if(canvas && lastLadder){
+      paintLadder(canvas, lastLadder, getScalpingDomVolumeInput(symbol));
+    }
+  }
+
+  function showVolumeForSymbol(){
+    if(volumeInput){
+      volumeInput.value = formatVolumeInput(getScalpingDomVolumeInput(symbol));
+    }
   }
   if(scaleSelect){
     scaleSelect.value = String(getScalpingDomPriceScale());
@@ -341,12 +358,10 @@ export function createLadderUi(root, options = {}){
   }
 
   volumeInput?.addEventListener("change", () => {
-    const next = setScalpingDomVolumeInput(volumeInput.value);
+    const next = setScalpingDomVolumeInput(symbol, volumeInput.value);
     volumeInput.value = formatVolumeInput(next);
     notifySettings();
-    if(lastLadder){
-      paintLadder(canvas, lastLadder);
-    }
+    paintCurrent();
   });
 
   scaleSelect?.addEventListener("change", () => {
@@ -387,9 +402,7 @@ export function createLadderUi(root, options = {}){
   if(typeof ResizeObserver === "function" && canvas){
     resizeObs = new ResizeObserver(() => {
       emitView();
-      if(lastLadder){
-        paintLadder(canvas, lastLadder);
-      }
+      paintCurrent();
     });
     resizeObs.observe(canvas);
   }
@@ -397,8 +410,21 @@ export function createLadderUi(root, options = {}){
   requestAnimationFrame(() => emitView());
 
   return {
-    setSymbol(){
+    setSymbol(next){
+      const incoming = String(next || "")
+        .trim()
+        .toUpperCase()
+        .replace(/\.P$/i, "")
+        .replace(/[^A-Z0-9]/g, "");
+      if(incoming && incoming !== symbol){
+        if(symbol && volumeInput){
+          setScalpingDomVolumeInput(symbol, volumeInput.value);
+        }
+        symbol = incoming;
+        showVolumeForSymbol();
+      }
       viewOffset = 0;
+      paintCurrent();
     },
     setStatus(text){
       if(statusEl){
@@ -420,7 +446,7 @@ export function createLadderUi(root, options = {}){
         viewOffset = ladder.viewOffset | 0;
       }
       lastLadder = ladder;
-      paintLadder(canvas, ladder);
+      paintLadder(canvas, ladder, getScalpingDomVolumeInput(symbol));
     },
     destroy(){
       resizeObs?.disconnect();

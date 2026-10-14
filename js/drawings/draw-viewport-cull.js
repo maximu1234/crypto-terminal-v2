@@ -410,3 +410,191 @@ return true;
 return false;
 
 }
+
+/**
+ * Якорь фигуры уже на плоте (с запасом).
+ * Отсев по времени шкалы иногда врёт: пустое место справа и логический
+ * диапазон шире реальных баров, а timeToCoordinate фигуру всё равно рисует.
+ * Такую фигуру нельзя пропускать — иначе она видна только под курсором.
+ */
+export function shapeProjectsOnPlot(
+shape,
+toXY,
+plotW,
+plotH,
+margin =
+24
+){
+
+if(
+!shape ||
+typeof toXY !==
+"function" ||
+!(
+plotW >
+0
+) ||
+!(
+plotH >
+0
+)
+){
+return false;
+}
+
+const pts =
+[];
+
+for(
+const key of [
+"p1",
+"p2",
+"p3",
+"p4",
+"p5"
+]
+){
+
+if(
+shape[
+key
+]
+){
+pts.push(
+shape[
+key
+]
+);
+}
+
+}
+
+if(
+shape.time !=
+null ||
+shape.price !=
+null
+){
+pts.push({
+time:
+shape.time,
+price:
+shape.price
+});
+}
+
+for(
+const list of [
+shape.path,
+shape.points
+]
+){
+
+if(
+!Array.isArray(
+list
+)
+){
+continue;
+}
+
+for(
+const point of list
+){
+
+if(
+point
+){
+pts.push(
+point
+);
+}
+
+}
+
+}
+
+if(
+shape.p1 &&
+shape.tpPrice !=
+null
+){
+pts.push({
+time:
+shape.p1.time,
+price:
+shape.tpPrice
+});
+}
+
+if(
+shape.p1 &&
+shape.slPrice !=
+null
+){
+pts.push({
+time:
+shape.p1.time,
+price:
+shape.slPrice
+});
+}
+
+const left =
+-margin;
+const right =
+plotW +
+margin;
+const top =
+-margin;
+const bottom =
+plotH +
+margin;
+
+for(
+const point of pts
+){
+
+let xy =
+null;
+
+try{
+xy =
+toXY(
+point
+);
+}catch{
+xy =
+null;
+}
+
+if(
+!xy ||
+!Number.isFinite(
+xy.x
+) ||
+!Number.isFinite(
+xy.y
+)
+){
+continue;
+}
+
+if(
+xy.x >=
+left &&
+xy.x <=
+right &&
+xy.y >=
+top &&
+xy.y <=
+bottom
+){
+return true;
+}
+
+}
+
+return false;
+
+}

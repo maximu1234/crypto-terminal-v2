@@ -4,11 +4,11 @@
  */
 import {
 createTickBook
-} from "./tick-book.js?v=2fb03244";
+} from "./tick-book.js?v=c3d35264";
 
 import {
 buildVisibleSliceFromTickBook
-} from "./ladder-slice.js?v=d43ffbec";
+} from "./ladder-slice.js?v=bad84c8d";
 
 import {
 createBybitDepthWs,
@@ -97,6 +97,7 @@ function postFrame(slice){
       bestAsk: slice.bestAsk,
       mid: slice.mid,
       maxSize: slice.maxSize,
+      bookMaxSize: slice.bookMaxSize,
       recentered: slice.recentered,
       viewOffset: slice.viewOffset,
       rowCount: n,
@@ -170,7 +171,6 @@ function attachBybit(){
     onStatus: (text) => postStatus(text),
     onSnapshot: (data) => {
       book.applySnapshot(data);
-      sticky = null;
       scheduleFrame();
     },
     onDelta: (data) => {
@@ -287,7 +287,6 @@ self.onmessage = (event) => {
         break;
       }
       book.applySnapshot(msg);
-      sticky = null;
       scheduleFrame();
       break;
 

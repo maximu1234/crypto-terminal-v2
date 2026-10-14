@@ -161,7 +161,24 @@ export const SCALPING_DOM_PRICE_SCALE_OPTIONS =
 25
 ];
 
-export function getScalpingDomVolumeInput(){
+function normalizeVolumeSymbol(
+raw
+){
+
+return String(
+raw ||
+""
+).trim().toUpperCase().replace(
+/\.P$/i,
+""
+).replace(
+/[^A-Z0-9]/g,
+""
+);
+
+}
+
+function readVolumeBySymbol(){
 
 try{
 const raw =
@@ -175,13 +192,41 @@ null ||
 raw ===
 ""
 ){
-return 0;
+return {};
 }
+
+const parsed =
+JSON.parse(
+raw
+);
+
+if(
+!parsed ||
+typeof parsed !==
+"object" ||
+Array.isArray(
+parsed
+)
+){
+return {};
+}
+
+return parsed;
+}catch{
+return {};
+}
+
+}
+
+function volumeNumber(
+raw
+){
 
 const n =
 Number(
 String(
-raw
+raw ??
+""
 ).replace(
 /,/g,
 ""
@@ -191,44 +236,81 @@ raw
 return Number.isFinite(
 n
 ) &&
-n >=
+n >
 0
 ? n
 : 0;
-}catch{
+
+}
+
+export function getScalpingDomVolumeInput(
+symbol
+){
+
+const sym =
+normalizeVolumeSymbol(
+symbol
+);
+
+if(
+!sym
+){
 return 0;
 }
+
+const stored =
+readVolumeBySymbol()[
+sym
+];
+
+return volumeNumber(
+stored
+);
 
 }
 
 export function setScalpingDomVolumeInput(
+symbol,
 value
 ){
 
-const n =
-Number(
-String(
-value ??
-""
-).replace(
-/,/g,
-""
-)
+const sym =
+normalizeVolumeSymbol(
+symbol
 );
 const safe =
-Number.isFinite(
-n
-) &&
-n >=
+volumeNumber(
+value
+);
+
+if(
+!sym
+){
+return safe;
+}
+
+const map =
+readVolumeBySymbol();
+
+if(
+safe >
 0
-? n
-: 0;
+){
+map[
+sym
+] =
+safe;
+}else{
+delete map[
+sym
+];
+}
 
 try{
 localStorage.setItem(
 SCALPING_DOM_VOLUME_KEY,
-String(
-safe
+JSON.stringify(
+map
 )
 );
 }catch{

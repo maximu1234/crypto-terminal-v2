@@ -118,6 +118,8 @@ white-space:nowrap;
     overflow:hidden;
     position:relative;
     min-height:0;
+    container-type:inline-size;
+    container-name:wl-widget;
 }
 
 .widget:hover{
@@ -134,15 +136,17 @@ white-space:nowrap;
     border-bottom:1px solid #1f2937;
     padding:6px 8px;
     flex-shrink:0;
+    min-width:0;
     background:#13181e;
 }
 
 .widget-header-row{
     display:flex;
     align-items:center;
-    justify-content:space-between;
+    justify-content:flex-start;
     gap:6px;
     width:100%;
+    min-width:0;
     min-height:32px;
 }
 
@@ -150,9 +154,9 @@ white-space:nowrap;
     display:flex;
     align-items:center;
     gap:6px;
-    min-width:0;
-    flex:1;
-    overflow:visible;
+    flex:1 1 auto;
+    min-width:210px;
+    overflow:hidden;
 }
 
 .widget-header-left .screener-flag-wrap{
@@ -162,8 +166,17 @@ white-space:nowrap;
 .widget-header-right{
     display:flex;
     align-items:center;
+    justify-content:flex-start;
     gap:8px;
-    flex-shrink:0;
+    flex:0 0 auto;
+    min-width:0;
+    max-width:calc(100% - 210px);
+    margin-left:auto;
+    overflow:hidden;
+}
+
+.widget-header-right:has([aria-expanded="true"]){
+    overflow:visible;
 }
 
 .widget-header .price-info{
@@ -171,7 +184,45 @@ white-space:nowrap;
     align-items:center;
     justify-content:flex-end;
     gap:10px;
-    flex-shrink:0;
+    flex:1 1 auto;
+    min-width:0;
+    overflow:hidden;
+}
+
+.widget-header .price-info .price{
+    min-width:0;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+}
+
+/* Узкий виджет (3 в ряд на обычном экране): процент не занимает место кнопок */
+@container wl-widget (max-width: 560px){
+    .widget-header-row{
+        gap:4px;
+    }
+
+    .widget-header-left{
+        gap:4px;
+    }
+
+    .widget-header-right,
+    .widget-header .price-info{
+        gap:4px;
+    }
+
+    .widget-header .price-info .change{
+        display:none;
+    }
+
+    .widget-draw-tools{
+        margin-left:2px;
+        padding-left:6px;
+    }
+}
+
+.widget.widget-draw-tools-open .widget-header-left{
+    overflow:visible;
 }
 
 .widget-active{
@@ -856,6 +907,19 @@ body.tablet-chart .widget-chart-wrap.chart-touch-locked .chart{
     display:flex;
     align-items:center;
     gap:8px;
+    flex:1 1 auto;
+    min-width:0;
+    overflow:hidden;
+}
+
+.widget-header-left .widget-symbol{
+    flex:1 1 auto;
+    min-width:6.5ch;
+    overflow:hidden;
+    text-overflow:ellipsis;
+}
+
+.widget-header-left .tf-select{
     flex-shrink:0;
 }
 

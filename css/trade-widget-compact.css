@@ -129,6 +129,30 @@ body.watchlist-page.trade-page .widget-header .price-info .change{
 font-size:11px;
 }
 
+/* Узкий виджет: число объёма и цены на кнопках покупки/продажи
+   уступают место кнопке рисования и кнопке пресетов. */
+@container wl-widget (max-width: 560px){
+
+body.watchlist-page.trade-page .trade-widget-toolbar{
+gap:4px;
+margin-right:0;
+}
+
+body.watchlist-page.trade-page .trade-widget-volume-wrap .trade-volume-presets-value{
+display:none;
+}
+
+body.watchlist-page.trade-page .trade-widget-volume-wrap .trade-volume-presets-control{
+gap:0;
+padding-right:2px;
+}
+
+body.watchlist-page.trade-page .trade-widget-market-entry .trade-market-entry-price{
+display:none;
+}
+
+}
+
 @media (max-width:640px){
 
 body.watchlist-page.trade-page .trade-widget-toolbar{
