@@ -16,8 +16,10 @@ mainChartCrosshairOptions,
 mountChartPriceHud,
 applyTabletMainChartScroll,
 applyTabletRsiChartOptions,
-SCREENER_MAX_BARS
-} from "./chart-import.js?v=45dccc88";
+SCREENER_PAGE_VISIBLE_BARS,
+SCREENER_PAGE_MAX_BARS,
+SCREENER_PAGE_HISTORY_REQUESTS
+} from "./chart-import.js?v=63f1c250";
 
 import {
 isIpadWebViewport
@@ -55,7 +57,7 @@ createScreenerMacdChart,
 isScreenerHistogramOscillator,
 setScreenerAoData,
 setScreenerMacdData
-} from "./screener-widget-oscillator.js?v=22d098fd";
+} from "./screener-widget-oscillator.js?v=12b57712";
 
 import {
 shouldIgnoreTypingHotkey
@@ -1053,7 +1055,7 @@ const loaded =
 await loadMarketHistory(
 symbol,
 tf,
-2,
+SCREENER_PAGE_HISTORY_REQUESTS,
 {
 parallel:
 true
@@ -1061,9 +1063,9 @@ true
 );
 
 return loaded.length >
-SCREENER_MAX_BARS
+SCREENER_PAGE_MAX_BARS
 ? loaded.slice(
--SCREENER_MAX_BARS
+-SCREENER_PAGE_MAX_BARS
 )
 : loaded;
 
@@ -1159,7 +1161,7 @@ const {
 mountWidgetTabletChart
 } =
 await import(
-"./tablet-widget-chart.js?v=8d1b668a"
+"./tablet-widget-chart.js?v=15385cab"
 );
 
 if(
@@ -1532,7 +1534,11 @@ state.chart,
 state.series,
 state.candles,
 w,
-h
+h,
+{
+visibleBars:
+SCREENER_PAGE_VISIBLE_BARS
+}
 );
 alignZoomPaneScales(
 state
@@ -1714,7 +1720,7 @@ candle,
 liveBarPeriodSec(
 state.tf
 ),
-SCREENER_MAX_BARS
+SCREENER_PAGE_MAX_BARS
 );
 
 if(
@@ -1786,7 +1792,7 @@ getCandles:
 ()=>
 state.candles,
 maxLen:
-SCREENER_MAX_BARS,
+SCREENER_PAGE_MAX_BARS,
 isAlive:
 ()=>
 !state.disposed &&

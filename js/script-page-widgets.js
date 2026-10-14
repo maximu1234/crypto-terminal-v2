@@ -10,9 +10,10 @@ restoreScreenerViewport,
 updateRsiBandLayout,
 updateRsiLevelLinesLayout,
 linkPairedChartTimeScales,
-SCREENER_MAX_BARS,
-SCREENER_VISIBLE_BARS
-} from "./chart-import.js?v=45dccc88";
+SCREENER_PAGE_MAX_BARS,
+SCREENER_PAGE_VISIBLE_BARS,
+SCREENER_PAGE_HISTORY_REQUESTS
+} from "./chart-import.js?v=63f1c250";
 
 import {
 loadMarketHistory,
@@ -56,7 +57,7 @@ getWidgetFlagHtml,
 wireWidgetFlagUi,
 updateWidgetFlagUi,
 bindWidgetFlagGlobalListeners
-} from "./widget-favorite-flag.js?v=abbe14d3";
+} from "./widget-favorite-flag.js?v=7fd0930e";
 
 const SCRIPT_MAX_CONCURRENT_CHART_LOADS =
 4;
@@ -82,7 +83,7 @@ if(
 ){
 scriptZoomModulePromise =
 import(
-"./screener-widget-zoom.js?v=33ec3ace"
+"./screener-widget-zoom.js?v=b19884a7"
 ).then(
 mod=>{
 refreshZoomFavoriteUi =
@@ -108,10 +109,10 @@ PATTERN_SCAN_SIDE_LABELS
 let patternOverlayApi =
 null;
 
-/** Script lookback → visible bars (set by createScriptWidgetGrid). */
+/** Видимое окно виджета Скрипта — как на Скринере. */
 let resolvePatternVisibleBars =
 ()=>
-SCREENER_VISIBLE_BARS;
+SCREENER_PAGE_VISIBLE_BARS;
 
 function patternVisibleBars(){
 
@@ -130,7 +131,7 @@ n >
 0
 ){
 return Math.min(
-SCREENER_VISIBLE_BARS,
+SCREENER_PAGE_VISIBLE_BARS,
 Math.max(
 80,
 Math.round(
@@ -144,7 +145,7 @@ n
 /* ignore */
 }
 
-return SCREENER_VISIBLE_BARS;
+return SCREENER_PAGE_VISIBLE_BARS;
 
 }
 
@@ -564,7 +565,7 @@ try{
 const maxLen =
 widget.userAdjustedZoom
 ? 0
-: SCREENER_MAX_BARS;
+: SCREENER_PAGE_MAX_BARS;
 const {
 rolled,
 kind,
@@ -666,7 +667,7 @@ widget.candles,
 maxLen:
 widget.userAdjustedZoom
 ? 0
-: SCREENER_MAX_BARS,
+: SCREENER_PAGE_MAX_BARS,
 isAlive:
 ()=>
 isWidgetCurrent(
@@ -714,7 +715,6 @@ gridEl,
 paginationEl,
 statusEl,
 onPersist,
-getLookbackBars,
 getScanIndicatorId
 }
 ){
@@ -737,30 +737,8 @@ let tickerPollTimer =
 null;
 
 resolvePatternVisibleBars =
-()=>{
-
-const lookback =
-Math.max(
-1,
-Number(
-typeof getLookbackBars ===
-"function"
-? getLookbackBars()
-: 30
-) ||
-30
-);
-
-/*
-  Search depth is often 30 — 1500-bar screener zoom hides PT4 marks.
-*/
-return Math.max(
-80,
-lookback *
-3
-);
-
-};
+()=>
+SCREENER_PAGE_VISIBLE_BARS;
 
 function updateWidgetMeta(
 symbol,
@@ -1503,7 +1481,7 @@ const candles =
 await loadMarketHistory(
 symbol,
 tf,
-2,
+SCREENER_PAGE_HISTORY_REQUESTS,
 {
 parallel:
 true
@@ -1525,9 +1503,9 @@ return;
 
 const loaded =
 candles.length >
-SCREENER_MAX_BARS
+SCREENER_PAGE_MAX_BARS
 ? candles.slice(
--SCREENER_MAX_BARS
+-SCREENER_PAGE_MAX_BARS
 )
 : candles;
 

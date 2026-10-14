@@ -9,7 +9,7 @@ import {
 import {
   getLoadedTradeExchangeModules,
   loadTradeExchangeModules
-} from "../trade/module-router.js?v=679c5141";
+} from "../trade/module-router.js?v=0917a3ca";
 
 export async function fetchTradesForSymbol(symbol, chartStartSec) {
   await loadTradeExchangeModules();

@@ -436,6 +436,9 @@ export {
 SCREENER_VISIBLE_BARS,
 SCREENER_MAX_BARS,
 SCREENER_LOAD_BARS,
+SCREENER_PAGE_VISIBLE_BARS,
+SCREENER_PAGE_MAX_BARS,
+SCREENER_PAGE_HISTORY_REQUESTS,
 applyDashboardZoom,
 computeChartFutureMarginBars,
 appendFutureWhitespaceBars,
@@ -447,11 +450,11 @@ restoreScreenerViewport,
 applyScreenerZoom,
 tfPeriodSec,
 rsiPlotTimeOffsetSec
-} from "./chart-viewport.js?v=95c948c9";
+} from "./chart-viewport.js?v=c4f4504e";
 
 import {
 tfPeriodSec
-} from "./chart-viewport.js?v=95c948c9";
+} from "./chart-viewport.js?v=c4f4504e";
 
 
 
@@ -1868,7 +1871,7 @@ lineEl.classList.remove(
 
 export {
 linkChartsCrosshair
-} from "./chart-crosshair-link.js?v=9c897298";
+} from "./chart-crosshair-link.js?v=e1332dc1";
 
 
 

@@ -14,6 +14,14 @@ export const SCREENER_MAX_BARS = 2000;
 
 export const SCREENER_LOAD_BARS = SCREENER_MAX_BARS;
 
+/**
+ * Проба страницы Скринер: видимое окно как на Терминале,
+ * ещё 500 свечей за левым краем (3 запроса × 1000).
+ */
+export const SCREENER_PAGE_VISIBLE_BARS = 2500;
+export const SCREENER_PAGE_MAX_BARS = 3000;
+export const SCREENER_PAGE_HISTORY_REQUESTS = 3;
+
 export function applyDashboardZoom(chart, candles, tf){
 
 if(!candles.length){

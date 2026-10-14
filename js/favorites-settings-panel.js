@@ -5,11 +5,11 @@ import {
 isCloudLoggedIn,
 getCloudUserEmail,
 onCloudSyncChange
-} from "./cloud-sync.js?v=f842930b";
+} from "./cloud-sync.js?v=b9fe8c0d";
 
 import {
 syncFavoritesCloudOnDemand
-} from "./favorites-cloud-sync.js?v=965690fa";
+} from "./favorites-cloud-sync.js?v=0f0c5f37";
 
 function setStatus(
 el,

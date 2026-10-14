@@ -43,7 +43,7 @@ SCREENER_WIDGET_OSCILLATOR_MACD,
 SCREENER_WIDGET_OSCILLATOR_RSI,
 getScreenerWidgetOscillator,
 setScreenerWidgetOscillator
-} from "./screener-widget-oscillator.js?v=22d098fd";
+} from "./screener-widget-oscillator.js?v=12b57712";
 
 import {
 renderHeaderNav

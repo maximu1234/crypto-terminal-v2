@@ -19,9 +19,10 @@ restoreScreenerViewport,
 linkPairedChartTimeScales,
 syncLinkedChartTimescales,
 equalizeLinkedPanePriceScales,
-SCREENER_VISIBLE_BARS,
-SCREENER_MAX_BARS
-} from "./chart-import.js?v=45dccc88";
+SCREENER_PAGE_VISIBLE_BARS,
+SCREENER_PAGE_MAX_BARS,
+SCREENER_PAGE_HISTORY_REQUESTS
+} from "./chart-import.js?v=63f1c250";
 
 import {
 isIpadWebViewport
@@ -47,7 +48,7 @@ SCREENER_WIDGET_OSCILLATOR_MACD,
 createScreenerAoChart,
 createScreenerMacdChart,
 isScreenerHistogramOscillator
-} from "./screener-widget-oscillator.js?v=22d098fd";
+} from "./screener-widget-oscillator.js?v=12b57712";
 
 let deps = null;
 
@@ -118,7 +119,7 @@ const total =
 widget.candles.length;
 const visible =
 Math.min(
-SCREENER_VISIBLE_BARS,
+SCREENER_PAGE_VISIBLE_BARS,
 total
 );
 
@@ -425,7 +426,7 @@ try{
 const maxLen =
 widget.userAdjustedZoom
 ? 0
-: SCREENER_MAX_BARS;
+: SCREENER_PAGE_MAX_BARS;
 const {
 rolled,
 kind,
@@ -523,7 +524,7 @@ widget.candles,
 maxLen:
 widget.userAdjustedZoom
 ? 0
-: SCREENER_MAX_BARS,
+: SCREENER_PAGE_MAX_BARS,
 isAlive:
 ()=>
 deps.isScreenerWidgetCurrent(
@@ -609,7 +610,7 @@ latest,
 preferIncoming:
 true,
 limit:
-SCREENER_MAX_BARS
+SCREENER_PAGE_MAX_BARS
 }
 );
 const shift =
@@ -664,7 +665,7 @@ merged,
 {
 coversVisible:
 merged.length >=
-SCREENER_VISIBLE_BARS ||
+SCREENER_PAGE_VISIBLE_BARS ||
 merged.length <
 500
 }
@@ -700,13 +701,14 @@ if(
 cached &&
 (
 cached.candles.length >=
-SCREENER_VISIBLE_BARS ||
-cached.coversVisible
+SCREENER_PAGE_VISIBLE_BARS ||
+cached.candles.length <
+500
 )
 ){
 candles =
 cached.candles.slice(
--SCREENER_MAX_BARS
+-SCREENER_PAGE_MAX_BARS
 );
 fromCache =
 true;
@@ -715,7 +717,7 @@ candles =
 await loadMarketHistory(
 symbol,
 deps.currentTF,
-2,
+SCREENER_PAGE_HISTORY_REQUESTS,
 { parallel: true }
 );
 }
@@ -735,7 +737,7 @@ candles,
 {
 coversVisible:
 candles.length >=
-SCREENER_VISIBLE_BARS ||
+SCREENER_PAGE_VISIBLE_BARS ||
 candles.length <
 500
 }
@@ -756,8 +758,8 @@ return;
 }
 
 const loaded =
-candles.length > SCREENER_MAX_BARS
-? candles.slice(-SCREENER_MAX_BARS)
+candles.length > SCREENER_PAGE_MAX_BARS
+? candles.slice(-SCREENER_PAGE_MAX_BARS)
 : candles;
 
 widget.candles = loaded;
@@ -1441,6 +1443,8 @@ widget.candles,
 w,
 h,
 {
+visibleBars:
+SCREENER_PAGE_VISIBLE_BARS,
 shouldContinue:()=>
 deps.isScreenerWidgetCurrent(
 widget

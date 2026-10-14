@@ -5,7 +5,7 @@ SUPABASE_AUTH_STORAGE_KEY
 import {
 waitForCloudAuth,
 ensureCloudLoginResolved
-} from "../cloud-sync.js?v=f842930b";
+} from "../cloud-sync.js?v=b9fe8c0d";
 
 import {
 getCachedAlertAuth,
@@ -23,11 +23,11 @@ import {
 alertsDebugLog,
 broadcastAlertsRegistrySync,
 lastSeenCloudAlerts
-} from "./debug.js?v=c25186c3";
+} from "./debug.js?v=8a3d286b";
 
 import {
 isAlertsCloudDisabled
-} from "../supabase-usage-prefs.js?v=07d16ec0";
+} from "../supabase-usage-prefs.js?v=1ef319cb";
 
 function alertsCloudBlocked(){
 
@@ -1079,7 +1079,7 @@ return false;
 }
 
 const { forgetAlertDeleted } =
-await import("../alerts.js?v=ad153c6f");
+await import("../alerts.js?v=14a4e9cd");
 
 forgetAlertDeleted(
 sym,
@@ -2371,7 +2371,7 @@ null;
 
 if(cloudId){
 const { markAlertCloudId } =
-await import("../alerts.js?v=ad153c6f");
+await import("../alerts.js?v=14a4e9cd");
 
 markAlertCloudId(
 symbol,

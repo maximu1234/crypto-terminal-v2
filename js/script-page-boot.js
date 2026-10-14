@@ -11,7 +11,7 @@ loadLightweightCharts
 
 import {
 jsImport
-} from "./asset-manifest.js?v=fd4e19dd";
+} from "./asset-manifest.js?v=e7982508";
 
 import {
 isScriptNavEnabled

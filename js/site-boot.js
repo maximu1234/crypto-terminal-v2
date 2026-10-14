@@ -1,10 +1,10 @@
 import {
 initAlertMonitor
-} from "./alert-monitor.js?v=d1b732f5";
+} from "./alert-monitor.js?v=b9559880";
 
 import {
 ensureCloudReady
-} from "./auth-ui.js?v=b5583c9c";
+} from "./auth-ui.js?v=41215a96";
 
 import {
 isAlertsPage
@@ -20,18 +20,18 @@ isScriptPage
 import {
 initAlertsCloudSync,
 scheduleRegistryCloudSync
-} from "./alerts-cloud-sync.js?v=81871e3e";
+} from "./alerts-cloud-sync.js?v=6bf8e2de";
 
 import {
 stripAlertFlagsNotInRegistry
-} from "./alerts.js?v=ad153c6f";
+} from "./alerts.js?v=14a4e9cd";
 
 import {
 isCloudLoggedIn,
 isCloudLoggedInEffective,
 isCloudSyncEnabled,
 onCloudSyncChange
-} from "./cloud-sync.js?v=f842930b";
+} from "./cloud-sync.js?v=b9fe8c0d";
 
 import {
 isSupabaseConfigured
@@ -65,7 +65,7 @@ initFocusBlurAfterPick
 
 import {
 initDesktopAppUi
-} from "./desktop-app-ui.js?v=d031d5bb";
+} from "./desktop-app-ui.js?v=28551157";
 
 import {
 initSiteHeader,
@@ -202,7 +202,7 @@ return;
 }
 
 void import(
-"./algo-trading/desktop-site-boot.js?v=0f0b12cf"
+"./algo-trading/desktop-site-boot.js?v=95348a47"
 ).then(
 m=>
 m.bootAlgoDesktopBackgroundJobs?.()
@@ -226,7 +226,7 @@ return Promise.resolve();
 }
 
 return import(
-"./algo-trading/desktop-site-boot.js?v=0f0b12cf"
+"./algo-trading/desktop-site-boot.js?v=95348a47"
 ).then(
 m=>
 m.stopAlgoDesktopBackgroundJobs?.()
@@ -564,7 +564,7 @@ isAlgoReducedCloudClient();
 if(
 !algoCloudLite
 ){
-import("./favorites-cloud-sync.js?v=965690fa").then(
+import("./favorites-cloud-sync.js?v=0f0c5f37").then(
 ({ initFavoritesCloudSync })=>{
 initFavoritesCloudSync();
 }
