@@ -7,7 +7,7 @@ import {
   formatDiaryPct,
   formatDiaryUsd,
   sideLabel
-} from "./trade-diary-format.js?v=6";
+} from "./trade-diary-format.js?v=e2a1aeff";
 
 export const DIARY_JOURNAL_KIND = "multichart-trade-diary";
 export const DIARY_JOURNAL_VERSION = 1;

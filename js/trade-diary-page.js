@@ -9,7 +9,7 @@ import {
 import {
   getLoadedTradeExchangeModules,
   loadTradeExchangeModules
-} from "./trade/module-router.js?v=d490af10";
+} from "./trade/module-router.js?v=679c5141";
 
 import {
   installWebTradingShell

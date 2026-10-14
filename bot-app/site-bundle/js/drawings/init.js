@@ -1,39 +1,39 @@
 import {
 parseDrawColor,
 formatDrawColor
-} from "../draw-color-palette.js?v=7";
+} from "../draw-color-palette.js?v=e2a8aa69";
 
 import {
 TRASH_ICON_SVG
-} from "../draw-ui-shared.js?v=45";
+} from "../draw-ui-shared.js?v=a01caf04";
 
 import {
 closeAllWidgetDrawToolsMenus
-} from "../watchlist-draw-ui.js?v=29";
+} from "../watchlist-draw-ui.js?v=7adb537b";
 
 import {
 ensureDrawToolsVisible
-} from "../draw-tools-visible.js?v=2";
+} from "../draw-tools-visible.js?v=fc8f1d0d";
 
 import {
 touchShapeRevision,
 recordDrawingTombstone
-} from "../drawings-storage.js?v=10";
+} from "../drawings-storage.js?v=c2e9af64";
 
 import {
 EXCHANGE_CHANGED_EVENT,
 loadMarketHistory
-} from "../market-api.js?v=7";
+} from "../market-api.js?v=7b3e6b3c";
 
 import {
 registerDrawingsStoragePoller,
 touchDrawingsStorageSnap
-} from "../drawings-storage-poller.js?v=4";
+} from "../drawings-storage-poller.js?v=0da51745";
 
 import {
 layoutScaleLabelYs,
 CHART_PRICE_HUD_FALLBACK_HEIGHT
-} from "./scale-label-layout.js?v=2";
+} from "./scale-label-layout.js?v=03c98903";
 
 import {
 formatPrice,
@@ -50,7 +50,7 @@ ensureDomChartCrosshair,
 hideDomChartCrosshair,
 positionTabletProbeHorizInStack,
 fullCrosshairOptions
-} from "../chart-import.js?v=66";
+} from "../chart-import.js?v=45dccc88";
 
 import {
 STROKE,
@@ -59,23 +59,23 @@ HANDLE_STROKE,
 WIDTH_OPTIONS,
 isHorizPriceTool,
 horizPriceLineX1
-} from "./constants.js?v=13";
+} from "./constants.js?v=c47ce407";
 
 import {
 getRectangleHandleScreens,
 moveRectangleHandle
-} from "./arrow-rect.js?v=2";
+} from "./arrow-rect.js?v=8d4294c4";
 
 import {
 bindFvpDataSource,
 clearFvpLtfCache,
 isFvpType,
 fvpBodyDist
-} from "./fixed-volume-profile.js?v=3";
+} from "./fixed-volume-profile.js?v=bb03b4a7";
 
 import {
 distToSegment
-} from "./math.js?v=2";
+} from "./math.js?v=2731b0ed";
 
 import {
 normalizeFibLineStyle,
@@ -90,7 +90,7 @@ getFibRows,
 isSeriesLogarithmic,
 isFibType,
 isFibExtType
-} from "./fib-spec.js?v=17";
+} from "./fib-spec.js?v=5f577f26";
 
 import {
 setFibPanelCommitHook,
@@ -106,7 +106,7 @@ isFibLineWidthMenuOpenForAnchor,
 fibPortalHitTest,
 retainFibPortals,
 releaseFibPortals
-} from "./fib-portals.js?v=3";
+} from "./fib-portals.js?v=2d6d15fb";
 
 import {
 isPositionType,
@@ -114,31 +114,31 @@ positionEntryPrice,
 positionXBounds as resolvePositionXBounds,
 positionBodyDist as resolvePositionBodyDist,
 getPositionHandleScreens as resolvePositionHandleScreens
-} from "./position.js?v=11";
+} from "./position.js?v=152e419c";
 
 import {
 createDrawPrefs
-} from "./draw-prefs.js?v=13";
+} from "./draw-prefs.js?v=f4d23141";
 
 import {
 createPositionDraw
-} from "./position-draw.js?v=5";
+} from "./position-draw.js?v=e7f5f3e4";
 
 import {
 pickUi
-} from "./utils.js?v=1";
+} from "./utils.js?v=dff73c52";
 
 import {
 createDrawHitTester
-} from "./draw-hit.js?v=21";
+} from "./draw-hit.js?v=f9862978";
 
 import {
 createDrawRenderer
-} from "./draw-render.js?v=31";
+} from "./draw-render.js?v=e287d58f";
 
 import {
 snapPlotToCandleWick
-} from "./draw-magnet.js?v=1";
+} from "./draw-magnet.js?v=df326ca8";
 
 import {
 computeChartRulerMetrics,
@@ -148,82 +148,180 @@ ensureChartRulerLabelEl,
 hideChartRulerLabelEl,
 isChartRulerGoingDown,
 updateChartRulerLabelEl
-} from "./chart-ruler.js?v=9";
+} from "./chart-ruler.js?v=45402471";
 
 import {
 mountTabletDrawInput
-} from "../drawings-tablet-input.js?v=12";
+} from "../drawings-tablet-input.js?v=26d41da8";
 
 import {
 cloneDrawingsForUndo,
 createDrawUndoStack
-} from "./draw-undo.js?v=2";
+} from "./draw-undo.js?v=4725fe9d";
 
 import {
 createDrawDesktopSelection
-} from "./draw-edit-desktop.js?v=15";
+} from "./draw-edit-desktop.js?v=49e6d71d";
 
 import {
 createDrawingsPersist
-} from "./drawings-persist.js?v=21";
+} from "./drawings-persist.js?v=ccf2d710";
 
 import {
 createDrawStyleBar
-} from "./draw-style-bar.js?v=67";
+} from "./draw-style-bar.js?v=62c906d8";
 
 import {
 createDrawAlertsChart
-} from "./draw-alerts-chart.js?v=7";
+} from "./draw-alerts-chart.js?v=ca8e94a7";
 
 import {
 createDrawPlacement
-} from "./draw-placement.js?v=24";
+} from "./draw-placement.js?v=b8c6f03e";
 
 import {
 createDrawTextEditor,
 isTextTool,
 hitTestTextBody
-} from "./text.js?v=3";
+} from "./text.js?v=441520b6";
 
 import {
 isElliottType,
 listElliottHandles
-} from "./elliott-spec.js?v=17";
+} from "./elliott-spec.js?v=3fb92981";
 
 import {
 closeElliottFlyout,
 syncElliottGroupActive
-} from "./elliott-toolbar.js?v=5";
+} from "./elliott-toolbar.js?v=cd94d014";
 
 import {
 closeFibFlyout,
 syncFibGroupActive
-} from "./fib-toolbar.js?v=5";
+} from "./fib-toolbar.js?v=dd31e8c1";
 
 import {
 createBrushPlacement
-} from "./brush-placement.js?v=3";
+} from "./brush-placement.js?v=971f7b05";
 
 import {
 createDrawEditInteraction
-} from "./draw-edit-interaction.js?v=30";
+} from "./draw-edit-interaction.js?v=b9a97c4f";
 
 import {
 createDrawChartInput
-} from "./draw-chart-input.js?v=5";
+} from "./draw-chart-input.js?v=50b3308a";
 
 import {
 createDrawPriceScale
-} from "./draw-price-scale.js?v=19";
+} from "./draw-price-scale.js?v=1a917499";
 
 import {
 createDrawRedrawLoop
-} from "./draw-redraw-loop.js?v=16";
+} from "./draw-redraw-loop.js?v=d07c9e6a";
 
 import {
 isAlgoReducedCloudClient
-} from "../page-routes.js?v=7";
+} from "../page-routes.js?v=4dc7f350";
 
+import {
+timeFromX as timeFromXMoved,
+manualPriceToCoordinate as manualPriceToCoordinateMoved,
+plotCoordinateToPrice as plotCoordinateToPriceMoved,
+resolvePointFromPlotXY as resolvePointFromPlotXYMoved,
+hitTest as hitTestMoved
+} from "./draw-plot-hit.js?v=39e2ce10";
+import {
+setupTabletNativeSelectionBlock as setupTabletNativeSelectionBlockMoved,
+drawBrushPlacementPreview as drawBrushPlacementPreviewMoved,
+drawChartRulerOverlay as drawChartRulerOverlayMoved,
+setTool as setToolMoved,
+pickDrawTool as pickDrawToolMoved,
+deleteSelected as deleteSelectedMoved,
+handleChartRulerClick as handleChartRulerClickMoved,
+clearAllDrawingsOnChart as clearAllDrawingsOnChartMoved,
+bindClearAllToolbarButtons as bindClearAllToolbarButtonsMoved,
+setDrawingsHidden as setDrawingsHiddenMoved,
+handleToolbarToolPick as handleToolbarToolPickMoved
+} from "./draw-tool-actions.js?v=c37a8c1c";
+import {
+notifyTabletChartGestureAbort as notifyTabletChartGestureAbortMoved,
+selectedIdsList as selectedIdsListMoved,
+isIdSelected as isIdSelectedMoved,
+applyPrimarySelectedId as applyPrimarySelectedIdMoved,
+applySelectedIds as applySelectedIdsMoved,
+toggleIdInSelection as toggleIdInSelectionMoved,
+refreshDrawToolsAccessUi as refreshDrawToolsAccessUiMoved,
+getDrawToolsContainers as getDrawToolsContainersMoved,
+isDrawingInteractionLocked as isDrawingInteractionLockedMoved,
+shouldSuppressNativeSelection as shouldSuppressNativeSelectionMoved,
+blocksDrawPaneSwitch as blocksDrawPaneSwitchMoved,
+shouldDeferExternalDrawingsSync as shouldDeferExternalDrawingsSyncMoved,
+flushDeferredFibSettingsSync as flushDeferredFibSettingsSyncMoved,
+notifyAfterRedraw as notifyAfterRedrawMoved,
+normalizeTime as normalizeTimeMoved,
+candleSeries as candleSeriesMoved,
+segmentX as segmentXMoved,
+xFromTime as xFromTimeMoved,
+resetDrawUndoHistory as resetDrawUndoHistoryMoved,
+syncDrawUndoBaseline as syncDrawUndoBaselineMoved,
+applyDrawingsUndoSnapshot as applyDrawingsUndoSnapshotMoved,
+undoLastDrawingChange as undoLastDrawingChangeMoved,
+getSelected as getSelectedMoved,
+chartScrollWhenUnlocked as chartScrollWhenUnlockedMoved,
+syncChartTouchPan as syncChartTouchPanMoved,
+isTouchDrawTablet as isTouchDrawTabletMoved,
+isTouchDrawPlacement as isTouchDrawPlacementMoved,
+beginTouchPlacementSession as beginTouchPlacementSessionMoved,
+useChartProbeCrosshair as useChartProbeCrosshairMoved,
+initTouchDrawCrosshair as initTouchDrawCrosshairMoved,
+syncTouchDrawCrosshairPreview as syncTouchDrawCrosshairPreviewMoved,
+showStandardChartCrosshair as showStandardChartCrosshairMoved,
+hideStandardChartCrosshair as hideStandardChartCrosshairMoved,
+suppressChartCrosshairForDrag as suppressChartCrosshairForDragMoved,
+syncEditDragCrosshair as syncEditDragCrosshairMoved,
+beginEditDragCrosshair as beginEditDragCrosshairMoved,
+clearEditDragCrosshair as clearEditDragCrosshairMoved,
+placementPointsNeeded as placementPointsNeededMoved,
+clearTouchDrawState as clearTouchDrawStateMoved,
+getTouchDrawCrosshair as getTouchDrawCrosshairMoved,
+getTouchPlaceTrack as getTouchPlaceTrackMoved,
+pointFromParam as pointFromParamMoved,
+clearChartRuler as clearChartRulerMoved,
+syncChartRulerLayerClass as syncChartRulerLayerClassMoved,
+scheduleChartRulerRedraw as scheduleChartRulerRedrawMoved,
+isChartRulerShiftActive as isChartRulerShiftActiveMoved,
+syncChartRulerShiftFromEvent as syncChartRulerShiftFromEventMoved,
+syncChartRulerEndFromPlot as syncChartRulerEndFromPlotMoved,
+readChartScaleMargins as readChartScaleMarginsMoved,
+isPriceScaleInverted as isPriceScaleInvertedMoved,
+pointFromXY as pointFromXYMoved,
+plotPriceToCoordinate as plotPriceToCoordinateMoved,
+toXY as toXYMoved,
+isEphemeralDrawingShape as isEphemeralDrawingShapeMoved,
+reapplyEphemeralDrawings as reapplyEphemeralDrawingsMoved,
+setEphemeralDrawings as setEphemeralDrawingsMoved,
+clearEphemeralDrawings as clearEphemeralDrawingsMoved,
+chartSize as chartSizeMoved,
+resizeCanvas as resizeCanvasMoved,
+shapeStyle as shapeStyleMoved,
+anchorCircleRadius as anchorCircleRadiusMoved,
+anchorSquareHalfSize as anchorSquareHalfSizeMoved,
+drawAnchorCircle as drawAnchorCircleMoved,
+drawAnchorSquare as drawAnchorSquareMoved,
+listHandles as listHandlesMoved,
+pointerFromEvent as pointerFromEventMoved,
+chartCanvasEl as chartCanvasElMoved,
+onTextDblClick as onTextDblClickMoved,
+syncDrawingsHiddenButton as syncDrawingsHiddenButtonMoved,
+bindHideDrawingsToolbarButtons as bindHideDrawingsToolbarButtonsMoved,
+touchStorageSnap as touchStorageSnapMoved,
+syncDrawingsFromStorageIfChanged as syncDrawingsFromStorageIfChangedMoved,
+startCoordRetryBurst as startCoordRetryBurstMoved,
+applyRemoteDrawingsToChart as applyRemoteDrawingsToChartMoved,
+syncDrawingsFromStorageNow as syncDrawingsFromStorageNowMoved,
+defaultHrayAnchorTime as defaultHrayAnchorTimeMoved
+} from "./draw-session.js?v=69c5893b";
 export function initDrawings({
 
 chart,
@@ -272,14 +370,104 @@ chart;
 const tools =
 toolsRoot || document;
 
-function notifyTabletChartGestureAbort(){
-
-try{
-abortTabletChartGesture?.();
-}catch{
-/* ignore */
+function drawSessionHost(){
+if(!drawSessionHost.current){
+drawSessionHost.current = {
+get CHART_SCROLL_DEFAULT(){ return CHART_SCROLL_DEFAULT; },
+get CHART_SCROLL_DRAW_TOOL(){ return CHART_SCROLL_DRAW_TOOL; },
+get CHART_SCROLL_LOCKED(){ return CHART_SCROLL_LOCKED; },
+get CHART_SCROLL_TABLET_CUSTOM_PAN(){ return CHART_SCROLL_TABLET_CUSTOM_PAN; },
+get EPHEMERAL_DRAWING_FLAGS(){ return EPHEMERAL_DRAWING_FLAGS; },
+get HANDLE_FILL(){ return HANDLE_FILL; },
+get HANDLE_STROKE(){ return HANDLE_STROKE; },
+get STROKE(){ return STROKE; },
+get TABLET_USE_CUSTOM_TOUCH_PAN(){ return TABLET_USE_CUSTOM_TOUCH_PAN; },
+get abortTabletChartGesture(){ return abortTabletChartGesture; },
+get afterRedrawListeners(){ return afterRedrawListeners; },
+get alive(){ return alive; },
+get brushPlacementCtl(){ return brushPlacementCtl; },
+get canvas(){ return canvas; },
+get channelP4Point(){ return channelP4Point; },
+get chart(){ return chart; },
+get chartPanActive(){ return chartPanActive; },
+get chartRulerEndPlot(){ return chartRulerEndPlot; },
+set chartRulerEndPlot(value){ chartRulerEndPlot = value; },
+get chartRulerLabelEl(){ return chartRulerLabelEl; },
+get chartRulerRedrawRaf(){ return chartRulerRedrawRaf; },
+set chartRulerRedrawRaf(value){ chartRulerRedrawRaf = value; },
+get chartRulerShiftDown(){ return chartRulerShiftDown; },
+set chartRulerShiftDown(value){ chartRulerShiftDown = value; },
+get chartRulerStart(){ return chartRulerStart; },
+set chartRulerStart(value){ chartRulerStart = value; },
+get cloneDrawingsForUndo(){ return cloneDrawingsForUndo; },
+get containingBarOpenTime(){ return containingBarOpenTime; },
+get coordChart(){ return coordChart; },
+get deferKeyboardUndo(){ return deferKeyboardUndo; },
+get dragState(){ return dragState; },
+get drawUndo(){ return drawUndo; },
+get drawings(){ return drawings; },
+set drawings(value){ drawings = value; },
+get drawingsHidden(){ return drawingsHidden; },
+get ensureDrawToolsVisible(){ return ensureDrawToolsVisible; },
+get ephemeralDrawingsByFlag(){ return ephemeralDrawingsByFlag; },
+get fibSettingsSyncDeferred(){ return fibSettingsSyncDeferred; },
+set fibSettingsSyncDeferred(value){ fibSettingsSyncDeferred = value; },
+get getCandles(){ return getCandles; },
+get getSymbol(){ return getSymbol; },
+get hasAnyFinePointer(){ return hasAnyFinePointer; },
+get hideChartRulerLabelEl(){ return hideChartRulerLabelEl; },
+get hitTest(){ return hitTest; },
+get isActive(){ return isActive; },
+get isCoarseTouchViewport(){ return isCoarseTouchViewport; },
+get isElliottType(){ return isElliottType; },
+get isFibExtType(){ return isFibExtType; },
+get isFvpType(){ return isFvpType; },
+get isHorizPriceTool(){ return isHorizPriceTool; },
+get isPositionType(){ return isPositionType; },
+get isTabletChartViewport(){ return isTabletChartViewport; },
+get isTextTool(){ return isTextTool; },
+get listElliottHandles(){ return listElliottHandles; },
+get loadDrawings(){ return loadDrawings; },
+get manualPriceScaleDrag(){ return manualPriceScaleDrag; },
+get manualPriceToCoordinate(){ return manualPriceToCoordinate; },
+get normalizeDrawingShape(){ return normalizeDrawingShape; },
+get placement(){ return placement; },
+get plotCoordinateToPrice(){ return plotCoordinateToPrice; },
+get positionEntryPrice(){ return positionEntryPrice; },
+get priceScaleDragActive(){ return priceScaleDragActive; },
+get redraw(){ return redraw; },
+get removePriceGutterOverlay(){ return removePriceGutterOverlay; },
+get saveDrawings(){ return saveDrawings; },
+get scheduleRedraw(){ return scheduleRedraw; },
+get selectedId(){ return selectedId; },
+set selectedId(value){ selectedId = value; },
+get selectedIds(){ return selectedIds; },
+get series(){ return series; },
+get setDrawingsHidden(){ return setDrawingsHidden; },
+get shapeCoordsReady(){ return shapeCoordsReady; },
+get sharedDrawUndo(){ return sharedDrawUndo; },
+get storageKey(){ return storageKey; },
+get stripOrphanAlertDrawings(){ return stripOrphanAlertDrawings; },
+get styleBarCtl(){ return styleBarCtl; },
+get tabletCustomPanHooked(){ return tabletCustomPanHooked; },
+get tabletDrawInput(){ return tabletDrawInput; },
+get textEditor(){ return textEditor; },
+get timeFromX(){ return timeFromX; },
+get tool(){ return tool; },
+get tools(){ return tools; },
+get touchDrawingsStorageSnap(){ return touchDrawingsStorageSnap; },
+get updateStyleBar(){ return updateStyleBar; },
+get wrapEl(){ return wrapEl; }
+};
+}
+return drawSessionHost.current;
 }
 
+function notifyTabletChartGestureAbort(){
+return notifyTabletChartGestureAbortMoved(
+drawSessionHost(),
+...arguments
+);
 }
 
 let alive = true;
@@ -371,143 +559,45 @@ const selectedIds =
 new Set();
 
 function selectedIdsList(){
-
-return [
-...selectedIds
-];
-
-}
-
-function isIdSelected(
-id
-){
-
-return !!id &&
-selectedIds.has(
-id
-);
-
-}
-
-function applyPrimarySelectedId(
-id
-){
-
-selectedId =
-id ||
-null;
-selectedIds.clear();
-
-if(
-selectedId
-){
-selectedIds.add(
-selectedId
+return selectedIdsListMoved(
+drawSessionHost(),
+...arguments
 );
 }
 
-}
-
-function applySelectedIds(
-ids,
-primaryId
-){
-
-selectedIds.clear();
-
-for(
-const id of ids ||
-[]
-){
-
-if(
-id
-){
-selectedIds.add(
-id
+function isIdSelected(id){
+return isIdSelectedMoved(
+drawSessionHost(),
+...arguments
 );
 }
 
-}
-
-if(
-primaryId &&
-selectedIds.has(
-primaryId
-)
-){
-selectedId =
-primaryId;
-}else if(
-!(
-selectedId &&
-selectedIds.has(
-selectedId
-)
-)
-){
-selectedId =
-selectedIds.size
-? [
-...selectedIds
-][
-selectedIds.size -
-1
-]
-: null;
-}
-
-}
-
-function toggleIdInSelection(
-id
-){
-
-if(
-!id
-){
-return;
-}
-
-if(
-selectedIds.has(
-id
-)
-){
-
-selectedIds.delete(
-id
+function applyPrimarySelectedId(id){
+return applyPrimarySelectedIdMoved(
+drawSessionHost(),
+...arguments
 );
-
-if(
-selectedId ===
-id
-){
-selectedId =
-selectedIds.size
-? [
-...selectedIds
-][
-selectedIds.size -
-1
-]
-: null;
 }
 
-}else{
-
-selectedIds.add(
-id
+function applySelectedIds(ids,
+primaryId){
+return applySelectedIdsMoved(
+drawSessionHost(),
+...arguments
 );
-selectedId =
-id;
-
 }
 
+function toggleIdInSelection(id){
+return toggleIdInSelectionMoved(
+drawSessionHost(),
+...arguments
+);
 }
 
 let textEditor =
 null;
+let drawingsHidden =
+false;
 /** @type {ReturnType<typeof createDrawDesktopSelection> | null} */
 let desktopEdit =
 null;
@@ -542,62 +632,17 @@ let rangeHandlerCoordSub =
 null;
 
 function refreshDrawToolsAccessUi(){
-
-ensureDrawToolsVisible();
-
-getDrawToolsContainers().forEach(el=>{
-el.classList.remove(
-"hidden",
-"draw-tools--locked"
+return refreshDrawToolsAccessUiMoved(
+drawSessionHost(),
+...arguments
 );
-el.setAttribute(
-"aria-disabled",
-"false"
-);
-});
-
-tools.querySelectorAll(
-"[data-draw-tool], .draw-tool-clear-all"
-).forEach(btn=>{
-btn.classList.remove(
-"hidden",
-"draw-tools-btn--locked"
-);
-btn.disabled = false;
-});
-
 }
 
 function getDrawToolsContainers(){
-
-const found =
-new Set();
-
-[
-tools,
-document
-].forEach(root=>{
-
-if(
-!root?.querySelectorAll
-){
-return;
-}
-
-root.querySelectorAll(
-".widget-draw-tools, #draw-toolbar"
-).forEach(el=>{
-found.add(
-el
+return getDrawToolsContainersMoved(
+drawSessionHost(),
+...arguments
 );
-});
-
-});
-
-return [
-...found
-];
-
 }
 
 let fibSettingsSyncDeferred = false;
@@ -737,70 +782,38 @@ let chartPanSettleTimer =
 
 
 function isDrawingInteractionLocked(){
-
-return !!(
-dragState ||
-placement ||
-brushPlacementCtl?.getBrushStroke?.()
+return isDrawingInteractionLockedMoved(
+drawSessionHost(),
+...arguments
 );
-
 }
 
 function shouldSuppressNativeSelection(){
-
-if(
-!alive ||
-!isActive()
-){
-return false;
-}
-
-return (
-tool !==
-"cursor" ||
-isDrawingInteractionLocked()
+return shouldSuppressNativeSelectionMoved(
+drawSessionHost(),
+...arguments
 );
-
 }
 
 function blocksDrawPaneSwitch(){
-
-return !!(
-dragState ||
-placement?.points?.length ||
-brushPlacementCtl?.getBrushStroke?.()
+return blocksDrawPaneSwitchMoved(
+drawSessionHost(),
+...arguments
 );
-
 }
 
 function shouldDeferExternalDrawingsSync(){
-
-return (
-isDrawingInteractionLocked() ||
-(
-styleBarCtl?.shouldDeferExternalDrawingsSync?.() ??
-false
-)
+return shouldDeferExternalDrawingsSyncMoved(
+drawSessionHost(),
+...arguments
 );
-
 }
 
 function flushDeferredFibSettingsSync(){
-
-if(
-!fibSettingsSyncDeferred
-){
-return;
-}
-
-fibSettingsSyncDeferred = false;
-
-applyRemoteDrawingsToChart(
-[
-getSymbol()
-]
+return flushDeferredFibSettingsSyncMoved(
+drawSessionHost(),
+...arguments
 );
-
 }
 
 let chartApplyPatchRestore = null;
@@ -815,33 +828,13 @@ let manualPriceScaleDrag = null;
 const afterRedrawListeners =
 new Set();
 
-function notifyAfterRedraw(
-ctx,
+function notifyAfterRedraw(ctx,
 plotW,
-h
-){
-
-afterRedrawListeners.forEach(
-listener=>{
-
-try{
-listener(
-ctx,
-plotW,
-h
+h){
+return notifyAfterRedrawMoved(
+drawSessionHost(),
+...arguments
 );
-}catch(
-err
-){
-console.warn(
-"afterRedraw",
-err
-);
-}
-
-}
-);
-
 }
 
 let priceScaleApplyPatchRestore = null;
@@ -859,286 +852,82 @@ getToolDefaults
 createDrawPrefs();
 
 function normalizeTime(time){
-
-if(typeof time === "number"){
-return time;
-}
-
-if(typeof time === "string"){
-return Math.floor(new Date(time).getTime() / 1000);
-}
-
-if(time && typeof time.timestamp === "number"){
-return time.timestamp;
-}
-
-return null;
-
+return normalizeTimeMoved(
+drawSessionHost(),
+...arguments
+);
 }
 
 function candleSeries(){
-
-return getCandles?.() || [];
-
+return candleSeriesMoved(
+drawSessionHost(),
+...arguments
+);
 }
 
 function segmentX(ts, t0, t1){
-
-const x0 = ts.timeToCoordinate(t0);
-const x1 = ts.timeToCoordinate(t1);
-
-if(x0 == null || x1 == null){
-return null;
-}
-
-return { x0, x1, dt: t1 - t0 };
-
+return segmentXMoved(
+drawSessionHost(),
+...arguments
+);
 }
 
 function xFromTime(time){
-
-const t = normalizeTime(time);
-
-if(t == null){
-return null;
-}
-
-const ts =
-coordChart.timeScale();
-const direct =
-ts.timeToCoordinate(t);
-
-if(direct != null){
-return direct;
-}
-
-const candles = candleSeries();
-
-if(!candles.length){
-return null;
-}
-
-const first = candles[0];
-const last = candles[candles.length - 1];
-
-/* Past / future beyond series: keep linear extrapolate so rays can extend. */
-if(candles.length >= 2 && t < first.time){
-
-const second = candles[1];
-const seg = segmentX(ts, first.time, second.time);
-
-if(!seg || seg.dt <= 0){
-return seg?.x0 ?? null;
-}
-
-return seg.x0 + (seg.x1 - seg.x0) * ((t - first.time) / seg.dt);
-
-}
-
-if(candles.length >= 2 && t > last.time){
-
-const prev = candles[candles.length - 2];
-const seg = segmentX(ts, prev.time, last.time);
-
-if(!seg || seg.dt <= 0){
-return seg?.x1 ?? null;
-}
-
-return seg.x1 + (seg.x1 - seg.x0) * ((t - last.time) / seg.dt);
-
-}
-
-/* Between bars (e.g. 1h open on Daily): stick to containing bar column. */
-const barOpen =
-containingBarOpenTime(
-candles,
-t
+return xFromTimeMoved(
+drawSessionHost(),
+...arguments
 );
-
-if(barOpen == null){
-return null;
 }
 
-return ts.timeToCoordinate(barOpen);
-
+function plotHitHost(){
+if(!plotHitHost.current){
+plotHitHost.current = {
+get brushBodyDist(){ return brushBodyDist; },
+get candleSeries(){ return candleSeries; },
+get channelBodyDist(){ return channelBodyDist; },
+get coordChart(){ return coordChart; },
+get distToSegment(){ return distToSegment; },
+get drawBodyHitThreshold(){ return drawBodyHitThreshold; },
+get drawMagnetKeyDown(){ return drawMagnetKeyDown; },
+get drawings(){ return drawings; },
+get drawingsHidden(){ return drawingsHidden; },
+get elliottBodyDist(){ return elliottBodyDist; },
+get enableMagnet(){ return enableMagnet; },
+get fibBodyDist(){ return fibBodyDist; },
+get fvpBodyDist(){ return fvpBodyDist; },
+get getCandles(){ return getCandles; },
+get getPlotWidth(){ return getPlotWidth; },
+get hitTestHandle(){ return hitTestHandle; },
+get hitTestTextBody(){ return hitTestTextBody; },
+get horizPriceLineX1(){ return horizPriceLineX1; },
+get isElliottType(){ return isElliottType; },
+get isFibType(){ return isFibType; },
+get isFvpType(){ return isFvpType; },
+get isHorizPriceTool(){ return isHorizPriceTool; },
+get isPositionType(){ return isPositionType; },
+get isTextTool(){ return isTextTool; },
+get manualPriceScaleDrag(){ return manualPriceScaleDrag; },
+get normalizeTime(){ return normalizeTime; },
+get plotPriceToCoordinate(){ return plotPriceToCoordinate; },
+get positionBodyDist(){ return positionBodyDist; },
+get priceScaleDragActive(){ return priceScaleDragActive; },
+get rectangleBodyDist(){ return rectangleBodyDist; },
+get segmentX(){ return segmentX; },
+get series(){ return series; },
+get snapPlotToCandleWick(){ return snapPlotToCandleWick; },
+get toXY(){ return toXY; },
+get trendlineBodyDist(){ return trendlineBodyDist; },
+get xFromTime(){ return xFromTime; }
+};
+}
+return plotHitHost.current;
 }
 
 function timeFromX(x){
-
-const ts =
-coordChart.timeScale();
-const candles =
-candleSeries();
-
-if(
-candles.length >=
-2
-){
-
-const first =
-candles[
-0
-];
-const second =
-candles[
-1
-];
-const prev =
-candles[
-candles.length - 2
-];
-const last =
-candles[
-candles.length - 1
-];
-
-const head =
-segmentX(
-ts,
-first.time,
-second.time
+return timeFromXMoved(
+plotHitHost(),
+...arguments
 );
-
-if(
-head &&
-head.dt >
-0 &&
-x <
-Math.min(
-head.x0,
-head.x1
-) -
-0.5
-){
-
-const ratio =
-(x - head.x0) /
-(head.x1 - head.x0);
-
-return (
-first.time +
-ratio *
-head.dt
-);
-
-}
-
-const tail =
-segmentX(
-ts,
-prev.time,
-last.time
-);
-
-if(
-tail &&
-tail.dt >
-0 &&
-x >
-Math.max(
-tail.x0,
-tail.x1
-) +
-0.5
-){
-
-const ratio =
-(x - tail.x1) /
-(tail.x1 - tail.x0);
-
-return (
-last.time +
-ratio *
-tail.dt
-);
-
-}
-
-}
-
-let time =
-normalizeTime(
-ts.coordinateToTime(
-x
-)
-);
-
-if(
-time !=
-null
-){
-
-return time;
-
-}
-
-if(
-candles.length <
-2
-){
-return null;
-}
-
-for(
-let i =
-0;
-i <
-candles.length - 1;
-i++
-){
-
-const seg =
-segmentX(
-ts,
-candles[
-i
-].time,
-candles[
-i + 1
-].time
-);
-
-if(
-!seg ||
-seg.dt <=
-0
-){
-continue;
-}
-
-const minX =
-Math.min(
-seg.x0,
-seg.x1
-);
-const maxX =
-Math.max(
-seg.x0,
-seg.x1
-);
-
-if(
-x >=
-minX &&
-x <=
-maxX
-){
-const ratio =
-(x - seg.x0) /
-(seg.x1 - seg.x0);
-return (
-candles[
-i
-].time +
-ratio *
-seg.dt
-);
-}
-
-}
-
-return null;
-
 }
 
 let storageKey;
@@ -1148,110 +937,38 @@ let saveDrawings;
 let persistDrawingsForSymbol;
 
 function resetDrawUndoHistory(){
-
-drawUndo.reset();
-
-if(
-sharedDrawUndo &&
-deferKeyboardUndo
-){
-sharedDrawUndo.reset();
-}
-
+return resetDrawUndoHistoryMoved(
+drawSessionHost(),
+...arguments
+);
 }
 
 function syncDrawUndoBaseline(){
-
-drawUndo.syncBaseline(
-cloneDrawingsForUndo(
-drawings,
-normalizeDrawingShape
-)
+return syncDrawUndoBaselineMoved(
+drawSessionHost(),
+...arguments
 );
-
 }
 
-function applyDrawingsUndoSnapshot(
-prev
-){
-
-if(
-!prev
-){
-return false;
-}
-
-const keepIds =
-selectedIdsList();
-
-drawUndo.setReplay(
-true
+function applyDrawingsUndoSnapshot(prev){
+return applyDrawingsUndoSnapshotMoved(
+drawSessionHost(),
+...arguments
 );
-
-drawings =
-prev.map(shape=>
-normalizeDrawingShape(
-shape
-)
-);
-
-applySelectedIds(
-keepIds.filter(
-id=>
-drawings.some(d=>d.id === id)
-)
-);
-
-syncDrawUndoBaseline();
-
-saveDrawings({
-skipUndoRecord:true
-});
-
-drawUndo.setReplay(
-false
-);
-
-updateStyleBar();
-redraw();
-
-return true;
-
 }
 
 function undoLastDrawingChange(){
-
-if(
-!alive ||
-placement ||
-dragState
-){
-return false;
-}
-
-if(
-sharedDrawUndo?.canUndo?.()
-){
-return sharedDrawUndo.undo();
-}
-
-if(
-!isActive() ||
-!drawUndo.canUndo()
-){
-return false;
-}
-
-return applyDrawingsUndoSnapshot(
-drawUndo.pop()
+return undoLastDrawingChangeMoved(
+drawSessionHost(),
+...arguments
 );
-
 }
 
 function getSelected(){
-
-return drawings.find(d=>d.id === selectedId) || null;
-
+return getSelectedMoved(
+drawSessionHost(),
+...arguments
+);
 }
 
 
@@ -1285,979 +1002,332 @@ vertTouchDrag:false
 };
 
 function chartScrollWhenUnlocked(){
-
-if(
-tabletCustomPanHooked &&
-isTabletChartViewport() &&
-TABLET_USE_CUSTOM_TOUCH_PAN &&
-!hasAnyFinePointer()
-){
-return CHART_SCROLL_TABLET_CUSTOM_PAN;
-}
-
-if(
-isCoarseTouchViewport() &&
-!tabletCustomPanHooked &&
-tool !==
-"cursor"
-){
-return CHART_SCROLL_DRAW_TOOL;
-}
-
-return CHART_SCROLL_DEFAULT;
-
+return chartScrollWhenUnlockedMoved(
+drawSessionHost(),
+...arguments
+);
 }
 
 function syncChartTouchPan(){
-
-const desktopStrokePlacementDrag =
-!!placement &&
-!isTouchDrawPlacement() &&
-(
-placement.type ===
-"rectangle" ||
-placement.type ===
-"trendline" ||
-placement.type ===
-"fib" ||
-placement.type ===
-"fib-ext" ||
-placement.type ===
-"channel" ||
-placement.type ===
-"arrow"
-) &&
-placement.points.length >=
-1;
-
-const lock =
-alive &&
-(
-!!dragState ||
-(
-placement &&
-isTouchDrawPlacement()
-) ||
-desktopStrokePlacementDrag
+return syncChartTouchPanMoved(
+drawSessionHost(),
+...arguments
 );
-
-try{
-chart.applyOptions({
-handleScroll: lock
-? CHART_SCROLL_LOCKED
-: chartScrollWhenUnlocked()
-});
-}catch{
-/* ignore */
-}
-
-wrapEl?.classList.toggle(
-"chart-touch-locked",
-!!lock
-);
-
 }
 
 
 function isTouchDrawTablet(){
-
-return tabletDrawInput?.isTouchDrawTablet() ??
-false;
-
+return isTouchDrawTabletMoved(
+drawSessionHost(),
+...arguments
+);
 }
 
 function isTouchDrawPlacement(){
-
-return tabletDrawInput?.isTouchDrawPlacement() ??
-false;
-
+return isTouchDrawPlacementMoved(
+drawSessionHost(),
+...arguments
+);
 }
 
-function beginTouchPlacementSession(
-pointerType
-){
-
-tabletDrawInput?.beginPlacementSession?.(
-pointerType
+function beginTouchPlacementSession(pointerType){
+return beginTouchPlacementSessionMoved(
+drawSessionHost(),
+...arguments
 );
-
 }
 
 function useChartProbeCrosshair(){
-
-return tabletDrawInput?.useChartProbeCrosshair() ??
-false;
-
+return useChartProbeCrosshairMoved(
+drawSessionHost(),
+...arguments
+);
 }
 
 function initTouchDrawCrosshair(){
-
-tabletDrawInput?.initTouchDrawCrosshair();
-
+return initTouchDrawCrosshairMoved(
+drawSessionHost(),
+...arguments
+);
 }
 
 function syncTouchDrawCrosshairPreview(){
-
-tabletDrawInput?.syncTouchDrawCrosshairPreview();
-
+return syncTouchDrawCrosshairPreviewMoved(
+drawSessionHost(),
+...arguments
+);
 }
 
-function showStandardChartCrosshair(
-e,
+function showStandardChartCrosshair(e,
 localX,
-localY
-){
-
-tabletDrawInput?.showStandardChartCrosshair(
-e,
-localX,
-localY
+localY){
+return showStandardChartCrosshairMoved(
+drawSessionHost(),
+...arguments
 );
-
 }
 
 function hideStandardChartCrosshair(){
-
-tabletDrawInput?.hideStandardChartCrosshair();
-
+return hideStandardChartCrosshairMoved(
+drawSessionHost(),
+...arguments
+);
 }
 
 function suppressChartCrosshairForDrag(){
-
-tabletDrawInput?.suppressChartCrosshairForDrag();
-
+return suppressChartCrosshairForDragMoved(
+drawSessionHost(),
+...arguments
+);
 }
 
-function syncEditDragCrosshair(
-e,
+function syncEditDragCrosshair(e,
 localX,
-localY
-){
-
-tabletDrawInput?.syncEditDragCrosshair(
-e,
-localX,
-localY
+localY){
+return syncEditDragCrosshairMoved(
+drawSessionHost(),
+...arguments
 );
-
 }
 
-function beginEditDragCrosshair(
-e,
+function beginEditDragCrosshair(e,
 localX,
-localY
-){
-
-tabletDrawInput?.beginEditDragCrosshair(
-e,
-localX,
-localY
+localY){
+return beginEditDragCrosshairMoved(
+drawSessionHost(),
+...arguments
 );
-
 }
 
 function clearEditDragCrosshair(){
-
-tabletDrawInput?.clearEditDragCrosshair();
-
+return clearEditDragCrosshairMoved(
+drawSessionHost(),
+...arguments
+);
 }
 
-function placementPointsNeeded(
-type
-){
-
-return tabletDrawInput?.placementPointsNeeded(
-type
-) ??
-2;
-
+function placementPointsNeeded(type){
+return placementPointsNeededMoved(
+drawSessionHost(),
+...arguments
+);
 }
 
 function clearTouchDrawState(){
-
-tabletDrawInput?.clearTouchDrawState();
-
+return clearTouchDrawStateMoved(
+drawSessionHost(),
+...arguments
+);
 }
 
 function getTouchDrawCrosshair(){
-
-return tabletDrawInput?.getTouchDrawCrosshair() ??
-null;
-
+return getTouchDrawCrosshairMoved(
+drawSessionHost(),
+...arguments
+);
 }
 
 function getTouchPlaceTrack(){
-
-return tabletDrawInput?.getTouchPlaceTrack() ??
-null;
-
+return getTouchPlaceTrackMoved(
+drawSessionHost(),
+...arguments
+);
 }
 
 
 
 function pointFromParam(param){
-
-if(!param.point){
-return null;
-}
-
-const price =
-series.coordinateToPrice(param.point.y);
-
-if(price == null || !Number.isFinite(price)){
-return null;
-}
-
-let time = null;
-
-if(
-placement
-){
-time = timeFromX(param.point.x);
-}
-
-if(
-time == null &&
-param.time != null
-){
-time = normalizeTime(param.time);
-}
-
-if(time == null){
-time = timeFromX(param.point.x);
-}
-
-if(time == null){
-return null;
-}
-
-return { time, price };
-
+return pointFromParamMoved(
+drawSessionHost(),
+...arguments
+);
 }
 
 function clearChartRuler(){
-
-chartRulerStart = null;
-chartRulerEndPlot = null;
-
-hideChartRulerLabelEl(
-chartRulerLabelEl
+return clearChartRulerMoved(
+drawSessionHost(),
+...arguments
 );
-
-syncChartRulerLayerClass();
-
-if(
-chartRulerRedrawRaf
-){
-cancelAnimationFrame(
-chartRulerRedrawRaf
-);
-chartRulerRedrawRaf = 0;
-}
-
 }
 
 function syncChartRulerLayerClass(){
-
-wrapEl?.classList.toggle(
-"chart-ruler-active",
-!!chartRulerStart
+return syncChartRulerLayerClassMoved(
+drawSessionHost(),
+...arguments
 );
-
 }
 
 function scheduleChartRulerRedraw(){
-
-if(
-chartPanActive
-){
-return;
-}
-
-if(
-chartRulerRedrawRaf
-){
-return;
-}
-
-chartRulerRedrawRaf =
-requestAnimationFrame(()=>{
-
-chartRulerRedrawRaf = 0;
-redraw();
-
-});
-
-}
-
-function isChartRulerShiftActive(
-optEvent
-){
-
-return !!(
-chartRulerShiftDown ||
-optEvent?.shiftKey ===
-true
+return scheduleChartRulerRedrawMoved(
+drawSessionHost(),
+...arguments
 );
-
 }
 
-function syncChartRulerShiftFromEvent(
-optEvent
-){
-
-if(
-optEvent?.shiftKey ===
-true
-){
-chartRulerShiftDown = true;
+function isChartRulerShiftActive(optEvent){
+return isChartRulerShiftActiveMoved(
+drawSessionHost(),
+...arguments
+);
 }
 
+function syncChartRulerShiftFromEvent(optEvent){
+return syncChartRulerShiftFromEventMoved(
+drawSessionHost(),
+...arguments
+);
 }
 
-function drawChartRulerOverlay(
-ctx,
+function drawToolHost(){
+if(!drawToolHost.current){
+drawToolHost.current = {
+get alive(){ return alive; },
+get applyPrimarySelectedId(){ return applyPrimarySelectedId; },
+get baseDefaultStyle(){ return baseDefaultStyle; },
+get brushPlacementCtl(){ return brushPlacementCtl; },
+get cancelPlacement(){ return cancelPlacement; },
+get candleSeries(){ return candleSeries; },
+get chartRulerEndPlot(){ return chartRulerEndPlot; },
+set chartRulerEndPlot(value){ chartRulerEndPlot = value; },
+get chartRulerLabelEl(){ return chartRulerLabelEl; },
+get chartRulerStart(){ return chartRulerStart; },
+set chartRulerStart(value){ chartRulerStart = value; },
+get clearAllPeers(){ return clearAllPeers; },
+get clearChartRuler(){ return clearChartRuler; },
+get closeAllWidgetDrawToolsMenus(){ return closeAllWidgetDrawToolsMenus; },
+get closeElliottFlyout(){ return closeElliottFlyout; },
+get closeFibFlyout(){ return closeFibFlyout; },
+get computeChartRulerMetrics(){ return computeChartRulerMetrics; },
+get desktopEdit(){ return desktopEdit; },
+get drawAnchorCircle(){ return drawAnchorCircle; },
+get drawChartRuler(){ return drawChartRuler; },
+get drawShape(){ return drawShape; },
+get drawings(){ return drawings; },
+set drawings(value){ drawings = value; },
+get drawingsHidden(){ return drawingsHidden; },
+set drawingsHidden(value){ drawingsHidden = value; },
+get getSymbol(){ return getSymbol; },
+get isActive(){ return isActive; },
+get isChartRulerGoingDown(){ return isChartRulerGoingDown; },
+get isChartRulerShiftActive(){ return isChartRulerShiftActive; },
+get isCoarseTouchViewport(){ return isCoarseTouchViewport; },
+get isTabletChartViewport(){ return isTabletChartViewport; },
+get lastToolPickStamp(){ return lastToolPickStamp; },
+set lastToolPickStamp(value){ lastToolPickStamp = value; },
+get notifyTabletChartGestureAbort(){ return notifyTabletChartGestureAbort; },
+get pointFromXY(){ return pointFromXY; },
+get recordDrawingTombstone(){ return recordDrawingTombstone; },
+get redraw(){ return redraw; },
+get saveDrawings(){ return saveDrawings; },
+get scheduleRedraw(){ return scheduleRedraw; },
+get selectedId(){ return selectedId; },
+get selectedIds(){ return selectedIds; },
+get selectedIdsList(){ return selectedIdsList; },
+get shouldSuppressNativeSelection(){ return shouldSuppressNativeSelection; },
+get startPlacement(){ return startPlacement; },
+get styleBar(){ return styleBar; },
+get syncChartRulerLayerClass(){ return syncChartRulerLayerClass; },
+get syncDrawingsHiddenButton(){ return syncDrawingsHiddenButton; },
+get syncElliottGroupActive(){ return syncElliottGroupActive; },
+get syncFibGroupActive(){ return syncFibGroupActive; },
+get textEditor(){ return textEditor; },
+get toXY(){ return toXY; },
+get tool(){ return tool; },
+set tool(value){ tool = value; },
+get tools(){ return tools; },
+get updateChartRulerLabelEl(){ return updateChartRulerLabelEl; },
+get updateStyleBar(){ return updateStyleBar; },
+get wrapEl(){ return wrapEl; }
+};
+}
+return drawToolHost.current;
+}
+
+function drawChartRulerOverlay(ctx,
 plotW,
-plotH
-){
-
-if(
-!chartRulerStart ||
-!chartRulerEndPlot
-){
-return;
-}
-
-const startXY =
-toXY(
-chartRulerStart
-);
-
-if(
-!startXY
-){
-return;
-}
-
-const endPoint =
-pointFromXY(
-chartRulerEndPlot.x,
-chartRulerEndPlot.y
-);
-
-if(
-!endPoint
-){
-return;
-}
-
-const metrics =
-computeChartRulerMetrics(
-chartRulerStart,
-endPoint,
-candleSeries()
-);
-
-const goesDown =
-isChartRulerGoingDown(
-startXY,
-chartRulerEndPlot
-);
-
-drawChartRuler(
-ctx,
-startXY,
-chartRulerEndPlot,
-goesDown
-);
-
-try{
-
-updateChartRulerLabelEl(
-chartRulerLabelEl,
-{
-bx: chartRulerEndPlot.x,
-by: chartRulerEndPlot.y,
-goesDown,
-metrics,
-plotW,
-plotH
-}
-);
-
-}catch(
-labelErr
-){
-console.warn(
-"chart ruler label",
-labelErr
+plotH){
+return drawChartRulerOverlayMoved(
+drawToolHost(),
+...arguments
 );
 }
 
-}
-
-function syncChartRulerEndFromPlot(
-rawX,
-rawY
-){
-
-if(
-tool !==
-"cursor" ||
-!chartRulerStart
-){
-return false;
-}
-
-if(
-!Number.isFinite(
-rawX
-) ||
-!Number.isFinite(
-rawY
-)
-){
-return false;
-}
-
-chartRulerEndPlot = {
-x: rawX,
-y: rawY
-};
-
-scheduleChartRulerRedraw();
-
-return true;
-
-}
-
-function handleChartRulerClick(
-point,
-param
-){
-
-if(
-tool !==
-"cursor" ||
-!isChartRulerShiftActive(
-param
-) ||
-!point
-){
-return false;
-}
-
-if(
-chartRulerStart
-){
-clearChartRuler();
-redraw();
-return true;
-}
-
-chartRulerStart = {
-time: point.time,
-price: point.price
-};
-
-const startPlot =
-toXY(
-chartRulerStart
+function syncChartRulerEndFromPlot(rawX,
+rawY){
+return syncChartRulerEndFromPlotMoved(
+drawSessionHost(),
+...arguments
 );
+}
 
-chartRulerEndPlot = {
-x: param.point?.x ??
-startPlot?.x ??
-0,
-y: param.point?.y ??
-startPlot?.y ??
-0
-};
-
-syncChartRulerLayerClass();
-redraw();
-
-return true;
-
+function handleChartRulerClick(point,
+param){
+return handleChartRulerClickMoved(
+drawToolHost(),
+...arguments
+);
 }
 
 
 
 function readChartScaleMargins(){
-
-try{
-
-const o =
-chart.priceScale(
-"right"
-).options();
-
-return {
-top:
-o.scaleMargins?.top ??
-0.12,
-bottom:
-o.scaleMargins?.bottom ??
-0.12
-};
-
-}catch{
-
-return {
-top:0.12,
-bottom:0.12
-};
-
-}
-
+return readChartScaleMarginsMoved(
+drawSessionHost(),
+...arguments
+);
 }
 
 function isPriceScaleInverted(){
-
-try{
-return chart.priceScale(
-"right"
-).options().invertScale ===
-true;
-}catch{
-return false;
-}
-
-}
-
-function manualPriceToCoordinate(
-price
-){
-
-const s =
-manualPriceScaleDrag;
-
-if(
-!s ||
-!Number.isFinite(
-price
-)
-){
-return null;
-}
-
-const {
-minPrice,
-maxPrice,
-top,
-bottom,
-h
-} =
-s;
-
-const plotTop =
-h * top;
-
-const plotHeight =
-h * (
-1 - top - bottom
+return isPriceScaleInvertedMoved(
+drawSessionHost(),
+...arguments
 );
-
-if(
-plotHeight <=
-0
-){
-return null;
 }
 
-const inverted =
-s.inverted;
-
-if(
-s.logarithmic &&
-minPrice >
-0 &&
-maxPrice >
-0 &&
-price >
-0
-){
-
-const logMin =
-Math.log(
-minPrice
+function manualPriceToCoordinate(price){
+return manualPriceToCoordinateMoved(
+plotHitHost(),
+...arguments
 );
+}
 
-const logMax =
-Math.log(
-maxPrice
+function plotCoordinateToPrice(py){
+return plotCoordinateToPriceMoved(
+plotHitHost(),
+...arguments
 );
-
-const logSpan =
-logMax - logMin;
-
-if(
-!Number.isFinite(logSpan) ||
-logSpan ===
-0
-){
-return null;
-}
-
-const logP =
-Math.log(
-price
-);
-
-const ratio =
-inverted
-? (
-logP - logMin
-) / logSpan
-: (
-logMax - logP
-) / logSpan;
-
-return plotTop + ratio * plotHeight;
-
-}
-
-const span =
-maxPrice - minPrice;
-
-if(
-!Number.isFinite(span) ||
-span ===
-0
-){
-return null;
-}
-
-const ratio =
-inverted
-? (
-price - minPrice
-) / span
-: (
-maxPrice - price
-) / span;
-
-return plotTop + ratio * plotHeight;
-
-}
-
-function plotCoordinateToPrice(
-py
-){
-
-if(
-!Number.isFinite(
-py
-)
-){
-return null;
-}
-
-if(
-priceScaleDragActive &&
-manualPriceScaleDrag
-){
-
-const s =
-manualPriceScaleDrag;
-
-const {
-minPrice,
-maxPrice,
-top,
-bottom,
-h,
-inverted,
-logarithmic
-} =
-s;
-
-const plotTop =
-h * top;
-
-const plotHeight =
-h * (
-1 - top - bottom
-);
-
-if(
-plotHeight <=
-0
-){
-return null;
-}
-
-const ratio =
-(py - plotTop) /
-plotHeight;
-
-if(
-logarithmic &&
-minPrice >
-0 &&
-maxPrice >
-0
-){
-
-const logMin =
-Math.log(
-minPrice
-);
-
-const logMax =
-Math.log(
-maxPrice
-);
-
-const logSpan =
-logMax - logMin;
-
-if(
-!Number.isFinite(
-logSpan
-) ||
-logSpan ===
-0
-){
-return null;
-}
-
-const logP =
-inverted
-? logMin +
-ratio *
-logSpan
-: logMax -
-ratio *
-logSpan;
-
-const price =
-Math.exp(
-logP
-);
-
-return Number.isFinite(
-price
-)
-? price
-: null;
-
-}
-
-const span =
-maxPrice - minPrice;
-
-if(
-!Number.isFinite(
-span
-) ||
-span ===
-0
-){
-return null;
-}
-
-const price =
-inverted
-? minPrice +
-ratio *
-span
-: maxPrice -
-ratio *
-span;
-
-return Number.isFinite(
-price
-)
-? price
-: null;
-
-}
-
-return series.coordinateToPrice(
-py
-);
-
 }
 
 function pointFromXY(px, py){
-
-const price =
-plotCoordinateToPrice(
-py
+return pointFromXYMoved(
+drawSessionHost(),
+...arguments
 );
-
-if(price == null || !Number.isFinite(price)){
-return null;
-}
-
-const time = timeFromX(px);
-
-if(time == null){
-return null;
-}
-
-return { time, price };
-
 }
 
 /** Не сбрасывать якорь при кратком сбое time/price (зум, скролл, redraw). */
-function resolvePointFromPlotXY(
-px,
+function resolvePointFromPlotXY(px,
 py,
 prev = null,
-optEvent = null
-){
-
-const magnetActive =
-enableMagnet &&
-(
-drawMagnetKeyDown ||
-optEvent?.metaKey ===
-true
+optEvent = null){
+return resolvePointFromPlotXYMoved(
+plotHitHost(),
+...arguments
 );
-
-if(
-magnetActive
-){
-
-const snap =
-snapPlotToCandleWick({
-plotX: px,
-plotY: py,
-candles: candleSeries(),
-timeFromX,
-xFromTime,
-priceToPlotY: plotPriceToCoordinate
-});
-
-if(
-snap
-){
-return {
-time: snap.time,
-price: snap.price
-};
 }
 
-}
-
-const price =
-plotCoordinateToPrice(
-py
+function plotPriceToCoordinate(price){
+return plotPriceToCoordinateMoved(
+drawSessionHost(),
+...arguments
 );
-const time =
-timeFromX(
-px
-);
-
-if(
-price !=
-null &&
-Number.isFinite(
-price
-) &&
-time !=
-null
-){
-return {
-time,
-price
-};
-}
-
-if(
-!prev
-){
-return null;
-}
-
-const merged = {
-time:
-time ??
-prev.time,
-price:
-price !=
-null &&
-Number.isFinite(
-price
-)
-? price
-: prev.price
-};
-
-if(
-merged.time ==
-null ||
-merged.price ==
-null ||
-!Number.isFinite(
-merged.price
-)
-){
-return null;
-}
-
-return merged;
-
-}
-
-function plotPriceToCoordinate(
-price
-){
-
-if(
-priceScaleDragActive
-){
-
-if(
-manualPriceScaleDrag
-){
-const y =
-manualPriceToCoordinate(
-price
-);
-
-if(
-y !=
-null
-){
-return y;
-}
-}
-
-return null;
-
-}
-
-return series.priceToCoordinate(
-price
-);
-
 }
 
 function toXY(point){
-
-if(
-!point ||
-point.time ==
-null ||
-!Number.isFinite(
-point.price
-)
-){
-return null;
-}
-
-const x = xFromTime(point.time);
-const y = plotPriceToCoordinate(point.price);
-
-if(x == null || y == null){
-return null;
-}
-
-return { x, y };
-
+return toXYMoved(
+drawSessionHost(),
+...arguments
+);
 }
 
 const positionXBounds =
@@ -2353,56 +1423,11 @@ const EPHEMERAL_DRAWING_FLAGS =
 "algoPatternEntry"
 ];
 
-function isEphemeralDrawingShape(
-shape
-){
-
-if(
-!shape ||
-typeof shape !==
-"object"
-){
-return false;
-}
-
-for(
-const flag of EPHEMERAL_DRAWING_FLAGS
-){
-
-if(
-shape[
-flag
-]
-){
-return true;
-}
-
-}
-
-for(
-const flag of ephemeralDrawingsByFlag.keys()
-){
-
-if(
-shape[
-flag
-]
-){
-return true;
-}
-
-}
-
-const id =
-String(
-shape.id ||
-""
+function isEphemeralDrawingShape(shape){
+return isEphemeralDrawingShapeMoved(
+drawSessionHost(),
+...arguments
 );
-
-return id.startsWith(
-"algo-entry-"
-);
-
 }
 
 const loadDrawingsFromStorage =
@@ -2412,32 +1437,10 @@ const saveDrawingsToStorage =
 saveDrawings;
 
 function reapplyEphemeralDrawings(){
-
-drawings =
-drawings.filter(
-shape=>
-!isEphemeralDrawingShape(
-shape
-)
+return reapplyEphemeralDrawingsMoved(
+drawSessionHost(),
+...arguments
 );
-
-for(
-const shapes of ephemeralDrawingsByFlag.values()
-){
-
-if(
-Array.isArray(
-shapes
-) &&
-shapes.length
-){
-drawings.push(
-...shapes
-);
-}
-
-}
-
 }
 
 loadDrawings =
@@ -2471,7 +1474,7 @@ true
 reapplyEphemeralDrawings();
 };
 
-void import("../drawings-kv.js?v=3").then(
+void import("../drawings-kv.js?v=fc0e52d7").then(
 (
 m
 )=>{
@@ -2540,317 +1543,78 @@ reapplyEphemeralDrawings();
 
 };
 
-function setEphemeralDrawings(
-flag,
-shapes
-){
-
-const key =
-String(
-flag ||
-""
-).trim();
-
-if(
-!key
-){
-return;
-}
-
-const list =
-Array.isArray(
-shapes
-)
-? shapes.filter(
-Boolean
-)
-: [];
-
-if(
-list.length
-){
-ephemeralDrawingsByFlag.set(
-key,
-list
+function setEphemeralDrawings(flag,
+shapes){
+return setEphemeralDrawingsMoved(
+drawSessionHost(),
+...arguments
 );
-}else{
-ephemeralDrawingsByFlag.delete(
-key
-);
-}
-
-reapplyEphemeralDrawings();
-scheduleRedraw();
-
 }
 
 function clearEphemeralDrawings(){
-
-ephemeralDrawingsByFlag.clear();
-reapplyEphemeralDrawings();
-scheduleRedraw();
-
+return clearEphemeralDrawingsMoved(
+drawSessionHost(),
+...arguments
+);
 }
 
 function chartSize(){
-return {
-w: wrapEl.clientWidth,
-h: wrapEl.clientHeight
-};
+return chartSizeMoved(
+drawSessionHost(),
+...arguments
+);
 }
 
 
 function resizeCanvas(){
-
-const dpr =
-window.devicePixelRatio ||
-1;
-const {
-w,
-h
-} =
-chartSize();
-
-const nextW =
-Math.max(
-1,
-Math.floor(
-w *
-dpr
-)
+return resizeCanvasMoved(
+drawSessionHost(),
+...arguments
 );
-const nextH =
-Math.max(
-1,
-Math.floor(
-h *
-dpr
-)
-);
-const cssW =
-`${w}px`;
-const cssH =
-`${h}px`;
-
-if(
-canvas.width ===
-nextW &&
-canvas.height ===
-nextH &&
-canvas.style.width ===
-cssW &&
-canvas.style.height ===
-cssH
-){
-return;
-}
-
-canvas.width =
-nextW;
-canvas.height =
-nextH;
-canvas.style.width =
-cssW;
-canvas.style.height =
-cssH;
-
-removePriceGutterOverlay();
-
-/* bitmap clear — сразу redraw (resizeCharts уже обновил LW chart). */
-redraw();
-
 }
 
 function shapeStyle(shape){
-
-return {
-color: shape.color || STROKE,
-width: shape.lineWidth || 1,
-dash: null
-};
-
+return shapeStyleMoved(
+drawSessionHost(),
+...arguments
+);
 }
 
 
 function anchorCircleRadius(){
-
-return isCoarseTouchViewport()
-? 10
-: 5;
-
+return anchorCircleRadiusMoved(
+drawSessionHost(),
+...arguments
+);
 }
 
 function anchorSquareHalfSize(){
-
-return isCoarseTouchViewport()
-? 8
-: 4;
-
+return anchorSquareHalfSizeMoved(
+drawSessionHost(),
+...arguments
+);
 }
 
 
 function drawAnchorCircle(ctx, x, y){
-
-const r =
-anchorCircleRadius();
-const touch =
-isCoarseTouchViewport() ||
-isTabletChartViewport();
-
-ctx.beginPath();
-ctx.arc(x, y, r, 0, Math.PI * 2);
-
-if(
-!touch
-){
-ctx.fillStyle = HANDLE_FILL;
-ctx.fill();
-}
-
-ctx.strokeStyle = HANDLE_STROKE;
-ctx.lineWidth =
-touch ? 2 : 1.5;
-ctx.stroke();
-
+return drawAnchorCircleMoved(
+drawSessionHost(),
+...arguments
+);
 }
 
 function drawAnchorSquare(ctx, x, y){
-
-const h =
-anchorSquareHalfSize();
-const touch =
-isCoarseTouchViewport() ||
-isTabletChartViewport();
-
-if(
-!touch
-){
-ctx.fillStyle = HANDLE_FILL;
-ctx.fillRect(x - h, y - h, h * 2, h * 2);
-}
-
-ctx.strokeStyle = HANDLE_STROKE;
-ctx.lineWidth =
-touch ? 2 : 1.5;
-ctx.strokeRect(x - h - 0.5, y - h - 0.5, h * 2 + 1, h * 2 + 1);
-
+return drawAnchorSquareMoved(
+drawSessionHost(),
+...arguments
+);
 }
 
 function listHandles(shape){
-
-if(shape.type === "trendline" || shape.type === "fib" || shape.type === "arrow" || shape.type === "brush"){
-
-return [
-{ id: "p1", point: shape.p1 },
-{ id: "p2", point: shape.p2 }
-];
-
-}
-
-if(
-isFibExtType(
-shape.type
-)
-){
-
-return [
-{ id: "p1", point: shape.p1 },
-{ id: "p2", point: shape.p2 },
-{ id: "p3", point: shape.p3 }
-];
-
-}
-
-if(
-shape.type ===
-"rectangle"
-){
-
-return [
-{ id: "p1", point: shape.p1 },
-{ id: "p2", point: shape.p2 }
-];
-
-}
-
-if(
-isFvpType(
-shape.type
-)
-){
-return [];
-}
-
-if(isHorizPriceTool(shape.type)){
-
-return [{
-id: "anchor",
-point: { time: shape.time, price: shape.price }
-}];
-
-}
-
-if(isTextTool(shape.type)){
-
-return [{
-id: "anchor",
-point: { time: shape.time, price: shape.price }
-}];
-
-}
-
-if(shape.type === "channel"){
-
-const p4 =
-channelP4Point(
-shape
+return listHandlesMoved(
+drawSessionHost(),
+...arguments
 );
-
-if(
-!p4
-){
-return [
-{ id: "p1", point: shape.p1 },
-{ id: "p2", point: shape.p2 },
-{ id: "p3", point: shape.p3 }
-];
-}
-
-return [
-{ id: "p1", point: shape.p1 },
-{ id: "p2", point: shape.p2 },
-{ id: "p3", point: shape.p3 },
-{ id: "p4", point: p4 }
-];
-
-}
-
-if(
-isElliottType(
-shape.type
-)
-){
-return listElliottHandles(
-shape
-);
-}
-
-if(isPositionType(shape.type)){
-
-const entry =
-positionEntryPrice(shape);
-
-return [
-{ id: "entryL", point: { time: shape.p1.time, price: entry } },
-{ id: "entryR", point: { time: shape.p2.time, price: entry } },
-{ id: "tp", point: { time: shape.p1.time, price: shape.tpPrice } },
-{ id: "sl", point: { time: shape.p1.time, price: shape.slPrice } }
-];
-
-}
-
-return [];
-
 }
 
 
@@ -2868,6 +1632,8 @@ holdChartPanRedraw(),
 bumpChartPanRedraw:()=>
 bumpChartPanRedraw(),
 getDrawings:()=>drawings,
+getDrawingsHidden:()=>
+drawingsHidden,
 getSelectedId:()=>selectedId,
 getSelectedIds: selectedIdsList,
 listHandles,
@@ -2929,27 +1695,17 @@ priceScaleCtl);
 
 
 function pointerFromEvent(e){
-
-const rect = wrapEl.getBoundingClientRect();
-
-return {
-x: e.clientX - rect.left,
-y: e.clientY - rect.top
-};
-
+return pointerFromEventMoved(
+drawSessionHost(),
+...arguments
+);
 }
 
 function chartCanvasEl(){
-
-return (
-wrapEl?.querySelector(
-".chart"
-) ||
-wrapEl?.querySelector(
-"#chart"
-)
+return chartCanvasElMoved(
+drawSessionHost(),
+...arguments
 );
-
 }
 
 const {
@@ -3078,98 +1834,13 @@ alertsChart);
 }
 
 
-function drawBrushPlacementPreview(
-ctx,
+function drawBrushPlacementPreview(ctx,
 plotW,
-h
-){
-
-const stroke =
-brushPlacementCtl?.getBrushStroke?.();
-
-if(
-!stroke?.points?.length
-){
-return;
-}
-
-const pts =
-stroke.points;
-
-if(
-pts.length <
-1
-){
-return;
-}
-
-const style =
-baseDefaultStyle(
-"brush"
+h){
+return drawBrushPlacementPreviewMoved(
+drawToolHost(),
+...arguments
 );
-
-if(
-pts.length >=
-2
-){
-
-drawShape(
-ctx,
-{
-type: "brush",
-path: pts,
-p1: pts[
-0
-],
-p2: pts[
-pts.length -
-1
-],
-color: style.color,
-lineWidth: style.lineWidth
-},
-plotW,
-h
-);
-
-}
-
-const start =
-toXY(
-pts[
-0
-]
-);
-const end =
-toXY(
-pts[
-pts.length -
-1
-]
-);
-
-if(
-start
-){
-drawAnchorCircle(
-ctx,
-start.x,
-start.y
-);
-}
-
-if(
-end &&
-pts.length >
-1
-){
-drawAnchorCircle(
-ctx,
-end.x,
-end.y
-);
-}
-
 }
 
 
@@ -3180,6 +1851,8 @@ chartSize,
 getPlotWidth,
 getChartPanActive:()=>chartPanActive,
 getDrawings:()=>drawings,
+getDrawingsHidden:()=>
+drawingsHidden,
 getSelectedId:()=>selectedId,
 getIsIdSelected: isIdSelected,
 getDragState:()=>dragState,
@@ -3201,7 +1874,8 @@ drawPriceScaleLabels,
 onAfterRedraw:notifyAfterRedraw,
 getCandles:()=>
 getCandles?.() ||
-[]
+[],
+chart
 });
 
 let redrawCore;
@@ -3364,245 +2038,18 @@ placementCtl);
 
 
 function hitTest(px, py){
-
-const bodyThreshold =
-drawBodyHitThreshold();
-
-for(
-let i =
-drawings.length -
-1;
-i >=
-0;
-i--
-){
-
-const d =
-drawings[
-i
-];
-
-if(
-hitTestHandle(
-px,
-py,
-d
-)
-){
-return d.id;
-}
-
-}
-
-let best = null;
-let bestDist = bodyThreshold;
-
-drawings.forEach(d=>{
-
-let dist = Infinity;
-
-if(
-d.type === "trendline" ||
-d.type === "arrow"
-){
-
-dist = trendlineBodyDist(px, py, d);
-
-}
-
-if(
-d.type ===
-"rectangle"
-){
-
-dist = rectangleBodyDist(
-px,
-py,
-d,
-toXY
-);
-
-}
-
-if(
-isFvpType(
-d.type
-)
-){
-
-dist = fvpBodyDist(
-px,
-py,
-d,
-toXY,
-getCandles?.() ||
-[]
-);
-
-}
-
-if(isHorizPriceTool(d.type)){
-
-const anchor = toXY({
-time: d.time,
-price: d.price
-});
-
-if(anchor){
-dist = distToSegment(
-px,
-py,
-horizPriceLineX1(
-d.type,
-anchor.x
-),
-anchor.y,
-getPlotWidth(),
-anchor.y
+return hitTestMoved(
+plotHitHost(),
+...arguments
 );
 }
 
-}
-
-if(
-isFibType(
-d.type
-)
-){
-
-dist = fibBodyDist(px, py, d);
-
-}
-if(d.type === "channel"){
-
-dist = channelBodyDist(px, py, d);
-
-}
-
-if(
-isElliottType(
-d.type
-)
-){
-
-dist = elliottBodyDist(
-px,
-py,
-d
+function setTool(next,
+pointerType){
+return setToolMoved(
+drawToolHost(),
+...arguments
 );
-
-}
-
-if(d.type === "brush"){
-
-dist = brushBodyDist(px, py, d);
-
-}
-
-if(isTextTool(d.type)){
-
-dist =
-hitTestTextBody(
-px,
-py,
-d,
-toXY
-)
-? 0
-: Infinity;
-
-}
-
-if(isPositionType(d.type)){
-
-dist = positionBodyDist(px, py, d);
-
-}
-
-if(dist < bestDist){
-bestDist = dist;
-best = d.id;
-}
-
-});
-
-return best;
-
-}
-
-function setTool(
-next,
-pointerType
-){
-
-tool = next;
-cancelPlacement();
-
-wrapEl.classList.toggle(
-"chart-draw-interaction",
-next !==
-"cursor"
-);
-
-if(
-isCoarseTouchViewport() ||
-isTabletChartViewport()
-){
-document.body.classList.toggle(
-"tablet-chart-draw-mode",
-next !==
-"cursor"
-);
-}
-
-if(
-next !==
-"cursor"
-){
-desktopEdit?.clearDrawingSelection?.();
-}
-
-if(
-next !==
-"cursor"
-){
-clearChartRuler();
-notifyTabletChartGestureAbort();
-
-if(
-isActive() &&
-next !==
-"brush"
-){
-startPlacement(
-next,
-pointerType
-);
-}
-
-}else{
-notifyTabletChartGestureAbort();
-}
-
-tools.querySelectorAll("[data-draw-tool]").forEach(btn=>{
-btn.classList.toggle(
-"active",
-btn.dataset.drawTool === tool
-);
-});
-
-syncElliottGroupActive(
-tools,
-tool
-);
-syncFibGroupActive(
-tools,
-tool
-);
-
-updateStyleBar();
-redraw();
-
 }
 
 tabletDrawInput =
@@ -3644,133 +2091,19 @@ name: "",
 at: 0
 };
 
-function pickDrawTool(
-next,
-pointerType
-){
-
-if(
-!next
-){
-return;
-}
-
-closeElliottFlyout();
-closeFibFlyout();
-
-const now =
-performance.now();
-
-if(
-lastToolPickStamp.name ===
-next &&
-now - lastToolPickStamp.at <
-400
-){
-return;
-}
-
-lastToolPickStamp = {
-name: next,
-at: now
-};
-
-if(
-next ===
-"cursor"
-){
-setTool(
-"cursor"
+function pickDrawTool(next,
+pointerType){
+return pickDrawToolMoved(
+drawToolHost(),
+...arguments
 );
-closeAllWidgetDrawToolsMenus();
-return;
-}
-
-if(
-tool ===
-next
-){
-setTool(
-"cursor"
-);
-closeAllWidgetDrawToolsMenus();
-return;
-}
-
-setTool(
-next,
-pointerType
-);
-
-closeAllWidgetDrawToolsMenus();
-
 }
 
 function deleteSelected(){
-
-const ids =
-selectedIds.size
-? selectedIdsList()
-: selectedId
-? [
-selectedId
-]
-: [];
-
-if(
-!ids.length
-){
-return;
-}
-
-textEditor?.close?.(
-false
+return deleteSelectedMoved(
+drawToolHost(),
+...arguments
 );
-
-const idSet =
-new Set(
-ids
-);
-
-const symDel =
-String(
-getSymbol() ||
-""
-).trim().toUpperCase();
-
-for(
-const removed of drawings.filter(
-d=>
-idSet.has(
-d.id
-)
-)
-){
-
-if(
-removed?.id &&
-symDel
-){
-recordDrawingTombstone(
-symDel,
-removed.id
-);
-}
-
-}
-
-drawings =
-drawings.filter(
-d=>
-!idSet.has(
-d.id
-)
-);
-desktopEdit.clearDrawingSelection();
-saveDrawings();
-updateStyleBar();
-redraw();
-
 }
 
 textEditor =
@@ -3792,63 +2125,11 @@ deleteSelected();
 }
 });
 
-function onTextDblClick(
-e
-){
-
-if(
-!alive ||
-!isActive()
-){
-return;
-}
-
-if(
-textEditor?.isEditing?.()
-){
-return;
-}
-
-const pt =
-pointerFromEvent(
-e
+function onTextDblClick(e){
+return onTextDblClickMoved(
+drawSessionHost(),
+...arguments
 );
-
-if(
-!pt
-){
-return;
-}
-
-const id =
-hitTest(
-pt.x,
-pt.y
-);
-const shape =
-drawings.find(
-d=>
-d.id ===
-id
-);
-
-if(
-!isTextTool(
-shape?.type
-)
-){
-return;
-}
-
-e.preventDefault();
-applyPrimarySelectedId(
-id
-);
-updateStyleBar();
-textEditor.begin(
-shape
-);
-
 }
 
 wrapEl.addEventListener(
@@ -3857,98 +2138,38 @@ onTextDblClick
 );
 
 function clearAllDrawingsOnChart(){
-
-if(!alive){
-return false;
-}
-
-const sym =
-String(getSymbol() || "").trim().toUpperCase();
-
-for(
-const d of drawings
-){
-recordDrawingTombstone(
-sym,
-d.id
+return clearAllDrawingsOnChartMoved(
+drawToolHost(),
+...arguments
 );
 }
 
-drawings = [];
-applyPrimarySelectedId(
-null
+function syncDrawingsHiddenButton(){
+return syncDrawingsHiddenButtonMoved(
+drawSessionHost(),
+...arguments
 );
-cancelPlacement();
-saveDrawings();
+}
 
-window.dispatchEvent(
-new CustomEvent(
-"drawings-updated",
-{
-detail:{
-symbol: sym,
-cleared: true
-}
-}
-)
+function setDrawingsHidden(next){
+return setDrawingsHiddenMoved(
+drawToolHost(),
+...arguments
 );
-
-updateStyleBar();
-scheduleRedraw();
-
-if(
-clearAllPeers?.call
-){
-try{
-clearAllPeers.call();
-}catch{
-/* ignore */
-}
 }
 
-return true;
-
+function bindHideDrawingsToolbarButtons(){
+return bindHideDrawingsToolbarButtonsMoved(
+drawSessionHost(),
+...arguments
+);
 }
 
 function bindClearAllToolbarButtons(){
-
-const buttons =
-tools.querySelectorAll(
-".draw-tool-clear-all"
+return bindClearAllToolbarButtonsMoved(
+drawToolHost(),
+...arguments
 );
-
-buttons.forEach(btn=>{
-
-if(
-btn.dataset.clearAllBound ===
-"1"
-){
-return;
-}
-
-btn.dataset.clearAllBound = "1";
-
-const runClear = e=>{
-
-e.preventDefault();
-e.stopPropagation();
-clearAllDrawingsOnChart();
-
-};
-
-btn.addEventListener(
-"pointerdown",
-runClear,
-true
-);
-
-btn.addEventListener(
-"click",
-runClear
-);
-
-});
-
 }
 
 clickHandler = param=>{
@@ -3964,6 +2185,16 @@ if(
 !isActive()
 ){
 return;
+}
+
+if(
+tool !==
+"cursor" &&
+drawingsHidden
+){
+setDrawingsHidden(
+false
+);
 }
 
 handleToolClick(param);
@@ -4472,43 +2703,11 @@ redraw();
 
 window.addEventListener("blur", onWindowBlur);
 
-function handleToolbarToolPick(
-e
-){
-
-const btn =
-e.target.closest?.(
-"[data-draw-tool]"
+function handleToolbarToolPick(e){
+return handleToolbarToolPickMoved(
+drawToolHost(),
+...arguments
 );
-
-if(
-!btn ||
-!tools.contains(
-btn
-)
-){
-return false;
-}
-
-if(
-btn.closest(
-".widget-draw-tools-menu"
-) ||
-btn.closest(
-".widget-draw-tools-toggle"
-)
-){
-return false;
-}
-
-e.preventDefault();
-e.stopPropagation();
-pickDrawTool(
-btn.dataset.drawTool,
-e.pointerType
-);
-return true;
-
 }
 
 const onToolsPointerDown =
@@ -4517,6 +2716,9 @@ e=>{
 if(
 e.target.closest?.(
 ".draw-tool-clear-all"
+) ||
+e.target.closest?.(
+".draw-tool-hide-drawings"
 )
 ){
 return;
@@ -4545,6 +2747,20 @@ clearBtn
 e.preventDefault();
 e.stopPropagation();
 clearAllDrawingsOnChart();
+return;
+}
+
+const hideBtn =
+e.target.closest?.(
+".draw-tool-hide-drawings"
+);
+
+if(
+hideBtn &&
+tools.contains(
+hideBtn
+)
+){
 return;
 }
 
@@ -4590,6 +2806,7 @@ e.detail?.pointerType
 );
 
 bindClearAllToolbarButtons();
+bindHideDrawingsToolbarButtons();
 
 }
 
@@ -4800,7 +3017,22 @@ hitTestFvpBody,
 hitTestHrayLine,
 channelP4Point,
 drawBodyHitThreshold,
-drawingsIntersectingRect,
+drawingsIntersectingRect:(
+list,
+x1,
+y1,
+x2,
+y2
+)=>
+drawingsHidden
+? []
+: drawingsIntersectingRect(
+list,
+x1,
+y1,
+x2,
+y2
+),
 getCandles:()=>
 getCandles?.() ||
 []
@@ -4915,130 +3147,10 @@ const teardownPlacementPreview =
 setupPlacementPointerPreview();
 
 function setupTabletNativeSelectionBlock(){
-
-if(
-!isCoarseTouchViewport()
-){
-return ()=>{};
-}
-
-const cap = {
-capture:true
-};
-
-const touchCap = {
-capture:true,
-passive:false
-};
-
-const chartsStack =
-document.getElementById(
-"charts-stack"
+return setupTabletNativeSelectionBlockMoved(
+drawToolHost(),
+...arguments
 );
-
-const targets =
-[
-wrapEl,
-styleBar,
-tools,
-chartsStack
-].filter(
-Boolean
-);
-
-const onBlock =
-e=>{
-
-if(
-!shouldSuppressNativeSelection()
-){
-return;
-}
-
-e.preventDefault();
-
-};
-
-const onTouchBlock =
-e=>{
-
-if(
-!shouldSuppressNativeSelection()
-){
-return;
-}
-
-if(
-e.touches?.length >
-1
-){
-return;
-}
-
-e.preventDefault();
-
-};
-
-for(
-const el of
-targets
-){
-el.addEventListener(
-"selectstart",
-onBlock,
-cap
-);
-el.addEventListener(
-"contextmenu",
-onBlock,
-cap
-);
-el.addEventListener(
-"touchstart",
-onTouchBlock,
-touchCap
-);
-el.addEventListener(
-"touchmove",
-onTouchBlock,
-touchCap
-);
-}
-
-return ()=>{
-
-for(
-const el of
-targets
-){
-el.removeEventListener(
-"selectstart",
-onBlock,
-cap
-);
-el.removeEventListener(
-"contextmenu",
-onBlock,
-cap
-);
-el.removeEventListener(
-"touchstart",
-onTouchBlock,
-touchCap
-);
-el.removeEventListener(
-"touchmove",
-onTouchBlock,
-touchCap
-);
-}
-
-document.body.classList.remove(
-"tablet-chart-draw-mode"
-);
-
-};
-
 }
 
 const teardownTabletNativeSelectionBlock =
@@ -5131,157 +3243,39 @@ touchStorageSnap();
 };
 
 function touchStorageSnap(){
-
-touchDrawingsStorageSnap(
-storageKey()
+return touchStorageSnapMoved(
+drawSessionHost(),
+...arguments
 );
-
 }
 
 function syncDrawingsFromStorageIfChanged(){
-
-if(
-!alive
-){
-return;
-}
-
-if(
-shouldDeferExternalDrawingsSync()
-){
-fibSettingsSyncDeferred = true;
-return;
-}
-
-applyRemoteDrawingsToChart(
-[
-getSymbol()
-]
+return syncDrawingsFromStorageIfChangedMoved(
+drawSessionHost(),
+...arguments
 );
-
 }
 
 function startCoordRetryBurst(){
-
-let tries =
-0;
-
-const tick =
-()=>{
-
-if(
-!alive ||
-tries >
-48
-){
-return;
-}
-
-tries += 1;
-redraw();
-
-if(
-drawings.some(
-d=>!shapeCoordsReady(
-d
-)
-)
-){
-requestAnimationFrame(
-tick
+return startCoordRetryBurstMoved(
+drawSessionHost(),
+...arguments
 );
 }
 
-};
-
-requestAnimationFrame(
-tick
+function applyRemoteDrawingsToChart(symbols,
+options = {}){
+return applyRemoteDrawingsToChartMoved(
+drawSessionHost(),
+...arguments
 );
-
-}
-
-function applyRemoteDrawingsToChart(
-symbols,
-options = {}
-){
-
-if(
-!alive
-){
-return;
-}
-
-if(
-shouldDeferExternalDrawingsSync()
-){
-fibSettingsSyncDeferred = true;
-return;
-}
-
-const sym =
-String(
-getSymbol() ||
-""
-).trim().toUpperCase();
-
-if(
-symbols !=
-null &&
-Array.isArray(
-symbols
-)
-){
-
-const list =
-symbols.map(
-s=>
-String(
-s ||
-""
-).trim().toUpperCase()
-).filter(
-Boolean
-);
-
-if(
-list.length &&
-!list.includes(
-sym
-)
-){
-return;
-}
-
-}
-
-const reload =
-options.reload !==
-false;
-
-resizeCanvas();
-
-if(
-reload
-){
-loadDrawings();
-stripOrphanAlertDrawings();
-}
-
-scheduleRedraw();
-updateStyleBar();
-touchStorageSnap();
-startCoordRetryBurst();
-
 }
 
 function syncDrawingsFromStorageNow(){
-
-applyRemoteDrawingsToChart(
-[
-getSymbol()
-]
+return syncDrawingsFromStorageNowMoved(
+drawSessionHost(),
+...arguments
 );
-
 }
 
 const refreshDrawingsOnTabWake = ()=>{
@@ -5386,7 +3380,7 @@ lastChartAlertsPullMs =
 Date.now();
 
 void import(
-"../alerts-cloud-sync.js?v=115"
+"../alerts-cloud-sync.js?v=81871e3e"
 ).then(
 ({ pullRegistryFromCloudNow })=>
 pullRegistryFromCloudNow({
@@ -5512,28 +3506,10 @@ onPriceAlertsChanged
 }
 
 function defaultHrayAnchorTime(){
-
-const list =
-getCandles?.();
-
-if(
-Array.isArray(list) &&
-list.length
-){
-
-const last =
-list[list.length - 1];
-
-if(last?.time != null){
-return last.time;
-}
-
-}
-
-return Math.floor(
-Date.now() / 1000
+return defaultHrayAnchorTimeMoved(
+drawSessionHost(),
+...arguments
 );
-
 }
 
 
@@ -6035,14 +4011,6 @@ stripOrphanAlertDrawings();
 desktopEdit.clearDrawingSelection();
 cancelPlacement();
 clearChartRuler();
-
-if(tool !== "cursor"){
-const style =
-baseDefaultStyle(tool);
-
-updateColorStripe(style.color);
-setActiveWidth(style.lineWidth);
-}
 
 updateStyleBar();
 

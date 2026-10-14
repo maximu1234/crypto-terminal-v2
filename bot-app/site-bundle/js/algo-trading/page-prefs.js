@@ -9,7 +9,7 @@ clampRiskUsd,
 DEFAULT_SL_PCT_OF_X,
 DEFAULT_TP_RR,
 DEFAULT_RISK_USD
-} from "./pattern-entry-positions.js?v=16";
+} from "./pattern-entry-positions.js?v=492702eb";
 
 import {
 clampPartialTpX,
@@ -24,7 +24,7 @@ DEFAULT_PARTIAL_TP3_X,
 DEFAULT_TRAIL_SL_X1,
 DEFAULT_TRAIL_SL_X2,
 DEFAULT_TP_SHARES
-} from "./pattern-trade-stats-partial.js?v=22";
+} from "./pattern-trade-stats-partial.js?v=a92ca5c3";
 
 import {
 clampEntryTimeoutBars,
@@ -32,13 +32,13 @@ clampMaxPt1Pt4Bars,
 resolveMaxPt1Pt4BarsFromPrefs,
 ENTRY_TIMEOUT_BARS,
 ENTRY_MAX_PT1_PT4_BARS
-} from "./pattern-entry-logic.js?v=14";
+} from "./pattern-entry-logic.js?v=516b2a3a";
 
 import {
 clampPullbackBeforeArmPct,
 normalizePullbackBeforeArmEnabled,
 DEFAULT_PULLBACK_BEFORE_ARM_PCT
-} from "./temp-pullback-before-arm.js?v=4";
+} from "./temp-pullback-before-arm.js?v=f6ddff7a";
 
 import {
 normalizeAlgoSupertrendFilterEnabled,
@@ -47,11 +47,11 @@ clampAlgoSupertrendAtr,
 clampAlgoSupertrendFactor,
 DEFAULT_ALGO_SUPERTREND_ATR,
 DEFAULT_ALGO_SUPERTREND_FACTOR
-} from "./pattern-supertrend-filter.js?v=5";
+} from "./pattern-supertrend-filter.js?v=7676bfd0";
 
 import {
 normalizeAlgoStatsMode
-} from "./pattern-trade-stats.js?v=15";
+} from "./pattern-trade-stats.js?v=2530eb1e";
 
 export const DEFAULT_SYMBOL =
 "BTCUSDT";

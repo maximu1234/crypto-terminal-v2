@@ -7,29 +7,29 @@ chartScaleFont,
 CHART_SCALE_LABEL_PAD_LEFT,
 CHART_SCALE_LABEL_LINE_HEIGHT,
 scaleLabelTextColorForBackground
-} from "../chart-import.js?v=66";
+} from "../chart-import.js?v=45dccc88";
 
 import {
 layoutScaleLabelYs,
 CHART_PRICE_HUD_FALLBACK_HEIGHT
-} from "./scale-label-layout.js?v=2";
+} from "./scale-label-layout.js?v=03c98903";
 
 import {
 isSeriesLogarithmic
-} from "./fib-spec.js?v=17";
+} from "./fib-spec.js?v=5f577f26";
 
 import {
 isPositionType,
 positionScaleLabelColor
-} from "./position.js?v=11";
+} from "./position.js?v=152e419c";
 
 import {
 collectChartScaleLabelEntries
-} from "../chart/scale-label-providers.js?v=3";
+} from "../chart/scale-label-providers.js?v=fd4f7c2a";
 
 import {
 isHorizPriceTool
-} from "./constants.js?v=13";
+} from "./constants.js?v=c47ce407";
 
 export function createDrawPriceScale(
 deps
@@ -45,6 +45,8 @@ pointerFromEvent,
 holdChartPanRedraw,
 bumpChartPanRedraw,
 getDrawings,
+getDrawingsHidden = ()=>
+false,
 getSelectedId,
 getSelectedIds = ()=>{
 const id =
@@ -237,6 +239,12 @@ height
 function drawPriceScaleLabels(ctx){
 
 const entries = [];
+const hideDrawings =
+getDrawingsHidden();
+
+if(
+!hideDrawings
+){
 
 getDrawings().forEach(shape=>{
 
@@ -319,6 +327,8 @@ true
 });
 
 });
+
+}
 
 }
 

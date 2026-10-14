@@ -4,20 +4,20 @@
  */
 import {
 defaultPattern12Settings
-} from "./pattern-12-math.js?v=21";
+} from "./pattern-12-math.js?v=d408e1df";
 
 import {
 getOrComputeAlgoPattern12Scene
-} from "./pattern-12-scene-cache.js?v=10";
+} from "./pattern-12-scene-cache.js?v=ab20cc1a";
 
 import {
 detectPatternEntryEventsFromSetups
-} from "./pattern-entry-logic.js?v=14";
+} from "./pattern-entry-logic.js?v=516b2a3a";
 
 import {
 computeAlgoTradeStats,
 normalizeAlgoStatsMode
-} from "./pattern-trade-stats.js?v=15";
+} from "./pattern-trade-stats.js?v=2530eb1e";
 
 import {
 computePartialTpTradeStats,
@@ -25,24 +25,24 @@ normalizeTpShares,
 clampPartialTpX,
 clampTrailSlX1,
 clampTrailSlX2
-} from "./pattern-trade-stats-partial.js?v=22";
+} from "./pattern-trade-stats-partial.js?v=a92ca5c3";
 
 import {
 clampSlPctOfX,
 clampTpRr
-} from "./pattern-entry-positions.js?v=16";
+} from "./pattern-entry-positions.js?v=492702eb";
 
 import {
 filterEntryEventsBySupertrend,
 clampAlgoSupertrendAtr,
 clampAlgoSupertrendFactor,
 normalizeAlgoSupertrendTf
-} from "./pattern-supertrend-filter.js?v=5";
+} from "./pattern-supertrend-filter.js?v=7676bfd0";
 
 import {
 clampPullbackBeforeArmPct,
 normalizePullbackBeforeArmEnabled
-} from "./temp-pullback-before-arm.js?v=4";
+} from "./temp-pullback-before-arm.js?v=f6ddff7a";
 
 /**
  * @typedef {"st1"|"st2"|"st3"} AlgoOptimizeStrategyId

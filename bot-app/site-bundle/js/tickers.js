@@ -2,19 +2,19 @@ import {
 getActiveExchangeId,
 EXCHANGE_CHANGED_EVENT,
 loadMarketTickers
-} from "./market-api.js?v=7";
+} from "./market-api.js?v=7b3e6b3c";
 
 import {
 fetchBybit
-} from "./bybit-fetch.js?v=19";
+} from "./bybit-fetch.js?v=1c54517b";
 
 import {
 toCanonicalSymbol
-} from "./exchanges/symbol.js?v=2";
+} from "./exchanges/symbol.js?v=b2916b67";
 
 import {
 fetchBingx
-} from "./exchanges/bingx/fetch.js?v=5";
+} from "./exchanges/bingx/fetch.js?v=a76bddd0";
 
 const DEFAULT_POLL_INTERVAL_MS =
 3000;

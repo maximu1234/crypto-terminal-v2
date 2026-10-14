@@ -7,7 +7,7 @@ EXCHANGE_DEFINITIONS,
 getActiveExchangeId,
 setActiveExchangeId,
 pingActiveExchangePublic
-} from "./market-api.js?v=7";
+} from "./market-api.js?v=7b3e6b3c";
 
 import {
 readExchangeCredentials,
@@ -18,16 +18,16 @@ getExchangeSecretForSave
 
 import {
 getLoadedTradeExchangeModules
-} from "./trade/module-router.js?v=24";
+} from "./trade/module-router.js?v=679c5141";
 
 import {
 maskTradeDisplay
-} from "./trade-pnl-privacy.js?v=1";
+} from "./trade-pnl-privacy.js?v=abe7bf95";
 
 import {
 openChromeSurface,
 closeChromeSurface
-} from "./chrome-motion.js?v=5";
+} from "./chrome-motion.js?v=bb1d8933";
 
 function tradingApi(){
 

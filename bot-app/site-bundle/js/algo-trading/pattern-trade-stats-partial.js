@@ -14,7 +14,7 @@ computeStopFillPrice,
 linearUsdFromFill,
 DEFAULT_RISK_USD,
 DEFAULT_SL_PCT_OF_X
-} from "./pattern-entry-positions.js?v=16";
+} from "./pattern-entry-positions.js?v=492702eb";
 
 export const DEFAULT_PARTIAL_TP1_X =
 0.5;

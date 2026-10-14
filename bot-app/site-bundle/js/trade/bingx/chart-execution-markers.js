@@ -3,26 +3,25 @@
  */
 import {
 coinsState
-} from "../../terminal/terminal-state.js?v=17";
+} from "../../terminal/terminal-state.js?v=4747a92f";
 
 import {
 EXCHANGE_CHANGED_EVENT,
 getActiveExchangeId
-} from "../../market-api.js?v=7";
+} from "../../market-api.js?v=7b3e6b3c";
 
 import {
 buildMarkersForCandles,
-normalizeSymbol,
-tfMinutes
-} from "../../trade-markers-sandbox/marker-math.js?v=12";
+normalizeSymbol
+} from "../../trade-markers-sandbox/marker-math.js?v=a5c98186";
 
 import {
 fetchTradesForSymbol
-} from "../../trade-markers-sandbox/trade-fetch.js?v=19";
+} from "../../trade-markers-sandbox/trade-fetch.js?v=e817269a";
 
 import {
 clearDiaryTradeDeepLinkParams
-} from "../../trade-diary-terminal-deep-link.js?v=2";
+} from "../../trade-diary-terminal-deep-link.js?v=7e2fd114";
 
 let showMarkers =
 false;
@@ -42,13 +41,11 @@ let checkboxEl =
 null;
 let wired =
 false;
-/** @type {{ fromMs: number, toMs: number, orderId: string } | null} */
+/** @type {{ fromMs: number, toMs: number, openMs: number, closeMs: number, orderId: string } | null} */
 let focusWindow =
 null;
 let pendingDeepLink =
 null;
-let deepLinkScrollDone =
-false;
 
 function chartHost(){
 
@@ -514,8 +511,6 @@ if(
 markersSeq++;
 focusWindow =
 null;
-deepLinkScrollDone =
-false;
 clearTradeCache();
 cachedMarkers =
 [];
@@ -560,80 +555,6 @@ void tryConsumePendingDeepLink();
 }else{
 applyMarkers();
 void tryConsumePendingDeepLink();
-}
-
-}
-
-function scrollChartToFocusWindow(){
-
-if(
-!focusWindow ||
-deepLinkScrollDone
-){
-return;
-}
-
-const chart =
-chartHost()?.chart;
-
-if(
-!chart?.timeScale
-){
-return;
-}
-
-const {
-tf
-} =
-chartContext();
-const padSec =
-Math.max(
-1,
-tfMinutes(
-tf
-)
-) *
-30 *
-60;
-const from =
-Math.floor(
-focusWindow.fromMs /
-1000
-) -
-padSec;
-const to =
-Math.floor(
-focusWindow.toMs /
-1000
-) +
-padSec;
-
-if(
-!(
-to >
-from
-)
-){
-return;
-}
-
-try{
-chart.timeScale().setVisibleRange(
-{
-from,
-to
-}
-);
-deepLinkScrollDone =
-true;
-}catch(
-err
-){
-console.warn(
-"[trade-chart-markers] setVisibleRange",
-err?.message ||
-err
-);
 }
 
 }
@@ -690,30 +611,33 @@ clearDiaryTradeDeepLinkParams();
 return false;
 }
 
-focusWindow =
-{
-fromMs:
+const spanFrom =
 Math.min(
 openMs,
 closeMs
-) -
-60 *
-1000,
-toMs:
+);
+const spanTo =
 Math.max(
 openMs,
 closeMs
-) +
-60 *
-1000,
+);
+
+focusWindow =
+{
+fromMs:
+spanFrom,
+toMs:
+spanTo,
+openMs:
+spanFrom,
+closeMs:
+spanTo,
 orderId:
 String(
 link.orderId ||
 ""
 )
 };
-deepLinkScrollDone =
-false;
 
 const box =
 ensureCheckbox();
@@ -734,14 +658,13 @@ forceTrades:
 true
 }
 );
-scrollChartToFocusWindow();
 clearDiaryTradeDeepLinkParams();
 return true;
 
 }
 
 /**
- * Enable history markers and focus chart on a diary trade window.
+ * Enable history markers for a diary trade. Chart scale and timeframe stay as Terminal loaded them.
  * @param {{ history?: boolean, openMs?: number, closeMs?: number, orderId?: string }} link
  */
 export async function applyDiaryTradeDeepLink(

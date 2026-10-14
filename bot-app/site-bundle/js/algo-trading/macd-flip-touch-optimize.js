@@ -6,18 +6,18 @@
  */
 import {
   runMacdFlipTouch
-} from "./macd-flip-touch-engine.js?v=8";
+} from "./macd-flip-touch-engine.js?v=0e901e4f";
 import {
   computeMacdLineSignalArrays
-} from "./macd-flip-touch-macd.js?v=1";
+} from "./macd-flip-touch-macd.js?v=02dde0cd";
 import {
   normalizeMacdFlipTouchPrefs
-} from "./macd-flip-touch-prefs.js?v=9";
+} from "./macd-flip-touch-prefs.js?v=e8cc13ba";
 import {
   macdFlipTouchMinTestTrades,
   macdFlipTouchTestVerdict,
   macdFlipTouchTrainTestSplit
-} from "./macd-flip-touch-walkforward.js?v=13";
+} from "./macd-flip-touch-walkforward.js?v=5dcbbb9f";
 
 export function macdFlipTouchIntRange(from, to) {
   const start = Math.round(Number(from));

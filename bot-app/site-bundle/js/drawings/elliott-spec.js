@@ -4,8 +4,13 @@
  * then labeled wave ends: 0–1–2–3–4–5, 0–A–B–C, etc.
  */
 import {
-fibPriceAtRatio
-} from "./fib-spec.js?v=17";
+fibPriceAtRatio,
+normalizeFibLevelColor
+} from "./fib-spec.js?v=5f577f26";
+
+import {
+CHANNEL_DEFAULT_COLOR
+} from "./channel-spec.js?v=a8bcf3c9";
 
 export const ELLIOTT_DEFAULT_COLOR =
 "#38bdf8";
@@ -44,8 +49,106 @@ export const PATTERN_12_DEFAULT_DEGREE_JUNIOR =
 export const PATTERN_12_DEFAULT_SHOW_WAVE =
 false;
 
+export const PATTERN_12_DEFAULT_SHOW_CHANNEL =
+false;
+
+/** 0 / 0.5 / 1 как у параллельного канала, плюс расширения 2 и 2.44. */
+export const PATTERN_12_CHANNEL_LEVELS =
+Object.freeze([
+0,
+0.5,
+1,
+2,
+2.44
+]);
+
 export const PATTERN_12_DEFAULT_DASH_OPACITY =
 100;
+
+export const PATTERN_12_DEFAULT_DASH_LINE_STYLE =
+"dashed";
+
+export const PATTERN_12_DEFAULT_TP_LINE_STYLE =
+"dotted";
+
+export const PATTERN_12_DEFAULT_CHANNEL_LINE_STYLE =
+"solid";
+
+export const PATTERN_12_DEFAULT_CHANNEL_LINE_WIDTH =
+1;
+
+export const PATTERN_12_DEFAULT_CHANNEL_COLOR =
+CHANNEL_DEFAULT_COLOR;
+
+export function normalizePatternLineStyle(
+raw,
+fallback
+){
+
+if(
+raw ===
+"solid" ||
+raw ===
+"dashed" ||
+raw ===
+"dotted"
+){
+return raw;
+}
+
+if(
+fallback ===
+"solid" ||
+fallback ===
+"dashed" ||
+fallback ===
+"dotted"
+){
+return fallback;
+}
+
+return "solid";
+
+}
+
+export function normalizePatternChannelWidth(
+raw
+){
+
+const n =
+Number(
+raw
+);
+
+if(
+!Number.isFinite(
+n
+)
+){
+return PATTERN_12_DEFAULT_CHANNEL_LINE_WIDTH;
+}
+
+return Math.max(
+1,
+Math.min(
+4,
+Math.round(
+n
+)
+)
+);
+
+}
+
+export function normalizePatternChannelColor(
+raw
+){
+
+return normalizeFibLevelColor(
+raw
+);
+
+}
 
 export const PATTERN_12_TP_TICK_PAD_PX =
 14;
@@ -936,16 +1039,32 @@ const a =
 screens[1];
 const b =
 screens[3];
-const maxX =
-Math.max(
-...screens.map(
+const point3 =
+screens[5];
+const xs =
+screens.filter(
+Boolean
+).map(
 p=>
 p.x
-),
+).filter(
+x=>
+Number.isFinite(
+x
+)
+);
+/* Конец — вертикаль точки 3, чтобы длину задавало её положение. */
+const endX =
+point3 &&
+Number.isFinite(
+point3.x
+)
+? point3.x
+: Math.max(
+...xs,
 a.x,
 b.x
-) +
-36;
+);
 const left =
 a.x <=
 b.x
@@ -967,7 +1086,7 @@ left.x
 return {
 a: left,
 b: {
-x: maxX,
+x: endX,
 y: left.y
 }
 };
@@ -980,10 +1099,154 @@ const k =
 return {
 a: left,
 b: {
-x: maxX,
+x: endX,
 y: left.y +
 k *
-(maxX - left.x)
+(endX - left.x)
+}
+};
+
+}
+
+/**
+ * Parallel channel on Pattern 1-2-1-2-3.
+ * Level 0: point 0 through (2).
+ * Level 1: the same slope, passing through (1).
+ * Every level is clipped to the same verticals:
+ * left at point 0, right at point 3.
+ */
+export function pattern12ChannelGeometry(
+screens
+){
+
+if(
+!Array.isArray(
+screens
+) ||
+screens.length <
+6 ||
+!screens[
+0
+] ||
+!screens[
+1
+] ||
+!screens[
+2
+] ||
+!screens[
+5
+]
+){
+return null;
+}
+
+const origin =
+screens[
+0
+];
+const upper =
+screens[
+1
+];
+const through =
+screens[
+2
+];
+const point3 =
+screens[
+5
+];
+const coords =
+[
+origin.x,
+origin.y,
+upper.x,
+upper.y,
+through.x,
+through.y,
+point3.x,
+point3.y
+];
+
+if(
+coords.some(
+value=>
+!Number.isFinite(
+value
+)
+)
+){
+return null;
+}
+
+const leftX =
+origin.x;
+const rightX =
+point3.x;
+let slope =
+0;
+
+if(
+Math.abs(
+through.x -
+origin.x
+) >=
+0.5
+){
+
+slope =
+(
+through.y -
+origin.y
+) /
+(
+through.x -
+origin.x
+);
+
+}
+
+const yOnBase =
+x=>
+origin.y +
+slope *
+(
+x -
+origin.x
+);
+const offset =
+upper.y -
+yOnBase(
+upper.x
+);
+
+return {
+p1: {
+x: leftX,
+y: yOnBase(
+leftX
+)
+},
+p2: {
+x: rightX,
+y: yOnBase(
+rightX
+)
+},
+p3: {
+x: leftX,
+y: yOnBase(
+leftX
+) +
+offset
+},
+p4: {
+x: rightX,
+y: yOnBase(
+rightX
+) +
+offset
 }
 };
 
@@ -1313,6 +1576,18 @@ isP12
 : true,
 showPatternDash:
 true,
+showPatternChannel:
+PATTERN_12_DEFAULT_SHOW_CHANNEL,
+patternChannelLineStyle:
+PATTERN_12_DEFAULT_CHANNEL_LINE_STYLE,
+patternChannelLineWidth:
+PATTERN_12_DEFAULT_CHANNEL_LINE_WIDTH,
+patternChannelColor:
+PATTERN_12_DEFAULT_CHANNEL_COLOR,
+patternDashLineStyle:
+PATTERN_12_DEFAULT_DASH_LINE_STYLE,
+patternTpLineStyle:
+PATTERN_12_DEFAULT_TP_LINE_STYLE,
 patternDashOpacity:
 isP12
 ? PATTERN_12_DEFAULT_DASH_OPACITY
@@ -1416,6 +1691,48 @@ keepP12Custom
 ? saved.showPatternDash !==
 false
 : base.showPatternDash,
+showPatternChannel:
+keepP12Custom
+? saved.showPatternChannel ===
+true
+: base.showPatternChannel,
+patternChannelLineStyle:
+keepP12Custom
+? normalizePatternLineStyle(
+saved.patternChannelLineStyle,
+base.patternChannelLineStyle
+)
+: base.patternChannelLineStyle,
+patternChannelLineWidth:
+keepP12Custom
+? normalizePatternChannelWidth(
+saved.patternChannelLineWidth ??
+base.patternChannelLineWidth
+)
+: base.patternChannelLineWidth,
+patternChannelColor:
+keepP12Custom
+? (
+normalizePatternChannelColor(
+saved.patternChannelColor
+) ||
+base.patternChannelColor
+)
+: base.patternChannelColor,
+patternDashLineStyle:
+keepP12Custom
+? normalizePatternLineStyle(
+saved.patternDashLineStyle,
+base.patternDashLineStyle
+)
+: base.patternDashLineStyle,
+patternTpLineStyle:
+keepP12Custom
+? normalizePatternLineStyle(
+saved.patternTpLineStyle,
+base.patternTpLineStyle
+)
+: base.patternTpLineStyle,
 patternDashOpacity:
 keepP12Custom
 ? normalizePatternDashOpacity(
@@ -1902,6 +2219,40 @@ typeof shape.showPatternDash ===
 "boolean"
 ? shape.showPatternDash
 : defaults.showPatternDash;
+shape.showPatternChannel =
+typeof shape.showPatternChannel ===
+"boolean"
+? shape.showPatternChannel
+: defaults.showPatternChannel;
+shape.patternChannelLineStyle =
+normalizePatternLineStyle(
+shape.patternChannelLineStyle,
+defaults.patternChannelLineStyle ||
+PATTERN_12_DEFAULT_CHANNEL_LINE_STYLE
+);
+shape.patternChannelLineWidth =
+normalizePatternChannelWidth(
+shape.patternChannelLineWidth ??
+defaults.patternChannelLineWidth
+);
+shape.patternChannelColor =
+normalizePatternChannelColor(
+shape.patternChannelColor
+) ||
+defaults.patternChannelColor ||
+PATTERN_12_DEFAULT_CHANNEL_COLOR;
+shape.patternDashLineStyle =
+normalizePatternLineStyle(
+shape.patternDashLineStyle,
+defaults.patternDashLineStyle ||
+PATTERN_12_DEFAULT_DASH_LINE_STYLE
+);
+shape.patternTpLineStyle =
+normalizePatternLineStyle(
+shape.patternTpLineStyle,
+defaults.patternTpLineStyle ||
+PATTERN_12_DEFAULT_TP_LINE_STYLE
+);
 shape.patternDashOpacity =
 shape.patternDashOpacity ==
 null

@@ -5,12 +5,12 @@
 import {
 calculateRSI,
 alignRsiWithCandleTimes
-} from "../indicators.js?v=3";
+} from "../indicators.js?v=85e28ecc";
 
 import {
 updateRsiBandLayout,
 updateRsiLevelLinesLayout
-} from "../chart-import.js?v=66";
+} from "../chart-import.js?v=45dccc88";
 
 export function syncRsiHudPeriod(
 el,

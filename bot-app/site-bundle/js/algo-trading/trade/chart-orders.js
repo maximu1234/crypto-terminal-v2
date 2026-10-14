@@ -4,15 +4,15 @@
  */
 import {
 isExchangeTradingEnabled
-} from "./trading-gate.js?v=2";
+} from "./trading-gate.js?v=2bd9e2fd";
 
 import {
 maskTradeDisplay
-} from "./pnl-privacy-stub.js?v=1";
+} from "./pnl-privacy-stub.js?v=48c65d60";
 
 import {
 registerChartScaleLabelProvider
-} from "../../chart/scale-label-providers.js?v=3";
+} from "../../chart/scale-label-providers.js?v=fd4f7c2a";
 
 const BADGE_LEFT =
 12;

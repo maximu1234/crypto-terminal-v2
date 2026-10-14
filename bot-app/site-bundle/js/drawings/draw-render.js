@@ -13,46 +13,45 @@ fibShapeLevelXSpan,
 isFibType,
 isFibExtType,
 resolveFibTrendLineColor
-} from "./fib-spec.js?v=17";
+} from "./fib-spec.js?v=5f577f26";
 
 import {
 isPositionType
-} from "./position.js?v=11";
+} from "./position.js?v=152e419c";
 
 import {
 drawFilledArrow,
 drawRectangleShape
-} from "./arrow-rect.js?v=2";
+} from "./arrow-rect.js?v=8d4294c4";
 
 import {
 drawFvpShape
-} from "./fixed-volume-profile-draw.js?v=2";
+} from "./fixed-volume-profile-draw.js?v=f0cfee18";
 
 import {
 isFvpType,
 copyFvpStyleToShape
-} from "./fixed-volume-profile.js?v=3";
+} from "./fixed-volume-profile.js?v=bb03b4a7";
 
 import {
 drawBrushPath
-} from "./brush.js?v=2";
+} from "./brush.js?v=7e0b1c34";
 
 import {
-FIB_LINE_DASH,
 isHorizPriceTool,
 horizPriceLineX1
-} from "./constants.js?v=13";
+} from "./constants.js?v=c47ce407";
 
 import {
 channelLevelSegment,
 ensureChannelLevelsVisible
-} from "./channel-spec.js?v=2";
+} from "./channel-spec.js?v=a8bcf3c9";
 
 import {
 isTextTool,
 drawTextShape,
 TEXT_DEFAULT_CONTENT
-} from "./text.js?v=3";
+} from "./text.js?v=441520b6";
 
 import {
 isElliottType,
@@ -64,9 +63,15 @@ elliottVertexLabel,
 elliottNecklineScreen,
 normalizePattern12TpFlags,
 normalizePatternDashOpacity,
+normalizePatternChannelColor,
+normalizePatternChannelWidth,
+normalizePatternLineStyle,
+PATTERN_12_CHANNEL_LEVELS,
+PATTERN_12_DEFAULT_CHANNEL_COLOR,
+pattern12ChannelGeometry,
 pattern12DashScreen,
 pattern12TpTickLayout
-} from "./elliott-spec.js?v=17";
+} from "./elliott-spec.js?v=3fb92981";
 
 /**
  * @param {object} deps
@@ -203,7 +208,12 @@ ctx.lineCap =
 ctx.lineJoin =
 "round";
 ctx.setLineDash(
-FIB_LINE_DASH.dotted
+fibLevelDash(
+normalizePatternLineStyle(
+shape.patternTpLineStyle,
+"dotted"
+)
+)
 );
 ctx.font =
 "11px Arial";
@@ -232,6 +242,84 @@ tick.x2 +
 6,
 tick.y
 );
+
+}
+
+ctx.restore();
+
+}
+
+function drawPattern12Channel(
+ctx,
+shape,
+screens
+){
+
+const geom =
+pattern12ChannelGeometry(
+screens
+);
+
+if(
+!geom
+){
+return;
+}
+
+const lineColor =
+normalizePatternChannelColor(
+shape?.patternChannelColor
+) ||
+PATTERN_12_DEFAULT_CHANNEL_COLOR;
+const lineWidth =
+normalizePatternChannelWidth(
+shape?.patternChannelLineWidth
+);
+
+ctx.save();
+ctx.strokeStyle =
+lineColor;
+ctx.lineWidth =
+lineWidth;
+ctx.lineCap =
+"round";
+ctx.lineJoin =
+"round";
+ctx.setLineDash(
+fibLevelDash(
+normalizePatternLineStyle(
+shape?.patternChannelLineStyle,
+"solid"
+)
+)
+);
+
+for(
+const level of PATTERN_12_CHANNEL_LEVELS
+){
+
+const seg =
+channelLevelSegment(
+geom,
+level
+);
+
+if(
+!seg
+){
+continue;
+}
+
+ctx.beginPath();
+ctx.moveTo(
+seg.start.x,
+seg.start.y
+);
+ctx.lineTo(
+seg.end.x,
+seg.end.y
+);
+ctx.stroke();
 
 }
 
@@ -599,14 +687,30 @@ Math.max(
 (width || 1) *
 0.9
 ),
-[
-7,
-5
-],
+fibLevelDash(
+normalizePatternLineStyle(
+shape.patternDashLineStyle,
+"dashed"
+)
+),
 shape.patternDashOpacity
 );
 }
 
+}
+
+if(
+isPattern12Draw(
+shape.type
+) &&
+shape.showPatternChannel ===
+true
+){
+drawPattern12Channel(
+ctx,
+shape,
+screens
+);
 }
 
 if(
@@ -886,6 +990,11 @@ lineWidth,
 dash
 );
 
+if(
+shape.fibShowLabels !==
+false
+){
+
 ctx.fillStyle = lineColor;
 ctx.font = "11px Arial";
 ctx.fillText(
@@ -893,6 +1002,8 @@ formatFibLabel(row.v),
 labelX,
 y + 4
 );
+
+}
 
 });
 
@@ -1568,6 +1679,9 @@ style.fibLevels,
 fibShowTrendLine:
 style.fibShowTrendLine !==
 false,
+fibShowLabels:
+style.fibShowLabels !==
+false,
 fibTrendLineColor: style.fibTrendLineColor,
 p1: pts[0],
 p2: pts[1],
@@ -1749,6 +1863,12 @@ pts[0],
 color: style.color,
 lineWidth: style.lineWidth,
 lineStyle: style.lineStyle,
+showHorizLines: style.showHorizLines,
+horizLineStyle: style.horizLineStyle,
+horizColor: style.horizColor,
+showVertLines: style.showVertLines,
+vertLineStyle: style.vertLineStyle,
+vertColor: style.vertColor,
 showFill: style.showFill,
 fillColor: style.fillColor,
 fillOpacity: style.fillOpacity,
@@ -1882,6 +2002,7 @@ ensureFibLevelsVisible(
 style.fibLevels
 ),
 fibShowTrendLine: style.fibShowTrendLine,
+fibShowLabels: style.fibShowLabels,
 fibTrendLineColor: style.fibTrendLineColor,
 p1: pts[0],
 p2: previewAnchor
@@ -1916,6 +2037,7 @@ placement.type
 )
 : style.fibLevels,
 fibShowTrendLine: style.fibShowTrendLine,
+fibShowLabels: style.fibShowLabels,
 fibTrendLineColor: style.fibTrendLineColor,
 p1: previewPts[0],
 p2: previewPts[1],
@@ -2003,6 +2125,13 @@ showWave: style.showWave !==
 false,
 showPatternDash: style.showPatternDash !==
 false,
+showPatternChannel: style.showPatternChannel ===
+true,
+patternChannelLineStyle: style.patternChannelLineStyle,
+patternChannelLineWidth: style.patternChannelLineWidth,
+patternChannelColor: style.patternChannelColor,
+patternDashLineStyle: style.patternDashLineStyle,
+patternTpLineStyle: style.patternTpLineStyle,
 patternDashOpacity: style.patternDashOpacity,
 ...normalizePattern12TpFlags(
 style.showTpSenior,

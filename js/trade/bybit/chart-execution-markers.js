@@ -17,7 +17,7 @@ normalizeSymbol
 
 import {
 fetchTradesForSymbol
-} from "../../trade-markers-sandbox/trade-fetch.js?v=ba9ce4c2";
+} from "../../trade-markers-sandbox/trade-fetch.js?v=e817269a";
 
 import {
 clearDiaryTradeDeepLinkParams

@@ -12,72 +12,79 @@ applyRsiFixedPriceScale,
 appendFutureWhitespaceBars,
 computeChartFutureMarginBars,
 syncLinkedChartTimescales
-} from "./chart-import.js?v=66";
+} from "./chart-import.js?v=45dccc88";
 
 import {
 applyLiveSeriesUpdate,
 ensureOhlcRollover,
 liveBarPeriodSec,
 paintCatchupLiveSeries
-} from "./chart/live-bar-roll.js?v=4";
+} from "./chart/live-bar-roll.js?v=6ff2b718";
 
 import {
 terminalVisibleBars,
 terminalHistoryInitialRequests,
 TERMINAL_VISIBLE_BARS,
 TERMINAL_HISTORY_LAZY_BATCH_BARS
-} from "./terminal-chart-history-prefs.js?v=1";
+} from "./terminal-chart-history-prefs.js?v=948df10f";
+
+import {
+peekHistoryCache,
+putHistoryCache,
+mergeCandleRows,
+logicalIndexShift
+} from "./market-history-cache.js?v=dedca4e1";
 
 import {
 ALGO_TICKER_SCAN_HISTORY_REQUESTS
-} from "./algo-trading/ticker-scanner.js?v=10";
+} from "./algo-trading/ticker-scanner.js?v=3aa0a47d";
 
 import {
 defaultRsiPaneSettings,
 normalizeRsiPaneSettings
-} from "./indicators/rsi-pane.js?v=12";
+} from "./indicators/rsi-pane.js?v=cfe3bc1e";
 
 import {
 buildChartRsiPoints
-} from "./indicators/htf-project.js?v=5";
+} from "./indicators/htf-project.js?v=2d6ecf34";
 
 import {
 loadMarketHistory,
 getActiveExchangeId
-} from "./market-api.js?v=7";
+} from "./market-api.js?v=7b3e6b3c";
 
 import {
 subscribeKline,
 bindLiveCandleCatchup
-} from "./market-ws.js?v=3";
+} from "./market-ws.js?v=ab0ef4a1";
 
 import {
 mountAlgoTradingCoinList,
 refreshAlgoMarketListFromFlags
-} from "./algo-trading-list.js?v=28";
+} from "./algo-trading-list.js?v=3a2669e4";
 
 import {
 mountAlgoTickerScanUi
-} from "./algo-trading/ticker-scan-ui.js?v=33";
+} from "./algo-trading/ticker-scan-ui.js?v=001c77e0";
 
 import {
 getTickerStrategyOverlay,
 hasTickerStrategyOverlay,
 setTickerStrategyOverlay,
 writeTickerStrategyOverlays
-} from "./algo-trading/ticker-strategy-overlays.js?v=1";
+} from "./algo-trading/ticker-strategy-overlays.js?v=12676ce2";
 
 import {
 mountAlgoStrategyParamOptimizeUi
-} from "./algo-trading/strategy-param-optimize-ui.js?v=6";
+} from "./algo-trading/strategy-param-optimize-ui.js?v=e4b23135";
 
 import {
 mountAlgoRuntimeUi
-} from "./algo-trading/runtime-ui.js?v=16";
+} from "./algo-trading/runtime-ui.js?v=88effc76";
 
 import {
 mountAlgoBotStrategyUi
-} from "./algo-trading/bot-strategy-ui.js?v=95";
+} from "./algo-trading/bot-strategy-ui.js?v=176a1532";
 
 import {
 ALGO_ANALYSIS_BOT_CHANGE_EVENT,
@@ -89,63 +96,63 @@ getActiveAnalysisBotId,
 isActiveAnalysisBot,
 isAnyAnalysisBotActive,
 setActiveAnalysisBotId
-} from "./algo-trading/active-analysis-bot.js?v=4";
+} from "./algo-trading/active-analysis-bot.js?v=c1b8293b";
 
 import {
 mountSessionLogServerSettings
-} from "./algo-trading/bot-session-log-server-ui.js?v=11";
+} from "./algo-trading/bot-session-log-server-ui.js?v=d2088b81";
 
 import {
 syncBotStrategiesToMain
-} from "./algo-trading/bot-bridge.js?v=29";
+} from "./algo-trading/bot-bridge.js?v=17baeaa9";
 
 import {
 mountAlgoTradeUi
-} from "./algo-trading/trade/boot.js?v=12";
+} from "./algo-trading/trade/boot.js?v=cbd44eb9";
 
 import {
 mountAlgoTradingDrawings
-} from "./algo-trading/drawings.js?v=20";
+} from "./algo-trading/drawings.js?v=c4838585";
 
 import {
 mountAlgoTradingIndicators
-} from "./algo-trading/indicators.js?v=17";
+} from "./algo-trading/indicators.js?v=73da83a6";
 
 import {
 mountAlgoPatternEntryOverlay
-} from "./algo-trading/pattern-entry-overlay.js?v=17";
+} from "./algo-trading/pattern-entry-overlay.js?v=ceecf4be";
 
 import {
 mountRsiTouchFlipHost
-} from "./algo-trading/rsi-touch-flip-panel.js?v=38";
+} from "./algo-trading/rsi-touch-flip-panel.js?v=29260637";
 
 import {
 mountMacdFlipTouchHost
-} from "./algo-trading/macd-flip-touch-panel.js?v=1";
+} from "./algo-trading/macd-flip-touch-panel.js?v=eef7f6a3";
 
 import {
 loadRsiTouchFlipPrefs,
 saveRsiTouchFlipPrefs
-} from "./algo-trading/rsi-touch-flip-prefs.js?v=10";
+} from "./algo-trading/rsi-touch-flip-prefs.js?v=8d462a58";
 import {
 loadMacdFlipTouchPrefs
-} from "./algo-trading/macd-flip-touch-prefs.js?v=9";
+} from "./algo-trading/macd-flip-touch-prefs.js?v=e8cc13ba";
 
 import {
 clearAlgoPatternAnalysisUi,
 refreshAlgoPatternAnalysis
-} from "./algo-trading/pattern-analysis.js?v=38";
+} from "./algo-trading/pattern-analysis.js?v=1e002b9c";
 
 import {
 invalidateAlgoPattern12SceneCache,
 clearAlgoPattern12PaintEntryFilter
-} from "./algo-trading/pattern-12-scene-cache.js?v=10";
+} from "./algo-trading/pattern-12-scene-cache.js?v=ab20cc1a";
 
 import {
 clampSlPctOfX,
 clampTpRr,
 clampRiskUsd
-} from "./algo-trading/pattern-entry-positions.js?v=16";
+} from "./algo-trading/pattern-entry-positions.js?v=492702eb";
 
 import {
 clampPartialTpX,
@@ -156,51 +163,51 @@ rebalanceTpShares,
 DEFAULT_PARTIAL_TP1_X,
 DEFAULT_PARTIAL_TP2_X,
 DEFAULT_PARTIAL_TP3_X
-} from "./algo-trading/pattern-trade-stats-partial.js?v=22";
+} from "./algo-trading/pattern-trade-stats-partial.js?v=a92ca5c3";
 
 import {
 clampEntryTimeoutBars,
 clampMaxPt1Pt4Bars
-} from "./algo-trading/pattern-entry-logic.js?v=14";
+} from "./algo-trading/pattern-entry-logic.js?v=516b2a3a";
 
 /* TEMP_PULLBACK_BEFORE_ARM — remove with temp-pullback-before-arm.js */
 import {
 clampPullbackBeforeArmPct,
 normalizePullbackBeforeArmEnabled
-} from "./algo-trading/temp-pullback-before-arm.js?v=4";
+} from "./algo-trading/temp-pullback-before-arm.js?v=f6ddff7a";
 
 import {
 normalizeAlgoSupertrendTf,
 clampAlgoSupertrendAtr,
 clampAlgoSupertrendFactor
-} from "./algo-trading/pattern-supertrend-filter.js?v=5";
+} from "./algo-trading/pattern-supertrend-filter.js?v=7676bfd0";
 
 import {
 createAlgoSupertrendFilterOverlay
-} from "./algo-trading/supertrend-filter-overlay.js?v=2";
+} from "./algo-trading/supertrend-filter-overlay.js?v=c9dd85fb";
 
 import {
 normalizeAlgoStatsMode
-} from "./algo-trading/pattern-trade-stats.js?v=15";
+} from "./algo-trading/pattern-trade-stats.js?v=2530eb1e";
 
 import {
 readAlgoPattern12Settings
-} from "./algo-trading/pattern-12-settings.js?v=5";
+} from "./algo-trading/pattern-12-settings.js?v=cd75d3d2";
 
 import {
 setChartLayoutReady,
 isChartLayoutReady
-} from "./chart-layout-gate.js?v=4";
+} from "./chart-layout-gate.js?v=4a8798af";
 
 import {
 invalidatePreservedVisibleLogicalRange,
 runWithPreservedVisibleLogicalRange
-} from "./chart-visible-range.js?v=3";
+} from "./chart-visible-range.js?v=255ee6c8";
 
 import {
 coinsState,
 marketMap
-} from "./terminal/terminal-state.js?v=17";
+} from "./terminal/terminal-state.js?v=4747a92f";
 
 import {
 DEFAULT_TF,
@@ -213,23 +220,23 @@ writePrefs,
 clampScanMinWinRate,
 normalizeAlgoScanTfPref,
 resolveInitialSymbol
-} from "./algo-trading/page-prefs.js?v=2";
+} from "./algo-trading/page-prefs.js?v=0fea35db";
 
 import {
 mergeLiveCandle
-} from "./algo-trading/live-candle.js?v=3";
+} from "./algo-trading/live-candle.js?v=537e93bf";
 
 import {
 formatTurnover24Label
-} from "./algo-trading/page-format.js?v=1";
+} from "./algo-trading/page-format.js?v=43c07209";
 
 import {
 bindAlgoNumericField
-} from "./algo-trading/page-dom.js?v=1";
+} from "./algo-trading/page-dom.js?v=3cc21775";
 
 import {
 bindAlgoPageHotkeys
-} from "./algo-trading/page-hotkeys.js?v=3";
+} from "./algo-trading/page-hotkeys.js?v=b6c24375";
 
 import {
 createAlgoStrategyMemory,
@@ -243,7 +250,7 @@ applyStrategyPatchToMemory as applyStrategyPatchToMemoryFromMemory,
 syncStrategyDomFromMemory as syncStrategyDomFromMemoryFromMemory,
 restoreStrategyMemoryFromPrefs as restoreStrategyMemoryFromPrefsFromMemory,
 buildAlgoPrefsSnapshot
-} from "./algo-trading/page-strategy-state.js?v=1";
+} from "./algo-trading/page-strategy-state.js?v=ae7b6845";
 
 import {
 syncRsiHudPeriod as syncRsiHudPeriodEl,
@@ -251,20 +258,20 @@ syncRsiLevelDom as syncRsiLevelDomEl,
 setRsiHud as setRsiHudEl,
 lastRsiValue as lastRsiValueFromCandles,
 layoutRsiPane
-} from "./algo-trading/page-rsi.js?v=2";
+} from "./algo-trading/page-rsi.js?v=719c1277";
 
 import {
 bindAlgoStatsPanelResize
-} from "./algo-trading/stats-panel-resize.js?v=2";
+} from "./algo-trading/stats-panel-resize.js?v=2da2612d";
 
 import {
 isAlgoBotLiteMode,
 mountAlgoBotLiteLayout
-} from "./algo-trading/lite-layout.js?v=5";
+} from "./algo-trading/lite-layout.js?v=7a635cbf";
 
 import {
 loadAlgoBotLiteHistory
-} from "./algo-trading/lite-history.js?v=1";
+} from "./algo-trading/lite-history.js?v=12c6fb29";
 
 /** Глубина ботов / сканов / «Подобрать»: ~10 000. График сначала ~5000, затем догрузка. */
 const HISTORY_REQUESTS =
@@ -299,6 +306,79 @@ key
 
 }
 
+import {
+bindAlgoChartPaneSettle
+} from "./algo-trading/chart-pane-settle.js?v=3ecfb41d";
+import {
+loadSymbol as loadSymbolMoved
+} from "./algo-trading/chart-load-symbol.js?v=5f6d6126";
+import {
+applyRsiData as applyRsiDataMoved,
+deepenAlgoHistoryIfNeeded as deepenAlgoHistoryIfNeededMoved,
+refreshAlgoHistoryTail as refreshAlgoHistoryTailMoved,
+applyCandleData as applyCandleDataMoved,
+schedulePatternAnalysis as schedulePatternAnalysisMoved,
+resizeAlgoCharts as resizeAlgoChartsMoved,
+fitViewport as fitViewportMoved,
+mergeOlderAlgoCandles as mergeOlderAlgoCandlesMoved,
+applyLiveCandleTick as applyLiveCandleTickMoved
+} from "./algo-trading/chart-data.js?v=efc06faf";
+import {
+rsiPaneSettingsFromFlipPrefs as rsiPaneSettingsFromFlipPrefsMoved,
+readFlipPanePatchFromDom as readFlipPanePatchFromDomMoved,
+applyEffectiveRsiPaneSettings as applyEffectiveRsiPaneSettingsMoved,
+getRsiPaneSettings as getRsiPaneSettingsMoved,
+commitRsiPaneSettings as commitRsiPaneSettingsMoved,
+syncRsiHudPeriod as syncRsiHudPeriodMoved,
+syncRsiLevelDom as syncRsiLevelDomMoved,
+onRsiSettingsChange as onRsiSettingsChangeMoved,
+algoGate as algoGateMoved,
+chartStrategyId as chartStrategyIdMoved,
+chartGate as chartGateMoved,
+buildTradeOpts as buildTradeOptsMoved,
+isAlgoStatsAnalysisPaused as isAlgoStatsAnalysisPausedMoved,
+markAlgoHistoryStatsPending as markAlgoHistoryStatsPendingMoved,
+markAlgoHistoryStatsReadyAndAnalyze as markAlgoHistoryStatsReadyAndAnalyzeMoved,
+dispatchAlgoChartCandlesLoaded as dispatchAlgoChartCandlesLoadedMoved,
+ensureAlgoPattern12Enabled as ensureAlgoPattern12EnabledMoved,
+applyActiveAnalysisBotChartUi as applyActiveAnalysisBotChartUiMoved,
+syncChartMacdPaneFromFlip as syncChartMacdPaneFromFlipMoved,
+setRsiPaneActive as setRsiPaneActiveMoved,
+setSymbolLabel as setSymbolLabelMoved,
+syncAlgoChartTurnover24 as syncAlgoChartTurnover24Moved,
+setActiveTfButton as setActiveTfButtonMoved,
+setRsiHud as setRsiHudMoved,
+layoutRsi as layoutRsiMoved,
+scheduleResizeAlgoCharts as scheduleResizeAlgoChartsMoved,
+lastRsiValue as lastRsiValueMoved,
+buildDisplayCandles as buildDisplayCandlesMoved,
+refreshEntryFilterLines as refreshEntryFilterLinesMoved,
+refreshSupertrendFilterLines as refreshSupertrendFilterLinesMoved,
+destroySupertrendFilterLines as destroySupertrendFilterLinesMoved,
+buildPatternAnalysisOpts as buildPatternAnalysisOptsMoved,
+stopKline as stopKlineMoved,
+bindStrategyGateUi as bindStrategyGateUiMoved,
+strategyPrefKeys as strategyPrefKeysMoved,
+strategyPatchFromState as strategyPatchFromStateMoved,
+applyStrategyPatchToMemory as applyStrategyPatchToMemoryMoved,
+syncStrategyDomFromMemory as syncStrategyDomFromMemoryMoved,
+restoreStrategyMemoryFromPrefs as restoreStrategyMemoryFromPrefsMoved,
+hydrateTickerStrategyUi as hydrateTickerStrategyUiMoved,
+applyOptimizedPatchesToTickers as applyOptimizedPatchesToTickersMoved,
+persistAlgoSettings as persistAlgoSettingsMoved,
+getStatsModeForStrategy as getStatsModeForStrategyMoved,
+setStatsModeForStrategy as setStatsModeForStrategyMoved,
+applyStatsModeButtons as applyStatsModeButtonsMoved,
+applyChartPositionChecks as applyChartPositionChecksMoved,
+bindPartialTpInput as bindPartialTpInputMoved,
+bindTrailSlXInput as bindTrailSlXInputMoved,
+bindTrailSlCheck as bindTrailSlCheckMoved,
+reclampTrailSlX2 as reclampTrailSlX2Moved,
+bindTpShareInputs as bindTpShareInputsMoved,
+bindSide as bindSideMoved,
+setNum as setNumMoved,
+setCheck as setCheckMoved
+} from "./algo-trading/page-controls.js?v=3b6df78e";
 export async function mountAlgoTradingPage(){
 
 setActiveAnalysisBotId(
@@ -394,199 +474,177 @@ null;
 let rsiRebuildSeq =
 0;
 
-function rsiPaneSettingsFromFlipPrefs(
-raw
-){
-
-const fromColumn =
-raw &&
-typeof raw ===
-"object" &&
-(
-raw.rsiLen !=
-null ||
-raw.osLevel !=
-null ||
-raw.obLevel !=
-null ||
-raw.rsiTf !=
-null
-);
-const prefs =
-fromColumn
-? raw
-: loadRsiTouchFlipPrefs();
-
-return {
-period:
-prefs.rsiLen,
-overbought:
-prefs.obLevel,
-oversold:
-prefs.osLevel,
-tf:
-prefs.rsiTf ||
-""
+function algoPageHost(){
+if(!algoPageHost.current){
+algoPageHost.current = {
+get ALGO_ANALYSIS_BOT_MACD_FLIP_TOUCH(){ return ALGO_ANALYSIS_BOT_MACD_FLIP_TOUCH; },
+get ALGO_ANALYSIS_BOT_PATTERN_12(){ return ALGO_ANALYSIS_BOT_PATTERN_12; },
+get ALGO_ANALYSIS_BOT_RSI_TOUCH_FLIP(){ return ALGO_ANALYSIS_BOT_RSI_TOUCH_FLIP; },
+get ALGO_PREFS_KEY(){ return ALGO_PREFS_KEY; },
+get ALGO_STRATEGY_IDS(){ return ALGO_STRATEGY_IDS; },
+get Event(){ return Event; },
+get algoChartDbg(){ return algoChartDbg; },
+get algoGateFromMemory(){ return algoGateFromMemory; },
+get algoPattern12EnabledOnce(){ return algoPattern12EnabledOnce; },
+set algoPattern12EnabledOnce(value){ algoPattern12EnabledOnce = value; },
+get algoResizeRaf(){ return algoResizeRaf; },
+set algoResizeRaf(value){ algoResizeRaf = value; },
+get algoStatsPanelCollapsed(){ return algoStatsPanelCollapsed; },
+get appendFutureWhitespaceBars(){ return appendFutureWhitespaceBars; },
+get applyRsiData(){ return applyRsiData; },
+get applyStrategyPatchToMemoryFromMemory(){ return applyStrategyPatchToMemoryFromMemory; },
+get bindAlgoNumericField(){ return bindAlgoNumericField; },
+get buildAlgoPrefsSnapshot(){ return buildAlgoPrefsSnapshot; },
+get buildTradeOptsFromMemory(){ return buildTradeOptsFromMemory; },
+get candles(){ return candles; },
+get chartGateFromMemory(){ return chartGateFromMemory; },
+get chartIndicators(){ return chartIndicators; },
+get chartPositionChecks(){ return chartPositionChecks; },
+get chartStrategyIdFromMemory(){ return chartStrategyIdFromMemory; },
+get clampAlgoSupertrendAtr(){ return clampAlgoSupertrendAtr; },
+get clampAlgoSupertrendFactor(){ return clampAlgoSupertrendFactor; },
+get clampPartialTpX(){ return clampPartialTpX; },
+get clampPullbackBeforeArmPct(){ return clampPullbackBeforeArmPct; },
+get clampSlPctOfX(){ return clampSlPctOfX; },
+get clearAlgoPatternAnalysisUi(){ return clearAlgoPatternAnalysisUi; },
+get coinsState(){ return coinsState; },
+get computeChartFutureMarginBars(){ return computeChartFutureMarginBars; },
+get displaySymbol(){ return displaySymbol; },
+get disposed(){ return disposed; },
+get drawingTools(){ return drawingTools; },
+get entryOverlay(){ return entryOverlay; },
+get formatTurnover24Label(){ return formatTurnover24Label; },
+get getActiveAnalysisBotId(){ return getActiveAnalysisBotId; },
+get getTickerStrategyOverlay(){ return getTickerStrategyOverlay; },
+get hasTickerStrategyOverlay(){ return hasTickerStrategyOverlay; },
+get historyStatsReady(){ return historyStatsReady; },
+set historyStatsReady(value){ historyStatsReady = value; },
+get ignoreNextRsiSettingsCapture(){ return ignoreNextRsiSettingsCapture; },
+set ignoreNextRsiSettingsCapture(value){ ignoreNextRsiSettingsCapture = value; },
+get isActiveAnalysisBot(){ return isActiveAnalysisBot; },
+get isAlgoBotLiteMode(){ return isAlgoBotLiteMode; },
+get lastRsiHudValue(){ return lastRsiHudValue; },
+get lastRsiValueFromCandles(){ return lastRsiValueFromCandles; },
+get layoutRsiPane(){ return layoutRsiPane; },
+get liveBarRollTimer(){ return liveBarRollTimer; },
+set liveBarRollTimer(value){ liveBarRollTimer = value; },
+get loadMacdFlipTouchPrefs(){ return loadMacdFlipTouchPrefs; },
+get loadRsiTouchFlipPrefs(){ return loadRsiTouchFlipPrefs; },
+get macdFlipTouchHost(){ return macdFlipTouchHost; },
+get marketMap(){ return marketMap; },
+get mem(){ return mem; },
+get normalizeAlgoStatsMode(){ return normalizeAlgoStatsMode; },
+get normalizeAlgoSupertrendTf(){ return normalizeAlgoSupertrendTf; },
+get normalizeRsiPaneSettings(){ return normalizeRsiPaneSettings; },
+get normalizeSymbol(){ return normalizeSymbol; },
+get patternAnalysisSeq(){ return patternAnalysisSeq; },
+set patternAnalysisSeq(value){ patternAnalysisSeq = value; },
+get patternAnalysisTimer(){ return patternAnalysisTimer; },
+set patternAnalysisTimer(value){ patternAnalysisTimer = value; },
+get readAlgoPattern12Settings(){ return readAlgoPattern12Settings; },
+get readPrefs(){ return readPrefs; },
+get rebalanceTpShares(){ return rebalanceTpShares; },
+get recaptureAlgoStatsPanelHeight(){ return recaptureAlgoStatsPanelHeight; },
+get refreshAlgoPatternAnalysis(){ return refreshAlgoPatternAnalysis; },
+get resizeAlgoCharts(){ return resizeAlgoCharts; },
+get restoreStrategyMemoryFromPrefsFromMemory(){ return restoreStrategyMemoryFromPrefsFromMemory; },
+get rsiHudPeriodEl(){ return rsiHudPeriodEl; },
+get rsiHudValueEl(){ return rsiHudValueEl; },
+get rsiPaneActive(){ return rsiPaneActive; },
+set rsiPaneActive(value){ rsiPaneActive = value; },
+get rsiPaneSettings(){ return rsiPaneSettings; },
+set rsiPaneSettings(value){ rsiPaneSettings = value; },
+get rsiSeries(){ return rsiSeries; },
+get rsiTouchFlipHost(){ return rsiTouchFlipHost; },
+get rsiWrapEl(){ return rsiWrapEl; },
+get saveRsiTouchFlipPrefs(){ return saveRsiTouchFlipPrefs; },
+get schedulePatternAnalysis(){ return schedulePatternAnalysis; },
+get setRsiHudEl(){ return setRsiHudEl; },
+get setTickerStrategyOverlay(){ return setTickerStrategyOverlay; },
+get statsModeRoots(){ return statsModeRoots; },
+get strategyPatchFromStateFromMemory(){ return strategyPatchFromStateFromMemory; },
+get strategyPrefKeysFromMemory(){ return strategyPrefKeysFromMemory; },
+get supertrendFilterOverlay(){ return supertrendFilterOverlay; },
+set supertrendFilterOverlay(value){ supertrendFilterOverlay = value; },
+get symbol(){ return symbol; },
+get symbolEl(){ return symbolEl; },
+get syncRsiHudPeriodEl(){ return syncRsiHudPeriodEl; },
+get syncRsiLevelDomEl(){ return syncRsiLevelDomEl; },
+get syncStrategyDomFromMemoryFromMemory(){ return syncStrategyDomFromMemoryFromMemory; },
+get terminalVisibleBars(){ return terminalVisibleBars; },
+get tf(){ return tf; },
+get tfBar(){ return tfBar; },
+get tickerScanUi(){ return tickerScanUi; },
+get unbindLiveCatchup(){ return unbindLiveCatchup; },
+set unbindLiveCatchup(value){ unbindLiveCatchup = value; },
+get unsubKline(){ return unsubKline; },
+set unsubKline(value){ unsubKline = value; },
+get userRsiPaneSettings(){ return userRsiPaneSettings; },
+set userRsiPaneSettings(value){ userRsiPaneSettings = value; },
+get writePrefs(){ return writePrefs; },
+get writeTickerStrategyOverlays(){ return writeTickerStrategyOverlays; }
 };
+}
+return algoPageHost.current;
+}
 
+function rsiPaneSettingsFromFlipPrefs(raw){
+return rsiPaneSettingsFromFlipPrefsMoved(
+algoPageHost(),
+...arguments
+);
 }
 
 function readFlipPanePatchFromDom(){
-
-const lenEl =
-document.getElementById(
-"algo-rsi-flip-len"
+return readFlipPanePatchFromDomMoved(
+algoPageHost(),
+...arguments
 );
-
-if(
-!lenEl
-){
-return loadRsiTouchFlipPrefs();
-}
-
-return {
-rsiLen:
-lenEl.value,
-osLevel:
-document.getElementById(
-"algo-rsi-flip-os"
-)?.value,
-obLevel:
-document.getElementById(
-"algo-rsi-flip-ob"
-)?.value,
-rsiTf:
-document.getElementById(
-"algo-rsi-flip-tf"
-)?.value
-};
-
 }
 
 let ignoreNextRsiSettingsCapture =
 false;
 
-function applyEffectiveRsiPaneSettings(
-flipPatch
-){
-
-if(
-isActiveAnalysisBot(
-ALGO_ANALYSIS_BOT_RSI_TOUCH_FLIP
-)
-){
-rsiPaneSettings =
-normalizeRsiPaneSettings(
-rsiPaneSettingsFromFlipPrefs(
-flipPatch ||
-readFlipPanePatchFromDom()
-)
+function applyEffectiveRsiPaneSettings(flipPatch){
+return applyEffectiveRsiPaneSettingsMoved(
+algoPageHost(),
+...arguments
 );
-}else{
-rsiPaneSettings =
-userRsiPaneSettings;
-}
-
-syncRsiHudPeriod();
-syncRsiLevelDom();
-applyRsiData();
-
 }
 
 function getRsiPaneSettings(){
-
-if(
-!isActiveAnalysisBot(
-ALGO_ANALYSIS_BOT_RSI_TOUCH_FLIP
-)
-){
-return null;
-}
-
-return normalizeRsiPaneSettings(
-rsiPaneSettingsFromFlipPrefs(
-readFlipPanePatchFromDom()
-)
+return getRsiPaneSettingsMoved(
+algoPageHost(),
+...arguments
 );
-
 }
 
-function commitRsiPaneSettings(
-next
-){
-
-if(
-!isActiveAnalysisBot(
-ALGO_ANALYSIS_BOT_RSI_TOUCH_FLIP
-)
-){
-return false;
-}
-
-saveRsiTouchFlipPrefs(
-{
-rsiLen:
-next?.period,
-osLevel:
-next?.oversold,
-obLevel:
-next?.overbought,
-rsiTf:
-next?.tf ||
-""
-}
+function commitRsiPaneSettings(next){
+return commitRsiPaneSettingsMoved(
+algoPageHost(),
+...arguments
 );
-rsiTouchFlipHost?.applyColumnFromPrefs?.();
-applyEffectiveRsiPaneSettings();
-void rsiTouchFlipHost?.refresh?.();
-ignoreNextRsiSettingsCapture =
-true;
-return true;
-
 }
 
 function syncRsiHudPeriod(){
-
-syncRsiHudPeriodEl(
-rsiHudPeriodEl,
-rsiPaneSettings.period
+return syncRsiHudPeriodMoved(
+algoPageHost(),
+...arguments
 );
-
 }
 
 function syncRsiLevelDom(){
-
-syncRsiLevelDomEl(
-rsiWrapEl,
-rsiPaneSettings
-);
-
-}
-
-function onRsiSettingsChange(
-next
-){
-
-if(
-ignoreNextRsiSettingsCapture
-){
-ignoreNextRsiSettingsCapture =
-false;
-applyEffectiveRsiPaneSettings();
-return;
-}
-
-if(
-next
-){
-userRsiPaneSettings =
-normalizeRsiPaneSettings(
-next
+return syncRsiLevelDomMoved(
+algoPageHost(),
+...arguments
 );
 }
 
-applyEffectiveRsiPaneSettings();
-
+function onRsiSettingsChange(next){
+return onRsiSettingsChangeMoved(
+algoPageHost(),
+...arguments
+);
 }
 
 syncRsiHudPeriod();
@@ -694,48 +752,32 @@ rsi.series;
 const mem =
 createAlgoStrategyMemory();
 
-function algoGate(
-id
-){
-
-return algoGateFromMemory(
-mem,
-id
+function algoGate(id){
+return algoGateMoved(
+algoPageHost(),
+...arguments
 );
-
 }
 
 function chartStrategyId(){
-
-return chartStrategyIdFromMemory(
-mem
+return chartStrategyIdMoved(
+algoPageHost(),
+...arguments
 );
-
 }
 
 function chartGate(){
-
-return chartGateFromMemory(
-mem
+return chartGateMoved(
+algoPageHost(),
+...arguments
 );
-
 }
 
-function buildTradeOpts(
-strategyId
-){
-
-return buildTradeOptsFromMemory(
-mem,
-strategyId,
-{
-chartTf:
-tf,
-patternSettings:
-readAlgoPattern12Settings()
-}
+function buildTradeOpts(strategyId){
+return buildTradeOptsMoved(
+algoPageHost(),
+...arguments
 );
-
 }
 
 let tickerScanUi =
@@ -746,6 +788,11 @@ let candles =
 [];
 let loadSeq =
 0;
+
+bindAlgoChartPaneSettle(
+()=>
+loadSeq
+);
 let unsubKline =
 null;
 let unbindLiveCatchup =
@@ -795,157 +842,38 @@ let historyStatsReady =
 false;
 
 function isAlgoStatsAnalysisPaused(){
-
-return algoStatsPanelCollapsed;
-
+return isAlgoStatsAnalysisPausedMoved(
+algoPageHost(),
+...arguments
+);
 }
 
 function markAlgoHistoryStatsPending(){
-
-historyStatsReady =
-false;
-patternAnalysisSeq++;
-
-if(
-patternAnalysisTimer
-){
-clearTimeout(
-patternAnalysisTimer
+return markAlgoHistoryStatsPendingMoved(
+algoPageHost(),
+...arguments
 );
-patternAnalysisTimer =
-0;
-}
-
-clearAlgoPatternAnalysisUi(
-entryOverlay
-);
-
 }
 
 function markAlgoHistoryStatsReadyAndAnalyze(){
-
-historyStatsReady =
-true;
-
-if(
-!algoChartDbg(
-"analysis"
-)
-){
-return;
-}
-
-ensureAlgoPattern12Enabled();
-schedulePatternAnalysis(
-{
-force:
-true
-}
+return markAlgoHistoryStatsReadyAndAnalyzeMoved(
+algoPageHost(),
+...arguments
 );
-drawingTools?.scheduleRedraw?.();
-rsiTouchFlipHost?.refresh?.();
-macdFlipTouchHost?.refresh?.();
-
 }
 
-function dispatchAlgoChartCandlesLoaded(
-loadId
-){
-
-try{
-window.dispatchEvent(
-new CustomEvent(
-"chart-candles-loaded",
-{
-detail:{
-symbol:
-String(
-symbol ||
-""
-).replace(
-/\.P$/i,
-""
-).trim().toUpperCase(),
-loadSeq:
-Number(
-loadId
-) ||
-0
-}
-}
-)
+function dispatchAlgoChartCandlesLoaded(loadId){
+return dispatchAlgoChartCandlesLoadedMoved(
+algoPageHost(),
+...arguments
 );
-}catch{
-/* ignore */
-}
-
 }
 
 function ensureAlgoPattern12Enabled(){
-
-if(
-!algoChartDbg(
-"indicators"
-) ||
-!algoChartDbg(
-"analysis"
-)
-){
-return;
-}
-
-if(
-algoPattern12EnabledOnce ||
-disposed
-){
-return;
-}
-
-if(
-!isActiveAnalysisBot(
-ALGO_ANALYSIS_BOT_PATTERN_12
-)
-){
-return;
-}
-
-algoPattern12EnabledOnce =
-true;
-
-if(
-isAlgoBotLiteMode()
-){
-return;
-}
-
-const root =
-document.getElementById(
-"chart-indicators-wrap"
+return ensureAlgoPattern12EnabledMoved(
+algoPageHost(),
+...arguments
 );
-const input =
-root?.querySelector?.(
-'input[data-indicator-id="pattern-12"]'
-);
-
-if(
-!input ||
-input.checked
-){
-return;
-}
-
-input.checked =
-true;
-input.dispatchEvent(
-new Event(
-"change",
-{
-bubbles:
-true
-}
-)
-);
-
 }
 
 /**
@@ -953,407 +881,143 @@ true
  * pattern-12 / rsi-touch-flip — свой блок data-algo-analysis-bot + оверлей.
  */
 function applyActiveAnalysisBotChartUi(){
-
-const botId =
-getActiveAnalysisBotId();
-
-document.body?.setAttribute(
-"data-algo-analysis-bot",
-botId
-);
-
-const pattern12 =
-botId ===
-ALGO_ANALYSIS_BOT_PATTERN_12;
-
-if(
-!pattern12
-){
-patternAnalysisSeq++;
-if(
-patternAnalysisTimer
-){
-clearTimeout(
-patternAnalysisTimer
-);
-patternAnalysisTimer =
-0;
-}
-tickerScanUi?.stopAll?.();
-entryOverlay?.setEvents?.(
-[]
-);
-entryOverlay?.refreshPositions?.();
-algoPattern12EnabledOnce =
-false;
-refreshSupertrendFilterLines();
-rsiTouchFlipHost?.refresh?.();
-macdFlipTouchHost?.refresh?.();
-applyEffectiveRsiPaneSettings();
-if(
-isActiveAnalysisBot(
-ALGO_ANALYSIS_BOT_MACD_FLIP_TOUCH
-)
-){
-syncChartMacdPaneFromFlip();
-}else{
-chartIndicators?.setIndicatorEnabled?.(
-"macd",
-false
-);
-}
-requestAnimationFrame(
-()=>{
-recaptureAlgoStatsPanelHeight();
-}
-);
-return;
-}
-
-if(
-historyStatsReady &&
-!disposed
-){
-algoPattern12EnabledOnce =
-false;
-requestAnimationFrame(
-()=>{
-
-if(
-disposed ||
-!isActiveAnalysisBot(
-ALGO_ANALYSIS_BOT_PATTERN_12
-)
-){
-return;
-}
-
-ensureAlgoPattern12Enabled();
-refreshSupertrendFilterLines();
-schedulePatternAnalysis(
-{
-force:
-true
-}
-);
-
-}
+return applyActiveAnalysisBotChartUiMoved(
+algoPageHost(),
+...arguments
 );
 }
 
-applyEffectiveRsiPaneSettings();
-requestAnimationFrame(
-()=>{
-recaptureAlgoStatsPanelHeight();
-}
-);
-
-}
-
-function syncChartMacdPaneFromFlip(
-flipPatch
-){
-
-if(
-!isActiveAnalysisBot(
-ALGO_ANALYSIS_BOT_MACD_FLIP_TOUCH
-)
-){
-return;
-}
-
-const prefs =
-flipPatch &&
-typeof flipPatch ===
-"object"
-? flipPatch
-: loadMacdFlipTouchPrefs();
-const macdInd =
-chartIndicators?.getIndicator?.(
-"macd"
-);
-
-if(
-!macdInd
-){
-return;
-}
-
-chartIndicators?.setIndicatorEnabled?.(
-"macd",
-true
-);
-macdInd.applySettings?.(
-{
-fastLength:
-prefs.fastLength,
-slowLength:
-prefs.slowLength,
-signalLength:
-prefs.signalLength,
-tf:
-prefs.macdTf ||
-""
-}
-);
-chartIndicators?.notifyCandlesUpdate?.();
-
-}
-
-function setRsiPaneActive(
-active
-){
-
-rsiPaneActive =
-!!active;
-
-if(
-rsiPaneActive
-){
-applyRsiData();
-return;
-}
-
-rsiSeries?.setData(
-[]
-);
-layoutRsi();
-setRsiHud(
-null
-);
-
-}
-
-function setSymbolLabel(
-previewSymbol
-){
-
-const labelSymbol =
-previewSymbol !=
-null &&
-String(
-previewSymbol
-).trim()
-? normalizeSymbol(
-previewSymbol
-)
-: symbol;
-
-if(
-symbolEl
-){
-symbolEl.textContent =
-displaySymbol(
-labelSymbol
+function syncChartMacdPaneFromFlip(flipPatch){
+return syncChartMacdPaneFromFlipMoved(
+algoPageHost(),
+...arguments
 );
 }
 
-document.title =
-`${displaySymbol(
-labelSymbol
-)} — АлгоТрейдинг`;
-
-coinsState().currentSymbol =
-normalizeSymbol(
-labelSymbol
+function setRsiPaneActive(active){
+return setRsiPaneActiveMoved(
+algoPageHost(),
+...arguments
 );
-
-syncAlgoChartTurnover24(
-labelSymbol
-);
-
 }
 
-function syncAlgoChartTurnover24(
-nextSymbol =
-symbol
-){
-
-const el =
-document.getElementById(
-"coins-chart-turnover24"
+function setSymbolLabel(previewSymbol){
+return setSymbolLabelMoved(
+algoPageHost(),
+...arguments
 );
-
-if(
-!el
-){
-return;
 }
 
-const item =
-marketMap.get(
-normalizeSymbol(
-nextSymbol
-)
+function syncAlgoChartTurnover24(nextSymbol =
+symbol){
+return syncAlgoChartTurnover24Moved(
+algoPageHost(),
+...arguments
 );
-
-el.textContent =
-formatTurnover24Label(
-item?.volume24
-);
-
 }
 
 function setActiveTfButton(){
-
-tfBar?.querySelectorAll(
-".tf-btn"
-).forEach(
-btn=>{
-btn.classList.toggle(
-"active",
-btn.dataset.tf ===
-tf
+return setActiveTfButtonMoved(
+algoPageHost(),
+...arguments
 );
 }
+
+function setRsiHud(value){
+return setRsiHudMoved(
+algoPageHost(),
+...arguments
 );
-
-const chartTfSel =
-document.getElementById(
-"algo-rsi-flip-chart-tf"
-);
-
-if(
-chartTfSel &&
-document.activeElement !==
-chartTfSel &&
-[
-...chartTfSel.options
-].some(
-opt=>
-opt.value ===
-tf
-)
-){
-chartTfSel.value =
-tf;
-}
-
-}
-
-function setRsiHud(
-value
-){
-
-setRsiHudEl(
-rsiHudValueEl,
-value
-);
-
 }
 
 function layoutRsi(){
-
-if(
-!rsiSeries
-){
-return;
+return layoutRsiMoved(
+algoPageHost(),
+...arguments
+);
 }
 
-layoutRsiPane(
-rsiSeries,
-rsiWrapEl,
-rsiPaneSettings
-);
-
+function algoChartHost(){
+if(!algoChartHost.current){
+algoChartHost.current = {
+get ALGO_ANALYSIS_BOT_PATTERN_12(){ return ALGO_ANALYSIS_BOT_PATTERN_12; },
+get HISTORY_REQUESTS(){ return HISTORY_REQUESTS; },
+get PATTERN_ANALYSIS_LIVE_MS(){ return PATTERN_ANALYSIS_LIVE_MS; },
+get TERMINAL_HISTORY_LAZY_BATCH_BARS(){ return TERMINAL_HISTORY_LAZY_BATCH_BARS; },
+get TERMINAL_VISIBLE_BARS(){ return TERMINAL_VISIBLE_BARS; },
+get algoChartDbg(){ return algoChartDbg; },
+get appendFutureWhitespaceBars(){ return appendFutureWhitespaceBars; },
+get applyChartPriceFormat(){ return applyChartPriceFormat; },
+get applyCoinsChartViewport(){ return applyCoinsChartViewport; },
+get applyLiveSeriesUpdate(){ return applyLiveSeriesUpdate; },
+get applyRsiFixedPriceScale(){ return applyRsiFixedPriceScale; },
+get buildChartRsiPoints(){ return buildChartRsiPoints; },
+get buildDisplayCandles(){ return buildDisplayCandles; },
+get buildPatternAnalysisOpts(){ return buildPatternAnalysisOpts; },
+get candleSeries(){ return candleSeries; },
+get candles(){ return candles; },
+set candles(value){ candles = value; },
+get chart(){ return chart; },
+get chartIndicators(){ return chartIndicators; },
+get chartWrapEl(){ return chartWrapEl; },
+get computeChartFutureMarginBars(){ return computeChartFutureMarginBars; },
+get disposed(){ return disposed; },
+get drawingTools(){ return drawingTools; },
+get ensureOhlcRollover(){ return ensureOhlcRollover; },
+get entryOverlay(){ return entryOverlay; },
+get getActiveExchangeId(){ return getActiveExchangeId; },
+get historyStatsReady(){ return historyStatsReady; },
+get invalidatePreservedVisibleLogicalRange(){ return invalidatePreservedVisibleLogicalRange; },
+get isActiveAnalysisBot(){ return isActiveAnalysisBot; },
+get isAlgoStatsAnalysisPaused(){ return isAlgoStatsAnalysisPaused; },
+get isAnyAnalysisBotActive(){ return isAnyAnalysisBotActive; },
+get isChartLayoutReady(){ return isChartLayoutReady; },
+get lastPatternAnalysisAt(){ return lastPatternAnalysisAt; },
+set lastPatternAnalysisAt(value){ lastPatternAnalysisAt = value; },
+get lastRsiHudValue(){ return lastRsiHudValue; },
+set lastRsiHudValue(value){ lastRsiHudValue = value; },
+get layoutRsi(){ return layoutRsi; },
+get liveBarPeriodSec(){ return liveBarPeriodSec; },
+get loadMarketHistory(){ return loadMarketHistory; },
+get loadSeq(){ return loadSeq; },
+get logicalIndexShift(){ return logicalIndexShift; },
+get macdFlipTouchHost(){ return macdFlipTouchHost; },
+get markAlgoHistoryStatsReadyAndAnalyze(){ return markAlgoHistoryStatsReadyAndAnalyze; },
+get mergeCandleRows(){ return mergeCandleRows; },
+get patternAnalysisSeq(){ return patternAnalysisSeq; },
+set patternAnalysisSeq(value){ patternAnalysisSeq = value; },
+get patternAnalysisTimer(){ return patternAnalysisTimer; },
+set patternAnalysisTimer(value){ patternAnalysisTimer = value; },
+get pendingFitViewport(){ return pendingFitViewport; },
+set pendingFitViewport(value){ pendingFitViewport = value; },
+get putHistoryCache(){ return putHistoryCache; },
+get refreshAlgoPatternAnalysis(){ return refreshAlgoPatternAnalysis; },
+get refreshEntryFilterLines(){ return refreshEntryFilterLines; },
+get rsiChart(){ return rsiChart; },
+get rsiPaneActive(){ return rsiPaneActive; },
+get rsiPaneSettings(){ return rsiPaneSettings; },
+get rsiRebuildSeq(){ return rsiRebuildSeq; },
+set rsiRebuildSeq(value){ rsiRebuildSeq = value; },
+get rsiSeries(){ return rsiSeries; },
+get rsiTouchFlipHost(){ return rsiTouchFlipHost; },
+get rsiWrapEl(){ return rsiWrapEl; },
+get runWithPreservedVisibleLogicalRange(){ return runWithPreservedVisibleLogicalRange; },
+get setChartLayoutReady(){ return setChartLayoutReady; },
+get setRsiHud(){ return setRsiHud; },
+get symbol(){ return symbol; },
+get syncLinkedChartTimescales(){ return syncLinkedChartTimescales; },
+get terminalVisibleBars(){ return terminalVisibleBars; },
+get tf(){ return tf; }
+};
+}
+return algoChartHost.current;
 }
 
 function resizeAlgoCharts(){
-
-if(
-!chart ||
-!chartWrapEl
-){
-return;
-}
-
-const w =
-Math.max(
-chartWrapEl.clientWidth,
-1
+return resizeAlgoChartsMoved(
+algoChartHost(),
+...arguments
 );
-const chartH =
-Math.max(
-chartWrapEl.clientHeight,
-1
-);
-
-if(
-w <
-2 ||
-chartH <
-2
-){
-/* Cold-open: wrap ещё без layout — fit отложим до первого валидного resize. */
-if(
-candles.length
-){
-pendingFitViewport =
-true;
-}
-return;
-}
-
-chart.applyOptions(
-{
-width:
-w,
-height:
-chartH
-}
-);
-
-chartIndicators?.resizePanes?.(
-w
-);
-
-if(
-rsiChart &&
-rsiPaneActive &&
-rsiWrapEl
-){
-
-const rsiH =
-Math.max(
-rsiWrapEl.clientHeight,
-1
-);
-
-if(
-rsiH >=
-2
-){
-rsiChart.applyOptions(
-{
-width:
-w,
-height:
-rsiH
-}
-);
-}
-
-}
-
-layoutRsi();
-chartIndicators?.notifyLayoutChange?.();
-drawingTools?.resize?.();
-drawingTools?.scheduleRedraw?.();
-runWithPreservedVisibleLogicalRange(
-chart,
-()=>{
-chartIndicators?.notifyMainChartOverlaysSync?.();
-entryOverlay?.refreshPositions?.();
-}
-);
-
-if(
-pendingFitViewport &&
-candles.length
-){
-fitViewport();
-}
-
 }
 
 let algoResizeRaf =
@@ -1363,474 +1027,79 @@ let pendingFitViewport =
 false;
 
 function scheduleResizeAlgoCharts(){
-
-if(
-algoResizeRaf
-){
-cancelAnimationFrame(
-algoResizeRaf
+return scheduleResizeAlgoChartsMoved(
+algoPageHost(),
+...arguments
 );
-}
-
-algoResizeRaf =
-requestAnimationFrame(
-()=>{
-algoResizeRaf =
-0;
-resizeAlgoCharts();
-}
-);
-
 }
 
 function lastRsiValue(){
-
-if(
-lastRsiHudValue !=
-null &&
-Number.isFinite(
-lastRsiHudValue
-)
-){
-return lastRsiHudValue;
-}
-
-return lastRsiValueFromCandles(
-candles,
-rsiPaneSettings.period
+return lastRsiValueMoved(
+algoPageHost(),
+...arguments
 );
-
 }
 
-function applyRsiData(
-{
+function applyRsiData({
 notifyIndicators =
 true,
 liveLastOnly =
 false
 } =
-{}
-){
-
-if(
-!rsiSeries
-){
-return;
-}
-
-if(
-!algoChartDbg(
-"rsi"
-) ||
-!rsiPaneActive
-){
-if(
-notifyIndicators &&
-algoChartDbg(
-"indicators"
-)
-){
-chartIndicators?.notifyCandlesUpdate?.();
-}
-return;
-}
-
-const rsiTf =
-String(
-rsiPaneSettings.tf ||
-""
-).trim();
-const chartTf =
-String(
-tf ||
-""
-).trim();
-
-if(
-liveLastOnly &&
-rsiTf &&
-rsiTf !==
-chartTf
-){
-return;
-}
-
-if(
-!candles.length
-){
-rsiSeries.setData(
-[]
+{}){
+return applyRsiDataMoved(
+algoChartHost(),
+...arguments
 );
-lastRsiHudValue =
-null;
-setRsiHud(
-null
-);
-if(
-notifyIndicators
-){
-chartIndicators?.notifyCandlesUpdate?.();
-}
-return;
-}
-
-const seq =
-++rsiRebuildSeq;
-const chartCandles =
-candles;
-
-void (
-async()=>{
-
-const points =
-await buildChartRsiPoints(
-{
-chartCandles,
-period:
-rsiPaneSettings.period,
-tf:
-rsiPaneSettings.tf,
-chartTf:
-tf,
-symbol,
-loadHistory:(
-histSymbol,
-histTf,
-requests
-)=>
-loadMarketHistory(
-histSymbol,
-histTf,
-requests ||
-HISTORY_REQUESTS,
-{
-parallel:
-true,
-batchGapMs:
-0
-}
-)
-}
-);
-
-if(
-seq !==
-rsiRebuildSeq ||
-!rsiPaneActive
-){
-return;
-}
-
-rsiSeries.setData(
-appendFutureWhitespaceBars(
-points,
-computeChartFutureMarginBars(
-terminalVisibleBars(
-candles.length
-)
-),
-tf
-)
-);
-applyRsiFixedPriceScale(
-rsiChart,
-rsiSeries
-);
-syncLinkedChartTimescales(
-chart,
-rsiChart
-);
-layoutRsi();
-
-let last =
-null;
-
-for(
-let i =
-points.length -
-1;
-i >=
-0;
-i--
-){
-
-if(
-Number.isFinite(
-points[i]?.value
-)
-){
-last =
-points[i];
-break;
-}
-
-}
-
-lastRsiHudValue =
-last?.value ??
-null;
-setRsiHud(
-lastRsiHudValue
-);
-
-if(
-notifyIndicators
-){
-chartIndicators?.notifyCandlesUpdate?.();
-}
-
-}
-)();
-
 }
 
 function buildDisplayCandles(){
-
-if(
-!candles.length
-){
-return [];
-}
-
-return appendFutureWhitespaceBars(
-candles,
-computeChartFutureMarginBars(
-terminalVisibleBars(
-candles.length
-)
-),
-tf
+return buildDisplayCandlesMoved(
+algoPageHost(),
+...arguments
 );
-
 }
 
 function fitViewport(){
-
-if(
-!chart ||
-!chartWrapEl
-){
-return;
-}
-
-const wrapW =
-Math.max(
-chartWrapEl.clientWidth,
-0
+return fitViewportMoved(
+algoChartHost(),
+...arguments
 );
-const wrapH =
-Math.max(
-chartWrapEl.clientHeight,
-0
-);
-
-if(
-wrapW <
-2 ||
-wrapH <
-2
-){
-if(
-candles.length
-){
-pendingFitViewport =
-true;
-}
-return;
-}
-
-/* #chart position:absolute — clientWidth часто 0; размер берём с wrap. */
-chart.applyOptions(
-{
-width:
-wrapW,
-height:
-wrapH
-}
-);
-
-if(
-rsiChart &&
-rsiPaneActive &&
-rsiWrapEl
-){
-
-const rsiH =
-Math.max(
-rsiWrapEl.clientHeight,
-1
-);
-
-if(
-rsiH >=
-2
-){
-rsiChart.applyOptions(
-{
-width:
-wrapW,
-height:
-rsiH
-}
-);
-}
-
-}
-
-const display =
-buildDisplayCandles();
-
-if(
-!display.length
-){
-return;
-}
-
-pendingFitViewport =
-false;
-invalidatePreservedVisibleLogicalRange();
-
-applyCoinsChartViewport(
-chart,
-rsiChart,
-display,
-tf,
-wrapW,
-candles.length,
-TERMINAL_VISIBLE_BARS
-);
-
 }
 
 function refreshEntryFilterLines(){
-
-if(
-!algoChartDbg(
-"filterLines"
-)
-){
-return;
-}
-
-supertrendFilterOverlay?.refresh?.();
-
+return refreshEntryFilterLinesMoved(
+algoPageHost(),
+...arguments
+);
 }
 
 function refreshSupertrendFilterLines(){
-
-refreshEntryFilterLines();
-
+return refreshSupertrendFilterLinesMoved(
+algoPageHost(),
+...arguments
+);
 }
 
 function destroySupertrendFilterLines(){
-
-supertrendFilterOverlay?.destroy?.();
-supertrendFilterOverlay =
-null;
-
+return destroySupertrendFilterLinesMoved(
+algoPageHost(),
+...arguments
+);
 }
 
-function schedulePatternAnalysis(
-{
+function schedulePatternAnalysis({
 force =
 false
 } =
-{}
-){
-
-if(
-!algoChartDbg(
-"analysis"
-)
-){
-return;
-}
-
-if(
-!isActiveAnalysisBot(
-ALGO_ANALYSIS_BOT_PATTERN_12
-)
-){
-return;
-}
-
-if(
-!historyStatsReady
-){
-return;
-}
-
-if(
-!force &&
-isAlgoStatsAnalysisPaused()
-){
-return;
-}
-
-const seq =
-++patternAnalysisSeq;
-const runForced =
-!!force;
-
-if(
-patternAnalysisTimer
-){
-clearTimeout(
-patternAnalysisTimer
+{}){
+return schedulePatternAnalysisMoved(
+algoChartHost(),
+...arguments
 );
 }
 
-const delay =
-runForced
-? 0
-: Math.max(
-0,
-PATTERN_ANALYSIS_LIVE_MS -
-(
-Date.now() -
-lastPatternAnalysisAt
-)
-);
-
-patternAnalysisTimer =
-setTimeout(
-()=>{
-patternAnalysisTimer =
-0;
-
-if(
-disposed ||
-seq !==
-patternAnalysisSeq
-){
-return;
-}
-
-if(
-!runForced &&
-isAlgoStatsAnalysisPaused()
-){
-return;
-}
-
-lastPatternAnalysisAt =
-Date.now();
-
-refreshAlgoPatternAnalysis(
-candles,
-entryOverlay,
-buildPatternAnalysisOpts()
-);
-/* Paint filter applied in pattern-12 paint — достаточно redraw, без полного flush индикаторов. */
-drawingTools?.scheduleRedraw?.();
-},
-delay
-);
-
-}
-
-function applyCandleData(
-{
+function applyCandleData({
 fit =
 false,
 light =
@@ -1840,844 +1109,133 @@ false,
 forceAnalysis =
 false
 } =
-{}
-){
-
-if(
-!candleSeries
-){
-return;
-}
-
-const refPrice =
-candles[
-candles.length -
-1
-]?.close ??
-1;
-
-applyChartPriceFormat(
-candleSeries,
-refPrice
+{}){
+return applyCandleDataMoved(
+algoChartHost(),
+...arguments
 );
-
-const display =
-buildDisplayCandles();
-
-if(
-!light &&
-algoChartDbg(
-"indicators"
-)
-){
-chartIndicators?.clearMainChartOverlays?.();
-}
-
-candleSeries.setData(
-display
-);
-
-if(
-algoChartDbg(
-"rsi"
-)
-){
-applyRsiData(
-{
-notifyIndicators:
-!light
-}
-);
-}
-
-if(
-!light &&
-algoChartDbg(
-"filterLines"
-)
-){
-refreshEntryFilterLines();
-}
-
-if(
-!light &&
-algoChartDbg(
-"indicators"
-) &&
-(
-fit ||
-isChartLayoutReady()
-)
-){
-chartIndicators?.flushIndicatorDataRefreshNow?.();
-chartIndicators?.notifyMainChartOverlaysSync?.();
-}
-
-/* fit строго после оверлеев: иначе flush/ST перетирают viewport (мигание cold-open). */
-if(
-fit
-){
-fitViewport();
-
-if(
-!light
-){
-setChartLayoutReady(
-true
-);
-}
-
-}
-
-if(
-!skipAnalysis &&
-!light &&
-candles.length
-){
-schedulePatternAnalysis(
-{
-force:
-!!fit ||
-!!forceAnalysis
-}
-);
-}
-
-rsiTouchFlipHost?.refresh?.();
-macdFlipTouchHost?.refresh?.();
-
-drawingTools?.scheduleRedraw?.();
-
 }
 
 function buildPatternAnalysisOpts(){
-
-return {
-...buildTradeOpts(
-"st1"
-),
-gates:{
-st1:{
-...mem.strategyGates.st1
-},
-st2:{
-...mem.strategyGates.st2
-},
-st3:{
-...mem.strategyGates.st3
-}
-},
-statsMode:
-mem.statsMode,
-statsModeSt2:
-mem.statsModeSt2,
-statsModeSt3:
-mem.statsModeSt3,
-chartPositionsStrategy:
-mem.chartPositionsStrategy,
-symbol
-};
-
+return buildPatternAnalysisOptsMoved(
+algoPageHost(),
+...arguments
+);
 }
 
 function applyLiveCandleTick(){
-
-if(
-!candleSeries ||
-!algoChartDbg(
-"livePrice"
-) ||
-!candles.length
-){
-return;
-}
-
-ensureOhlcRollover(
-candles,
-liveBarPeriodSec(
-tf
-)
+return applyLiveCandleTickMoved(
+algoChartHost(),
+...arguments
 );
-
-const last =
-candles[
-candles.length -
-1
-];
-
-applyLiveSeriesUpdate(
-candleSeries,
-{
-time:
-last.time,
-open:
-last.open,
-high:
-last.high,
-low:
-last.low,
-close:
-last.close
-},
-buildDisplayCandles
-);
-
 }
 
 function stopKline(){
-
-try{
-unbindLiveCatchup?.();
-}catch{
-/* ignore */
-}
-
-unbindLiveCatchup =
-null;
-
-try{
-unsubKline?.();
-}catch{
-/* ignore */
-}
-
-unsubKline =
-null;
-
-if(
-liveBarRollTimer
-){
-clearInterval(
-liveBarRollTimer
-);
-liveBarRollTimer =
-null;
-}
-
-}
-
-function mergeOlderAlgoCandles(
-older
-){
-
-const byTime =
-new Map();
-
-for(
-const row of older ||
-[]
-){
-
-if(
-row?.time !=
-null
-){
-byTime.set(
-row.time,
-row
+return stopKlineMoved(
+algoPageHost(),
+...arguments
 );
 }
 
-}
-
-for(
-const row of candles
-){
-
-if(
-row?.time !=
-null
-){
-byTime.set(
-row.time,
-row
+function mergeOlderAlgoCandles(older){
+return mergeOlderAlgoCandlesMoved(
+algoChartHost(),
+...arguments
 );
 }
 
-}
-
-return Array.from(
-byTime.values()
-).sort(
-(
-a,
-b
-)=>
-a.time -
-b.time
-);
-
-}
-
-async function deepenAlgoHistoryIfNeeded(
-seq
-){
-
-if(
-!isAnyAnalysisBotActive() ||
-!candles.length
-){
-return;
-}
-
-const havePages =
-Math.max(
-1,
-Math.ceil(
-candles.length /
-TERMINAL_HISTORY_LAZY_BATCH_BARS
-)
-);
-const extra =
-HISTORY_REQUESTS -
-havePages;
-
-if(
-extra <=
-0
-){
-return;
-}
-
-try{
-const older =
-await loadMarketHistory(
-symbol,
-tf,
-extra,
-{
-parallel:
-true,
-batchGapMs:
-0,
-endMs:
-candles[0].time *
-1000 -
-1
-}
-);
-
-if(
-disposed ||
-seq !==
-loadSeq ||
-!older?.length
-){
-return;
-}
-
-const beforeLen =
-candles.length;
-const range =
-chart?.timeScale?.().getVisibleLogicalRange?.();
-candles =
-mergeOlderAlgoCandles(
-older
-);
-const added =
-candles.length -
-beforeLen;
-
-if(
-added <=
-0
-){
-return;
-}
-
-applyCandleData(
-{
-light:
-true,
-skipAnalysis:
-true
-}
-);
-chartIndicators?.notifyCandlesUpdate?.();
-chartIndicators?.notifyMainChartOverlaysSync?.();
-
-if(
-range &&
-chart?.timeScale?.().setVisibleLogicalRange
-){
-chart.timeScale().setVisibleLogicalRange(
-{
-from:
-range.from +
-added,
-to:
-range.to +
-added
-}
+async function deepenAlgoHistoryIfNeeded(seq){
+return deepenAlgoHistoryIfNeededMoved(
+algoChartHost(),
+...arguments
 );
 }
 
-drawingTools?.scheduleRedraw?.();
-markAlgoHistoryStatsReadyAndAnalyze();
-}catch{
-/* first paint already on screen */
-}
-
-}
-
-async function loadSymbol(
-nextSymbol,
-nextTf
-){
-
-const seq =
-++loadSeq;
-const persistFromSymbol =
-symbol;
-
-if(
-seq >
-1
-){
-persistAlgoSettings(
-{
-overlaySymbol:
-persistFromSymbol
-}
-);
-rsiTouchFlipHost?.persistForSymbol?.(
-persistFromSymbol
+async function refreshAlgoHistoryTail(seq){
+return refreshAlgoHistoryTailMoved(
+algoChartHost(),
+...arguments
 );
 }
 
-symbol =
-normalizeSymbol(
-nextSymbol
+function algoSymbolHost(){
+if(!algoSymbolHost.current){
+algoSymbolHost.current = {
+get DEFAULT_TF(){ return DEFAULT_TF; },
+get HISTORY_REQUESTS(){ return HISTORY_REQUESTS; },
+get TERMINAL_HISTORY_LAZY_BATCH_BARS(){ return TERMINAL_HISTORY_LAZY_BATCH_BARS; },
+get TERMINAL_VISIBLE_BARS(){ return TERMINAL_VISIBLE_BARS; },
+get algoChartDbg(){ return algoChartDbg; },
+get algoPattern12EnabledOnce(){ return algoPattern12EnabledOnce; },
+set algoPattern12EnabledOnce(value){ algoPattern12EnabledOnce = value; },
+get applyCandleData(){ return applyCandleData; },
+get applyLiveCandleTick(){ return applyLiveCandleTick; },
+get applyRsiData(){ return applyRsiData; },
+get bindLiveCandleCatchup(){ return bindLiveCandleCatchup; },
+get buildDisplayCandles(){ return buildDisplayCandles; },
+get candles(){ return candles; },
+set candles(value){ candles = value; },
+get chart(){ return chart; },
+get chartIndicators(){ return chartIndicators; },
+get deepenAlgoHistoryIfNeeded(){ return deepenAlgoHistoryIfNeeded; },
+get dispatchAlgoChartCandlesLoaded(){ return dispatchAlgoChartCandlesLoaded; },
+get disposed(){ return disposed; },
+get drawingTools(){ return drawingTools; },
+get ensureAlgoPattern12Enabled(){ return ensureAlgoPattern12Enabled; },
+get ensureOhlcRollover(){ return ensureOhlcRollover; },
+get fitViewport(){ return fitViewport; },
+get getActiveExchangeId(){ return getActiveExchangeId; },
+get hydrateTickerStrategyUi(){ return hydrateTickerStrategyUi; },
+get invalidateAlgoPattern12SceneCache(){ return invalidateAlgoPattern12SceneCache; },
+get isAlgoBotLiteMode(){ return isAlgoBotLiteMode; },
+get layoutRsi(){ return layoutRsi; },
+get listApi(){ return listApi; },
+get liveBarPeriodSec(){ return liveBarPeriodSec; },
+get liveBarRollTimer(){ return liveBarRollTimer; },
+set liveBarRollTimer(value){ liveBarRollTimer = value; },
+get loadAlgoBotLiteHistory(){ return loadAlgoBotLiteHistory; },
+get loadMarketHistory(){ return loadMarketHistory; },
+get loadSeq(){ return loadSeq; },
+set loadSeq(value){ loadSeq = value; },
+get markAlgoHistoryStatsPending(){ return markAlgoHistoryStatsPending; },
+get markAlgoHistoryStatsReadyAndAnalyze(){ return markAlgoHistoryStatsReadyAndAnalyze; },
+get mergeLiveCandle(){ return mergeLiveCandle; },
+get normalizeSymbol(){ return normalizeSymbol; },
+get paintCatchupLiveSeries(){ return paintCatchupLiveSeries; },
+get peekHistoryCache(){ return peekHistoryCache; },
+get persistAlgoSettings(){ return persistAlgoSettings; },
+get putHistoryCache(){ return putHistoryCache; },
+get refreshAlgoHistoryTail(){ return refreshAlgoHistoryTail; },
+get refreshEntryFilterLines(){ return refreshEntryFilterLines; },
+get rsiPaneActive(){ return rsiPaneActive; },
+get rsiTouchFlipHost(){ return rsiTouchFlipHost; },
+get runWithPreservedVisibleLogicalRange(){ return runWithPreservedVisibleLogicalRange; },
+get series(){ return series; },
+get setActiveTfButton(){ return setActiveTfButton; },
+get setChartLayoutReady(){ return setChartLayoutReady; },
+get setSymbolLabel(){ return setSymbolLabel; },
+get stopKline(){ return stopKline; },
+get subscribeKline(){ return subscribeKline; },
+get symbol(){ return symbol; },
+set symbol(value){ symbol = value; },
+get terminalHistoryInitialRequests(){ return terminalHistoryInitialRequests; },
+get tf(){ return tf; },
+set tf(value){ tf = value; },
+get unbindLiveCatchup(){ return unbindLiveCatchup; },
+set unbindLiveCatchup(value){ unbindLiveCatchup = value; },
+get unsubKline(){ return unsubKline; },
+set unsubKline(value){ unsubKline = value; }
+};
+}
+return algoSymbolHost.current;
+}
+
+async function loadSymbol(nextSymbol,
+nextTf){
+return loadSymbolMoved(
+algoSymbolHost(),
+...arguments
 );
-tf =
-String(
-nextTf ||
-tf ||
-DEFAULT_TF
-);
-
-rsiTouchFlipHost?.hydrateForSymbol?.(
-symbol
-);
-
-setChartLayoutReady(
-false
-);
-stopKline();
-setSymbolLabel();
-setActiveTfButton();
-hydrateTickerStrategyUi(
-{
-refreshFilters:
-false
-}
-);
-persistAlgoSettings(
-{
-writeOverlays:
-false
-}
-);
-drawingTools?.onSymbolChange?.({
-skipRedraw:
-true
-});
-
-if(
-isAlgoBotLiteMode()
-){
-markAlgoHistoryStatsPending();
-
-try{
-const rows =
-await loadAlgoBotLiteHistory(
-symbol,
-tf,
-HISTORY_REQUESTS,
-{
-parallel:
-true,
-batchGapMs:
-0
-}
-);
-
-if(
-disposed ||
-seq !==
-loadSeq
-){
-return;
-}
-
-candles =
-Array.isArray(
-rows
-)
-? rows.slice()
-: [];
-
-markAlgoHistoryStatsReadyAndAnalyze();
-listApi?.highlight?.();
-}catch(
-err
-){
-console.error(
-"[algo-trading] lite history",
-getActiveExchangeId(),
-symbol,
-tf,
-err
-);
-
-if(
-seq ===
-loadSeq
-){
-candles =
-[];
-markAlgoHistoryStatsReadyAndAnalyze();
-}
-}
-
-return;
-}
-
-/* Индикаторы обновим после полной истории — не flush на пустых/старых свечах. */
-try{
-chartIndicators?.clearMainChartOverlays?.();
-}catch{
-/* ignore */
-}
-invalidateAlgoPattern12SceneCache();
-algoPattern12EnabledOnce =
-false;
-
-markAlgoHistoryStatsPending();
-
-try{
-const rows =
-await loadMarketHistory(
-symbol,
-tf,
-terminalHistoryInitialRequests(),
-{
-parallel:
-true,
-batchGapMs:
-0
-}
-);
-
-if(
-disposed ||
-seq !==
-loadSeq
-){
-return;
-}
-
-candles =
-Array.isArray(
-rows
-)
-? rows.slice()
-: [];
-
-/* Как Терминал: сначала свечи + fit, без тяжёлых оверлеев. */
-applyCandleData(
-{
-fit:
-true,
-light:
-true,
-skipAnalysis:
-true
-}
-);
-void deepenAlgoHistoryIfNeeded(
-seq
-);
-
-unsubKline =
-subscribeKline(
-symbol,
-tf,
-candle=>{
-
-if(
-disposed ||
-seq !==
-loadSeq
-){
-return;
-}
-
-ensureOhlcRollover(
-candles,
-liveBarPeriodSec(
-tf
-)
-);
-
-const beforeLen =
-candles.length;
-const beforeTime =
-candles[
-candles.length -
-1
-]?.time;
-
-if(
-!mergeLiveCandle(
-candles,
-candle,
-0,
-liveBarPeriodSec(
-tf
-)
-)
-){
-return;
-}
-
-const isNewBar =
-candles.length !==
-beforeLen ||
-candles[
-candles.length -
-1
-]?.time !==
-beforeTime;
-
-if(
-isNewBar
-){
-applyCandleData(
-{
-forceAnalysis:
-algoChartDbg(
-"analysis"
-),
-light:
-!algoChartDbg(
-"analysis"
-) &&
-!algoChartDbg(
-"indicators"
-) &&
-!algoChartDbg(
-"filterLines"
-),
-skipAnalysis:
-!algoChartDbg(
-"analysis"
-)
-}
-);
-}else{
-if(
-algoChartDbg(
-"livePrice"
-)
-){
-applyLiveCandleTick();
-}
-if(
-algoChartDbg(
-"rsi"
-) &&
-rsiPaneActive
-){
-applyRsiData(
-{
-notifyIndicators:
-false,
-liveLastOnly:
-true
-}
-);
-}
-}
-
-}
-);
-
-liveBarRollTimer =
-setInterval(
-()=>{
-if(
-disposed ||
-seq !==
-loadSeq ||
-!candles.length
-){
-return;
-}
-
-if(
-ensureOhlcRollover(
-candles,
-liveBarPeriodSec(
-tf
-)
-)
-){
-applyLiveCandleTick();
-}
-},
-1000
-);
-
-unbindLiveCatchup =
-bindLiveCandleCatchup({
-getSymbol:
-()=>
-symbol,
-getTf:
-()=>
-tf,
-getCandles:
-()=>
-candles,
-maxLen:
-0,
-isAlive:
-()=>
-!disposed &&
-seq ===
-loadSeq,
-paint:
-(rows, info)=>{
-paintCatchupLiveSeries(
-series,
-buildDisplayCandles(),
-chart,
-info?.appended,
-info?.prevLen
-);
-if(
-info?.appended
-){
-applyCandleData(
-{
-light:
-true,
-skipAnalysis:
-true
-}
-);
-}else{
-applyLiveCandleTick();
-}
-}
-});
-
-listApi?.highlight?.();
-
-/* Как scheduleChartLayoutSettled на Терминале: индикаторы и позиции поверх стабильного viewport. */
-requestAnimationFrame(
-()=>{
-requestAnimationFrame(
-()=>{
-
-if(
-disposed ||
-seq !==
-loadSeq
-){
-return;
-}
-
-setChartLayoutReady(
-true
-);
-fitViewport();
-runWithPreservedVisibleLogicalRange(
-chart,
-()=>{
-if(
-algoChartDbg(
-"analysis"
-) ||
-algoChartDbg(
-"indicators"
-)
-){
-ensureAlgoPattern12Enabled();
-}
-
-if(
-algoChartDbg(
-"filterLines"
-)
-){
-refreshEntryFilterLines();
-}
-
-if(
-algoChartDbg(
-"indicators"
-)
-){
-chartIndicators?.notifyCandlesUpdate?.();
-chartIndicators?.flushIndicatorDataRefreshNow?.();
-chartIndicators?.notifyMainChartOverlaysSync?.();
-}
-}
-);
-fitViewport();
-markAlgoHistoryStatsReadyAndAnalyze();
-dispatchAlgoChartCandlesLoaded(
-seq
-);
-
-if(
-algoChartDbg(
-"drawings"
-)
-){
-drawingTools?.scheduleRedraw?.();
-}
-
-}
-);
-}
-);
-
-}catch(
-err
-){
-console.error(
-"[algo-trading] load",
-getActiveExchangeId(),
-symbol,
-tf,
-err
-);
-
-if(
-seq ===
-loadSeq
-){
-candles =
-[];
-applyCandleData(
-{
-fit:
-true
-}
-);
-setChartLayoutReady(
-true
-);
-dispatchAlgoChartCandlesLoaded(
-seq
-);
-markAlgoHistoryStatsReadyAndAnalyze();
-}
-}
-
 }
 
 const unlinkTime =
@@ -3340,287 +1898,11 @@ commitMaxPt1Pt4Bars
 
 
 
-function bindStrategyGateUi(
-id
-){
-
-function gate(){
-
-return algoGate(
-id
+function bindStrategyGateUi(id){
+return bindStrategyGateUiMoved(
+algoPageHost(),
+...arguments
 );
-
-}
-
-const g =
-gate();
-const slEl =
-document.getElementById(
-`algo-sl-pct-of-x-${id}`
-);
-const pbEl =
-document.getElementById(
-`algo-pullback-before-arm-${id}`
-);
-const pbPctEl =
-document.getElementById(
-`algo-pullback-before-arm-pct-${id}`
-);
-
-if(
-slEl
-){
-slEl.value =
-String(
-g.slPctOfX
-);
-const commit =
-()=>{
-const live =
-gate();
-const next =
-clampSlPctOfX(
-slEl.value
-);
-slEl.value =
-String(
-next
-);
-if(
-next ===
-live.slPctOfX
-){
-return;
-}
-live.slPctOfX =
-next;
-persistAlgoSettings();
-};
-bindAlgoNumericField(
-slEl,
-commit
-);
-}
-
-if(
-pbPctEl
-){
-pbPctEl.value =
-String(
-g.pullbackBeforeArmPct
-);
-const commit =
-()=>{
-const live =
-gate();
-const next =
-clampPullbackBeforeArmPct(
-pbPctEl.value
-);
-pbPctEl.value =
-String(
-next
-);
-if(
-next ===
-live.pullbackBeforeArmPct
-){
-return;
-}
-live.pullbackBeforeArmPct =
-next;
-persistAlgoSettings();
-};
-bindAlgoNumericField(
-pbPctEl,
-commit
-);
-}
-
-if(
-pbEl
-){
-pbEl.checked =
-g.pullbackBeforeArm;
-pbEl.addEventListener(
-"change",
-()=>{
-gate().pullbackBeforeArm =
-!!pbEl.checked;
-persistAlgoSettings();
-}
-);
-}
-
-function bindStSide(
-side
-){
-
-const cap =
-side ===
-"long"
-? "Long"
-: "Short";
-const filterKey =
-side ===
-"long"
-? "supertrendLongFilter"
-: "supertrendShortFilter";
-const atrKey =
-side ===
-"long"
-? "supertrendLongAtr"
-: "supertrendShortAtr";
-const factorKey =
-side ===
-"long"
-? "supertrendLongFactor"
-: "supertrendShortFactor";
-const tfKey =
-side ===
-"long"
-? "supertrendLongTf"
-: "supertrendShortTf";
-const filterEl =
-document.getElementById(
-`algo-st-${id}-${side}-filter`
-);
-const atrEl =
-document.getElementById(
-`algo-st-${id}-${side}-atr`
-);
-const factorEl =
-document.getElementById(
-`algo-st-${id}-${side}-factor`
-);
-const tfEl =
-document.getElementById(
-`algo-st-${id}-${side}-tf`
-);
-
-if(
-filterEl
-){
-filterEl.checked =
-g[
-filterKey
-];
-filterEl.addEventListener(
-"change",
-()=>{
-gate()[
-filterKey
-] =
-!!filterEl.checked;
-persistAlgoSettings();
-refreshEntryFilterLines();
-}
-);
-}
-
-if(
-atrEl
-){
-atrEl.value =
-String(
-g[
-atrKey
-]
-);
-atrEl.addEventListener(
-"change",
-()=>{
-const live =
-gate();
-const next =
-clampAlgoSupertrendAtr(
-atrEl.value
-);
-atrEl.value =
-String(
-next
-);
-live[
-atrKey
-] =
-next;
-persistAlgoSettings();
-refreshEntryFilterLines();
-}
-);
-}
-
-if(
-factorEl
-){
-factorEl.value =
-String(
-g[
-factorKey
-]
-);
-factorEl.addEventListener(
-"change",
-()=>{
-const live =
-gate();
-const next =
-clampAlgoSupertrendFactor(
-factorEl.value
-);
-factorEl.value =
-String(
-next
-);
-live[
-factorKey
-] =
-next;
-persistAlgoSettings();
-refreshEntryFilterLines();
-}
-);
-}
-
-if(
-tfEl
-){
-tfEl.value =
-g[
-tfKey
-];
-tfEl.addEventListener(
-"change",
-()=>{
-const live =
-gate();
-const next =
-normalizeAlgoSupertrendTf(
-tfEl.value
-);
-tfEl.value =
-next;
-live[
-tfKey
-] =
-next;
-persistAlgoSettings();
-refreshEntryFilterLines();
-}
-);
-}
-
-void cap;
-
-}
-
-bindStSide(
-"long"
-);
-bindStSide(
-"short"
-);
-
 }
 
 for(
@@ -3645,266 +1927,63 @@ document.getElementById(
 );
 
 
-function strategyPrefKeys(
-id
-){
-
-return strategyPrefKeysFromMemory(
-id
+function strategyPrefKeys(id){
+return strategyPrefKeysMoved(
+algoPageHost(),
+...arguments
 );
-
 }
 
-function strategyPatchFromState(
-strategyId
-){
-
-return strategyPatchFromStateFromMemory(
-mem,
-strategyId
+function strategyPatchFromState(strategyId){
+return strategyPatchFromStateMoved(
+algoPageHost(),
+...arguments
 );
-
 }
 
-function applyStrategyPatchToMemory(
-strategyId,
-patch
-){
-
-return applyStrategyPatchToMemoryFromMemory(
-mem,
-strategyId,
-patch
+function applyStrategyPatchToMemory(strategyId,
+patch){
+return applyStrategyPatchToMemoryMoved(
+algoPageHost(),
+...arguments
 );
-
 }
 
 function syncStrategyDomFromMemory(){
-
-return syncStrategyDomFromMemoryFromMemory(
-mem
+return syncStrategyDomFromMemoryMoved(
+algoPageHost(),
+...arguments
 );
-
 }
 
 function restoreStrategyMemoryFromPrefs(){
-
-return restoreStrategyMemoryFromPrefsFromMemory(
-mem
-);
-
-}
-
-function hydrateTickerStrategyUi(
-opts =
-{}
-){
-
-restoreStrategyMemoryFromPrefs();
-
-for(
-const id of ALGO_STRATEGY_IDS
-){
-const overlay =
-getTickerStrategyOverlay(
-id,
-symbol
-);
-
-if(
-overlay
-){
-applyStrategyPatchToMemory(
-id,
-overlay
+return restoreStrategyMemoryFromPrefsMoved(
+algoPageHost(),
+...arguments
 );
 }
 
-}
-
-syncStrategyDomFromMemory();
-
-if(
-opts.refreshFilters !==
-false
-){
-refreshEntryFilterLines();
-}
-
-}
-
-function applyOptimizedPatchesToTickers(
-strategyId,
-entries
-){
-
-const written =
-writeTickerStrategyOverlays(
-strategyId,
-entries
-);
-const overlay =
-getTickerStrategyOverlay(
-strategyId,
-symbol
-);
-
-if(
-overlay
-){
-applyStrategyPatchToMemory(
-strategyId,
-overlay
+function hydrateTickerStrategyUi(opts =
+{}){
+return hydrateTickerStrategyUiMoved(
+algoPageHost(),
+...arguments
 );
 }
 
-syncStrategyDomFromMemory();
-refreshEntryFilterLines();
-persistAlgoSettings(
-{
-writeOverlays:
-false
-}
-);
-return written;
-
-}
-
-function persistAlgoSettings(
-opts
-){
-
-const overlaySymbol =
-opts &&
-opts.overlaySymbol !=
-null
-? normalizeSymbol(
-opts.overlaySymbol
-)
-: symbol;
-const writeOverlays =
-!opts ||
-opts.writeOverlays !==
-false;
-const prev =
-readPrefs();
-let prevStored =
-{};
-
-try{
-const raw =
-JSON.parse(
-localStorage.getItem(
-ALGO_PREFS_KEY
-) ||
-"{}"
-);
-if(
-raw &&
-typeof raw ===
-"object" &&
-!Array.isArray(
-raw
-)
-){
-prevStored =
-raw;
-}
-}catch{
-prevStored =
-{};
-}
-const snapshot =
-buildAlgoPrefsSnapshot(
-mem,
-{
-symbol,
-tf
-}
-);
-
-for(
-const id of ALGO_STRATEGY_IDS
-){
-
-if(
-writeOverlays &&
-hasTickerStrategyOverlay(
-id,
-overlaySymbol
-)
-){
-setTickerStrategyOverlay(
-id,
-overlaySymbol,
-strategyPatchFromState(
-id
-)
+function applyOptimizedPatchesToTickers(strategyId,
+entries){
+return applyOptimizedPatchesToTickersMoved(
+algoPageHost(),
+...arguments
 );
 }
 
-if(
-!hasTickerStrategyOverlay(
-id,
-symbol
-)
-){
-continue;
-}
-
-for(
-const key of strategyPrefKeys(
-id
-)
-){
-if(
-Object.prototype.hasOwnProperty.call(
-prevStored,
-key
-) &&
-prevStored[
-key
-] !=
-null
-){
-snapshot[
-key
-] =
-prevStored[
-key
-];
-continue;
-}
-
-if(
-Object.prototype.hasOwnProperty.call(
-prev,
-key
-)
-){
-snapshot[
-key
-] =
-prev[
-key
-];
-}
-}
-
-}
-
-writePrefs(
-snapshot
+function persistAlgoSettings(opts){
+return persistAlgoSettingsMoved(
+algoPageHost(),
+...arguments
 );
-entryOverlay?.refreshPositions?.();
-drawingTools?.scheduleRedraw?.();
-refreshAlgoPatternAnalysis(
-candles,
-entryOverlay,
-buildPatternAnalysisOpts()
-);
-chartIndicators?.flushIndicatorDataRefreshNow?.();
-drawingTools?.scheduleRedraw?.();
 }
 
 const statsModeRoots =
@@ -3923,107 +2002,26 @@ document.querySelector(
 )
 };
 
-function getStatsModeForStrategy(
-strategy
-){
-
-if(
-strategy ===
-"partial-tp"
-){
-return mem.statsModeSt2;
-}
-
-if(
-strategy ===
-"partial-tp-y"
-){
-return mem.statsModeSt3;
-}
-
-return mem.statsMode;
-
-}
-
-function setStatsModeForStrategy(
-strategy,
-mode
-){
-
-const next =
-normalizeAlgoStatsMode(
-mode
+function getStatsModeForStrategy(strategy){
+return getStatsModeForStrategyMoved(
+algoPageHost(),
+...arguments
 );
-
-if(
-strategy ===
-"partial-tp"
-){
-mem.statsModeSt2 =
-next;
-}else if(
-strategy ===
-"partial-tp-y"
-){
-mem.statsModeSt3 =
-next;
-}else{
-mem.statsMode =
-next;
 }
 
+function setStatsModeForStrategy(strategy,
+mode){
+return setStatsModeForStrategyMoved(
+algoPageHost(),
+...arguments
+);
 }
 
 function applyStatsModeButtons(){
-
-for(
-const [
-strategy,
-root
-] of Object.entries(
-statsModeRoots
-)
-){
-
-if(
-!root
-){
-continue;
-}
-
-const current =
-getStatsModeForStrategy(
-strategy
+return applyStatsModeButtonsMoved(
+algoPageHost(),
+...arguments
 );
-
-for(
-const btn of root.querySelectorAll(
-"[data-algo-stats-mode]"
-)
-){
-const mode =
-normalizeAlgoStatsMode(
-btn.getAttribute(
-"data-algo-stats-mode"
-)
-);
-const active =
-mode ===
-current;
-btn.classList.toggle(
-"active",
-active
-);
-btn.setAttribute(
-"aria-selected",
-active
-? "true"
-: "false"
-);
-}
-
-}
-
 }
 
 applyStatsModeButtons();
@@ -4089,19 +2087,10 @@ const chartPositionChecks =
 ];
 
 function applyChartPositionChecks(){
-
-for(
-const input of chartPositionChecks
-){
-const strategy =
-input.getAttribute(
-"data-algo-chart-positions"
+return applyChartPositionChecksMoved(
+algoPageHost(),
+...arguments
 );
-input.checked =
-strategy ===
-mem.chartPositionsStrategy;
-}
-
 }
 
 applyChartPositionChecks();
@@ -4226,52 +2215,13 @@ commitRiskUsd
 );
 }
 
-function bindPartialTpInput(
-input,
+function bindPartialTpInput(input,
 getValue,
 setValue,
-fallback
-){
-
-if(
-!input
-){
-return;
-}
-
-input.value =
-String(
-getValue()
-);
-
-const commit =
-()=>{
-const next =
-clampPartialTpX(
-input.value,
-fallback
-);
-input.value =
-String(
-next
-);
-
-if(
-next ===
-getValue()
-){
-return;
-}
-
-setValue(
-next
-);
-persistAlgoSettings();
-};
-
-bindAlgoNumericField(
-input,
-commit
+fallback){
+return bindPartialTpInputMoved(
+algoPageHost(),
+...arguments
 );
 }
 
@@ -4350,88 +2300,23 @@ next;
 DEFAULT_PARTIAL_TP3_X
 );
 
-function bindTrailSlXInput(
-input,
+function bindTrailSlXInput(input,
 getValue,
 setValue,
-clamp
-){
-
-if(
-!input
-){
-return;
-}
-
-input.value =
-String(
-getValue()
-);
-
-const commit =
-()=>{
-const next =
-clamp(
-input.value
-);
-input.value =
-String(
-next
-);
-
-if(
-next ===
-getValue()
-){
-return;
-}
-
-setValue(
-next
-);
-persistAlgoSettings();
-};
-
-bindAlgoNumericField(
-input,
-commit
+clamp){
+return bindTrailSlXInputMoved(
+algoPageHost(),
+...arguments
 );
 }
 
-function bindTrailSlCheck(
-input,
+function bindTrailSlCheck(input,
 getValue,
-setValue
-){
-
-if(
-!input
-){
-return;
-}
-
-input.checked =
-!!getValue();
-input.addEventListener(
-"change",
-()=>{
-const next =
-!!input.checked;
-
-if(
-next ===
-!!getValue()
-){
-return;
-}
-
-setValue(
-next
+setValue){
+return bindTrailSlCheckMoved(
+algoPageHost(),
+...arguments
 );
-persistAlgoSettings();
-}
-);
-
 }
 
 const trailSlX1St2Input =
@@ -4483,36 +2368,14 @@ mem.tp3Y
 );
 
 /** Подъём трейлинга после ТП1 может поднять и нижнюю границу для ТП2. */
-function reclampTrailSlX2(
-input,
+function reclampTrailSlX2(input,
 clamp,
 getValue,
-setValue
-){
-
-const next =
-clamp(
-getValue()
+setValue){
+return reclampTrailSlX2Moved(
+algoPageHost(),
+...arguments
 );
-
-if(
-input
-){
-input.value =
-String(
-next
-);
-}
-
-if(
-next !==
-getValue()
-){
-setValue(
-next
-);
-}
-
 }
 
 bindTrailSlXInput(
@@ -4600,119 +2463,13 @@ next;
  * @param {()=>number[]} getShares
  * @param {(shares: number[])=>void} setShares
  */
-function bindTpShareInputs(
-span,
+function bindTpShareInputs(span,
 getShares,
-setShares
-){
-
-const inputs =
-[
-1,
-2,
-3
-].map(
-n=>
-document.getElementById(
-`algo-share${n}-${span}`
-)
+setShares){
+return bindTpShareInputsMoved(
+algoPageHost(),
+...arguments
 );
-
-const render =
-()=>{
-const shares =
-getShares();
-
-inputs.forEach(
-(
-input,
-i
-)=>{
-if(
-input
-){
-input.value =
-String(
-shares[
-i
-]
-);
-}
-}
-);
-};
-
-render();
-
-inputs.forEach(
-(
-input,
-index
-)=>{
-
-if(
-!input
-){
-return;
-}
-
-const commit =
-()=>{
-const cur =
-getShares();
-const next =
-rebalanceTpShares(
-index ===
-0
-? input.value
-: cur[
-0
-],
-index ===
-1
-? input.value
-: cur[
-1
-],
-index ===
-2
-? input.value
-: cur[
-2
-],
-index
-);
-
-if(
-next.every(
-(
-value,
-i
-)=>
-value ===
-cur[
-i
-]
-)
-){
-render();
-return;
-}
-
-setShares(
-next
-);
-render();
-persistAlgoSettings();
-};
-
-bindAlgoNumericField(
-input,
-commit
-);
-}
-);
-
 }
 
 bindTpShareInputs(
@@ -4762,161 +2519,13 @@ next[
 
 (function bindSupertrendFilter(){
 
-function bindSide(
-prefix,
+function bindSide(prefix,
 getState,
-setState
-){
-
-const filterEl =
-document.getElementById(
-`algo-st-${prefix}-filter`
+setState){
+return bindSideMoved(
+algoPageHost(),
+...arguments
 );
-const atrEl =
-document.getElementById(
-`algo-st-${prefix}-atr`
-);
-const factorEl =
-document.getElementById(
-`algo-st-${prefix}-factor`
-);
-const tfEl =
-document.getElementById(
-`algo-st-${prefix}-tf`
-);
-const state =
-getState();
-
-if(
-filterEl
-){
-filterEl.checked =
-state.filter;
-filterEl.addEventListener(
-"change",
-()=>{
-setState(
-{
-filter:
-!!filterEl.checked
-}
-);
-persistAlgoSettings();
-refreshEntryFilterLines();
-schedulePatternAnalysis(
-{
-force:
-true
-}
-);
-}
-);
-}
-
-if(
-atrEl
-){
-atrEl.value =
-String(
-state.atr
-);
-atrEl.addEventListener(
-"change",
-()=>{
-const next =
-clampAlgoSupertrendAtr(
-atrEl.value
-);
-atrEl.value =
-String(
-next
-);
-setState(
-{
-atr:
-next
-}
-);
-persistAlgoSettings();
-refreshEntryFilterLines();
-schedulePatternAnalysis(
-{
-force:
-true
-}
-);
-}
-);
-}
-
-if(
-factorEl
-){
-factorEl.value =
-String(
-state.factor
-);
-factorEl.addEventListener(
-"change",
-()=>{
-const next =
-clampAlgoSupertrendFactor(
-factorEl.value
-);
-factorEl.value =
-String(
-next
-);
-setState(
-{
-factor:
-next
-}
-);
-persistAlgoSettings();
-refreshEntryFilterLines();
-schedulePatternAnalysis(
-{
-force:
-true
-}
-);
-}
-);
-}
-
-if(
-tfEl
-){
-tfEl.value =
-state.tf;
-tfEl.addEventListener(
-"change",
-()=>{
-const next =
-normalizeAlgoSupertrendTf(
-tfEl.value
-);
-tfEl.value =
-next;
-setState(
-{
-tf:
-next
-}
-);
-persistAlgoSettings();
-refreshEntryFilterLines();
-schedulePatternAnalysis(
-{
-force:
-true
-}
-);
-}
-);
-}
-
 }
 
 (function bindSupertrendLinesVisible(){
@@ -5339,42 +2948,20 @@ algoGate(
 gateId
 );
 
-function setNum(
-id,
-value
-){
-const el =
-document.getElementById(
-id
-);
-
-if(
-el
-){
-el.value =
-String(
-value
+function setNum(id,
+value){
+return setNumMoved(
+algoPageHost(),
+...arguments
 );
 }
 
-}
-
-function setCheck(
-id,
-value
-){
-const el =
-document.getElementById(
-id
+function setCheck(id,
+value){
+return setCheckMoved(
+algoPageHost(),
+...arguments
 );
-
-if(
-el
-){
-el.checked =
-!!value;
-}
-
 }
 
 if(

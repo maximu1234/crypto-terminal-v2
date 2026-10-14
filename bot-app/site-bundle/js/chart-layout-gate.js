@@ -5,7 +5,7 @@
  */
 import {
 CHART_REDRAW_REASON
-} from "./chart-redraw-scheduler.js?v=2";
+} from "./chart-redraw-scheduler.js?v=230ac007";
 
 let layoutReady =
 true;

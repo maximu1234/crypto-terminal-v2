@@ -1,6 +1,6 @@
 import {
 loadLightweightCharts
-} from "../../charts-lib-boot.js?v=3";
+} from "../../charts-lib-boot.js?v=04885614";
 
 import {
 applyChartPriceFormat,
@@ -8,20 +8,20 @@ CHART_SCALE_FONT_FAMILY,
 CHART_SCALE_TEXT_COLOR,
 effectiveChartPriceScaleWidth,
 effectiveChartScaleFontSize
-} from "../../chart/chart-options.js?v=7";
+} from "../../chart/chart-options.js?v=f4be0094";
 
 import {
 withChartLocalTime
-} from "../../chart/chart-local-time.js?v=1";
+} from "../../chart/chart-local-time.js?v=027bb0cc";
 
 import {
 candleAlignSec,
 markerForExecutionSide
-} from "../../trade-markers-sandbox/marker-math.js?v=12";
+} from "../../trade-markers-sandbox/marker-math.js?v=a5c98186";
 
 import {
 diaryFetchKlineBatch
-} from "./chart-klines.js?v=1";
+} from "./chart-klines.js?v=d25a9827";
 
 export const DIARY_CHART_TFS =
 Object.freeze([

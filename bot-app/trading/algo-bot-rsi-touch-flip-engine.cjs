@@ -24,6 +24,8 @@ const {
   clampLeverageToSymbol,
   allocatedBalanceUsdt,
   equalShareBudget,
+  linearOrderCostRate,
+  maxEntryNotionalUsdt,
   rsiTouchFlipCycleSlHit,
   rsiTouchFlipLocalLooksOpen,
   rsiTouchFlipOpenLooksFilled,
@@ -458,10 +460,17 @@ async function openSlice(state, side, level, price, label) {
     return false;
   }
   const budget = sliceBudget(state);
-  const volumeUsdt = notionalAt(level, {
+  const plannedUsdt = notionalAt(level, {
     ...prefs,
     budget
   });
+  const leverage =
+    Number(margin?.leverage) > 0 ? Number(margin.leverage) : wantedLeverage();
+  const volumeUsdt = await entryNotionalWithinCost(
+    plannedUsdt,
+    leverage,
+    side
+  );
   if (!(volumeUsdt > 0)) {
     pushSignal({
       ts: Date.now(),
@@ -513,7 +522,9 @@ async function openSlice(state, side, level, price, label) {
     symbol: state.symbol,
     side,
     price,
-    text: `${label} · ${volumeUsdt.toFixed(2)} USDT · стек ${state.stack}/${prefs.maxStack}${
+    text: `${label} · ${volumeUsdt.toFixed(2)} USDT${
+      plannedUsdt - volumeUsdt > 0.005 ? " · комиссия учтена" : ""
+    } · стек ${state.stack}/${prefs.maxStack}${
       Number.isFinite(price) ? ` · ${price}` : ""
     }`
   });
@@ -949,6 +960,39 @@ function sliceBudget(state) {
     return Number(state.entryBudget);
   }
   return Number(state.prefs.budget);
+}
+
+/**
+ * Shrink the slice so Bybit order cost (margin + open fee + close fee)
+ * fits in the free balance. At 1x the whole notional is margin, so a
+ * 100% slice is rejected unless the fees are left in the wallet.
+ */
+async function entryNotionalWithinCost(plannedUsdt, leverage, side) {
+  const planned = Number(plannedUsdt);
+  if (!(planned > 0)) {
+    return 0;
+  }
+  let available = NaN;
+  try {
+    const wallet = await algoRest.getWalletBalance();
+    if (wallet?.ok !== false) {
+      available = walletAvailableUsdt(wallet);
+    }
+  } catch (err) {
+    log.warn("rsi touch flip balance for entry size:", err?.message || err);
+  }
+  if (Number.isFinite(available) && available > 0) {
+    const cap = maxEntryNotionalUsdt(available, leverage, side);
+    if (cap > 0) {
+      return Math.min(planned, cap);
+    }
+  }
+  const rate = linearOrderCostRate(leverage, side);
+  const initial = 1 / Math.max(1, Number(leverage) || 1);
+  if (rate > 0 && initial > 0) {
+    return Math.min(planned, (planned * initial) / rate);
+  }
+  return planned;
 }
 
 function tickerNote(state) {

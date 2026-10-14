@@ -5,11 +5,11 @@
 import {
 applyTradePositionsStream,
 syncTradePositionsCache
-} from "./positions-cache.js?v=7";
+} from "./positions-cache.js?v=b026a4f3";
 
 import {
 isExchangeTradingEnabled
-} from "../../market-api.js?v=7";
+} from "../../market-api.js?v=7b3e6b3c";
 
 let unsubscribe = null;
 let visibilityHandler = null;

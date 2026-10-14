@@ -7,7 +7,7 @@ import {
   replaceDiaryJournalFromImport,
   serializeDiaryJournalExcelXml,
   serializeDiaryJournalJson
-} from "./trade-diary-journal.js?v=2";
+} from "./trade-diary-journal.js?v=7b94619e";
 
 function stamp() {
   const d = new Date();

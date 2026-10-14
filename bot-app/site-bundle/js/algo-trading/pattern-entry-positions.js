@@ -6,11 +6,11 @@
 import {
 STROKE,
 POSITION_DEFAULT_WIDTH_BARS
-} from "../drawings/constants.js?v=13";
+} from "../drawings/constants.js?v=c47ce407";
 
 import {
 initialPositionTpSlPercent
-} from "../drawings/position.js?v=11";
+} from "../drawings/position.js?v=152e419c";
 
 export const ALGO_PATTERN_ENTRY_FLAG =
 "algoPatternEntry";

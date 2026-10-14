@@ -14,13 +14,13 @@
 import {
 ensureSupabaseSdk,
 isSupabaseConfigured
-} from "../supabase-client.js?v=9";
+} from "../supabase-client.js?v=1c4904d5";
 import {
 readPersistedAuthSession
-} from "../alert-auth-cache.js?v=7";
+} from "../alert-auth-cache.js?v=7d0f1599";
 import {
 isAlgoBotLiteShell
-} from "../page-routes.js?v=7";
+} from "../page-routes.js?v=4dc7f350";
 
 const INSTANCE_KEY =
 "algo_bot_lock_instance_id";
@@ -100,7 +100,7 @@ return null;
 
 const env =
 await import(
-"../supabase-env.js?v=5"
+"../supabase-env.js?v=ed71d82f"
 );
 
 if(

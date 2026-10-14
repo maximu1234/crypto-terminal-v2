@@ -4,7 +4,7 @@
  */
 import {
 getActiveExchangeId
-} from "../exchanges/context.js?v=1";
+} from "../exchanges/context.js?v=16fdeacc";
 
 export const ALGO_UNIVERSE_SCAN_RESULTS_KEY =
 "algo_trading_universe_scan_results_v1";

@@ -5,7 +5,7 @@
 import {
 STROKE,
 createRectangleToolDefaults
-} from "./constants.js?v=13";
+} from "./constants.js?v=c47ce407";
 
 import {
 ensureFibLevelsVisible,
@@ -13,39 +13,39 @@ finalizeFibLevels,
 isFibType,
 isFibExtType,
 resolveFibTrendLineColor
-} from "./fib-spec.js?v=17";
+} from "./fib-spec.js?v=5f577f26";
 
 import {
 isPositionType,
 positionEntryPrice
-} from "./position.js?v=11";
+} from "./position.js?v=152e419c";
 
 import {
 ensureBrushShape
-} from "./brush.js?v=2";
+} from "./brush.js?v=7e0b1c34";
 
 import {
 normalizeRectangleShape
-} from "./arrow-rect.js?v=2";
+} from "./arrow-rect.js?v=8d4294c4";
 
 import {
 isFvpType,
 normalizeFvpShape,
 createFvpToolDefaults
-} from "./fixed-volume-profile.js?v=3";
+} from "./fixed-volume-profile.js?v=bb03b4a7";
 
 import {
 normalizeTextShape
-} from "./text.js?v=3";
+} from "./text.js?v=441520b6";
 
 import {
 ensureChannelLevelsVisible
-} from "./channel-spec.js?v=2";
+} from "./channel-spec.js?v=a8bcf3c9";
 
 import {
 isElliottType,
 normalizeElliottShape
-} from "./elliott-spec.js?v=17";
+} from "./elliott-spec.js?v=3fb92981";
 
 import {
 drawingsStorageKey
@@ -55,7 +55,7 @@ import {
 drawingsKvGet,
 drawingsKvSet,
 ensureDrawingsKvReady
-} from "../drawings-kv.js?v=3";
+} from "../drawings-kv.js?v=fc0e52d7";
 
 void ensureDrawingsKvReady();
 
@@ -172,6 +172,12 @@ typeof shape.fibShowTrendLine ===
 shape.type
 );
 
+shape.fibShowLabels =
+typeof shape.fibShowLabels ===
+"boolean"
+? shape.fibShowLabels
+: true;
+
 shape.fibTrendLineColor =
 resolveFibTrendLineColor(
 shape.fibTrendLineColor
@@ -245,16 +251,31 @@ shape.type ===
 "rectangle"
 ){
 
+const rectFactory =
+createRectangleToolDefaults();
+
 normalizeRectangleShape(
 shape,
-createRectangleToolDefaults({
+{
 fillColor:
+shape.fillColor ||
 shape.color ||
-createRectangleToolDefaults().color,
+rectFactory.fillColor,
+fillOpacity:
+Number.isFinite(
+Number(
+shape.fillOpacity
+)
+)
+? Number(
+shape.fillOpacity
+)
+: rectFactory.fillOpacity,
 medianColor:
+shape.medianColor ||
 shape.color ||
-createRectangleToolDefaults().color
-})
+rectFactory.medianColor
+}
 );
 
 }

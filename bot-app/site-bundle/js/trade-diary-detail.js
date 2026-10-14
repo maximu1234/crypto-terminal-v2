@@ -1,7 +1,7 @@
 import {
 destroyDiaryTradeChart,
 mountDiaryTradeChart
-} from "./trade-diary-chart.js?v=15";
+} from "./trade-diary-chart.js?v=2f6747af";
 
 import {
 executionSideLabel,
@@ -14,12 +14,12 @@ formatDiaryDateTime,
 formatDiaryUsd,
 sideLabel,
 sideToneClass
-} from "./trade-diary-format.js?v=6";
+} from "./trade-diary-format.js?v=e2a1aeff";
 
 import {
 getLoadedTradeExchangeModules,
 loadTradeExchangeModules
-} from "./trade/module-router.js?v=24";
+} from "./trade/module-router.js?v=679c5141";
 
 function diaryMod() {
   return getLoadedTradeExchangeModules();

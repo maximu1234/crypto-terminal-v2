@@ -4,28 +4,28 @@ normalizeScreenRect,
 segmentIntersectsScreenRect,
 screenRectsIntersect,
 pointInScreenRect
-} from "./math.js?v=2";
+} from "./math.js?v=2731b0ed";
 
 import {
 brushBodyDist as brushStrokeBodyDist,
 brushPathScreenPoints
-} from "./brush.js?v=2";
+} from "./brush.js?v=7e0b1c34";
 
 import {
 rectangleBodyDist,
 rectangleScreenBox
-} from "./arrow-rect.js?v=2";
+} from "./arrow-rect.js?v=8d4294c4";
 
 import {
 fvpBodyDist,
 fvpScreenBox,
 isFvpType
-} from "./fixed-volume-profile.js?v=3";
+} from "./fixed-volume-profile.js?v=bb03b4a7";
 
 import {
 isPositionType,
 positionXBounds
-} from "./position.js?v=11";
+} from "./position.js?v=152e419c";
 
 import {
 fibPriceAtRatio,
@@ -36,7 +36,7 @@ fibLevelXSpan,
 fibShapeLevelXSpan,
 isFibType,
 isFibExtType
-} from "./fib-spec.js?v=17";
+} from "./fib-spec.js?v=5f577f26";
 
 import {
 FIB_HIT_X_PAD_PX,
@@ -45,22 +45,22 @@ DRAW_BODY_HIT_THRESHOLD_TOUCH,
 DRAW_BODY_HIT_THRESHOLD_DESKTOP,
 isHorizPriceTool,
 horizPriceLineX1
-} from "./constants.js?v=13";
+} from "./constants.js?v=c47ce407";
 
 import {
 isCoarseTouchViewport
-} from "../chart/chart-options.js?v=7";
+} from "../chart/chart-options.js?v=f4be0094";
 
 import {
 hitTestTextBody,
 isTextTool,
 measureTextBox
-} from "./text.js?v=3";
+} from "./text.js?v=441520b6";
 
 import {
 channelLevelSegment,
 getChannelDrawRows
-} from "./channel-spec.js?v=2";
+} from "./channel-spec.js?v=a8bcf3c9";
 
 import {
 isElliottType,
@@ -68,10 +68,12 @@ elliottScreenPoints,
 elliottLabelAnchor,
 elliottVertexLabel,
 elliottNecklineScreen,
+PATTERN_12_CHANNEL_LEVELS,
+pattern12ChannelGeometry,
 pattern12DashScreen,
 pattern12TpTickLayout,
 isPattern12Draw
-} from "./elliott-spec.js?v=17";
+} from "./elliott-spec.js?v=3fb92981";
 
 /**
  * @param {object} deps
@@ -683,6 +685,58 @@ dash.b.x,
 dash.b.y
 )
 );
+}
+
+}
+
+if(
+isPattern12Draw(
+shape.type
+) &&
+shape.showPatternChannel ===
+true
+){
+
+const channel =
+pattern12ChannelGeometry(
+screens
+);
+
+if(
+channel
+){
+
+for(
+const level of PATTERN_12_CHANNEL_LEVELS
+){
+
+const seg =
+channelLevelSegment(
+channel,
+level
+);
+
+if(
+!seg
+){
+continue;
+}
+
+best =
+Math.min(
+best,
+distToSegment(
+px,
+py,
+seg.start.x,
+seg.start.y,
+seg.end.x,
+seg.end.y
+)
+);
+
+}
+
 }
 
 }

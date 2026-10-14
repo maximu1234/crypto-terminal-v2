@@ -28,7 +28,7 @@ isCoarseTouchViewport,
 effectiveChartPriceScaleWidth,
 effectiveChartScaleFontSize,
 isTabletChartViewport
-} from "./chart/chart-options.js?v=7";
+} from "./chart/chart-options.js?v=f4be0094";
 
 export {
 ensureDomChartCrosshair,
@@ -44,16 +44,16 @@ hideTabletProbeHorizInStack,
 hideTabletProbeCrosshair,
 formatCrosshairTimeLabel,
 isUserCrosshairEvent
-} from "./chart/chart-dom-crosshair.js?v=17";
+} from "./chart/chart-dom-crosshair.js?v=0730674e";
 
 import {
 TABLET_LW_NATIVE_PRICE_SCALE,
 clearTabletProbeCrosshairForChart
-} from "./chart/chart-factory.js?v=61";
+} from "./chart/chart-factory.js?v=d9770b28";
 
 import {
 shouldHandleTabletPriceScalePointer
-} from "./tablet-gesture-policy.js?v=4";
+} from "./tablet-gesture-policy.js?v=54c860db";
 
 export {
 createCandlestickChart,
@@ -93,7 +93,7 @@ coinsTfVisibleBars,
 applyCoinsChartViewport,
 computeCoinsChartViewportPlan,
 refreshCoinsChartBarSpacing
-} from "./chart/chart-factory.js?v=61";
+} from "./chart/chart-factory.js?v=d9770b28";
 
 /* Tablet gestures: import ./chart-tablet-gestures.js only from tablet paths
    (tablet-widget-chart / terminal-tablet-controller) — never re-export here. */
@@ -102,7 +102,7 @@ import {
 effectiveChartPriceScaleWidth,
 CHART_TIME_SCALE_HEIGHT,
 isTabletChartViewport
-} from "./chart/chart-options.js?v=7";
+} from "./chart/chart-options.js?v=f4be0094";
 
 export {
 CHART_PRICE_SCALE_MODE_LOGARITHMIC,
@@ -112,11 +112,11 @@ lwPriceScaleModeId,
 isLwPriceScaleModeLogarithmic,
 isChartPriceScaleLogarithmic,
 applyChartPriceScaleMode
-} from "./chart/price-scale-mode.js?v=3";
+} from "./chart/price-scale-mode.js?v=7deaefee";
 
 import {
 isChartPriceScaleLogarithmic
-} from "./chart/price-scale-mode.js?v=3";
+} from "./chart/price-scale-mode.js?v=7deaefee";
 
 
 export const DEFAULT_PRICE_SCALE_MARGINS =

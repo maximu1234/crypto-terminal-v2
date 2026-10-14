@@ -5,10 +5,10 @@
  */
 import {
 computeMacdLineSignalArrays
-} from "./macd-flip-touch-macd.js?v=1";
+} from "./macd-flip-touch-macd.js?v=02dde0cd";
 import {
 normalizeMacdFlipTouchPrefs
-} from "./macd-flip-touch-prefs.js?v=9";
+} from "./macd-flip-touch-prefs.js?v=e8cc13ba";
 
 const KLINE_PAGE =
 1000;

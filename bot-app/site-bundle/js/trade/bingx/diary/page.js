@@ -1,7 +1,7 @@
 /** BingX trade diary page. */
 import {
 isDesktopTradeDiaryContext
-} from "../../../trade-diary-access.js?v=4";
+} from "../../../trade-diary-access.js?v=c3fda1b4";
 
 import {
 diaryDayKeyLocal,
@@ -14,39 +14,39 @@ formatDiaryWeekRange,
 pnlToneClass,
 sideLabel,
 sideToneClass
-} from "../../../trade-diary-format.js?v=6";
+} from "../../../trade-diary-format.js?v=e2a1aeff";
 
 import {
 closeTradeDetail,
 openTradeDetail
-} from "../../../trade-diary-detail.js?v=17";
+} from "../../../trade-diary-detail.js?v=f13cdc9a";
 
 import {
 mountTradeDiaryPeriodPicker
-} from "./period.js?v=1";
+} from "./period.js?v=16764aff";
 
 import {
 resolveInitialDiaryPeriod,
 saveDiaryPeriod
-} from "../../../trade-diary-storage.js?v=4";
+} from "../../../trade-diary-storage.js?v=1deb8f10";
 
 import {
 EXCHANGE_CHANGED_EVENT
-} from "../../../market-api.js?v=7";
+} from "../../../market-api.js?v=7b3e6b3c";
 
 import {
 initTradeDiaryNav
-} from "../../../trade-diary-nav.js?v=11";
+} from "../../../trade-diary-nav.js?v=d304920d";
 
 import {
 openPnlShareDiaryModal,
 PNL_SHARE_CONTROL_HTML
-} from "../pnl-share-modal.js?v=4";
+} from "../pnl-share-modal.js?v=c1972da3";
 
 import {
 renderDiaryPeriodAnalytics,
 clearDiaryPeriodAnalytics
-} from "../../../diary-period-analytics-ui.js?v=5";
+} from "../../../diary-period-analytics-ui.js?v=44d938ef";
 
 import {
 DIARY_COMMENT_MAX_LEN,
@@ -57,22 +57,22 @@ listDiaryJournalTradesInPeriod,
 diaryJournalRowToTrade,
 setDiaryJournalComment,
 upsertDiaryJournalTrades
-} from "../../../trade-diary-journal.js?v=2";
+} from "../../../trade-diary-journal.js?v=7b94619e";
 
 import {
 mountDiaryJournalActions
-} from "../../../trade-diary-journal-ui.js?v=2";
+} from "../../../trade-diary-journal-ui.js?v=4fbc6447";
 
 import {
 buildDiaryTradeTerminalUrl,
 resolveDiaryTradeFocusTimes
-} from "../../../trade-diary-terminal-deep-link.js?v=2";
+} from "../../../trade-diary-terminal-deep-link.js?v=7e2fd114";
 
 import {
 getLoadedTradeExchangeModules,
 loadTradeExchangeModules,
 resetTradeExchangeModules
-} from "../../module-router.js?v=24";
+} from "../../module-router.js?v=679c5141";
 
 const EXCHANGE_ID =
 "bingx";
@@ -1105,8 +1105,6 @@ window.location.href =
 buildDiaryTradeTerminalUrl(
 {
 symbol,
-tf:
-"60",
 openMs:
 focus.openMs,
 closeMs:

@@ -3,15 +3,15 @@
  */
 import {
   toBingxSymbol
-} from "../../../exchanges/symbol.js?v=2";
+} from "../../../exchanges/symbol.js?v=b2916b67";
 
 import {
   fetchBingx
-} from "../../../exchanges/bingx/fetch.js?v=5";
+} from "../../../exchanges/bingx/fetch.js?v=a76bddd0";
 
 import {
   tfToBingxInterval
-} from "../../../exchanges/bingx/intervals.js?v=1";
+} from "../../../exchanges/bingx/intervals.js?v=ce5c9eb7";
 
 export async function diaryFetchKlineBatch(symbol, tf, end) {
   try {

@@ -5,7 +5,7 @@
 import {
 hideDomChartCrosshair,
 positionTabletProbeHorizInStack
-} from "../chart-import.js?v=66";
+} from "../chart-import.js?v=45dccc88";
 
 import {
 ensureFibLevelsVisible,
@@ -14,37 +14,37 @@ ensureFibAnchorMinSpan,
 isFibType,
 isFibExtType,
 resolveFibTrendLineColor
-} from "./fib-spec.js?v=17";
+} from "./fib-spec.js?v=5f577f26";
 
 import {
 isPositionType
-} from "./position.js?v=11";
+} from "./position.js?v=152e419c";
 
 import {
 uid
-} from "./math.js?v=2";
+} from "./math.js?v=2731b0ed";
 
 import {
 snapPlotToCandleWick
-} from "./draw-magnet.js?v=1";
+} from "./draw-magnet.js?v=df326ca8";
 
 import {
 touchShapeRevision
-} from "../drawings-storage.js?v=10";
+} from "../drawings-storage.js?v=c2e9af64";
 
 import {
 isHorizPriceTool
-} from "./constants.js?v=13";
+} from "./constants.js?v=c47ce407";
 
 import {
 isTextTool,
 TEXT_DEFAULT_CONTENT
-} from "./text.js?v=3";
+} from "./text.js?v=441520b6";
 
 import {
 ensureChannelLevelsVisible,
 cloneDefaultChannelRows
-} from "./channel-spec.js?v=2";
+} from "./channel-spec.js?v=a8bcf3c9";
 
 import {
 isElliottType,
@@ -52,18 +52,18 @@ isPattern12Draw,
 elliottPointCount,
 normalizePattern12TpFlags,
 normalizePattern12TpLevels
-} from "./elliott-spec.js?v=17";
+} from "./elliott-spec.js?v=3fb92981";
 
 import {
 isFvpType,
 copyFvpStyleToShape
-} from "./fixed-volume-profile.js?v=3";
+} from "./fixed-volume-profile.js?v=bb03b4a7";
 
 import {
 constrainPointerToAxis,
 eventHasShiftKey,
 lastPlacementPointPlotXY
-} from "./draw-axis-lock.js?v=1";
+} from "./draw-axis-lock.js?v=a3b136ee";
 
 export function createDrawPlacement(
 deps
@@ -859,6 +859,28 @@ setDrawMagnetKeyDown(true);
 
 }
 
+let placementPreviewFrame =
+0;
+
+function schedulePlacementPreviewRedraw(){
+
+if(
+placementPreviewFrame
+){
+return;
+}
+
+placementPreviewFrame =
+requestAnimationFrame(
+()=>{
+placementPreviewFrame =
+0;
+redraw();
+}
+);
+
+}
+
 function syncDesktopDrawPlacementPreview(
 rawX,
 rawY,
@@ -960,7 +982,7 @@ ly
 
 }
 
-redraw();
+schedulePlacementPreviewRedraw();
 
 return resolved;
 
@@ -1316,6 +1338,10 @@ typeof style.fibShowTrendLine ===
 : isFibExtType(type)
 )
 :undefined,
+fibShowLabels:isFibType(type)
+? style.fibShowLabels !==
+false
+:undefined,
 fibTrendLineColor:isFibType(type)
 ? resolveFibTrendLineColor(
 style.fibTrendLineColor
@@ -1344,6 +1370,25 @@ false
 showPatternDash:isElliottType(type)
 ? style.showPatternDash !==
 false
+:undefined,
+showPatternChannel:isPattern12Draw(type)
+? style.showPatternChannel ===
+true
+:undefined,
+patternChannelLineStyle:isPattern12Draw(type)
+? style.patternChannelLineStyle
+:undefined,
+patternChannelLineWidth:isPattern12Draw(type)
+? style.patternChannelLineWidth
+:undefined,
+patternChannelColor:isPattern12Draw(type)
+? style.patternChannelColor
+:undefined,
+patternDashLineStyle:isPattern12Draw(type)
+? style.patternDashLineStyle
+:undefined,
+patternTpLineStyle:isPattern12Draw(type)
+? style.patternTpLineStyle
 :undefined,
 patternDashOpacity:isElliottType(type)
 ? style.patternDashOpacity
@@ -1392,6 +1437,12 @@ created = makeShape("rectangle", {
 p1: pts[0],
 p2: pts[1],
 lineStyle: rectStyle.lineStyle,
+showHorizLines: rectStyle.showHorizLines,
+horizLineStyle: rectStyle.horizLineStyle,
+horizColor: rectStyle.horizColor,
+showVertLines: rectStyle.showVertLines,
+vertLineStyle: rectStyle.vertLineStyle,
+vertColor: rectStyle.vertColor,
 showFill: rectStyle.showFill,
 fillColor: rectStyle.fillColor,
 fillOpacity: rectStyle.fillOpacity,

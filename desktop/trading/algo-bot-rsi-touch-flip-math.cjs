@@ -171,6 +171,50 @@ function equalShareBudget(allocated, tickerCount) {
 }
 
 /**
+ * Bybit non-VIP taker. Order cost reserves the close fee at this rate
+ * even when the account fee is lower.
+ * https://www.bybit.com/en/help-center/article/Order-Cost-USDT-Contract
+ */
+const BYBIT_NON_VIP_TAKER_FEE = 0.00055;
+
+function isShortEntrySide(side) {
+  const raw = String(side || "").trim().toLowerCase();
+  return raw === "short" || raw === "sell";
+}
+
+/**
+ * USDT linear order cost / notional.
+ * Initial margin + fee to open + estimated fee to close.
+ * @param {unknown} leverage
+ * @param {unknown} side
+ * @returns {number}
+ */
+function linearOrderCostRate(leverage, side) {
+  const lev = Math.max(1, Number(leverage) || 1);
+  const fee = BYBIT_NON_VIP_TAKER_FEE;
+  const initial = 1 / lev;
+  const closeFactor = isShortEntrySide(side) ? 1 + initial : 1 - initial;
+  return initial + fee + closeFactor * fee;
+}
+
+/**
+ * Largest order notional whose Bybit order cost fits in available balance.
+ * @param {unknown} available
+ * @param {unknown} leverage
+ * @param {unknown} side
+ * @returns {number}
+ */
+function maxEntryNotionalUsdt(available, leverage, side) {
+  const wallet = Number(available);
+  const rate = linearOrderCostRate(leverage, side);
+  if (!(wallet > 0) || !(rate > 0) || !Number.isFinite(rate)) {
+    return 0;
+  }
+  const cap = (wallet / rate) * (1 - 1e-6);
+  return cap > 0 ? cap : 0;
+}
+
+/**
  * @param {unknown} raw
  * @returns {number}
  */
@@ -548,6 +592,9 @@ module.exports = {
   clampLeverageToSymbol,
   allocatedBalanceUsdt,
   equalShareBudget,
+  BYBIT_NON_VIP_TAKER_FEE,
+  linearOrderCostRate,
+  maxEntryNotionalUsdt,
   rsiTouchFlipCycleSlHit,
   rsiTouchFlipLocalLooksOpen,
   rsiTouchFlipOpenLooksFilled,

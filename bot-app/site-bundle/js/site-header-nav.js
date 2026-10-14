@@ -1,15 +1,15 @@
 import {
 headerSettingsShellHtml
-} from "./header-settings-shell.js?v=4";
+} from "./header-settings-shell.js?v=4cd8426a";
 
 import {
 DESKTOP_HEADER_NAV_ITEMS
-} from "./site-header-nav-desktop.js?v=2";
+} from "./site-header-nav-desktop.js?v=a9be81ab";
 
 import {
 isScriptNavEnabled,
 isAlgoTradingNavEnabled
-} from "./desktop-feature-nav-prefs.js?v=5";
+} from "./desktop-feature-nav-prefs.js?v=0fd2425e";
 
 function getNavItems(){
 

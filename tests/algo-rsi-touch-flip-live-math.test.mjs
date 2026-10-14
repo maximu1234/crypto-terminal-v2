@@ -26,6 +26,30 @@ test("live math notional matches analysis engine", () => {
   assert.equal(math.notionalAt(1, avg), notionalAt(1, avg));
 });
 
+test("entry notional leaves Bybit order cost inside the free balance", () => {
+  const available = 38.85;
+  const fee = math.BYBIT_NON_VIP_TAKER_FEE;
+  assert.equal(fee, 0.00055);
+
+  const shortRate = math.linearOrderCostRate(1, "short");
+  const longRate = math.linearOrderCostRate(1, "long");
+  assert.equal(shortRate, 1 + fee + (1 + 1) * fee);
+  assert.equal(longRate, 1 + fee);
+  assert.equal(math.linearOrderCostRate(1, "Sell"), shortRate);
+  assert.equal(math.linearOrderCostRate(10, "Buy"), 0.1 + fee + (1 - 0.1) * fee);
+
+  const shortCap = math.maxEntryNotionalUsdt(available, 1, "short");
+  const longCap = math.maxEntryNotionalUsdt(available, 1, "long");
+  assert.ok(shortCap < available);
+  assert.ok(longCap < available);
+  assert.ok(shortCap < longCap);
+  assert.ok(shortCap * shortRate < available);
+  assert.ok(longCap * longRate < available);
+
+  const atTen = math.maxEntryNotionalUsdt(available, 10, "short");
+  assert.ok(atTen > available);
+});
+
 test("live budget is percent of wallet split equally across book tickers", () => {
   assert.equal(math.normalizeBalancePct(50), 50);
   assert.equal(math.normalizeBalancePct(0), 1);

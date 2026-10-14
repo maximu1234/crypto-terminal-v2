@@ -327,6 +327,66 @@ return "new";
 
 const last = candles[candles.length - 1];
 
+/*
+ * MOEX poll has only a last price. Its clock bucket is not the exchange
+ * bar open (15m UI is 10m ISS, daily is MSK). Patch the current bar and
+ * do not append or rewrite history from that guessed time.
+ */
+if(
+bar.mergeLast
+){
+
+const close =
+Number(
+bar.close
+);
+
+if(
+!Number.isFinite(
+close
+)
+){
+return null;
+}
+
+const prevHigh =
+Number(
+last.high
+);
+const prevLow =
+Number(
+last.low
+);
+
+candles[
+candles.length -
+1
+] =
+{
+...last,
+close,
+high: Math.max(
+Number.isFinite(
+prevHigh
+)
+? prevHigh
+: close,
+close
+),
+low: Math.min(
+Number.isFinite(
+prevLow
+)
+? prevLow
+: close,
+close
+)
+};
+
+return "last";
+
+}
+
 if(time === last.time){
 candles[candles.length - 1] = next;
 return "last";

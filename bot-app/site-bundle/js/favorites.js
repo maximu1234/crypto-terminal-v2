@@ -1,6 +1,6 @@
 import {
 getActiveExchangeId
-} from "./exchanges/context.js?v=1";
+} from "./exchanges/context.js?v=16fdeacc";
 
 const GROUPS = ["red", "green", "gray", "blue"];
 const LEGACY_FAVORITES_KEY = "favorites";

@@ -4,7 +4,7 @@
  */
 import {
 applyAlgoTickerFlagsRoot
-} from "./ticker-flags.js?v=10";
+} from "./ticker-flags.js?v=72da874e";
 
 export function desktopAlgoApi(){
 

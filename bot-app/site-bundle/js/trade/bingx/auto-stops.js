@@ -3,12 +3,12 @@
  */
 import {
 getTradeConfig
-} from "./config.js?v=10";
+} from "./config.js?v=ddb85880";
 
 import {
 getCachedPosition,
 upsertTradePositionInCache
-} from "./positions-cache.js?v=7";
+} from "./positions-cache.js?v=b026a4f3";
 
 const STORAGE_KEY =
 "trade_auto_stops_bingx_v1";

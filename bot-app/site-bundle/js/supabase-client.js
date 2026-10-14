@@ -3,11 +3,11 @@ createAuthStorage,
 SUPABASE_AUTH_STORAGE_KEY,
 isAuthRefreshBlocked,
 noteAuthRefreshHttpStatus
-} from "./auth-storage.js?v=11";
+} from "./auth-storage.js?v=67aa0041";
 
 import {
 isAlgoBotLiteShell
-} from "./page-routes.js?v=7";
+} from "./page-routes.js?v=4dc7f350";
 
 export {
 SUPABASE_AUTH_STORAGE_KEY
@@ -154,7 +154,7 @@ if(envPromise){
 return envPromise;
 }
 
-envPromise = import("./supabase-env.js?v=5")
+envPromise = import("./supabase-env.js?v=ed71d82f")
 .then(m=>m)
 .catch(()=>({
 SUPABASE_URL:"",

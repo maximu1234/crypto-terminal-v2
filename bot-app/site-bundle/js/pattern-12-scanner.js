@@ -8,21 +8,25 @@ import {
 loadMarketHistory,
 loadMarketSymbols,
 buildMarketLists
-} from "./market-api.js?v=7";
+} from "./market-api.js?v=7b3e6b3c";
+
+import {
+packCandles
+} from "./candle-columns.js?v=ecea9c10";
 
 import {
 PATTERN_12_ID,
 computePattern12Scene as computePattern12OriginalScene,
 defaultPattern12Settings as defaultPattern12OriginalSettings,
 normalizePattern12Settings as normalizePattern12OriginalSettings
-} from "./indicators/pattern-12-math.js?v=13";
+} from "./indicators/pattern-12-math.js?v=a63cb1e8";
 
 import {
 PATTERN_12_EARLY_T3_ID,
 computePattern12Scene as computePattern12EarlyT3Scene,
 defaultPattern12Settings as defaultPattern12EarlyT3Settings,
 normalizePattern12Settings as normalizePattern12EarlyT3Settings
-} from "./indicators/pattern-12-early-t3-math.js?v=1";
+} from "./indicators/pattern-12-early-t3-math.js?v=3afbc903";
 
 /** Совпадает с DEFAULT_STORAGE_KEY в chart-indicators.js (Терминал / Монеты). */
 export const TERMINAL_INDICATORS_STORAGE_KEY =
@@ -750,6 +754,206 @@ lists.crypto
 
 }
 
+let scanWorker =
+null;
+let scanWorkerSeq =
+0;
+const scanWorkerPending =
+new Map();
+
+function getScanWorker(){
+
+if(
+typeof Worker ===
+"undefined"
+){
+return null;
+}
+
+if(
+scanWorker
+){
+return scanWorker;
+}
+
+try{
+scanWorker =
+new Worker(
+new URL(
+"./pattern-12-scan-worker.js?v=06322b90",
+import.meta.url
+),
+{
+type: "module"
+}
+);
+scanWorker.onmessage =
+event=>{
+
+const pending =
+scanWorkerPending.get(
+event.data?.id
+);
+
+if(
+!pending
+){
+return;
+}
+
+scanWorkerPending.delete(
+event.data.id
+);
+pending.hits(
+event.data.hits
+);
+
+};
+scanWorker.onerror =
+()=>{
+
+const dead =
+scanWorker;
+scanWorker = null;
+
+try{
+dead?.terminate();
+}catch{
+/* already gone */
+}
+
+for(
+const [
+id,
+pending
+] of scanWorkerPending
+){
+scanWorkerPending.delete(
+id
+);
+pending.fail();
+}
+
+};
+}catch{
+scanWorker = null;
+}
+
+return scanWorker;
+
+}
+
+function findHitsOffMainThread(
+candles,
+lookbackBars,
+sideFilter,
+patternSettings,
+indicatorId
+){
+
+const fallback =
+()=>
+findPattern12HitsInLookback(
+candles,
+lookbackBars,
+sideFilter,
+patternSettings,
+indicatorId
+);
+const worker =
+getScanWorker();
+
+if(
+!worker
+){
+return Promise.resolve(
+fallback()
+);
+}
+
+const id =
+++scanWorkerSeq;
+
+return new Promise(
+resolve=>{
+
+const timer =
+setTimeout(
+()=>{
+scanWorkerPending.delete(
+id
+);
+resolve(
+fallback()
+);
+},
+8000
+);
+
+scanWorkerPending.set(
+id,
+{
+hits(
+value
+){
+clearTimeout(
+timer
+);
+resolve(
+value ||
+[]
+);
+},
+fail(){
+clearTimeout(
+timer
+);
+resolve(
+fallback()
+);
+}
+}
+);
+
+try{
+const packed =
+packCandles(
+candles
+);
+
+worker.postMessage(
+{
+id,
+packed:
+packed.buffer,
+rows:
+candles.length,
+lookbackBars,
+sideFilter,
+patternSettings,
+indicatorId
+},
+[
+packed.buffer
+]
+);
+}catch{
+clearTimeout(
+timer
+);
+scanWorkerPending.delete(
+id
+);
+resolve(
+fallback()
+);
+}
+
+}
+);
+
+}
+
 export function createPattern12Scanner(){
 
 let running =
@@ -1094,7 +1298,7 @@ return;
 }
 
 const hits =
-findPattern12HitsInLookback(
+await findHitsOffMainThread(
 candles,
 lookbackBars,
 taskSideFilter,

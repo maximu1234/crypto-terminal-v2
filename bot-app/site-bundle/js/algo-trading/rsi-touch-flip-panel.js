@@ -6,10 +6,10 @@ import {
 ALGO_ANALYSIS_BOT_CHANGE_EVENT,
 ALGO_ANALYSIS_BOT_RSI_TOUCH_FLIP,
 isActiveAnalysisBot
-} from "./active-analysis-bot.js?v=4";
+} from "./active-analysis-bot.js?v=c1b8293b";
 import {
 loadMarketHistory
-} from "../market-api.js?v=7";
+} from "../market-api.js?v=7b3e6b3c";
 import {
 RSI_TOUCH_FLIP_SIZE_AVERAGE,
 loadRsiTouchFlipPrefs,
@@ -20,7 +20,7 @@ loadRsiTouchFlipTickerPrefs,
 normalizeRsiTouchFlipPrefs,
 shouldReloadRsiTouchFlipColumn,
 loadRsiTouchFlipBalancePct
-} from "./rsi-touch-flip-prefs.js?v=10";
+} from "./rsi-touch-flip-prefs.js?v=8d462a58";
 import {
 RSI_TOUCH_FLIP_BOOK_CHANGE_EVENT,
 RSI_TOUCH_FLIP_BOOK_OPEN_EVENT,
@@ -29,31 +29,31 @@ loadRsiTouchFlipBook,
 rsiTouchFlipShareBudgetFits,
 upsertRsiTouchFlipBookRow,
 removeRsiTouchFlipBookRow
-} from "./rsi-touch-flip-book.js?v=5";
+} from "./rsi-touch-flip-book.js?v=c5c9afac";
 import {
 getAlgoTradingWalletBalance
-} from "./runtime-bridge.js?v=6";
+} from "./runtime-bridge.js?v=8fabea4a";
 import {
 runRsiTouchFlip
-} from "./rsi-touch-flip-engine.js?v=8";
+} from "./rsi-touch-flip-engine.js?v=92d67502";
 import {
 resolveRsiTouchFlipChartRsi,
 rsiTouchFlipChartDays
-} from "./rsi-touch-flip-mtf.js?v=5";
+} from "./rsi-touch-flip-mtf.js?v=11c6ea8a";
 import {
 mountRsiTouchFlipOverlay
-} from "./rsi-touch-flip-overlay.js?v=3";
+} from "./rsi-touch-flip-overlay.js?v=d9cd98da";
 import {
 mountRsiTouchFlipFit,
 loadRsiTouchFlipFitRowForSymbol
-} from "./rsi-touch-flip-fit-panel.js?v=15";
+} from "./rsi-touch-flip-fit-panel.js?v=1e6f8858";
 import {
 RSI_TOUCH_FLIP_DEFAULT_TRAIN_PCT,
 rsiTouchFlipFitPrefsForHydrate
-} from "./rsi-touch-flip-walkforward.js?v=13";
+} from "./rsi-touch-flip-walkforward.js?v=76212104";
 import {
 buildRsiTouchFlipEquityModel
-} from "./rsi-touch-flip-equity.js?v=7";
+} from "./rsi-touch-flip-equity.js?v=e44d4938";
 
 function el(
 id
@@ -468,7 +468,7 @@ if(
 ){
 equityChartMod =
 await import(
-"./rsi-touch-flip-equity-chart.js?v=7"
+"./rsi-touch-flip-equity-chart.js?v=236b554e"
 );
 }
 

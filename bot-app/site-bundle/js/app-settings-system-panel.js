@@ -7,11 +7,11 @@ isMenuBarTrayEnabled,
 isMenuBarTrayPlatform,
 setLaunchAgentAtLoginLocal,
 setMenuBarTrayEnabled
-} from "./desktop-menu-bar-tray-prefs.js?v=3";
+} from "./desktop-menu-bar-tray-prefs.js?v=cad92009";
 
 import {
 applyDesktopMenuBarTrayPreference
-} from "./desktop-menu-bar-tray.js?v=10";
+} from "./desktop-menu-bar-tray.js?v=ea5f485f";
 
 import {
 ALERT_NOTIFY_MODE_LABELS,
@@ -21,32 +21,33 @@ getAlertNotifyMode,
 getAlertToastDurationSec,
 setAlertNotifyMode,
 setAlertToastDurationSec
-} from "./alert-ui-prefs.js?v=1";
+} from "./alert-ui-prefs.js?v=245b4cc4";
 
 import {
 isScriptNavEnabled,
 isAlgoTradingNavEnabled,
 setScriptNavEnabled,
 setAlgoTradingNavEnabled
-} from "./desktop-feature-nav-prefs.js?v=5";
+} from "./desktop-feature-nav-prefs.js?v=0fd2425e";
 
 import {
 TERMINAL_HISTORY_DEPTH_MAX,
 TERMINAL_HISTORY_DEPTH_MIN,
 getTerminalHistoryDepth,
 setTerminalHistoryDepth
-} from "./terminal-chart-history-prefs.js?v=1";
+} from "./terminal-chart-history-prefs.js?v=948df10f";
 
 import {
+SCREENER_WIDGET_OSCILLATOR_AO,
 SCREENER_WIDGET_OSCILLATOR_MACD,
 SCREENER_WIDGET_OSCILLATOR_RSI,
 getScreenerWidgetOscillator,
 setScreenerWidgetOscillator
-} from "./screener-widget-oscillator.js?v=2";
+} from "./screener-widget-oscillator.js?v=22d098fd";
 
 import {
 renderHeaderNav
-} from "./site-header-nav.js?v=10";
+} from "./site-header-nav.js?v=37f95bcf";
 
 const APP_HEADER_NAV_ID =
 "app-header-nav";
@@ -328,6 +329,10 @@ ${snapshotLogoBlock}
 <input type="checkbox" class="app-settings-toggle-input" id="app-settings-screener-widget-macd" />
 <span class="app-settings-toggle-label">Показывать MACD в виджетах в Скринере</span>
 </label>
+<label class="app-settings-toggle-row">
+<input type="checkbox" class="app-settings-toggle-input" id="app-settings-screener-widget-ao" />
+<span class="app-settings-toggle-label">Показывать AO в виджетах в Скринере</span>
+</label>
 <p class="app-settings-panel-hint">В виджетах 4 и 6 и в окне увеличения. Одновременно включён только один индикатор.</p>
 <p class="app-settings-panel-lead app-settings-panel-lead--spaced">Алерты.</p>
 <label class="app-settings-field-row" for="app-settings-alert-notify-mode">
@@ -388,6 +393,10 @@ const screenerMacdInput =
 host.querySelector(
 "#app-settings-screener-widget-macd"
 );
+const screenerAoInput =
+host.querySelector(
+"#app-settings-screener-widget-ao"
+);
 
 function syncScreenerOscillatorToggles(){
 
@@ -408,6 +417,14 @@ screenerMacdInput
 screenerMacdInput.checked =
 kind ===
 SCREENER_WIDGET_OSCILLATOR_MACD;
+}
+
+if(
+screenerAoInput
+){
+screenerAoInput.checked =
+kind ===
+SCREENER_WIDGET_OSCILLATOR_AO;
 }
 
 }
@@ -763,6 +780,20 @@ screenerMacdInput?.addEventListener(
 setScreenerWidgetOscillator(
 screenerMacdInput.checked
 ? SCREENER_WIDGET_OSCILLATOR_MACD
+: SCREENER_WIDGET_OSCILLATOR_RSI
+);
+syncScreenerOscillatorToggles();
+
+}
+);
+
+screenerAoInput?.addEventListener(
+"change",
+()=>{
+
+setScreenerWidgetOscillator(
+screenerAoInput.checked
+? SCREENER_WIDGET_OSCILLATOR_AO
 : SCREENER_WIDGET_OSCILLATOR_RSI
 );
 syncScreenerOscillatorToggles();

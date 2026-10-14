@@ -10,26 +10,26 @@ clampSupertrendFactor,
 DEFAULT_SUPERTREND_ATR_LENGTH,
 DEFAULT_SUPERTREND_FACTOR,
 splitSupertrendValuedSegments
-} from "./supertrend-math.js?v=3";
+} from "./supertrend-math.js?v=7d6c81b0";
 
 import {
 paintSupertrendSegments
-} from "./supertrend-paint.js?v=1";
+} from "./supertrend-paint.js?v=fa48f634";
 
 import {
 fetchHtfCandles
-} from "./htf-loader.js?v=6";
+} from "./htf-loader.js?v=4c5b8439";
 
 import {
 isChartLayoutReady
-} from "../chart-layout-gate.js?v=4";
+} from "../chart-layout-gate.js?v=4a8798af";
 
 import {
 closeIndicatorColorPicker,
 openIndicatorColorPicker,
 previewColorHex,
 isValidDrawColor
-} from "./indicator-color-picker-ui.js?v=2";
+} from "./indicator-color-picker-ui.js?v=755ce025";
 
 export const SUPERTREND_ID =
 "supertrend";

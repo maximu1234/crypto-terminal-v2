@@ -2,8 +2,9 @@
  * @module page-routes
  * Единое определение «на какой странице мы» — pathname без query/hash.
  *
- * Имена страниц (2026): Скринер / Терминал / Вотчлист.
- * Legacy URL: /index → Скринер, /coins → Терминал, /terminal → Вотчлист.
+ * Имена страниц: Скринер / Терминал / Вотчлист.
+ * /screener.html — Скринер, /terminal.html — Терминал, /watchlist.html — Вотчлист.
+ * Legacy: /index → Скринер, /coins и /trade → Терминал.
  */
 
 /** @returns {string} */

@@ -4,18 +4,18 @@
 import {
 loadPatternScanResults,
 savePatternScanResults
-} from "./pattern-scan-results.js?v=1";
+} from "./pattern-scan-results.js?v=29e601ec";
 
 import {
 PATTERN_SCAN_DEPTH_OPTIONS,
 normalizePatternScanSideFilter,
 normalizeScriptScanIndicatorId,
 SCRIPT_SCAN_INDICATOR_PATTERN12
-} from "./pattern-12-scanner.js?v=25";
+} from "./pattern-12-scanner.js?v=297ef592";
 
 import {
 getActiveExchangeId
-} from "./exchanges/context.js?v=1";
+} from "./exchanges/context.js?v=16fdeacc";
 
 /** @deprecated flat prefs; migrated → by_exchange */
 export const SCRIPT_PAGE_STORAGE_KEY =

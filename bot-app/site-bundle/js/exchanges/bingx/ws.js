@@ -3,20 +3,20 @@
  */
 import {
 getBingxWsUrl
-} from "./fetch.js?v=5";
+} from "./fetch.js?v=a76bddd0";
 
 import {
 toBingxSymbol
-} from "../symbol.js?v=2";
+} from "../symbol.js?v=b2916b67";
 
 import {
 tfToBingxInterval
-} from "./intervals.js?v=1";
+} from "./intervals.js?v=ce5c9eb7";
 
 import {
 queueKlineByTime,
 takeQueuedKlinesSorted
-} from "../../chart/live-bar-roll.js?v=4";
+} from "../../chart/live-bar-roll.js?v=6ff2b718";
 
 let socket =
 null;

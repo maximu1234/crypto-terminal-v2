@@ -1,6 +1,6 @@
 import {
 getActiveExchangeId
-} from "./context.js?v=1";
+} from "./context.js?v=16fdeacc";
 
 /** @typedef {{ id: string, label: string, realtime?: boolean }} ExchangeMarketType */
 

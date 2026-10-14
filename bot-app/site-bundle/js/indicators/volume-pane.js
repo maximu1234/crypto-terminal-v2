@@ -8,19 +8,23 @@ linkPairedChartTimeScales,
 appendFutureWhitespaceBars,
 computeChartFutureMarginBars,
 coinsTfVisibleBars
-} from "../chart-import.js?v=66";
+} from "../chart-import.js?v=45dccc88";
 
 import {
 isChartLayoutReady
-} from "../chart-layout-gate.js?v=4";
+} from "../chart-layout-gate.js?v=4a8798af";
+
+import {
+isCoinsPaneHeightDrag
+} from "../terminal-layout-resize.js?v=671925b0";
 
 import {
 isBottomIndicatorPane
-} from "./indicator-pane-order.js?v=2";
+} from "./indicator-pane-order.js?v=b9987606";
 
 import {
 syncPaneViewportAfterData
-} from "./indicator-pane-viewport.js?v=8";
+} from "./indicator-pane-viewport.js?v=efc01e0e";
 
 export const VOLUME_PANE_ID =
 "volume";
@@ -189,7 +193,8 @@ updateTimeScaleVisibility,
 linkedDrivesMain:
 false,
 isLocked:()=>
-!isChartLayoutReady()
+!isChartLayoutReady() ||
+isCoinsPaneHeightDrag()
 }
 );
 

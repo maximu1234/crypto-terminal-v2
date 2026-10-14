@@ -10,18 +10,21 @@ COINS_PANEL_MIN_RATIO,
 defaultRsiHeightPx,
 defaultVolumeHeightPx,
 defaultAoHeightPx,
+defaultMacdHeightPx,
 computeCoinsLayoutLimits,
 computeVolumeHeightLimits,
 computeAoHeightLimits,
+computeMacdHeightLimits,
 clampCoinsListWidth,
 clampCoinsRsiHeight,
 clampCoinsVolumeHeight,
-clampCoinsAoHeight
-} from "./terminal-layout-math.js?v=5";
+clampCoinsAoHeight,
+clampCoinsMacdHeight
+} from "./terminal-layout-math.js?v=9457222d";
 
 import {
 isTerminalPage
-} from "./terminal/terminal-state.js?v=12";
+} from "./terminal/terminal-state.js?v=4747a92f";
 
 export {
 COINS_LIST_DEFAULT_PX,
@@ -31,17 +34,35 @@ COINS_PANEL_MIN_RATIO,
 defaultRsiHeightPx,
 defaultVolumeHeightPx,
 defaultAoHeightPx,
+defaultMacdHeightPx,
 computeCoinsLayoutLimits,
 computeVolumeHeightLimits,
 computeAoHeightLimits,
+computeMacdHeightLimits,
 clampCoinsListWidth,
 clampCoinsRsiHeight,
 clampCoinsVolumeHeight,
-clampCoinsAoHeight
+clampCoinsAoHeight,
+clampCoinsMacdHeight
 };
 
 export const COINS_LAYOUT_KEY =
 "coins_layout_v1";
+
+/** Высоту RSI / MACD / Volume / AO тянут прямо сейчас. */
+export function isCoinsPaneHeightDrag(){
+
+try{
+
+return !!document.body?.classList.contains(
+"coins-layout-dragging-v"
+);
+
+}catch{
+return false;
+}
+
+}
 
 const DESKTOP_MQ =
 "(min-width:641px)";
@@ -62,7 +83,8 @@ return {
 listWidth:null,
 rsiHeight:null,
 volumeHeight:null,
-aoHeight:null
+aoHeight:null,
+macdHeight:null
 };
 }
 
@@ -99,11 +121,19 @@ parsed?.aoHeight
 ? parsed.aoHeight
 : null;
 
+const macdHeight =
+Number.isFinite(
+parsed?.macdHeight
+)
+? parsed.macdHeight
+: null;
+
 return {
 listWidth,
 rsiHeight,
 volumeHeight,
-aoHeight
+aoHeight,
+macdHeight
 };
 
 }catch{
@@ -112,7 +142,8 @@ return {
 listWidth:null,
 rsiHeight:null,
 volumeHeight:null,
-aoHeight:null
+aoHeight:null,
+macdHeight:null
 };
 
 }
@@ -149,6 +180,12 @@ Number.isFinite(
 prefs?.aoHeight
 )
 ? prefs.aoHeight
+: null,
+macdHeight:
+Number.isFinite(
+prefs?.macdHeight
+)
+? prefs.macdHeight
 : null
 };
 
@@ -160,6 +197,8 @@ null &&
 out.volumeHeight ===
 null &&
 out.aoHeight ===
+null &&
+out.macdHeight ===
 null
 ){
 
@@ -238,6 +277,11 @@ document.getElementById(
 "ao-wrap"
 );
 
+const macdWrap =
+document.getElementById(
+"macd-wrap"
+);
+
 if(
 !app ||
 !list ||
@@ -260,6 +304,8 @@ let volumeHeight =
 saved.volumeHeight;
 let aoHeight =
 saved.aoHeight;
+let macdHeight =
+saved.macdHeight;
 
 let dragMode =
 null;
@@ -274,6 +320,8 @@ let dragStartRsiH =
 let dragStartVolumeH =
 0;
 let dragStartAoH =
+0;
+let dragStartMacdH =
 0;
 
 const hHandle =
@@ -364,6 +412,28 @@ aoVHandle.setAttribute(
 aoVHandle.tabIndex =
 0;
 
+const macdVHandle =
+document.createElement(
+"div"
+);
+
+macdVHandle.className =
+"coins-layout-resize coins-layout-resize--v";
+macdVHandle.setAttribute(
+"role",
+"separator"
+);
+macdVHandle.setAttribute(
+"aria-orientation",
+"horizontal"
+);
+macdVHandle.setAttribute(
+"aria-label",
+"Высота MACD"
+);
+macdVHandle.tabIndex =
+0;
+
 list.appendChild(
 hHandle
 );
@@ -372,6 +442,13 @@ aoWrap
 ){
 aoWrap.appendChild(
 aoVHandle
+);
+}
+if(
+macdWrap
+){
+macdWrap.appendChild(
+macdVHandle
 );
 }
 volumeWrap.appendChild(
@@ -399,6 +476,12 @@ const volumeVisible =
 const aoVisible =
 !!aoWrap &&
 !aoWrap.classList.contains(
+"indicator-pane-hidden"
+);
+
+const macdVisible =
+!!macdWrap &&
+!macdWrap.classList.contains(
 "indicator-pane-hidden"
 );
 
@@ -435,6 +518,16 @@ innerHeight
 )
 : 0;
 
+const currentMacdH =
+macdVisible
+? (
+macdHeight ??
+defaultMacdHeightPx(
+innerHeight
+)
+)
+: 0;
+
 const layoutLimits =
 computeCoinsLayoutLimits(
 {
@@ -450,6 +543,10 @@ volumeVisible
 aoOccupiedHeight:
 aoVisible
 ? currentAoH
+: 0,
+macdOccupiedHeight:
+macdVisible
+? currentMacdH
 : 0
 }
 );
@@ -468,10 +565,18 @@ innerHeight
 }
 );
 
+const macdLimits =
+computeMacdHeightLimits(
+{
+innerHeight
+}
+);
+
 return {
 ...layoutLimits,
 ...volumeLimits,
-...aoLimits
+...aoLimits,
+...macdLimits
 };
 
 }
@@ -485,7 +590,9 @@ immediate = false
 
 if(
 immediate ||
-!dragMode
+!dragMode ||
+dragMode !==
+"h"
 ){
 
 if(
@@ -632,6 +739,34 @@ aoWrap.style.setProperty(
 }
 
 if(
+!macdWrap
+){
+/* MACD pane missing */
+}else if(
+macdHeight ==
+null
+){
+
+macdWrap.style.removeProperty(
+"--coins-macd-h"
+);
+
+}else{
+
+macdHeight =
+clampCoinsMacdHeight(
+macdHeight,
+limits
+);
+
+macdWrap.style.setProperty(
+"--coins-macd-h",
+`${macdHeight}px`
+);
+
+}
+
+if(
 persist
 ){
 
@@ -640,7 +775,8 @@ writeCoinsLayoutPrefs(
 listWidth,
 rsiHeight,
 volumeHeight,
-aoHeight
+aoHeight,
+macdHeight
 }
 );
 
@@ -683,6 +819,10 @@ limits.defaultVolumeH;
 dragStartAoH =
 aoHeight ??
 limits.defaultAoH;
+
+dragStartMacdH =
+macdHeight ??
+limits.defaultMacdH;
 
 document.body.classList.add(
 mode ===
@@ -734,6 +874,9 @@ mode ===
 : mode ===
 "ao"
 ? aoVHandle
+: mode ===
+"macd"
+? macdVHandle
 : vHandle
 ).setPointerCapture(
 e.pointerId
@@ -796,6 +939,19 @@ e.clientY;
 
 aoHeight =
 dragStartAoH +
+delta;
+
+}else if(
+dragMode ===
+"macd"
+){
+
+const delta =
+dragStartY -
+e.clientY;
+
+macdHeight =
+dragStartMacdH +
 delta;
 
 }else{
@@ -867,6 +1023,19 @@ aoVHandle.addEventListener(
 "pointerdown",
 onPointerDown(
 "ao"
+)
+);
+
+}
+
+if(
+macdWrap
+){
+
+macdVHandle.addEventListener(
+"pointerdown",
+onPointerDown(
+"macd"
 )
 );
 
@@ -959,6 +1128,7 @@ hHandle.remove();
 vHandle.remove();
 volumeVHandle.remove();
 aoVHandle.remove();
+macdVHandle.remove();
 window.removeEventListener(
 "pointermove",
 onPointerMove
@@ -995,6 +1165,9 @@ volumeWrap.style.removeProperty(
 );
 aoWrap?.style.removeProperty(
 "--coins-ao-h"
+);
+macdWrap?.style.removeProperty(
+"--coins-macd-h"
 );
 
 };

@@ -8,7 +8,7 @@ linkPairedChartTimeScales,
 appendFutureWhitespaceBars,
 computeChartFutureMarginBars,
 coinsTfVisibleBars
-} from "../chart-import.js?v=66";
+} from "../chart-import.js?v=45dccc88";
 
 import {
 calculateMacd,
@@ -18,26 +18,30 @@ macdHistColor,
 MACD_LINE_COLOR,
 MACD_SIGNAL_COLOR,
 normalizeMacdSettings
-} from "./macd-math.js?v=3";
+} from "./macd-math.js?v=ca060ff4";
 
 import {
 formatHtfTfLegend,
 htfTfSelectHtml,
 projectHtfRowsOntoChart,
 resolveIndicatorSourceCandles
-} from "./htf-project.js?v=5";
+} from "./htf-project.js?v=2d6ecf34";
 
 import {
 isChartLayoutReady
-} from "../chart-layout-gate.js?v=4";
+} from "../chart-layout-gate.js?v=4a8798af";
+
+import {
+isCoinsPaneHeightDrag
+} from "../terminal-layout-resize.js?v=671925b0";
 
 import {
 isBottomIndicatorPane
-} from "./indicator-pane-order.js?v=2";
+} from "./indicator-pane-order.js?v=b9987606";
 
 import {
 syncPaneViewportAfterData
-} from "./indicator-pane-viewport.js?v=8";
+} from "./indicator-pane-viewport.js?v=efc01e0e";
 
 export const MACD_PANE_ID =
 "macd";
@@ -343,7 +347,8 @@ updateTimeScaleVisibility,
 linkedDrivesMain:
 false,
 isLocked:()=>
-!isChartLayoutReady()
+!isChartLayoutReady() ||
+isCoinsPaneHeightDrag()
 }
 );
 

@@ -3,31 +3,31 @@
  */
 import {
 cssUrl
-} from "./asset-manifest.js?v=35";
+} from "./asset-manifest.js?v=fd4e19dd";
 
 import {
 isSystemAdminUser
-} from "./system-admin-access.js?v=3";
+} from "./system-admin-access.js?v=393ba264";
 
 import {
 beginChromeOverlay,
 endChromeOverlay,
 isChromeOverlayActive,
 chromeOverlayRedrawReason
-} from "./chart-layout-gate.js?v=4";
+} from "./chart-layout-gate.js?v=4a8798af";
 
 import {
 openChromeSurface,
 closeChromeSurface
-} from "./chrome-motion.js?v=5";
+} from "./chrome-motion.js?v=bb1d8933";
 
 import {
 mountTelegramSettingsPanel
-} from "./telegram-settings-panel.js?v=2";
+} from "./telegram-settings-panel.js?v=dbc06eb2";
 
 import {
 mountFavoritesCloudSettingsPanel
-} from "./favorites-settings-panel.js?v=3";
+} from "./favorites-settings-panel.js?v=cbb461e7";
 
 const SECTIONS =
 [
@@ -445,7 +445,7 @@ const {
 closeCloudSettingsDropdown
 } =
 await import(
-"./auth-ui.js?v=69"
+"./auth-ui.js?v=b5583c9c"
 );
 closeCloudSettingsDropdown();
 await openAppSettingsWindow();
@@ -662,7 +662,7 @@ const {
 mountSystemSettingsPanel
 } =
 await import(
-"./app-settings-system-panel.js?v=20"
+"./app-settings-system-panel.js?v=d3063fad"
 );
 
 systemCtl =
@@ -709,7 +709,7 @@ const {
 mountCloudAuthPanelInSettings
 } =
 await import(
-"./auth-ui.js?v=69"
+"./auth-ui.js?v=b5583c9c"
 );
 
 mountCloudAuthPanelInSettings(
@@ -776,7 +776,7 @@ mountExchangeConnectionsPanel,
 updateTradeExchangeConnectionChrome
 } =
 await import(
-"./trade-exchange-settings.js?v=25"
+"./trade-exchange-settings.js?v=a5da46af"
 );
 
 const host =
@@ -820,7 +820,7 @@ const {
 mountProxySettingsPanel
 } =
 await import(
-"./app-settings-proxy-panel.js?v=6"
+"./app-settings-proxy-panel.js?v=8615ff5c"
 );
 
 mountProxySettingsPanel(
@@ -871,7 +871,7 @@ const {
 mountTradingSettingsPanel
 } =
 await import(
-"./trade-trading-settings-panel.js?v=3"
+"./trade-trading-settings-panel.js?v=4e0f5b97"
 );
 
 const host =
@@ -900,7 +900,7 @@ const {
 mountHotkeysSettingsPanel
 } =
 await import(
-"./app-settings-hotkeys-panel.js?v=4"
+"./app-settings-hotkeys-panel.js?v=fbf97a56"
 );
 
 mountHotkeysSettingsPanel(
@@ -921,7 +921,7 @@ const {
 mountSecretSettingsPanel
 } =
 await import(
-"./app-settings-secret.js?v=10"
+"./app-settings-secret.js?v=cf2ea9d5"
 );
 
 await mountSecretSettingsPanel(
@@ -1050,7 +1050,7 @@ const {
 installWebTradingShell
 } =
 await import(
-"./trade-web/client.js?v=6"
+"./trade-web/client.js?v=4050e4f8"
 );
 installWebTradingShell();
 }

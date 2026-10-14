@@ -5,10 +5,10 @@
  */
 import {
 computeWilderRsiValues
-} from "./rsi-touch-flip-engine.js?v=8";
+} from "./rsi-touch-flip-engine.js?v=92d67502";
 import {
 normalizeRsiTouchFlipPrefs
-} from "./rsi-touch-flip-prefs.js?v=10";
+} from "./rsi-touch-flip-prefs.js?v=8d462a58";
 
 const KLINE_PAGE =
 1000;

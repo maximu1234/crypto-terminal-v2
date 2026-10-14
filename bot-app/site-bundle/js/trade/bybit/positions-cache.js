@@ -5,31 +5,31 @@ import {
 maybeApplyAutoStopsForNewPosition,
 clearDismissedStops,
 isStopDismissed
-} from "./auto-stops.js?v=2";
+} from "./auto-stops.js?v=0e31e88c";
 
 import {
 tryApplyDrawingStopsPending,
 wasDrawingStopsJustApplied
-} from "./drawing-stops.js?v=4";
+} from "./drawing-stops.js?v=78127df4";
 
 import {
 maybeReconcileOrdersOnPositionOpen
-} from "./position-open-orders.js?v=1";
+} from "./position-open-orders.js?v=9f39b3e0";
 
 import {
 maybeReconcileOrdersOnPositionClose
-} from "../../trade-position-close-orders.js?v=1";
+} from "../../trade-position-close-orders.js?v=bd8436c2";
 
 import {
 applyTradePositionSoundDiff,
 establishTradePositionSoundBaseline,
 isTradePositionSoundBaselineReady,
 resetTradePositionSoundBaseline
-} from "../../trade-position-sounds.js?v=4";
+} from "../../trade-position-sounds.js?v=2db7043e";
 
 import {
 getTradeConfig
-} from "./config.js?v=3";
+} from "./config.js?v=6ddbe7e2";
 
 const cacheBySymbol =
 new Map();

@@ -31,6 +31,43 @@ deps;
 /** @type {{ pointerId: number, points: object[] } | null} */
 let brushStroke =
 null;
+let brushFrame =
+0;
+
+function scheduleBrushRedraw(){
+
+if(
+brushFrame
+){
+return;
+}
+
+brushFrame =
+requestAnimationFrame(
+()=>{
+brushFrame =
+0;
+redraw();
+}
+);
+
+}
+
+function cancelBrushRedraw(){
+
+if(
+!brushFrame
+){
+return;
+}
+
+cancelAnimationFrame(
+brushFrame
+);
+brushFrame =
+0;
+
+}
 
 function getBrushStroke(){
 
@@ -185,7 +222,7 @@ path.push(
 pt
 );
 e.preventDefault();
-redraw();
+scheduleBrushRedraw();
 
 }
 
@@ -205,6 +242,7 @@ const pts =
 brushStroke.points;
 brushStroke =
 null;
+cancelBrushRedraw();
 
 if(
 pts.length <

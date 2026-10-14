@@ -11,11 +11,11 @@ removeAlert,
 loadAllAlerts,
 saveAlerts,
 dispatchPriceAlertsChanged
-} from "../alerts.js?v=114";
+} from "../alerts.js?v=ad153c6f";
 
 import {
 shouldRunAlgoBackgroundJobs
-} from "../desktop-feature-nav-prefs.js?v=5";
+} from "../desktop-feature-nav-prefs.js?v=0fd2425e";
 
 export const ALGO_BOT_ALERT_SOURCE =
 "algo-bot";

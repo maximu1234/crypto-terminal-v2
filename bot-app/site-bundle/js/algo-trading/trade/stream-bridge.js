@@ -4,7 +4,7 @@
 import {
 applyTradePositionsStream,
 syncTradePositionsCache
-} from "./positions-cache.js?v=3";
+} from "./positions-cache.js?v=ea4eb9ea";
 
 let unsubscribe =
 null;

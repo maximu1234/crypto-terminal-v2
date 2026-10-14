@@ -13,34 +13,34 @@ completeAuthFromCallbackUrl,
 hasAuthCallbackInUrl,
 exportAuthSessionTransferString,
 importAuthSessionTransferString
-} from "./cloud-sync.js?v=74";
+} from "./cloud-sync.js?v=f842930b";
 
 import {
 isSupabaseConfigured
-} from "./supabase-client.js?v=9";
+} from "./supabase-client.js?v=1c4904d5";
 
 import {
 readAlertTokenSync
-} from "./alert-auth-cache.js?v=7";
+} from "./alert-auth-cache.js?v=7d0f1599";
 
 import {
 isAlertsPage
-} from "./cloud-sync-throttle.js?v=3";
+} from "./cloud-sync-throttle.js?v=3c85c6a2";
 
 import {
 initAppSettingsWindow,
 refreshAppSettingsAdminNav,
 openAppSettingsWindow
-} from "./app-settings-window.js?v=29";
+} from "./app-settings-window.js?v=0b7ed2c3";
 
 import {
 ensureHeaderSettingsShell
-} from "./header-settings-shell.js?v=4";
+} from "./header-settings-shell.js?v=4cd8426a";
 
 import {
 openChromeSurface,
 closeChromeSurface
-} from "./chrome-motion.js?v=5";
+} from "./chrome-motion.js?v=bb1d8933";
 
 let cloudEnvConfigured = false;
 let cloudSdkError = "";
@@ -905,7 +905,7 @@ if(
 isAlgoBotShell()
 ){
 void import(
-"./algo-trading/bot-session-log-server-ui.js?v=11"
+"./algo-trading/bot-session-log-server-ui.js?v=d2088b81"
 ).then(
 mod=>{
 mod.mountSessionLogServerSettings(
@@ -1766,7 +1766,7 @@ const {
 getTelegramChatId
 } =
 await import(
-"./alerts-cloud/telegram-id.js?v=3"
+"./alerts-cloud/telegram-id.js?v=b96e4172"
 );
 const chatId =
 await getTelegramChatId();

@@ -3,40 +3,40 @@
  */
 import {
 loadBotStrategiesPrefs
-} from "./bot-strategy-prefs.js?v=33";
+} from "./bot-strategy-prefs.js?v=e463f141";
 import {
 readAlgoPattern12Settings
-} from "./pattern-12-settings.js?v=5";
+} from "./pattern-12-settings.js?v=cd75d3d2";
 import {
 readAlgoPattern12EarlyT3Settings
-} from "./pattern-12-early-t3-settings.js?v=1";
+} from "./pattern-12-early-t3-settings.js?v=3317e6a6";
 import {
 loadEarlyT3BotPrefs
-} from "./early-t3-bot-prefs.js?v=5";
+} from "./early-t3-bot-prefs.js?v=920e9956";
 import {
 loadAlgoTickerFlags,
 ALGO_TICKER_FLAGS_KEY
-} from "./ticker-flags.js?v=10";
+} from "./ticker-flags.js?v=72da874e";
 import {
 acquireAlgoBotLock,
 releaseAlgoBotLock,
 clearAlgoBotLock,
 fetchAlgoBotLock,
 ensureAlgoBotLockHeld
-} from "./bot-cloud-lock.js?v=11";
+} from "./bot-cloud-lock.js?v=2e026387";
 import {
 freezeBotTickerBookSnapshot,
 hydrateBotTickerBookFromMain,
 loadBotTickerBook,
 loadStagedBotTickerBook,
 writePublishedBotTickerBook
-} from "./bot-ticker-book.js?v=7";
+} from "./bot-ticker-book.js?v=24739acf";
 import {
 replaceRsiTouchFlipBook
-} from "./rsi-touch-flip-book.js?v=5";
+} from "./rsi-touch-flip-book.js?v=c5c9afac";
 import {
 replaceMacdFlipTouchBook
-} from "./macd-flip-touch-book.js?v=5";
+} from "./macd-flip-touch-book.js?v=d4d39562";
 import {
 saveRsiTouchFlipBalancePct,
 loadRsiTouchFlipBalancePct,
@@ -44,22 +44,22 @@ saveRsiTouchFlipMarginMode,
 loadRsiTouchFlipMarginMode,
 saveRsiTouchFlipLeverage,
 loadRsiTouchFlipLeverage
-} from "./rsi-touch-flip-prefs.js?v=10";
+} from "./rsi-touch-flip-prefs.js?v=8d462a58";
 import {
 saveMacdFlipTouchBalancePct,
 loadMacdFlipTouchBalancePct,
 saveMacdFlipTouchMarginMode,
 loadMacdFlipTouchMarginMode
-} from "./macd-flip-touch-prefs.js?v=9";
+} from "./macd-flip-touch-prefs.js?v=e8cc13ba";
 
 import {
 isAlgoBotWorking
-} from "../desktop-feature-nav-shutdown.js?v=1";
+} from "../desktop-feature-nav-shutdown.js?v=dfea477f";
 import {
 desktopAlgoApi,
 fetchAlgoBotStatus,
 maybeApplyTickerFlagsFromBotStatus
-} from "./bot-status-flags.js?v=1";
+} from "./bot-status-flags.js?v=a514c726";
 
 export {
 fetchAlgoBotStatus,

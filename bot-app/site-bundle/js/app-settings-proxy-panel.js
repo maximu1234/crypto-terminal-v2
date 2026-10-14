@@ -19,6 +19,10 @@ const enabledInput =
 host.querySelector(
 "#app-settings-proxy-enabled"
 );
+const ticksOnlyInput =
+host.querySelector(
+"#app-settings-proxy-ticks-only"
+);
 const typeSelect =
 host.querySelector(
 "#app-settings-proxy-type"
@@ -43,6 +47,10 @@ host.querySelector(
 return {
 enabled:
 !!enabledInput?.checked,
+ticksOnly:
+ticksOnlyInput
+? !!ticksOnlyInput.checked
+: true,
 type:
 typeSelect?.value ||
 "socks5",
@@ -74,6 +82,10 @@ const enabledInput =
 host.querySelector(
 "#app-settings-proxy-enabled"
 );
+const ticksOnlyInput =
+host.querySelector(
+"#app-settings-proxy-ticks-only"
+);
 const typeSelect =
 host.querySelector(
 "#app-settings-proxy-type"
@@ -100,6 +112,14 @@ enabledInput
 ){
 enabledInput.checked =
 !!settings?.enabled;
+}
+
+if(
+ticksOnlyInput
+){
+ticksOnlyInput.checked =
+settings?.ticksOnly !==
+false;
 }
 
 if(
@@ -251,7 +271,88 @@ err?.message ||
 
 }
 
-async function testBybitThroughProxy(){
+async function probeBybitKlineHistory(){
+
+const ctrl =
+new AbortController();
+const timer =
+setTimeout(
+()=>
+ctrl.abort(),
+12000
+);
+
+try{
+const res =
+await fetch(
+"https://api.bybit.com/v5/market/kline?category=linear&symbol=BTCUSDT&interval=1&limit=1",
+{
+signal:
+ctrl.signal,
+cache:
+"no-store"
+}
+);
+
+if(
+!res.ok
+){
+return {
+ok:
+false,
+message:
+"История свечей через прокси не открылась."
+};
+}
+
+const json =
+await res.json();
+const list =
+json?.result?.list;
+
+if(
+json?.retCode ===
+0 &&
+Array.isArray(
+list
+) &&
+list.length
+){
+return {
+ok:
+true
+};
+}
+
+return {
+ok:
+false,
+message:
+"Bybit не отдал историю свечей через прокси."
+};
+}catch(
+err
+){
+return {
+ok:
+false,
+message:
+err?.name ===
+"AbortError"
+? "Таймаут истории свечей через прокси."
+: "История свечей через прокси не открылась."
+};
+}finally{
+clearTimeout(
+timer
+);
+}
+
+}
+
+async function testBybitThroughProxy(
+ticksOnly
+){
 
 const desktop =
 window.cryptoTerminalDesktop;
@@ -270,6 +371,27 @@ await probeFn();
 if(
 result?.ok
 ){
+if(
+ticksOnly ===
+false
+){
+const history =
+await probeBybitKlineHistory();
+
+if(
+!history.ok
+){
+return history;
+}
+
+return {
+ok:
+true,
+message:
+"Прокси до тиков и истории свечей Bybit живой."
+};
+}
+
 return {
 ok:
 true,
@@ -324,6 +446,27 @@ cache:
 if(
 res
 ){
+if(
+ticksOnly ===
+false
+){
+const history =
+await probeBybitKlineHistory();
+
+if(
+!history.ok
+){
+return history;
+}
+
+return {
+ok:
+true,
+message:
+"Прокси до тиков и истории свечей Bybit живой."
+};
+}
+
 return {
 ok:
 true,
@@ -391,6 +534,10 @@ host.innerHTML =
 <input type="checkbox" class="app-settings-toggle-input" id="app-settings-proxy-enabled" />
 <span class="app-settings-toggle-label">Включить прокси</span>
 </label>
+<label class="app-settings-toggle-row app-settings-proxy-ticks">
+<input type="checkbox" class="app-settings-toggle-input" id="app-settings-proxy-ticks-only" checked />
+<span class="app-settings-toggle-label">Только тики</span>
+</label>
 <label class="app-settings-stack-field" for="app-settings-proxy-type">
 <span class="app-settings-stack-label">Тип</span>
 <select id="app-settings-proxy-type" class="app-settings-field-select app-settings-field-select--wide" aria-label="Тип прокси">
@@ -419,7 +566,7 @@ host.innerHTML =
 <button type="button" class="app-settings-action-btn" id="app-settings-proxy-test">Проверить Bybit</button>
 </div>
 <p class="app-settings-panel-hint" id="app-settings-proxy-status"></p>
-<p class="app-settings-panel-hint">Через прокси идут тики (WebSocket) и торговля Bybit. История свечей остаётся напрямую — в кафе она и так открывается. Сохранение с включённым прокси перезагружает окно.</p>
+<p class="app-settings-panel-hint">Галочка «Только тики»: через прокси идут тики и торговля Bybit, история свечей — напрямую. Без галочки через прокси идёт и история свечей. Вход и облако остаются напрямую. Сохранение с включённым прокси перезагружает окно.</p>
 `;
 
 const saveBtn =
@@ -558,7 +705,11 @@ return;
 }
 
 const probe =
-await testBybitThroughProxy();
+await testBybitThroughProxy(
+readForm(
+host
+).ticksOnly
+);
 setStatus(
 host,
 probe.message,

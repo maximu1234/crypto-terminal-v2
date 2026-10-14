@@ -149,11 +149,7 @@ isBuy
 : "aboveBar",
 color:
 focused
-? (
-isBuy
-? "#4ade80"
-: "#f87171"
-)
+? "#fbbf24"
 : (
 isBuy
 ? "#22c55e"
@@ -163,9 +159,11 @@ shape:
 isBuy
 ? "arrowUp"
 : "arrowDown",
-/* Same size as normal history — deep-link focus only changes color. */
+/* Diary deep-link: gold and larger, so this trade is not another green/red arrow. */
 size:
-2
+focused
+? 3
+: 2
 };
 
 }
@@ -252,6 +250,13 @@ trade?.sparse
 continue;
 }
 
+const orderId =
+String(
+trade?.orderId ||
+trade?.positionId ||
+""
+).trim();
+
 if(
 Number.isFinite(
 openMs
@@ -264,7 +269,8 @@ openMs,
 side:
 isLong
 ? "Buy"
-: "Sell"
+: "Sell",
+orderId
 }
 );
 }
@@ -281,7 +287,8 @@ closeMs,
 side:
 isLong
 ? "Sell"
-: "Buy"
+: "Buy",
+orderId
 }
 );
 
@@ -290,6 +297,90 @@ isLong
 }
 
 return out;
+
+}
+
+const FOCUS_TIME_SLACK_MS =
+2 *
+60 *
+1000;
+
+/**
+ * Diary deep-link: only this trade's entry and exit, not every fill in between.
+ * @param {object} execution
+ * @param {{ orderId?: string, openMs?: number, closeMs?: number } | null} focus
+ */
+export function executionIsDiaryFocus(
+execution,
+focus
+){
+
+if(
+!focus
+){
+return false;
+}
+
+const focusOrderId =
+String(
+focus.orderId ||
+""
+).trim();
+const orderId =
+String(
+execution?.orderId ||
+execution?.positionId ||
+""
+).trim();
+
+if(
+focusOrderId &&
+orderId
+){
+return orderId ===
+focusOrderId;
+}
+
+const t =
+Number(
+execution?.execTimeMs
+);
+
+if(
+!Number.isFinite(
+t
+) ||
+t <=
+0
+){
+return false;
+}
+
+const points =
+[
+focus.openMs,
+focus.closeMs
+]
+.map(
+Number
+)
+.filter(
+ms=>
+Number.isFinite(
+ms
+) &&
+ms >
+0
+);
+
+return points.some(
+ms=>
+Math.abs(
+t -
+ms
+) <=
+FOCUS_TIME_SLACK_MS
+);
 
 }
 
@@ -313,24 +404,6 @@ candles
 ){
 return [];
 }
-
-const focusFrom =
-Number(
-focusRangeMs?.fromMs
-);
-const focusTo =
-Number(
-focusRangeMs?.toMs
-);
-const hasFocus =
-Number.isFinite(
-focusFrom
-) &&
-Number.isFinite(
-focusTo
-) &&
-focusTo >=
-focusFrom;
 
 const sortedTimes =
 candles
@@ -419,7 +492,7 @@ return best;
 const markers =
 [];
 const seen =
-new Set();
+new Map();
 
 for(
 const ex of
@@ -468,33 +541,62 @@ ex?.side ||
 const key =
 `${time}-${side}`;
 
-if(
-seen.has(
-key
-)
-){
-continue;
-}
-
-seen.add(
-key
-);
-
 const focused =
-hasFocus &&
-execTimeMs >=
-focusFrom &&
-execTimeMs <=
-focusTo;
-
-markers.push(
+executionIsDiaryFocus(
+ex,
+focusRangeMs
+);
+const marker =
 markerForExecutionSide(
 ex.side,
 time,
 {
 focused
 }
+);
+
+if(
+seen.has(
+key
 )
+){
+const prev =
+seen.get(
+key
+);
+
+if(
+focused &&
+!prev.focused
+){
+markers[
+prev.index
+] =
+marker;
+seen.set(
+key,
+{
+index:
+prev.index,
+focused:
+true
+}
+);
+}
+
+continue;
+}
+
+seen.set(
+key,
+{
+index:
+markers.length,
+focused
+}
+);
+markers.push(
+marker
 );
 
 }

@@ -2,11 +2,11 @@
 
 import {
 klineTfToMs
-} from "../kline-history-pages.js?v=2";
+} from "../kline-history-pages.js?v=cc7b66ca";
 
 import {
 priceFormatForValue
-} from "../chart/chart-options.js?v=7";
+} from "../chart/chart-options.js?v=f4be0094";
 
 export const FVP_TYPE =
 "fvp";

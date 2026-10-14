@@ -12,15 +12,15 @@ formatRsiAlertLevel,
 isMacdAlert,
 isOscillatorAlert,
 isRsiAlert
-} from "./alerts.js?v=d9d41a91";
+} from "./alerts.js?v=ad153c6f";
 
 import {
 isCloudLoggedInEffective
-} from "./cloud-sync.js?v=7b80fe2a";
+} from "./cloud-sync.js?v=f842930b";
 
 import {
 getTelegramChatId
-} from "./alerts-cloud-sync.js?v=72fcebd7";
+} from "./alerts-cloud-sync.js?v=81871e3e";
 
 import {
 formatPrice,

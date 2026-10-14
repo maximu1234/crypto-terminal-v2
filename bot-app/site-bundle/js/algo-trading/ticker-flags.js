@@ -7,7 +7,7 @@
  */
 import {
 getActiveExchangeId
-} from "../exchanges/context.js?v=1";
+} from "../exchanges/context.js?v=16fdeacc";
 
 export const ALGO_TICKER_FLAGS_KEY =
 "algo_trading_ticker_flags_v1";

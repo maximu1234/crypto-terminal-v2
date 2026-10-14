@@ -1,6 +1,6 @@
 import {
 getActiveExchangeId
-} from "./exchanges/context.js?v=1";
+} from "./exchanges/context.js?v=16fdeacc";
 
 import {
 drawingsStorageKey,
@@ -14,7 +14,7 @@ drawingsKvSet,
 drawingsKvRemove,
 drawingsKvListKeysForExchange,
 ensureDrawingsKvReady
-} from "./drawings-kv.js?v=3";
+} from "./drawings-kv.js?v=fc0e52d7";
 
 void ensureDrawingsKvReady();
 

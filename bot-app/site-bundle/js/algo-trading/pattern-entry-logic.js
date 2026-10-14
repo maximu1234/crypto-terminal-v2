@@ -9,7 +9,7 @@
 import {
 computePattern12Scene,
 defaultPattern12Settings
-} from "./pattern-12-math.js?v=21";
+} from "./pattern-12-math.js?v=d408e1df";
 import {
 TEMP_PULLBACK_BEFORE_ARM,
 clampPullbackBeforeArmPct,
@@ -17,7 +17,7 @@ computePullbackArmLevel,
 candleTouchesPullbackLevel,
 candlePiercesPt4BeforeArm,
 normalizePullbackBeforeArmEnabled
-} from "./temp-pullback-before-arm.js?v=4";
+} from "./temp-pullback-before-arm.js?v=f6ddff7a";
 
 export {
 evaluatePullbackArmGate,
@@ -25,7 +25,7 @@ isPullbackReadyToArm,
 clampPullbackBeforeArmPct,
 normalizePullbackBeforeArmEnabled,
 DEFAULT_PULLBACK_BEFORE_ARM_PCT
-} from "./temp-pullback-before-arm.js?v=4";
+} from "./temp-pullback-before-arm.js?v=f6ddff7a";
 
 export const ENTRY_TIMEOUT_BARS =
 300;

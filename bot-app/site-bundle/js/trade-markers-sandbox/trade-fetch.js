@@ -4,12 +4,12 @@
  */
 import {
   SANDBOX_SYMBOL
-} from "./marker-math.js?v=12";
+} from "./marker-math.js?v=a5c98186";
 
 import {
   getLoadedTradeExchangeModules,
   loadTradeExchangeModules
-} from "../trade/module-router.js?v=24";
+} from "../trade/module-router.js?v=679c5141";
 
 export async function fetchTradesForSymbol(symbol, chartStartSec) {
   await loadTradeExchangeModules();

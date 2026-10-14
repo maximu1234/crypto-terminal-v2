@@ -6,11 +6,11 @@ import {
 MAX_ACTIVE_INDICATORS,
 canEnableIndicator,
 countLimitedActive
-} from "./indicators/registry.js?v=1";
+} from "./indicators/registry.js?v=760a1a23";
 
 import {
 isChartLayoutReady
-} from "./chart-layout-gate.js?v=4";
+} from "./chart-layout-gate.js?v=4a8798af";
 
 const DEFAULT_STORAGE_KEY =
 "chart_indicators_v1";
@@ -233,25 +233,25 @@ createIndicatorSettingsDialog
 await Promise.all(
 [
 import(
-"./indicators/rsi-pane.js?v=12"
+"./indicators/rsi-pane.js?v=cfe3bc1e"
 ),
 import(
-"./indicators/volume-pane.js?v=21"
+"./indicators/volume-pane.js?v=cbf545fd"
 ),
 import(
-"./indicators/ao-pane.js?v=18"
+"./indicators/ao-pane.js?v=579385b1"
 ),
 import(
-"./indicators/macd-pane.js?v=11"
+"./indicators/macd-pane.js?v=75d68c1a"
 ),
 import(
-"./indicators/moving-average.js?v=19"
+"./indicators/moving-average.js?v=10ad82b5"
 ),
 import(
-"./indicators/ema-shift-ribbon.js?v=10"
+"./indicators/ema-shift-ribbon.js?v=72a66d90"
 ),
 import(
-"./indicators/supertrend.js?v=6"
+"./indicators/supertrend.js?v=1ccf695b"
 ),
 typeof createPattern12IndicatorOverride ===
 "function"
@@ -262,16 +262,16 @@ createPattern12IndicatorOverride
 }
 )
 : import(
-"./indicators/pattern-12.js?v=17"
+"./indicators/pattern-12.js?v=4570161f"
 ),
 import(
-"./indicators/horizontal-volume.js?v=11"
+"./indicators/horizontal-volume.js?v=e74b89e4"
 ),
 import(
-"./indicators/volume-bubbles.js?v=3"
+"./indicators/volume-bubbles.js?v=3cab9f85"
 ),
 import(
-"./indicators/indicator-settings-dialog.js?v=8"
+"./indicators/indicator-settings-dialog.js?v=a19be76c"
 )
 ]
 );

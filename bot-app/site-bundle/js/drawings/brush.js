@@ -3,7 +3,7 @@
  */
 import {
 distToSegment
-} from "./math.js?v=2";
+} from "./math.js?v=2731b0ed";
 
 const MIN_PATH_POINTS =
 2;

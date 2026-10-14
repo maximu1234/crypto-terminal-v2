@@ -7,7 +7,7 @@ buildMarketLists,
 getActiveExchangeId,
 EXCHANGE_CHANGED_EVENT,
 isActiveRealtimeMarketDataset
-} from "./market-api.js?v=7";
+} from "./market-api.js?v=7b3e6b3c";
 
 import {
 coinsState,
@@ -28,16 +28,16 @@ syncCoinListFreezeFromFlagMenus,
 getCurrentSymbols,
 getVisibleSymbolList,
 setCoinOpenPositionChecker
-} from "./algo-trading/coin-list-host.js?v=2";
+} from "./algo-trading/coin-list-host.js?v=37792f22";
 
 import {
 hasOpenPosition,
 initAlgoOpenPositions
-} from "./algo-trading/trade/open-positions.js?v=2";
+} from "./algo-trading/trade/open-positions.js?v=5d6e7267";
 
 import {
 mountCoinsListRefreshControls
-} from "./terminal-list-refresh.js?v=1";
+} from "./terminal-list-refresh.js?v=1f24b65b";
 
 import {
 ALGO_MARKET_LONG_5M,
@@ -52,7 +52,7 @@ getAlgoTickerFlagList,
 isAlgoMarketDataset,
 toggleAlgoTickerInFlagList,
 removeAlgoTickerFromFlagList
-} from "./algo-trading/ticker-flags.js?v=10";
+} from "./algo-trading/ticker-flags.js?v=72da874e";
 
 import {
 ALGO_ANALYSIS_BOT_CHANGE_EVENT,
@@ -61,7 +61,7 @@ ALGO_ANALYSIS_BOT_EARLY_T3,
 ALGO_ANALYSIS_BOT_RSI_TOUCH_FLIP,
 ALGO_ANALYSIS_BOT_MACD_FLIP_TOUCH,
 isActiveAnalysisBot
-} from "./algo-trading/active-analysis-bot.js?v=4";
+} from "./algo-trading/active-analysis-bot.js?v=c1b8293b";
 
 import {
 RSI_TOUCH_FLIP_LIST_MARKET,
@@ -70,7 +70,7 @@ RSI_TOUCH_FLIP_BOOK_OPEN_EVENT,
 listRsiTouchFlipBookSymbols,
 getRsiTouchFlipBookRow,
 removeRsiTouchFlipBookRow
-} from "./algo-trading/rsi-touch-flip-book.js?v=5";
+} from "./algo-trading/rsi-touch-flip-book.js?v=c5c9afac";
 
 import {
 MACD_FLIP_TOUCH_LIST_MARKET,
@@ -79,15 +79,15 @@ MACD_FLIP_TOUCH_BOOK_OPEN_EVENT,
 listMacdFlipTouchBookSymbols,
 getMacdFlipTouchBookRow,
 removeMacdFlipTouchBookRow
-} from "./algo-trading/macd-flip-touch-book.js?v=5";
+} from "./algo-trading/macd-flip-touch-book.js?v=d4d39562";
 
 import {
 mountQwertyKeyInput
-} from "./qwerty-key-input.js?v=4";
+} from "./qwerty-key-input.js?v=7ac067d9";
 
 import {
 isAlgoBotLiteMode
-} from "./algo-trading/lite-layout.js?v=5";
+} from "./algo-trading/lite-layout.js?v=7a635cbf";
 
 function renderList(){
 

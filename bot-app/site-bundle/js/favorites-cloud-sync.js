@@ -9,17 +9,17 @@ isCloudApiUsable,
 isCloudAuthError,
 reportCloudAuthFailure,
 tryCloudAuthRecovery
-} from "./cloud-sync.js?v=74";
+} from "./cloud-sync.js?v=f842930b";
 
 import {
 isFavoritesCloudDisabled,
 isFavoritesAutoCloudDisabled,
 isSupabaseRealtimeDisabled
-} from "./supabase-usage-prefs.js?v=7";
+} from "./supabase-usage-prefs.js?v=07d16ec0";
 
 import {
 getActiveExchangeId
-} from "./exchanges/context.js?v=1";
+} from "./exchanges/context.js?v=16fdeacc";
 
 import {
 loadFavoritesGroups,
@@ -36,16 +36,16 @@ saveFavoritesCloudUpdatedAt,
 saveFavoritesCloudSyncedSignature,
 hasUnsyncedFavoritesCloud,
 markFavoritesCloudDirty
-} from "./favorites.js?v=6";
+} from "./favorites.js?v=d5f9b002";
 
 import {
 readAlertTokenSync,
 resolveAlertAuthFast
-} from "./alert-auth-cache.js?v=7";
+} from "./alert-auth-cache.js?v=7d0f1599";
 
 import {
 createPullCoalescer
-} from "./cloud-sync-throttle.js?v=3";
+} from "./cloud-sync-throttle.js?v=3c85c6a2";
 
 const coalesceFavoritesPull =
 createPullCoalescer({
@@ -231,7 +231,7 @@ notifyFavoritesListeners();
 async function getSupabaseHttpConfig(){
 
 const env =
-await import("./supabase-env.js?v=5");
+await import("./supabase-env.js?v=ed71d82f");
 
 const base =
 String(

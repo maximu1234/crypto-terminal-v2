@@ -6,7 +6,7 @@
 import {
   loadMarketHistory,
   getActiveExchangeId
-} from "../market-api.js?v=7";
+} from "../market-api.js?v=7b3e6b3c";
 
 /**
  * @param {unknown} symbol

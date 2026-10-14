@@ -1,7 +1,7 @@
 import {
 formatPrice,
 formatChartPrice
-} from "./chart-options.js?v=7";
+} from "./chart-options.js?v=f4be0094";
 
 const DOM_CROSSHAIR_VERT =
 "chart-dom-crosshair-vert";
@@ -1752,8 +1752,20 @@ function updateCrosshairPriceLabel({
 priceLabelEl,
 plotY,
 mainSeries,
-mainChart
+mainChart,
+labelWrapEl = null
 }){
+
+if(
+labelWrapEl &&
+priceLabelEl &&
+priceLabelEl.parentElement !==
+labelWrapEl
+){
+labelWrapEl.appendChild(
+priceLabelEl
+);
+}
 
 const y =
 plotY;
@@ -1813,19 +1825,66 @@ mainChart
 );
 
 const refData =
-mainSeries?.data?.();
-const refPrice =
-refData?.[
-refData.length -
-1
-]?.close ??
+mainSeries?.data?.() ||
+[];
+let refPrice =
 price;
 
-priceLabelEl.textContent =
+for(
+let i =
+refData.length -
+1;
+i >=
+0;
+i--
+){
+
+const bar =
+refData[
+i
+];
+const v =
+bar?.close ??
+bar?.value;
+
+if(
+Number.isFinite(
+v
+)
+){
+refPrice =
+v;
+break;
+}
+
+}
+
+let labelText =
+"";
+
+try{
+labelText =
+mainSeries?.priceFormatter?.()?.format?.(
+price
+) ||
+"";
+}catch{
+labelText =
+"";
+}
+
+if(
+!labelText
+){
+labelText =
 formatChartPrice(
 price,
 refPrice
 );
+}
+
+priceLabelEl.textContent =
+labelText;
 priceLabelEl.style.top =
 `${Math.round(y)}px`;
 priceLabelEl.style.right =
@@ -1882,7 +1941,8 @@ priceLabelEl = null,
 snappedX,
 plotY,
 mainSeries = null,
-mainChart = null
+mainChart = null,
+labelWrapEl = null
 }){
 
 const x =
@@ -1932,7 +1992,8 @@ updateCrosshairPriceLabel({
 priceLabelEl,
 plotY:y,
 mainSeries,
-mainChart
+mainChart,
+labelWrapEl
 });
 
 }

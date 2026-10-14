@@ -5,13 +5,13 @@
  */
 import {
   loadLightweightCharts
-} from "../charts-lib-boot.js?v=3";
+} from "../charts-lib-boot.js?v=04885614";
 import {
   withChartLocalTime
-} from "../chart/chart-local-time.js?v=1";
+} from "../chart/chart-local-time.js?v=027bb0cc";
 import {
   MACD_FLIP_TOUCH_EQUITY_POS_COLOR
-} from "./macd-flip-touch-equity.js?v=7";
+} from "./macd-flip-touch-equity.js?v=8b6c93df";
 
 const BG =
 "#0f1419";

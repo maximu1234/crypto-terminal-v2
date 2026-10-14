@@ -5,7 +5,7 @@ RECT_DEFAULT_FILL_COLOR,
 RECT_DEFAULT_FILL_OPACITY,
 createRectangleToolDefaults,
 FIB_TOOL_DEFAULTS_VERSION
-} from "./constants.js?v=13";
+} from "./constants.js?v=c47ce407";
 
 import {
 cloneDefaultFibRows,
@@ -16,29 +16,29 @@ isFibType,
 isFibExtType,
 FIB_EXT_TOOL_DEFAULTS_VERSION,
 resolveFibTrendLineColor
-} from "./fib-spec.js?v=17";
+} from "./fib-spec.js?v=5f577f26";
 
 import {
 normalizeRectangleShape
-} from "./arrow-rect.js?v=2";
+} from "./arrow-rect.js?v=8d4294c4";
 
 import {
 isFvpType,
 extractFvpStyleSnapshot,
 copyFvpStyleToShape,
 createFvpToolDefaults
-} from "./fixed-volume-profile.js?v=3";
+} from "./fixed-volume-profile.js?v=bb03b4a7";
 
 import {
 isPositionType
-} from "./position.js?v=11";
+} from "./position.js?v=152e419c";
 
 import {
 isTextTool,
 TEXT_DEFAULT_COLOR,
 TEXT_DEFAULT_SIZE,
 clampTextFontSize
-} from "./text.js?v=3";
+} from "./text.js?v=441520b6";
 
 import {
 CHANNEL_DEFAULT_COLOR,
@@ -46,7 +46,7 @@ CHANNEL_TOOL_DEFAULTS_VERSION,
 cloneDefaultChannelRows,
 createChannelToolDefaults,
 ensureChannelLevelsVisible
-} from "./channel-spec.js?v=2";
+} from "./channel-spec.js?v=a8bcf3c9";
 
 import {
 ELLIOTT_DEFAULT_COLOR,
@@ -57,8 +57,11 @@ isElliottType,
 isPattern12Draw,
 migrateElliottToolDefaults,
 normalizeElliottDegree,
-normalizePattern12TpFlags
-} from "./elliott-spec.js?v=17";
+normalizePattern12TpFlags,
+normalizePatternChannelColor,
+normalizePatternChannelWidth,
+normalizePatternLineStyle
+} from "./elliott-spec.js?v=3fb92981";
 
 export const DRAW_TEMPLATES_STORAGE_KEY =
 "draw_templates_v1";
@@ -137,6 +140,8 @@ fibDefaultsVersion:
 FIB_TOOL_DEFAULTS_VERSION,
 fibShowTrendLine:
 false,
+fibShowLabels:
+true,
 fibTrendLineColor:
 resolveFibTrendLineColor(),
 fibLevels:[
@@ -633,6 +638,10 @@ typeof shape?.fibShowTrendLine ===
 type
 );
 
+out.fibShowLabels =
+shape?.fibShowLabels !==
+false;
+
 out.fibTrendLineColor =
 resolveFibTrendLineColor(
 shape?.fibTrendLineColor
@@ -669,6 +678,26 @@ shape?.medianLineStyle ||
 lineStyle:
 shape?.lineStyle ||
 "solid",
+showHorizLines:
+shape?.showHorizLines !==
+false,
+horizLineStyle:
+shape?.horizLineStyle ||
+shape?.lineStyle ||
+"solid",
+horizColor:
+shape?.horizColor ||
+out.color,
+showVertLines:
+shape?.showVertLines !==
+false,
+vertLineStyle:
+shape?.vertLineStyle ||
+shape?.lineStyle ||
+"solid",
+vertColor:
+shape?.vertColor ||
+out.color,
 showMedian:
 !!shape?.showMedian
 }
@@ -677,6 +706,24 @@ showMedian:
 out.lineStyle =
 shape?.lineStyle ||
 out.lineStyle;
+out.showHorizLines =
+shape?.showHorizLines !==
+false;
+out.horizLineStyle =
+shape?.horizLineStyle ||
+out.horizLineStyle;
+out.horizColor =
+shape?.horizColor ||
+out.horizColor;
+out.showVertLines =
+shape?.showVertLines !==
+false;
+out.vertLineStyle =
+shape?.vertLineStyle ||
+out.vertLineStyle;
+out.vertColor =
+shape?.vertColor ||
+out.vertColor;
 out.showFill =
 shape?.showFill ??
 out.showFill;
@@ -761,6 +808,35 @@ false;
 out.showPatternDash =
 defaults.showPatternDash !==
 false;
+out.showPatternChannel =
+typeof shape?.showPatternChannel ===
+"boolean"
+? shape.showPatternChannel
+: defaults.showPatternChannel ===
+true;
+out.patternChannelLineStyle =
+shape?.patternChannelLineStyle
+? normalizePatternLineStyle(
+shape.patternChannelLineStyle,
+defaults.patternChannelLineStyle
+)
+: defaults.patternChannelLineStyle;
+out.patternChannelLineWidth =
+shape?.patternChannelLineWidth !=
+null
+? normalizePatternChannelWidth(
+shape.patternChannelLineWidth
+)
+: defaults.patternChannelLineWidth;
+out.patternChannelColor =
+normalizePatternChannelColor(
+shape?.patternChannelColor
+) ||
+defaults.patternChannelColor;
+out.patternDashLineStyle =
+defaults.patternDashLineStyle;
+out.patternTpLineStyle =
+defaults.patternTpLineStyle;
 out.patternDashOpacity =
 defaults.patternDashOpacity;
 out.elliottDefaultsVersion =
@@ -902,6 +978,19 @@ false;
 out.showPatternDash =
 defaults.showPatternDash !==
 false;
+out.showPatternChannel =
+defaults.showPatternChannel ===
+true;
+out.patternChannelLineStyle =
+defaults.patternChannelLineStyle;
+out.patternChannelLineWidth =
+defaults.patternChannelLineWidth;
+out.patternChannelColor =
+defaults.patternChannelColor;
+out.patternDashLineStyle =
+defaults.patternDashLineStyle;
+out.patternTpLineStyle =
+defaults.patternTpLineStyle;
 out.patternDashOpacity =
 defaults.patternDashOpacity;
 out.elliottDefaultsVersion =
@@ -926,6 +1015,83 @@ defaults.tpLevels;
 }
 
 return out;
+
+}
+
+export function collectTemplateApplyTargets({
+type,
+selectedIds,
+drawings,
+primary
+} = {}){
+
+const ids =
+Array.isArray(
+selectedIds
+)
+? selectedIds
+: [];
+const list =
+Array.isArray(
+drawings
+)
+? drawings
+: [];
+
+if(
+ids.length >
+1 &&
+isTemplateEligibleType(
+type
+)
+){
+
+const matched =
+[];
+
+for(
+const id of ids
+){
+
+const shape =
+list.find(
+item=>
+item?.id ===
+id
+);
+
+if(
+shape &&
+shape.type ===
+type
+){
+matched.push(
+shape
+);
+}
+
+}
+
+if(
+matched.length
+){
+return matched;
+}
+
+}
+
+if(
+primary &&
+isTemplateEligibleType(
+primary.type
+)
+){
+return [
+primary
+];
+}
+
+return [];
 
 }
 
@@ -1006,6 +1172,9 @@ out.fibShowTrendLine =
 isFibExtType(
 type
 );
+
+out.fibShowLabels =
+true;
 
 out.fibTrendLineColor =
 resolveFibTrendLineColor();
@@ -1091,6 +1260,19 @@ out.showWave =
 elliottDefaults.showWave;
 out.showPatternDash =
 elliottDefaults.showPatternDash;
+out.showPatternChannel =
+elliottDefaults.showPatternChannel ===
+true;
+out.patternChannelLineStyle =
+elliottDefaults.patternChannelLineStyle;
+out.patternChannelLineWidth =
+elliottDefaults.patternChannelLineWidth;
+out.patternChannelColor =
+elliottDefaults.patternChannelColor;
+out.patternDashLineStyle =
+elliottDefaults.patternDashLineStyle;
+out.patternTpLineStyle =
+elliottDefaults.patternTpLineStyle;
 out.patternDashOpacity =
 elliottDefaults.patternDashOpacity;
 out.elliottDefaultsVersion =
@@ -1211,6 +1393,10 @@ typeof snapshot.fibShowTrendLine ===
 type
 );
 
+shape.fibShowLabels =
+snapshot.fibShowLabels !==
+false;
+
 shape.fibTrendLineColor =
 resolveFibTrendLineColor(
 snapshot.fibTrendLineColor
@@ -1228,6 +1414,12 @@ type ===
 
 [
 "lineStyle",
+"showHorizLines",
+"horizLineStyle",
+"horizColor",
+"showVertLines",
+"vertLineStyle",
+"vertColor",
 "showFill",
 "fillColor",
 "fillOpacity",
@@ -1323,6 +1515,19 @@ false;
 shape.showPatternDash =
 defaults.showPatternDash !==
 false;
+shape.showPatternChannel =
+defaults.showPatternChannel ===
+true;
+shape.patternChannelLineStyle =
+defaults.patternChannelLineStyle;
+shape.patternChannelLineWidth =
+defaults.patternChannelLineWidth;
+shape.patternChannelColor =
+defaults.patternChannelColor;
+shape.patternDashLineStyle =
+defaults.patternDashLineStyle;
+shape.patternTpLineStyle =
+defaults.patternTpLineStyle;
 shape.patternDashOpacity =
 defaults.patternDashOpacity;
 

@@ -4,38 +4,43 @@
  */
 import {
 isPositionType
-} from "./position.js?v=11";
+} from "./position.js?v=152e419c";
 
 import {
 getRectangleHandleScreens
-} from "./arrow-rect.js?v=2";
+} from "./arrow-rect.js?v=8d4294c4";
 
 import {
 getFvpHandleScreens,
 isFvpType
-} from "./fixed-volume-profile.js?v=3";
+} from "./fixed-volume-profile.js?v=bb03b4a7";
 
 import {
 isChartLayoutReady
-} from "../chart-layout-gate.js?v=4";
+} from "../chart-layout-gate.js?v=4a8798af";
 
 import {
 createChartRedrawScheduler,
 CHART_REDRAW_REASON
-} from "../chart-redraw-scheduler.js?v=2";
+} from "../chart-redraw-scheduler.js?v=230ac007";
 
 import {
 isHorizPriceTool
-} from "./constants.js?v=13";
+} from "./constants.js?v=c47ce407";
 
 import {
 isFibExtType
-} from "./fib-spec.js?v=17";
+} from "./fib-spec.js?v=5f577f26";
 
 import {
 isElliottType,
 elliottSelectionHandlePoints
-} from "./elliott-spec.js?v=17";
+} from "./elliott-spec.js?v=3fb92981";
+
+import {
+shapeMissesViewport,
+shapeProjectsOnPlot
+} from "./draw-viewport-cull.js?v=a90e62ab";
 
 export function createDrawRedrawLoop(
 deps
@@ -47,6 +52,8 @@ chartSize,
 getPlotWidth,
 getChartPanActive,
 getDrawings,
+getDrawingsHidden = ()=>
+false,
 getSelectedId,
 getIsIdSelected = id=>
 id ===
@@ -70,9 +77,54 @@ drawRegistryPriceAlerts,
 drawPriceScaleLabels,
 onAfterRedraw,
 getCandles = ()=>
-[]
+[],
+chart = null
 } =
 deps;
+
+function readDrawViewport(){
+
+const time =
+chart?.timeScale?.().getVisibleRange?.();
+const price =
+chart?.priceScale?.("right")?.getVisibleRange?.();
+
+if(
+!time ||
+!Number.isFinite(
+Number(
+time.from
+)
+) ||
+!Number.isFinite(
+Number(
+time.to
+)
+)
+){
+return null;
+}
+
+return {
+timeFrom:
+Number(
+time.from
+),
+timeTo:
+Number(
+time.to
+),
+priceFrom:
+Number(
+price?.from
+),
+priceTo:
+Number(
+price?.to
+)
+};
+
+}
 
 let coordRetryCount = 0;
 
@@ -465,6 +517,8 @@ const plotW =
 getPlotWidth();
 
 ctx.setTransform(1, 0, 0, 1, 0, 0);
+ctx.globalAlpha = 1;
+ctx.globalCompositeOperation = "source-over";
 ctx.clearRect(0, 0, canvas.width, canvas.height);
 ctx.scale(dpr, dpr);
 
@@ -475,9 +529,38 @@ ctx.beginPath();
 ctx.rect(0, 0, plotW, h);
 ctx.clip();
 
+if(
+!getDrawingsHidden()
+){
+
+const drawView =
+getDragState()
+? null
+: readDrawViewport();
+
 getDrawings().forEach(d=>{
 
 try{
+
+if(
+drawView &&
+!getIsIdSelected(
+d.id
+) &&
+shapeMissesViewport(
+d,
+drawView
+) &&
+!shapeProjectsOnPlot(
+d,
+toXY,
+plotW,
+h
+)
+){
+return;
+}
+
 drawShape(ctx, d, plotW, h);
 
 if(
@@ -493,6 +576,8 @@ console.warn("draw shape", err);
 }
 
 });
+
+}
 
 if(getPlacement()){
 drawPlacementPreview(ctx, plotW, h);

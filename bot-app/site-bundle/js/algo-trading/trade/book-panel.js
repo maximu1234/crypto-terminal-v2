@@ -4,35 +4,35 @@
 import {
 formatTradePnl,
 formatTradeUsdt
-} from "./format.js?v=2";
+} from "./format.js?v=f1666a0b";
 
 import {
 getAllCachedPositions,
 syncTradePositionsCache,
 removeTradePositionFromCache
-} from "./positions-cache.js?v=3";
+} from "./positions-cache.js?v=ea4eb9ea";
 
 import {
 loadAllAlerts,
 removeAlert,
 formatAlertDate,
 formatAlertTicker
-} from "../../alerts.js?v=114";
+} from "../../alerts.js?v=ad153c6f";
 
 import {
 isAlgoBotAlertRow,
 rememberBotAlertShapeId,
 retagKnownAlgoBotAlerts
-} from "../bot-alert-bridge.js?v=7";
+} from "../bot-alert-bridge.js?v=4975a629";
 
 import {
 fetchAlgoBotStatus,
 subscribeAlgoBotStatus
-} from "../bot-bridge.js?v=29";
+} from "../bot-bridge.js?v=17baeaa9";
 
 import {
 isAlgoBotLiteMode
-} from "../lite-layout.js?v=5";
+} from "../lite-layout.js?v=7a635cbf";
 
 const PANEL_HEIGHT_KEY =
 "algo_trade_book_panel_height_v1";
@@ -988,7 +988,7 @@ isAlgoBotLiteMode()
 return;
 }
 void import(
-"../diary/modal.js?v=13"
+"../diary/modal.js?v=68f7bccc"
 ).then(
 (mod)=>{
 if(

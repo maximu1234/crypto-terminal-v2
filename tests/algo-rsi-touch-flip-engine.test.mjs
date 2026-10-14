@@ -519,6 +519,8 @@ test("live engine logs CYCLE SL only via closeAll and reconciles vanished exchan
       src.indexOf("async function openSlice"),
       src.indexOf("async function onClosedChartBar")
     );
+    assert.match(src, /maxEntryNotionalUsdt/);
+    assert.match(openSlice, /entryNotionalWithinCost/);
     assert.match(openSlice, /rsiTouchFlipOpenLooksFilled\(result\)/);
     assert.ok(
       openSlice.indexOf("rsiTouchFlipOpenLooksFilled") <

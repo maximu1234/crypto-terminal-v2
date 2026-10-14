@@ -32,7 +32,7 @@ require(
 "./app-session.cjs"
 );
 const {
-PROXY_BYPASS_RULES,
+buildProxyBypassRules,
 normalizeProxySettings,
 isProxyConfigReady,
 buildProxyRules
@@ -176,7 +176,9 @@ await ses.setProxy({
 proxyRules:
 rules,
 proxyBypassRules:
-PROXY_BYPASS_RULES
+buildProxyBypassRules(
+settings
+)
 });
 }
 
@@ -307,6 +309,8 @@ settings
 return {
 enabled:
 cfg.enabled,
+ticksOnly:
+cfg.ticksOnly,
 type:
 cfg.type,
 host:

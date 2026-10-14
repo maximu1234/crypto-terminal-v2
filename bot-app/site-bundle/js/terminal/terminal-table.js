@@ -3,58 +3,63 @@ coinsState,
 marketMap,
 coinElements,
 isTerminalPage
-} from "./terminal-state.js?v=17";
+} from "./terminal-state.js?v=4747a92f";
+
+import {
+isTerminalReplayActive
+} from "./terminal-replay.js?v=1b9e6de6";
 
 import {
 normalizeMinVolume,
 filterMarketItemsByMinVolume
-} from "../screener-volume-filter.js?v=4";
+} from "../screener-volume-filter.js?v=2018f0b9";
 
 import {
 isActiveRealtimeMarketDataset,
-isExchangeTradingEnabled
-} from "../market-api.js?v=7";
+isExchangeTradingEnabled,
+peekMarketQuote
+} from "../market-api.js?v=7b3e6b3c";
 
 import {
 connectKlineStream,
 subscribeTicker,
 bindLiveCandleCatchup
-} from "../market-ws.js?v=3";
+} from "../market-ws.js?v=ab0ef4a1";
 
 import {
 connectTickerStream,
 fetchTickersInto
-} from "../tickers.js?v=29";
+} from "../tickers.js?v=729ac4e5";
 
 import {
 createTickerUiBatcher
-} from "../ticker-update-batch.js?v=1";
+} from "../ticker-update-batch.js?v=cc523cbc";
 
 import {
 processAlertCandle
-} from "../alert-monitor.js?v=75";
+} from "../alert-monitor.js?v=d1b732f5";
 
 import {
 getFavoriteGroup,
 flagSortRank,
 emptyFavorites
-} from "../favorites.js?v=6";
+} from "../favorites.js?v=d5f9b002";
 
 import {
 isTradePage
-} from "./terminal-state.js?v=17";
+} from "./terminal-state.js?v=4747a92f";
 
 import {
 applyLiveOhlcBar,
 ensureOhlcRollover,
 liveBarPeriodSec,
 paintCatchupLiveSeries
-} from "../chart/live-bar-roll.js?v=4";
+} from "../chart/live-bar-roll.js?v=6ff2b718";
 
 import {
 canonicalChartSymbol,
 shouldApplyLivePriceToChart
-} from "./chart-live-guard.js?v=1";
+} from "./chart-live-guard.js?v=91dbce1f";
 
 /** Desktop /trade only — не тянем trade-open-positions в открытый web /coins. */
 function escapeHtml(
@@ -91,7 +96,7 @@ isTradePage
 ){
 const tradePositions =
 await import(
-"../trade-open-positions.js?v=4"
+"../trade-open-positions.js?v=5820b48c"
 );
 hasOpenPosition =
 tradePositions.hasOpenPosition;
@@ -368,6 +373,15 @@ const prev =
 previous.get(
 symbol
 );
+const seeded =
+Number(
+prev?.price
+) >
+0
+? null
+: peekMarketQuote(
+symbol
+);
 
 return {
 symbol,
@@ -375,10 +389,16 @@ price:
 Number(
 prev?.price
 ) ||
+Number(
+seeded?.price
+) ||
 0,
 change24:
 Number(
 prev?.change24
+) ||
+Number(
+seeded?.change24
 ) ||
 0,
 change1h:
@@ -389,6 +409,9 @@ prev?.change1h
 volume24:
 Number(
 prev?.volume24
+) ||
+Number(
+seeded?.volume24
 ) ||
 0
 };
@@ -674,6 +697,10 @@ null;
 function paintLiveChartBar(
 bar
 ){
+
+if(isTerminalReplayActive()){
+return;
+}
 
 const last =
 bar ||

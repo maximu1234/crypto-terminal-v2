@@ -6,34 +6,34 @@ getCachedPosition,
 listCachedPositionsForSymbol,
 removeTradePositionFromCache,
 upsertTradePositionInCache
-} from "./positions-cache.js?v=3";
+} from "./positions-cache.js?v=4e2f5360";
 
 import {
 getActiveTradeVolumeUsdt
-} from "./volume-presets.js?v=2";
+} from "./volume-presets.js?v=7d0ef0d1";
 
 import {
 applyAutoStopsAfterEntry,
 getAutoStopSettings
-} from "./auto-stops.js?v=2";
+} from "./auto-stops.js?v=0e31e88c";
 
 import {
 peekDrawingStopsPendingForSide,
 tryApplyDrawingStopsPending,
 wasDrawingStopsJustApplied
-} from "./drawing-stops.js?v=4";
+} from "./drawing-stops.js?v=78127df4";
 
 import {
 marketMap
-} from "../../terminal/terminal-state.js?v=17";
+} from "../../terminal/terminal-state.js?v=4747a92f";
 
 import {
 getTradeConfig
-} from "./config.js?v=3";
+} from "./config.js?v=6ddbe7e2";
 
 import {
 mountTradeChartMarkersToggle
-} from "./chart-execution-markers.js?v=5";
+} from "./chart-execution-markers.js?v=c0a3e041";
 
 const REFRESH_MS =
 1500;

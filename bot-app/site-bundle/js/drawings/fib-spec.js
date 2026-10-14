@@ -11,11 +11,11 @@ WIDTH_OPTIONS,
 FIB_MIN_ANCHOR_SPAN_PX,
 FIB_LABEL_X_PAD_PX,
 FIB_LABEL_RIGHT_RESERVE_PX
-} from "./constants.js?v=13";
+} from "./constants.js?v=c47ce407";
 
 import {
 isLwPriceScaleModeLogarithmic
-} from "../chart/price-scale-mode.js?v=3";
+} from "../chart/price-scale-mode.js?v=7deaefee";
 
 export {
 FIB_MIN_ANCHOR_SPAN_PX,
@@ -287,6 +287,7 @@ color: STROKE,
 lineWidth: 1,
 fibLevels: cloneDefaultFibRows(),
 fibShowTrendLine: false,
+fibShowLabels: true,
 fibTrendLineColor: FIB_TREND_LINE_COLOR
 };
 
@@ -300,6 +301,7 @@ color: STROKE,
 lineWidth: 1,
 fibLevels: cloneDefaultFibExtRows(),
 fibShowTrendLine: true,
+fibShowLabels: true,
 fibTrendLineColor: FIB_TREND_LINE_COLOR
 };
 
@@ -352,6 +354,11 @@ typeof saved.fibShowTrendLine ===
 "boolean"
 ? saved.fibShowTrendLine
 : false,
+fibShowLabels:
+typeof saved.fibShowLabels ===
+"boolean"
+? saved.fibShowLabels
+: true,
 fibTrendLineColor: resolveFibTrendLineColor(
 saved.fibTrendLineColor
 )
@@ -386,6 +393,11 @@ fibShowTrendLine:
 typeof saved.fibShowTrendLine ===
 "boolean"
 ? saved.fibShowTrendLine
+: true,
+fibShowLabels:
+typeof saved.fibShowLabels ===
+"boolean"
+? saved.fibShowLabels
 : true,
 fibTrendLineColor: resolveFibTrendLineColor(
 saved.fibTrendLineColor

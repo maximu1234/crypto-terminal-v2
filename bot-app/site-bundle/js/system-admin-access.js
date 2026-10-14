@@ -1,7 +1,7 @@
 import {
 isCloudLoggedInEffective,
 getEffectiveCloudUserEmail
-} from "./cloud-sync.js?v=74";
+} from "./cloud-sync.js?v=f842930b";
 
 function normalizeEmail(raw){
 
@@ -14,7 +14,7 @@ export async function getSystemAdminEmails(){
 try{
 
 const env =
-await import("./supabase-env.js?v=5");
+await import("./supabase-env.js?v=ed71d82f");
 
 const list = [];
 

@@ -89,7 +89,8 @@ color:#fff;
 font-weight:400;
 }
 
-body.terminal-page .coins-tf-desktop .tf-btn:focus{
+body.terminal-page .coins-tf-desktop .tf-btn:focus,
+body.terminal-page .terminal-replay-btn:focus{
 outline:none;
 }
 
@@ -315,6 +316,25 @@ object-fit:contain;
 object-position:center;
 image-rendering:auto;
 flex-shrink:0;
+}
+
+body.terminal-page #draw-toolbar.draw-toolbar-vertical .draw-tool-hide-drawings svg{
+width:22px;
+height:22px;
+max-width:22px;
+max-height:22px;
+}
+
+body.terminal-page #draw-toolbar.draw-toolbar-vertical .draw-tool-hide-drawings .draw-tool-hide-drawings-eye-off{
+display:none;
+}
+
+body.terminal-page #draw-toolbar.draw-toolbar-vertical .draw-tool-hide-drawings.is-drawings-hidden .draw-tool-hide-drawings-eye{
+display:none;
+}
+
+body.terminal-page #draw-toolbar.draw-toolbar-vertical .draw-tool-hide-drawings.is-drawings-hidden .draw-tool-hide-drawings-eye-off{
+display:block;
 }
 
 body.terminal-page #draw-toolbar.draw-toolbar-vertical .draw-tool-clear-all:hover,

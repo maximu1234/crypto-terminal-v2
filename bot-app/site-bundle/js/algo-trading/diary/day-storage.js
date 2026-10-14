@@ -10,7 +10,7 @@ getDefaultDiaryPeriod,
 msFromDayKey,
 resolveDiaryPreset,
 startOfDayMs
-} from "./time-utils.js?v=1";
+} from "./time-utils.js?v=753b2239";
 
 const PERIOD_STORAGE_LEGACY_KEY =
 "trade_diary_period_v1";

@@ -5,20 +5,20 @@
  */
 import {
 isChartLayoutReady
-} from "../chart-layout-gate.js?v=4";
+} from "../chart-layout-gate.js?v=4a8798af";
 import {
 PATTERN_12_EARLY_T3_ID,
 defaultPattern12Settings,
 normalizePattern12Settings
-} from "./pattern-12-early-t3-math.js?v=2";
+} from "./pattern-12-early-t3-math.js?v=62280714";
 
 import {
 getOrComputeAlgoPattern12Scene
-} from "./pattern-12-early-t3-scene-cache.js?v=2";
+} from "./pattern-12-early-t3-scene-cache.js?v=8428cc75";
 
 import {
 paintPattern12Scene
-} from "./pattern-12-paint.js?v=5";
+} from "./pattern-12-paint.js?v=95040ca0";
 
 function readSettings(
 store
