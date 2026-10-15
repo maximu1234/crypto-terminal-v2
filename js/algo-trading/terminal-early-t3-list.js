@@ -12,7 +12,7 @@ generateMarketData,
 primeTickerSnapshots,
 renderList,
 highlightActiveSymbol
-} from "../terminal/terminal-table.js?v=41680946";
+} from "../terminal/terminal-table.js?v=5c90705f";
 import {
 ALGO_FLAG_EARLY_T3,
 ALGO_MARKET_EARLY_T3,

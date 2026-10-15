@@ -62,7 +62,7 @@ bindLiveCandleCatchup
 import {
 mountAlgoTradingCoinList,
 refreshAlgoMarketListFromFlags
-} from "./algo-trading-list.js?v=1f39d317";
+} from "./algo-trading-list.js?v=83c5bcba";
 
 import {
 mountAlgoTickerScanUi
@@ -85,7 +85,7 @@ mountAlgoRuntimeUi
 
 import {
 mountAlgoBotStrategyUi
-} from "./algo-trading/bot-strategy-ui.js?v=736690b3";
+} from "./algo-trading/bot-strategy-ui.js?v=3dcc07e6";
 
 import {
 ALGO_ANALYSIS_BOT_CHANGE_EVENT,
@@ -101,7 +101,7 @@ setActiveAnalysisBotId
 
 import {
 mountSessionLogServerSettings
-} from "./algo-trading/bot-session-log-server-ui.js?v=2fd60feb";
+} from "./algo-trading/bot-session-log-server-ui.js?v=0debdf98";
 
 import {
 syncBotStrategiesToMain
@@ -109,15 +109,15 @@ syncBotStrategiesToMain
 
 import {
 mountAlgoTradeUi
-} from "./algo-trading/trade/boot.js?v=2b292006";
+} from "./algo-trading/trade/boot.js?v=efaa2f69";
 
 import {
 mountAlgoTradingDrawings
-} from "./algo-trading/drawings.js?v=bbfa6918";
+} from "./algo-trading/drawings.js?v=78bbb9d6";
 
 import {
 mountAlgoTradingIndicators
-} from "./algo-trading/indicators.js?v=e2dc6e8c";
+} from "./algo-trading/indicators.js?v=95da22ac";
 
 import {
 mountAlgoPatternEntryOverlay
@@ -203,7 +203,7 @@ isChartLayoutReady
 import {
 invalidatePreservedVisibleLogicalRange,
 runWithPreservedVisibleLogicalRange
-} from "./chart-visible-range.js?v=fe893946";
+} from "./chart-visible-range.js?v=ee220e18";
 
 import {
 coinsState,

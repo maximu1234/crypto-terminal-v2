@@ -9,6 +9,8 @@ countLimitedActive
 } from "./indicators/registry.js?v=760a1a23";
 
 import {
+beginChromeOverlay,
+endChromeOverlay,
 isChartLayoutReady
 } from "./chart-layout-gate.js?v=4a8798af";
 
@@ -236,7 +238,7 @@ import(
 "./indicators/rsi-pane.js?v=f7536a67"
 ),
 import(
-"./indicators/volume-pane.js?v=b4590dd0"
+"./indicators/volume-pane.js?v=e48e583a"
 ),
 import(
 "./indicators/ao-pane.js?v=312fa92a"
@@ -245,10 +247,10 @@ import(
 "./indicators/macd-pane.js?v=23a67818"
 ),
 import(
-"./indicators/moving-average.js?v=32130756"
+"./indicators/moving-average.js?v=7664f7e3"
 ),
 import(
-"./indicators/ema-shift-ribbon.js?v=be5da63b"
+"./indicators/ema-shift-ribbon.js?v=ed6186e1"
 ),
 import(
 "./indicators/supertrend.js?v=113e8867"
@@ -271,7 +273,7 @@ import(
 "./indicators/volume-bubbles.js?v=3cab9f85"
 ),
 import(
-"./indicators/indicator-settings-dialog.js?v=a19be76c"
+"./indicators/indicator-settings-dialog.js?v=33a501fb"
 )
 ]
 );
@@ -369,6 +371,12 @@ legendEl.setAttribute(
 "true"
 );
 
+/* Какой набор кнопок сейчас в DOM (id + hasSettings).
+   На тиках меняется только текст (AO …) — кнопки не трогаем,
+   иначе клик по настройкам срывается и легенда мигает. */
+let legendStructureKey =
+"";
+
 chartWrap?.appendChild(
 legendEl
 );
@@ -422,6 +430,31 @@ root.querySelector(
 "#chart-indicators-menu"
 );
 
+function legendItemLabel(
+ind
+){
+
+return ind.getLegendLabel?.() ||
+ind.legendLabel ||
+ind.label ||
+"";
+
+}
+
+function rebuildLegend(
+items
+){
+
+legendEl.innerHTML =
+items.map(
+item=>
+`<button type="button" class="chart-indicator-legend-item${item.hasSettings ? " chart-indicator-legend-item--settings" : ""}" data-indicator-id="${item.id}"${item.hasSettings ? ' data-has-settings="true" title="Клик — настройки"' : ""}>${item.label}</button>`
+).join(
+""
+);
+
+}
+
 function updateLegend(){
 
 const active =
@@ -430,34 +463,117 @@ ind=>
 ind.isEnabled?.()
 );
 
-legendEl.innerHTML =
+const items =
 active.map(
-ind=>{
-const label =
-ind.getLegendLabel?.() ||
-ind.legendLabel ||
-ind.label;
-const hasSettings =
-!!ind.supportsSettingsDialog;
+ind=>({
+id:
+ind.id,
+label:
+legendItemLabel(
+ind
+),
+hasSettings:
+!!ind.supportsSettingsDialog
+})
+);
 
-return `
-<button type="button" class="chart-indicator-legend-item${hasSettings ? " chart-indicator-legend-item--settings" : ""}" data-indicator-id="${ind.id}" ${hasSettings ? 'data-has-settings="true" title="Клик — настройки"' : ""}>${label}</button>
-`;
-}
+const structureKey =
+items.map(
+item=>
+`${item.id}:${item.hasSettings ? "1" : "0"}`
 ).join(
-""
+"|"
 );
 
 legendEl.classList.toggle(
 "hidden",
-!active.length
+!items.length
 );
 legendEl.setAttribute(
 "aria-hidden",
-active.length
+items.length
 ? "false"
 : "true"
 );
+
+if(
+!items.length
+){
+legendStructureKey =
+"";
+legendEl.innerHTML =
+"";
+return;
+}
+
+if(
+structureKey !==
+legendStructureKey
+){
+legendStructureKey =
+structureKey;
+rebuildLegend(
+items
+);
+return;
+}
+
+const buttons =
+legendEl.querySelectorAll(
+"[data-indicator-id]"
+);
+
+if(
+buttons.length !==
+items.length
+){
+legendStructureKey =
+structureKey;
+rebuildLegend(
+items
+);
+return;
+}
+
+for(
+let i =
+0;
+i <
+items.length;
+i++
+){
+
+const btn =
+buttons[
+i
+];
+const item =
+items[
+i
+];
+
+if(
+!btn ||
+btn.dataset.indicatorId !==
+item.id
+){
+legendStructureKey =
+structureKey;
+rebuildLegend(
+items
+);
+return;
+}
+
+if(
+btn.innerHTML !==
+item.label
+){
+btn.innerHTML =
+item.label;
+}
+
+}
 
 }
 
@@ -477,10 +593,62 @@ if(
 return;
 }
 
+let pinnedRange =
+null;
+let chromeHeld =
+false;
+
+function releaseSettingsChartGuard(){
+
+if(
+pinnedRange &&
+getHost?.()?.chart
+){
+
+try{
+getHost().chart.timeScale().setVisibleLogicalRange(
+pinnedRange
+);
+}catch{
+/* ignore */
+}
+
+}
+
+pinnedRange =
+null;
+
+if(
+chromeHeld
+){
+endChromeOverlay();
+chromeHeld =
+false;
+}
+
+}
+
 settingsDialog.show(
 ind,
 {
+onOpen:()=>{
+
+beginChromeOverlay();
+chromeHeld =
+true;
+
+try{
+pinnedRange =
+getHost?.()?.chart?.timeScale?.().getVisibleLogicalRange?.() ||
+null;
+}catch{
+pinnedRange =
+null;
+}
+
+},
 onClose:()=>{
+releaseSettingsChartGuard();
 updateLegend();
 getHost?.()?.getDrawingTools?.()?.scheduleRedraw?.();
 }
@@ -518,6 +686,28 @@ close:()=>{}
 return true;
 
 }
+
+legendEl.addEventListener(
+"pointerdown",
+event=>{
+
+const item =
+event.target.closest(
+"[data-indicator-id]"
+);
+
+if(
+!item?.dataset?.hasSettings
+){
+return;
+}
+
+/* Не отдавать жест графику — иначе pan/from≈0 и ленивая история гасят свечи.
+   preventDefault не ставим: на touch иначе пропадёт click. */
+event.stopPropagation();
+
+}
+);
 
 legendEl.addEventListener(
 "click",

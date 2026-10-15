@@ -8,7 +8,7 @@ alignMaPointsToDisplayCandles
 
 import {
 runWithPreservedVisibleLogicalRange
-} from "../chart-visible-range.js?v=fe893946";
+} from "../chart-visible-range.js?v=ee220e18";
 
 import {
 isChartLayoutReady

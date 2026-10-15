@@ -59,13 +59,13 @@ calcPositionVolumeUsd
 
 import {
 applyPositionVolumeFromDrawing
-} from "../trade-volume-presets.js?v=d502dd14";
+} from "../trade-volume-presets.js?v=75c6fe3f";
 
 import {
 stashDrawingStopsFromDrawing,
 clearDrawingStopsPending,
 hasDrawingStopsPending
-} from "../trade-auto-stops.js?v=bdedc57d";
+} from "../trade-auto-stops.js?v=13d639c8";
 
 import {
 touchShapeRevision

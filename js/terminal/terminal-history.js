@@ -4,8 +4,9 @@ isTerminalReplayActive
 } from "./terminal-replay.js?v=1b9e6de6";
 
 import {
+isIndicatorSettingsModalOpen,
 isPreservingVisibleLogicalRange
-} from "../chart-visible-range.js?v=fe893946";
+} from "../chart-visible-range.js?v=ee220e18";
 
 /**
  * Closure slice. `host` is the surrounding function's bindings.
@@ -133,7 +134,7 @@ if(
 host.isTradePage
 ){
 void import(
-"../trade-volume-presets.js?v=d502dd14"
+"../trade-volume-presets.js?v=75c6fe3f"
 ).then(
 ({
 switchTradeVolumeSymbol
@@ -593,9 +594,10 @@ host.candleSeries?.setData(
 host.buildChartDisplayCandles()
 );
 
-host.rebuildRsiFromCandles();
-host.chartIndicators?.notifyCandlesUpdate?.();
-
+/*
+ * Сначала вернуть шкалу, потом RSI/индикаторы: их setData иначе
+ * захватывает from≈0 после setData свечей и через rAF откатывает вид.
+ */
 if(
 range &&
 host.chart
@@ -611,6 +613,9 @@ added
 }
 );
 }
+
+host.rebuildRsiFromCandles();
+host.chartIndicators?.notifyCandlesUpdate?.();
 
 host.scheduleCoinsDrawRedraw();
 
@@ -771,9 +776,6 @@ host.candleSeries?.setData(
 host.buildChartDisplayCandles()
 );
 
-host.rebuildRsiFromCandles();
-host.chartIndicators?.notifyCandlesUpdate?.();
-
 if(
 range &&
 host.chart &&
@@ -790,6 +792,9 @@ shift
 }
 );
 }
+
+host.rebuildRsiFromCandles();
+host.chartIndicators?.notifyCandlesUpdate?.();
 
 host.scheduleCoinsDrawRedraw();
 
@@ -931,13 +936,29 @@ host.historyLazyTimer =
 0;
 
 if(
-isPreservingVisibleLogicalRange() ||
 host.historyLoadingOlder ||
 host.historyExhausted ||
 !host.candles.length ||
 host.candles.length >=
 host.getTerminalHistoryDepth()
 ){
+return;
+}
+
+/*
+ * Пока setData индикатора откатывает шкалу или открыты настройки —
+ * не грузим историю (ответ через ~5с переписывает свечи → пустой график).
+ * Перенесём проверку, а не пропускаем навсегда.
+ */
+if(
+isPreservingVisibleLogicalRange() ||
+isIndicatorSettingsModalOpen()
+){
+host.historyLazyTimer =
+setTimeout(
+onRange,
+400
+);
 return;
 }
 

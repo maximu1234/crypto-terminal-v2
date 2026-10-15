@@ -1642,6 +1642,7 @@ body.terminal-page:not(.algo-trading-page) .chart-symbol-fullname[hidden]{
 
 body.terminal-page:not(.algo-trading-page) #chart-wrap:has(.chart-symbol-fullname:not([hidden])) .chart-indicator-legend{
   top:26px;
+  z-index:35;
 }
 
 .coins-chart-turnover24{

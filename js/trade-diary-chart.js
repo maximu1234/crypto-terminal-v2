@@ -30,7 +30,7 @@ getExchangeDefinition
 import {
 getLoadedTradeExchangeModules,
 loadTradeExchangeModules
-} from "./trade/module-router.js?v=2af73074";
+} from "./trade/module-router.js?v=0fc27c02";
 
 import {
 candleAlignSec,

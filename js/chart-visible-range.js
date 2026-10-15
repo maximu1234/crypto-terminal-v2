@@ -27,6 +27,19 @@ return preserveDepth >
 
 }
 
+/** True while indicator settings modal is open (body class). */
+export function isIndicatorSettingsModalOpen(){
+
+try{
+return document.body.classList.contains(
+"chart-indicator-modal-open"
+);
+}catch{
+return false;
+}
+
+}
+
 export function runWithPreservedVisibleLogicalRange(
 chart,
 fn

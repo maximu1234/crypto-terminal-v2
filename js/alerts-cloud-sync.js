@@ -17,14 +17,14 @@ isAlertRowInCloud,
 deleteAlertViaWorker,
 pushAlertViaWorker,
 hintWorkerReloadAlerts
-} from "./alerts-cloud/worker-client.js?v=f3837d47";
+} from "./alerts-cloud/worker-client.js?v=9820fe56";
 
 export {
 readCachedTelegramChatId,
 getTelegramChatId,
 saveTelegramChatId,
 clearTelegramChatId
-} from "./alerts-cloud/telegram-id.js?v=910fb6dc";
+} from "./alerts-cloud/telegram-id.js?v=2ec14b5b";
 
 export {
 pauseRegistryCloudSync,
@@ -40,11 +40,11 @@ pullRegistryFromCloud,
 pullRegistryFromCloudNow,
 pullAlertHistoryFromCloud,
 scheduleRegistryCloudSync
-} from "./alerts-cloud/registry-sync.js?v=c871a439";
+} from "./alerts-cloud/registry-sync.js?v=60d2c0fa";
 
 export {
 purgeAlertGarbageFromCloud
-} from "./alerts-cloud/garbage-purge.js?v=b0c834ae";
+} from "./alerts-cloud/garbage-purge.js?v=7945dca0";
 
 export {
 scheduleRemoteRegistrySync,
@@ -54,4 +54,4 @@ setupAlertsRealtimeForUser,
 hydrateAlertsAfterAuth,
 syncAlertsWithCloud,
 initAlertsCloudSync
-} from "./alerts-cloud/polling-realtime.js?v=2eea7856";
+} from "./alerts-cloud/polling-realtime.js?v=50a2fef0";

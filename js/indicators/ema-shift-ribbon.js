@@ -11,7 +11,7 @@ isChartLayoutReady
 } from "../chart-layout-gate.js?v=4a8798af";
 import {
 runWithPreservedVisibleLogicalRange
-} from "../chart-visible-range.js?v=fe893946";
+} from "../chart-visible-range.js?v=ee220e18";
 import {
 calculateShiftedEmaSeries
 } from "./htf-ema.js?v=b7d2ebae";

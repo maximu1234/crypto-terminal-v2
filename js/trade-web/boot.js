@@ -4,29 +4,29 @@
  */
 import {
   cssUrl
-} from "../asset-manifest.js?v=ae9abec4";
+} from "../asset-manifest.js?v=64cdecba";
 import {
   isTerminalPageOnly,
   isWatchlistPage
 } from "../page-routes.js?v=4dc7f350";
 import {
   initTradeExchangeSettings
-} from "../trade-exchange-settings.js?v=e581efd2";
+} from "../trade-exchange-settings.js?v=cfe2170f";
 import {
   initTradeVolumePresets
-} from "../trade-volume-presets.js?v=d502dd14";
+} from "../trade-volume-presets.js?v=75c6fe3f";
 import {
   initTradeLeverageSettings
-} from "../trade-leverage-settings.js?v=22008184";
+} from "../trade-leverage-settings.js?v=56606184";
 import {
   initTradeMarketEntry
-} from "../trade-market-entry.js?v=1fefa6ec";
+} from "../trade-market-entry.js?v=49db1533";
 import {
   initTradeBookPanel
-} from "../trade-book-panel.js?v=1e8cb847";
+} from "../trade-book-panel.js?v=3d7e91e8";
 import {
   loadTradeExchangeModules
-} from "../trade/module-router.js?v=2af73074";
+} from "../trade/module-router.js?v=0fc27c02";
 import {
   getActiveExchangeId,
   setActiveExchangeId
@@ -98,7 +98,7 @@ export async function initTradeWebBeforeChart(options = {}) {
     initTradeExchangeSettings();
     await loadTradeExchangeModules("bybit");
     const { initExchangeTradingGate } = await import(
-      "../exchange-trading-gate.js?v=aa9bd978"
+      "../exchange-trading-gate.js?v=f764cd91"
     );
     await initExchangeTradingGate();
     return;
@@ -114,7 +114,7 @@ export async function initTradeWebBeforeChart(options = {}) {
   initTradeLeverageSettings();
   initTradeMarketEntry();
   const { initExchangeTradingGate } = await import(
-    "../exchange-trading-gate.js?v=aa9bd978"
+    "../exchange-trading-gate.js?v=f764cd91"
   );
   await initExchangeTradingGate();
   const { initTradePositionSounds } = await import(
@@ -122,11 +122,11 @@ export async function initTradeWebBeforeChart(options = {}) {
   );
   initTradePositionSounds();
   const { initTradePositionsLive } = await import(
-    "../trade-positions-live.js?v=2f16e9a4"
+    "../trade-positions-live.js?v=2cc01fb3"
   );
   initTradePositionsLive();
   const { initTradeOpenPositions } = await import(
-    "../trade-open-positions.js?v=f15dadc4"
+    "../trade-open-positions.js?v=ec6c2010"
   );
   initTradeOpenPositions();
 }
@@ -144,7 +144,7 @@ export async function initTradeWebAfterChart(options = {}) {
       return;
     }
     const { initTradePositionsCache } = await import(
-      "../trade-positions-cache.js?v=37fc9e0b"
+      "../trade-positions-cache.js?v=736a3728"
     );
     initTradePositionsCache();
     window.__tradeAppReady = true;
@@ -170,15 +170,15 @@ export async function initTradeWebAfterChart(options = {}) {
     );
   });
   const { initTradeChartOverlay } = await import(
-    "../trade-chart-overlay.js?v=d917c8f3"
+    "../trade-chart-overlay.js?v=7c2b994f"
   );
   initTradeChartOverlay();
   const { initTradeChartOrders } = await import(
-    "../trade-chart-orders.js?v=e132035b"
+    "../trade-chart-orders.js?v=265e8841"
   );
   initTradeChartOrders();
   const { initTradeChartExecutionMarkers } = await import(
-    "../trade-chart-execution-markers.js?v=553535dd"
+    "../trade-chart-execution-markers.js?v=81c139d6"
   );
   initTradeChartExecutionMarkers();
   initTradeBookPanel();

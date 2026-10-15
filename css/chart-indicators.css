@@ -152,7 +152,7 @@ color:#f0f3fa;
 position:absolute;
 top:8px;
 left:10px;
-z-index:20;
+z-index:35;
 display:flex;
 flex-direction:column;
 align-items:flex-start;
@@ -168,7 +168,7 @@ display:none;
 
 .chart-indicator-legend-item{
 margin:0;
-padding:0;
+padding:1px 6px 1px 0;
 border:none;
 background:transparent;
 font:500 11px/1.35 system-ui,-apple-system,sans-serif;
@@ -184,6 +184,8 @@ text-align:left;
 .chart-indicator-legend-item--settings{
 pointer-events:auto;
 cursor:pointer;
+position:relative;
+z-index:1;
 }
 
 .chart-indicator-legend-item--settings:hover{
@@ -209,7 +211,11 @@ inset:0;
 z-index:15000;
 display:block;
 padding:0;
-background:rgba(0,0,0,0.45);
+/*
+ * Лёгкое затемнение: 0.45 гасило тонкие свечи на log-шкале, пока
+ * толстые линии EMA/AO оставались видны — казалось, что график пропал.
+ */
+background:rgba(0,0,0,0.18);
 box-sizing:border-box;
 pointer-events:auto;
 }
@@ -218,12 +224,9 @@ pointer-events:auto;
 display:none;
 }
 
+/* Клики ловит fixed backdrop (z-index 15000). Не ставим pointer-events:none
+   на #chart-wrap * — в Electron это могло гасить отрисовку canvas свечей. */
 body.chart-indicator-modal-open #charts-stack{
-pointer-events:none !important;
-}
-
-body.chart-indicator-modal-open #chart-wrap,
-body.chart-indicator-modal-open #chart-wrap *{
 pointer-events:none !important;
 }
 

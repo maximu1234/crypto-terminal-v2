@@ -343,6 +343,9 @@ event.pointerId
 
 function hide(){
 
+const closeCb =
+onCloseCallback;
+
 backdrop.classList.add(
 "hidden"
 );
@@ -366,12 +369,19 @@ headerEl?.classList.remove(
 "chart-indicator-settings-header--dragging"
 );
 
+if(
+closeCb
+){
+closeCb();
+}
+
 }
 
 function show(
 indicator,
 {
-onClose
+onClose,
+onOpen
 } = {}
 ){
 
@@ -379,6 +389,14 @@ if(
 !indicator?.populateSettingsDialog
 ){
 return;
+}
+
+if(
+!backdrop.classList.contains(
+"hidden"
+)
+){
+hide();
 }
 
 activeIndicator =
@@ -422,6 +440,8 @@ document.body.classList.add(
 "chart-indicator-modal-open"
 );
 
+onOpen?.();
+
 requestAnimationFrame(
 ()=>{
 requestAnimationFrame(
@@ -443,13 +463,6 @@ event.target ===
 backdrop
 ){
 hide();
-
-if(
-onCloseCallback
-){
-onCloseCallback();
-}
-
 }
 
 }
@@ -490,13 +503,6 @@ closeBtn?.addEventListener(
 event=>{
 event.stopPropagation();
 hide();
-
-if(
-onCloseCallback
-){
-onCloseCallback();
-}
-
 }
 );
 
@@ -505,13 +511,6 @@ doneBtn?.addEventListener(
 event=>{
 event.stopPropagation();
 hide();
-
-if(
-onCloseCallback
-){
-onCloseCallback();
-}
-
 }
 );
 
@@ -530,12 +529,6 @@ return;
 }
 
 hide();
-
-if(
-onCloseCallback
-){
-onCloseCallback();
-}
 
 }
 );
