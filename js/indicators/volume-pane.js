@@ -2,10 +2,8 @@
  * Volume — гистограмма внизу панели цены (как на TradingView).
  */
 import {
-appendFutureWhitespaceBars,
-computeChartFutureMarginBars,
-coinsTfVisibleBars
-} from "../chart-import.js?v=21aeb8d5";
+runWithPreservedVisibleLogicalRange
+} from "../chart-visible-range.js?v=fe893946";
 
 export const VOLUME_PANE_ID =
 "volume";
@@ -102,9 +100,7 @@ return next;
 }
 
 function buildVolumeDisplayPoints(
-candles,
-tf,
-visibleBarsCap
+candles
 ){
 
 if(
@@ -113,32 +109,12 @@ if(
 return [];
 }
 
-const cap =
-typeof visibleBarsCap ===
-"number"
-? visibleBarsCap
-: null;
-const visibleBars =
-typeof cap ===
-"number" &&
-cap >
-0
-? Math.min(
-cap,
-candles.length
-)
-: coinsTfVisibleBars(
-tf,
-candles.length
-);
-
-const futureMargin =
-computeChartFutureMarginBars(
-visibleBars
-);
-
-return appendFutureWhitespaceBars(
-candles.map(
+/*
+ * Только реальные свечи. Пустые точки «в будущее» уже стоят
+ * на серии цены. Нули на тех же временах сдвигают шкалу и
+ * на несколько секунд оставляют график пустым.
+ */
+return candles.map(
 bar=>({
 time:
 bar.time,
@@ -152,9 +128,6 @@ bar.open,
 close:
 bar.close
 })
-),
-futureMargin,
-tf
 );
 
 }
@@ -195,6 +168,8 @@ let boundChart =
 null;
 let opacity =
 readOpacity();
+let paintedKey =
+"";
 
 function wrapEl(){
 
@@ -256,23 +231,39 @@ false
 
 function dropSeries(){
 
-if(
-boundChart &&
-series
-){
-try{
-boundChart.removeSeries(
-series
-);
-}catch{
-/* ignore */
-}
-}
+const chart =
+boundChart;
+const histogram =
+series;
 
 series =
 null;
 boundChart =
 null;
+paintedKey =
+"";
+
+if(
+!chart ||
+!histogram
+){
+return;
+}
+
+runWithPreservedVisibleLogicalRange(
+chart,
+()=>{
+
+try{
+chart.removeSeries(
+histogram
+);
+}catch{
+/* ignore */
+}
+
+}
+);
 
 }
 
@@ -298,6 +289,10 @@ return true;
 dropSeries();
 
 try{
+runWithPreservedVisibleLogicalRange(
+hostChart,
+()=>{
+
 series =
 hostChart.addHistogramSeries(
 {
@@ -318,6 +313,9 @@ base:
 boundChart =
 hostChart;
 pinVolumeScale();
+
+}
+);
 return true;
 }catch{
 series =
@@ -350,19 +348,16 @@ const raw =
 host?.getCandles?.() ||
 [];
 
-const tf =
-host?.getTf?.() ||
-"D";
-
 const points =
 buildVolumeDisplayPoints(
-raw,
-tf,
-host?.getVisibleBarsCap?.()
+raw
 );
 
-try{
-series.setData(
+const hostChart =
+boundChart ||
+mainChart();
+
+const rows =
 points.map(
 bar=>({
 time:
@@ -376,9 +371,58 @@ bar,
 opacity
 )
 })
-)
 );
+
+const prev =
+rows.length >
+1
+? rows[
+rows.length -
+2
+]
+: null;
+const key =
+rows.length
+? `${rows.length}:${rows[0].time}:${prev?.time || 0}`
+: "0";
+const lastOnly =
+key !==
+"0" &&
+key ===
+paintedKey;
+
+try{
+runWithPreservedVisibleLogicalRange(
+hostChart,
+()=>{
+
+if(
+lastOnly
+){
+try{
+series.update(
+rows[
+rows.length -
+1
+]
+);
+}catch{
+series.setData(
+rows
+);
+}
+}else{
+series.setData(
+rows
+);
+}
+
+paintedKey =
+key;
 pinVolumeScale();
+
+}
+);
 }catch{
 dropSeries();
 }

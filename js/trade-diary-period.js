@@ -15,7 +15,7 @@ export {
 
 import {
   getLoadedTradeExchangeModules
-} from "./trade/module-router.js?v=35038f1d";
+} from "./trade/module-router.js?v=2af73074";
 
 function mod() {
   return getLoadedTradeExchangeModules();

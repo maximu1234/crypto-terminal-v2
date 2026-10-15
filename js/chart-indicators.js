@@ -233,25 +233,25 @@ createIndicatorSettingsDialog
 await Promise.all(
 [
 import(
-"./indicators/rsi-pane.js?v=6c63bcae"
+"./indicators/rsi-pane.js?v=f7536a67"
 ),
 import(
-"./indicators/volume-pane.js?v=2105eb41"
+"./indicators/volume-pane.js?v=b4590dd0"
 ),
 import(
-"./indicators/ao-pane.js?v=daa19ed6"
+"./indicators/ao-pane.js?v=312fa92a"
 ),
 import(
-"./indicators/macd-pane.js?v=ffb8c6e4"
+"./indicators/macd-pane.js?v=23a67818"
 ),
 import(
-"./indicators/moving-average.js?v=10ad82b5"
+"./indicators/moving-average.js?v=32130756"
 ),
 import(
-"./indicators/ema-shift-ribbon.js?v=72a66d90"
+"./indicators/ema-shift-ribbon.js?v=be5da63b"
 ),
 import(
-"./indicators/supertrend.js?v=1ccf695b"
+"./indicators/supertrend.js?v=113e8867"
 ),
 typeof createPattern12IndicatorOverride ===
 "function"

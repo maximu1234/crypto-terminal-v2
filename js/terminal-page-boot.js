@@ -14,7 +14,7 @@ CHART_BUILD_ID,
 CHART_PAGE_ENTRY,
 TERMINAL_ENTRY,
 jsUrl
-} from "./asset-manifest.js?v=e5726c1b";
+} from "./asset-manifest.js?v=ae9abec4";
 
 function isDesktopTradeMode(){
 
@@ -40,7 +40,7 @@ if(
 ){
 tradeDesktopBootPromise =
 import(
-"./trade-desktop-boot.js?v=7d0b686a"
+"./trade-desktop-boot.js?v=39fc5f10"
 );
 }
 
@@ -66,7 +66,7 @@ if(
 ){
 tradeWebBootPromise =
 import(
-"./trade-web/boot.js?v=3e0f3113"
+"./trade-web/boot.js?v=89120dd6"
 );
 }
 

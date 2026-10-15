@@ -1,5 +1,5 @@
 /**
- * EMA Shift Ribbon — до 4 EMA с вертикальным сдвигом (%) и HTF.
+ * EMA Shift Ribbon — до 4 ручных EMA + auto Нижняя/Верхняя, сдвиг (%) и HTF.
  */
 import {
 clearAllHtfCache,
@@ -11,7 +11,7 @@ isChartLayoutReady
 } from "../chart-layout-gate.js?v=4a8798af";
 import {
 runWithPreservedVisibleLogicalRange
-} from "../chart-visible-range.js?v=255ee6c8";
+} from "../chart-visible-range.js?v=fe893946";
 import {
 calculateShiftedEmaSeries
 } from "./htf-ema.js?v=b7d2ebae";
@@ -21,9 +21,26 @@ openIndicatorColorPicker,
 previewColorHex,
 isValidDrawColor
 } from "./indicator-color-picker-ui.js?v=755ce025";
+import {
+DEFAULT_EMA_SHIFT_FIT_LOOKBACK,
+EMA_SHIFT_FIT_LOOKBACK_OPTIONS,
+EMA_SHIFT_FIT_SIDE_LOWER,
+EMA_SHIFT_FIT_SIDE_UPPER,
+fitEmaShiftToExtremes,
+normalizeEmaShiftFitLookback
+} from "./ema-shift-fit.js?v=37eb58e7";
 
 export const EMA_SHIFT_RIBBON_ID =
 "ema-shift-ribbon";
+
+const BAND_COUNT =
+6;
+
+const AUTO_UPPER_BAND_INDEX =
+4;
+
+const AUTO_LOWER_BAND_INDEX =
+5;
 
 export const TF_OPTIONS =
 [
@@ -76,7 +93,9 @@ const DEFAULT_COLORS =
 "#22c55e",
 "#facc15",
 "#22d3ee",
-"#ef4444"
+"#ef4444",
+"#fb7185",
+"#a78bfa"
 ];
 
 function defaultSettings(){
@@ -84,6 +103,8 @@ function defaultSettings(){
 return {
 lineWidth:
 1,
+fitLookback:
+DEFAULT_EMA_SHIFT_FIT_LOOKBACK,
 bands:
 [
 {
@@ -141,9 +162,70 @@ color:
 DEFAULT_COLORS[
 3
 ]
+},
+{
+show:
+false,
+length:
+21,
+shift:
+12,
+tf:
+"",
+color:
+DEFAULT_COLORS[
+4
+]
+},
+{
+show:
+false,
+length:
+21,
+shift:
+-12,
+tf:
+"",
+color:
+DEFAULT_COLORS[
+5
+]
 }
 ]
 };
+
+}
+
+function autoBandLabel(
+index
+){
+
+if(
+index ===
+AUTO_LOWER_BAND_INDEX
+){
+return "Нижняя";
+}
+
+if(
+index ===
+AUTO_UPPER_BAND_INDEX
+){
+return "Верхняя";
+}
+
+return `EMA ${index + 1}`;
+
+}
+
+function isAutoBandIndex(
+index
+){
+
+return index ===
+AUTO_LOWER_BAND_INDEX ||
+index ===
+AUTO_UPPER_BAND_INDEX;
 
 }
 
@@ -180,6 +262,11 @@ raw.lineWidth
 ) ||
 base.lineWidth
 )
+),
+fitLookback:
+normalizeEmaShiftFitLookback(
+raw.fitLookback ??
+base.fitLookback
 ),
 bands:
 base.bands.map(
@@ -378,7 +465,7 @@ for(
 let i =
 0;
 i <
-4;
+BAND_COUNT;
 i++
 ){
 
@@ -745,12 +832,31 @@ ${settings.bands.map(
 (
 band,
 index
-)=>`
-<div class="ind-ribbon-settings-row">
-<label class="ind-ribbon-settings-show" title="Показать EMA ${index + 1}">
+)=>{
+
+const isAuto =
+isAutoBandIndex(
+index
+);
+const name =
+autoBandLabel(
+index
+);
+const fitSide =
+index ===
+AUTO_UPPER_BAND_INDEX
+? EMA_SHIFT_FIT_SIDE_UPPER
+: EMA_SHIFT_FIT_SIDE_LOWER;
+const showLookback =
+index ===
+AUTO_UPPER_BAND_INDEX;
+
+return `
+<div class="ind-ribbon-settings-row${isAuto ? " ind-ribbon-settings-row--auto" : ""}">
+<label class="ind-ribbon-settings-show" title="Показать ${name}">
 <input type="checkbox" data-band="${index}" data-field="show" ${band.show ? "checked" : ""}/>
 </label>
-<span class="ind-ribbon-settings-name">EMA ${index + 1}</span>
+<span class="ind-ribbon-settings-name">${name}</span>
 <button type="button" class="ind-ribbon-settings-color" data-band="${index}" data-field="color" data-color="${band.color}" style="--line-color:${previewColorHex(band.color)}" title="Цвет линии">
 <span class="ind-ribbon-settings-color-preview"></span>
 </button>
@@ -766,7 +872,30 @@ opt=>`
 )}
 </select>
 </div>
+${isAuto
+? `
+<div class="ind-ribbon-settings-auto-tools">
+${showLookback
+? `
+<label class="ind-ribbon-settings-auto-lookback">
+<span>Окно подбора</span>
+<select class="chart-indicator-settings-select" data-field="fitLookback">
+${EMA_SHIFT_FIT_LOOKBACK_OPTIONS.map(
+n=>
+`<option value="${n}" ${n === settings.fitLookback ? "selected" : ""}>${n}</option>`
+).join(
+""
+)}
+</select>
+</label>
 `
+: `<span class="ind-ribbon-settings-auto-spacer"></span>`}
+<button type="button" class="ind-ribbon-settings-fit-btn" data-action="fit-auto" data-fit-side="${fitSide}" data-band="${index}">Подобрать</button>
+</div>
+`
+: ""}
+`;
+}
 ).join(
 ""
 )}
@@ -790,11 +919,18 @@ root.querySelector(
 ) ||
 1;
 
+next.fitLookback =
+normalizeEmaShiftFitLookback(
+root.querySelector(
+'[data-field="fitLookback"]'
+)?.value
+);
+
 for(
 let i =
 0;
 i <
-4;
+BAND_COUNT;
 i++
 ){
 
@@ -972,6 +1108,201 @@ commit();
 }
 );
 
+}
+);
+}
+);
+
+async function runAutoFit(
+fitBtn
+){
+
+if(
+!fitBtn ||
+fitBtn.disabled
+){
+return;
+}
+
+const bandIndex =
+Number(
+fitBtn.dataset.band
+);
+const side =
+fitBtn.dataset.fitSide ===
+EMA_SHIFT_FIT_SIDE_UPPER
+? EMA_SHIFT_FIT_SIDE_UPPER
+: EMA_SHIFT_FIT_SIDE_LOWER;
+
+if(
+!isAutoBandIndex(
+bandIndex
+)
+){
+return;
+}
+
+const host =
+getHost?.();
+const chartCandles =
+host?.getCandles?.() ||
+[];
+
+if(
+!chartCandles.length
+){
+return;
+}
+
+commit();
+
+const lookback =
+normalizeEmaShiftFitLookback(
+root.querySelector(
+'[data-field="fitLookback"]'
+)?.value
+);
+const bandTf =
+root.querySelector(
+`[data-band="${bandIndex}"][data-field="tf"]`
+)?.value ??
+"";
+const chartTf =
+host?.getTf?.();
+const tf =
+resolveTf(
+bandTf,
+chartTf
+);
+
+fitBtn.disabled =
+true;
+fitBtn.textContent =
+"…";
+
+try{
+
+let sourceCandles =
+chartCandles;
+
+if(
+tf !==
+String(
+chartTf ||
+""
+).trim()
+){
+sourceCandles =
+await fetchHtfCandles(
+host?.getSymbol?.(),
+tf,
+host?.loadIndicatorHistory,
+chartCandles,
+chartTf
+);
+}
+
+const fitted =
+fitEmaShiftToExtremes(
+{
+side,
+chartCandles,
+sourceCandles,
+lookback
+}
+);
+
+if(
+!fitted
+){
+fitBtn.textContent =
+"Нет данных";
+window.setTimeout(
+()=>{
+fitBtn.disabled =
+false;
+fitBtn.textContent =
+"Подобрать";
+},
+1200
+);
+return;
+}
+
+const lengthEl =
+root.querySelector(
+`[data-band="${bandIndex}"][data-field="length"]`
+);
+const shiftEl =
+root.querySelector(
+`[data-band="${bandIndex}"][data-field="shift"]`
+);
+const showEl =
+root.querySelector(
+`[data-band="${bandIndex}"][data-field="show"]`
+);
+
+if(
+lengthEl
+){
+lengthEl.value =
+String(
+fitted.length
+);
+}
+
+if(
+shiftEl
+){
+shiftEl.value =
+String(
+fitted.shift
+);
+}
+
+if(
+showEl
+){
+showEl.checked =
+true;
+}
+
+commit();
+fitBtn.disabled =
+false;
+fitBtn.textContent =
+"Подобрать";
+
+}catch{
+
+fitBtn.disabled =
+false;
+fitBtn.textContent =
+"Ошибка";
+window.setTimeout(
+()=>{
+fitBtn.textContent =
+"Подобрать";
+},
+1200
+);
+
+}
+
+}
+
+root.querySelectorAll(
+'[data-action="fit-auto"]'
+).forEach(
+fitBtn=>{
+fitBtn.addEventListener(
+"click",
+event=>{
+event.preventDefault();
+event.stopPropagation();
+void runAutoFit(
+fitBtn
+);
 }
 );
 }

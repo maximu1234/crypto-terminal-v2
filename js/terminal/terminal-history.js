@@ -3,6 +3,10 @@ stopTerminalReplay,
 isTerminalReplayActive
 } from "./terminal-replay.js?v=1b9e6de6";
 
+import {
+isPreservingVisibleLogicalRange
+} from "../chart-visible-range.js?v=fe893946";
+
 /**
  * Closure slice. `host` is the surrounding function's bindings.
  */
@@ -129,7 +133,7 @@ if(
 host.isTradePage
 ){
 void import(
-"../trade-volume-presets.js?v=c075f58f"
+"../trade-volume-presets.js?v=d502dd14"
 ).then(
 ({
 switchTradeVolumeSymbol
@@ -904,32 +908,65 @@ return;
 }
 
 const onRange =
-range=>{
+()=>{
 
+/*
+ * setData индикатора на кадр ставит from≈0. Если грузить историю
+ * сразу, ответ через несколько секунд переписывает свечи и график пустой.
+ * Ждём, пока шкала вернётся, и только потом догружаем.
+ */
 if(
-!range ||
-host.historyLoadingOlder ||
-host.historyExhausted ||
-!host.candles.length
+host.historyLazyTimer
 ){
-return;
+clearTimeout(
+host.historyLazyTimer
+);
 }
 
+host.historyLazyTimer =
+setTimeout(
+()=>{
+
+host.historyLazyTimer =
+0;
+
 if(
+isPreservingVisibleLogicalRange() ||
+host.historyLoadingOlder ||
+host.historyExhausted ||
+!host.candles.length ||
 host.candles.length >=
 host.getTerminalHistoryDepth()
 ){
 return;
 }
 
+let range =
+null;
+
+try{
+range =
+host.chart.timeScale().getVisibleLogicalRange();
+}catch{
+range =
+null;
+}
+
 if(
+!range ||
 range.from >
 80
 ){
 return;
 }
 
-void maybeLoadOlderTerminalHistory(host);
+void maybeLoadOlderTerminalHistory(
+host
+);
+
+},
+400
+);
 
 };
 
@@ -939,6 +976,16 @@ onRange
 
 host.historyRangeUnsub =
 ()=>{
+
+if(
+host.historyLazyTimer
+){
+clearTimeout(
+host.historyLazyTimer
+);
+host.historyLazyTimer =
+0;
+}
 
 try{
 host.chart.timeScale().unsubscribeVisibleLogicalRangeChange(

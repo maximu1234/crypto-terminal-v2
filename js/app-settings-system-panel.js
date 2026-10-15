@@ -43,7 +43,7 @@ SCREENER_WIDGET_OSCILLATOR_MACD,
 SCREENER_WIDGET_OSCILLATOR_RSI,
 getScreenerWidgetOscillator,
 setScreenerWidgetOscillator
-} from "./screener-widget-oscillator.js?v=8d32ca29";
+} from "./screener-widget-oscillator.js?v=60ae7cd9";
 
 import {
 CANDLE_COLOR_CLASSIC,
@@ -337,20 +337,20 @@ ${snapshotLogoBlock}
 <span class="app-settings-toggle-label">Монохром</span>
 </label>
 <p class="app-settings-panel-hint">Монохром — все свечи белые. Включённый режим действует на всех графиках.</p>
-<p class="app-settings-panel-lead app-settings-panel-lead--spaced">Скринер.</p>
+<p class="app-settings-panel-lead app-settings-panel-lead--spaced">Виджеты.</p>
 <label class="app-settings-toggle-row">
 <input type="checkbox" class="app-settings-toggle-input" id="app-settings-screener-widget-rsi" />
-<span class="app-settings-toggle-label">Показывать RSI в виджетах в Скринере</span>
+<span class="app-settings-toggle-label">Показывать RSI в виджетах</span>
 </label>
 <label class="app-settings-toggle-row">
 <input type="checkbox" class="app-settings-toggle-input" id="app-settings-screener-widget-macd" />
-<span class="app-settings-toggle-label">Показывать MACD в виджетах в Скринере</span>
+<span class="app-settings-toggle-label">Показывать MACD в виджетах</span>
 </label>
 <label class="app-settings-toggle-row">
 <input type="checkbox" class="app-settings-toggle-input" id="app-settings-screener-widget-ao" />
-<span class="app-settings-toggle-label">Показывать AO в виджетах в Скринере</span>
+<span class="app-settings-toggle-label">Показывать AO в виджетах</span>
 </label>
-<p class="app-settings-panel-hint">В виджетах 4 и 6 и в окне увеличения. Одновременно включён только один индикатор.</p>
+<p class="app-settings-panel-hint">Скринер: виджеты 4 и 6 и окно увеличения. Вотчлист: сетка до 6 графиков. Одновременно включён только один индикатор.</p>
 <p class="app-settings-panel-lead app-settings-panel-lead--spaced">Алерты.</p>
 <label class="app-settings-field-row" for="app-settings-alert-notify-mode">
 <span class="app-settings-field-label">Канал уведомлений</span>

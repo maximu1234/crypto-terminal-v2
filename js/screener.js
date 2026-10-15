@@ -48,7 +48,7 @@ updateRsiLevelLinesLayout,
 linkPairedChartTimeScales,
 SCREENER_VISIBLE_BARS,
 SCREENER_MAX_BARS
-} from "./chart-import.js?v=21aeb8d5";
+} from "./chart-import.js?v=38a93246";
 
 import {
 isIpadWebViewport
@@ -84,7 +84,7 @@ createTickerUiBatcher
 
 import {
 mountReleaseMarker
-} from "./release-marker.js?v=d96016c0";
+} from "./release-marker.js?v=9c830f51";
 
 import {
 saveScreenerState,
@@ -103,7 +103,7 @@ FAVORITES_BY_EXCHANGE_KEY
 
 import {
 ensureCloudReady
-} from "./auth-ui.js?v=86535de8";
+} from "./auth-ui.js?v=38f361c4";
 
 import {
 ensureSettled,
@@ -113,7 +113,7 @@ withTimeout
 import {
 persistFavoritesToCloud,
 onFavoritesRemoteUpdate
-} from "./cloud-sync.js?v=c4d00dfb";
+} from "./cloud-sync.js?v=f7c02b56";
 
 import {
 attachSymbolAutocomplete,
@@ -143,7 +143,7 @@ getScreenerWidgetOscillator,
 isScreenerHistogramOscillator,
 setScreenerAoData,
 setScreenerMacdData
-} from "./screener-widget-oscillator.js?v=8d32ca29";
+} from "./screener-widget-oscillator.js?v=60ae7cd9";
 
 const SCREENER_MAX_CONCURRENT_CHART_LOADS =
 4;
@@ -175,7 +175,7 @@ if(
 ){
 screenerZoomMountPromise =
 import(
-"./screener-widget-zoom.js?v=6e9c08d3"
+"./screener-widget-zoom.js?v=5b8ee352"
 ).then(
 mod=>{
 refreshZoomFavoriteUi =
@@ -1443,7 +1443,7 @@ destroyWidgets,
 loadWidgetChart,
 observeWidgetKlineVisibility,
 updateWidgetMeta
-} from "./screener-widgets.js?v=13cd64c5";
+} from "./screener-widgets.js?v=8646a7e7";
 
 bindScreenerWidgets({
 get activeWidgets(){ return activeWidgets; },

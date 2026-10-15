@@ -81,16 +81,26 @@ host.ALGO_ANALYSIS_BOT_RSI_TOUCH_FLIP
 ){
 host.rsiPaneSettings =
 host.normalizeRsiPaneSettings(
-rsiPaneSettingsFromFlipPrefs(host, 
+{
+...rsiPaneSettingsFromFlipPrefs(host, 
 flipPatch ||
 readFlipPanePatchFromDom(host)
-)
+),
+colorLines:
+host.userRsiPaneSettings?.colorLines ===
+true
+}
 );
 }else{
 host.rsiPaneSettings =
 host.userRsiPaneSettings;
 }
 
+host.applyRsiSeriesColorMode?.(
+host.rsiSeries,
+host.rsiPaneSettings.colorLines ===
+true
+);
 syncRsiHudPeriod(host);
 syncRsiLevelDom(host);
 host.applyRsiData();
@@ -126,6 +136,16 @@ host.ALGO_ANALYSIS_BOT_RSI_TOUCH_FLIP
 ){
 return false;
 }
+
+host.userRsiPaneSettings =
+host.normalizeRsiPaneSettings(
+{
+...host.userRsiPaneSettings,
+colorLines:
+next?.colorLines ===
+true
+}
+);
 
 host.saveRsiTouchFlipPrefs(
 {

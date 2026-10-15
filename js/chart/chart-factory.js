@@ -445,6 +445,7 @@ SCREENER_PAGE_VISIBLE_BARS,
 SCREENER_PAGE_MAX_BARS,
 SCREENER_PAGE_HISTORY_REQUESTS,
 applyDashboardZoom,
+primeDashboardChartScale,
 computeChartFutureMarginBars,
 appendFutureWhitespaceBars,
 coinsTfVisibleBars,
@@ -455,11 +456,11 @@ restoreScreenerViewport,
 applyScreenerZoom,
 tfPeriodSec,
 rsiPlotTimeOffsetSec
-} from "./chart-viewport.js?v=c4f4504e";
+} from "./chart-viewport.js?v=c071f3e4";
 
 import {
 tfPeriodSec
-} from "./chart-viewport.js?v=c4f4504e";
+} from "./chart-viewport.js?v=c071f3e4";
 
 
 
@@ -511,6 +512,73 @@ scaleMargins:{
 top:0,
 bottom:0
 }
+});
+
+}catch{
+/* ignore */
+}
+
+}
+
+const RSI_LINE_COLOR_NEUTRAL =
+"#b2b5be";
+const RSI_LINE_COLOR_ABOVE =
+"#459782";
+const RSI_LINE_COLOR_BELOW =
+"#ef4444";
+
+/** Baseline RSI: выше 50 — зелёный, ниже — красный; иначе одна нейтральная линия. */
+export function applyRsiSeriesColorMode(
+series,
+colorLines
+){
+
+if(
+!series?.applyOptions
+){
+return;
+}
+
+const above =
+colorLines
+? RSI_LINE_COLOR_ABOVE
+: RSI_LINE_COLOR_NEUTRAL;
+const below =
+colorLines
+? RSI_LINE_COLOR_BELOW
+: RSI_LINE_COLOR_NEUTRAL;
+
+try{
+
+series.applyOptions({
+baseValue:{
+type:
+"price",
+price:
+50
+},
+topLineColor:
+above,
+bottomLineColor:
+below,
+topFillColor1:
+"rgba(0,0,0,0)",
+topFillColor2:
+"rgba(0,0,0,0)",
+bottomFillColor1:
+"rgba(0,0,0,0)",
+bottomFillColor2:
+"rgba(0,0,0,0)",
+lineWidth:
+1,
+lineVisible:
+true,
+lastValueVisible:
+true,
+priceLineVisible:
+false,
+crosshairMarkerVisible:
+false
 });
 
 }catch{
@@ -604,9 +672,72 @@ crosshair:hiddenCrosshairOptions()
 });
 
 const series =
-chart.addLineSeries({
+typeof chart.addBaselineSeries ===
+"function"
+? chart.addBaselineSeries({
 
-color:"#b2b5be",
+baseValue:{
+type:
+"price",
+price:
+50
+},
+
+topLineColor:
+RSI_LINE_COLOR_NEUTRAL,
+
+bottomLineColor:
+RSI_LINE_COLOR_NEUTRAL,
+
+topFillColor1:
+"rgba(0,0,0,0)",
+
+topFillColor2:
+"rgba(0,0,0,0)",
+
+bottomFillColor1:
+"rgba(0,0,0,0)",
+
+bottomFillColor2:
+"rgba(0,0,0,0)",
+
+lineWidth:1,
+
+lastValueVisible:true,
+
+priceLineVisible:false,
+
+crosshairMarkerVisible:false,
+
+autoscaleInfoProvider:()=>(
+{
+
+priceRange:{
+
+minValue:0,
+
+maxValue:100
+
+}
+
+}
+),
+
+priceFormat:{
+
+type:"price",
+
+precision:2,
+
+minMove:0.01
+
+}
+
+})
+: chart.addLineSeries({
+
+color:
+RSI_LINE_COLOR_NEUTRAL,
 
 lineWidth:1,
 
@@ -641,6 +772,11 @@ minMove:0.01
 }
 
 });
+
+applyRsiSeriesColorMode(
+series,
+false
+);
 
 applyRsiFixedPriceScale(
 chart,
@@ -1876,7 +2012,7 @@ lineEl.classList.remove(
 
 export {
 linkChartsCrosshair
-} from "./chart-crosshair-link.js?v=58c4889d";
+} from "./chart-crosshair-link.js?v=cf295fe7";
 
 
 

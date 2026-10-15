@@ -137,6 +137,12 @@ host.loadSeq
 return;
 }
 
+host.applyRsiSeriesColorMode?.(
+host.rsiSeries,
+host.rsiPaneSettings.colorLines ===
+true
+);
+
 host.rsiSeries.setData(
 host.appendFutureWhitespaceBars(
 points,

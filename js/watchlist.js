@@ -36,12 +36,13 @@ isLocalDevHost
 import {
 applyChartPriceFormat,
 applyDashboardZoom,
+primeDashboardChartScale,
 markTabletChartBody,
 createRSIChart,
 updateRsiBandLayout,
 updateRsiLevelLinesLayout,
 linkPairedChartTimeScales
-} from "./chart-import.js?v=21aeb8d5";
+} from "./chart-import.js?v=38a93246";
 
 import {
 formatPrice
@@ -53,13 +54,25 @@ alignRsiWithCandleTimes
 } from "./indicators.js?v=85e28ecc";
 
 import {
+SCREENER_WIDGET_OSCILLATOR_AO,
+SCREENER_WIDGET_OSCILLATOR_CHANGED,
+SCREENER_WIDGET_OSCILLATOR_MACD,
+createScreenerAoChart,
+createScreenerMacdChart,
+getScreenerWidgetOscillator,
+isScreenerHistogramOscillator,
+setScreenerAoData,
+setScreenerMacdData
+} from "./screener-widget-oscillator.js?v=60ae7cd9";
+
+import {
 createDashboardChartWidget,
 mountDashboardChartInteractions
-} from "./chart-widget-host.js?v=8c7fbab1";
+} from "./chart-widget-host.js?v=c85e8ec4";
 
 import {
 mountWidgetTabletChart
-} from "./tablet-widget-chart.js?v=81bf2043";
+} from "./tablet-widget-chart.js?v=9c611f5f";
 
 import {
 subscribeKline,
@@ -108,7 +121,7 @@ getWidgetFlagHtml,
 wireWidgetFlagUi,
 updateWidgetFlagUi,
 bindWidgetFlagGlobalListeners
-} from "./widget-favorite-flag.js?v=be415bb0";
+} from "./widget-favorite-flag.js?v=0c9b3e59";
 
 function escapeHtml(
 value
@@ -181,7 +194,7 @@ return;
 
 const mod =
 await import(
-"./trade-widget-mount.js?v=1d49c296"
+"./trade-widget-mount.js?v=0cbbedad"
 );
 
 mountTradeOnDashboardWidget =
@@ -494,10 +507,12 @@ dashboardGridClass(
 symbols.length
 );
 
-const showRsi =
+const oscKind =
 terminalWidgetShowsRsi(
 symbols.length
-);
+)
+? getScreenerWidgetOscillator()
+: null;
 
 symbols.forEach(
 (
@@ -508,7 +523,7 @@ try{
 createWidget(
 symbol,
 i,
-showRsi
+oscKind
 );
 }catch(
 err
@@ -555,6 +570,9 @@ entry
 ){
 
 if(
+isScreenerHistogramOscillator(
+entry?.oscKind
+) ||
 !entry?.rsiSeries ||
 !entry?.rsiWrapEl
 ){
@@ -584,8 +602,58 @@ entry.candlesRef?.() ??
 [];
 
 if(
-!entry?.rsiSeries ||
 !candles.length
+){
+return;
+}
+
+if(
+entry.oscKind ===
+SCREENER_WIDGET_OSCILLATOR_MACD
+){
+
+if(
+!entry.macdHistSeries
+){
+return;
+}
+
+setScreenerMacdData(
+{
+histSeries:
+entry.macdHistSeries,
+macdSeries:
+entry.rsiSeries,
+signalSeries:
+entry.macdSignalSeries
+},
+candles
+);
+return;
+
+}
+
+if(
+entry.oscKind ===
+SCREENER_WIDGET_OSCILLATOR_AO
+){
+
+if(
+!entry.rsiSeries
+){
+return;
+}
+
+setScreenerAoData(
+entry.rsiSeries,
+candles
+);
+return;
+
+}
+
+if(
+!entry?.rsiSeries
 ){
 return;
 }
@@ -611,20 +679,65 @@ entry
 
 }
 
+function terminalWidgetClassName(
+oscKind
+){
+
+if(
+oscKind ===
+SCREENER_WIDGET_OSCILLATOR_MACD
+){
+return "widget has-macd";
+}
+
+if(
+oscKind ===
+SCREENER_WIDGET_OSCILLATOR_AO
+){
+return "widget has-ao";
+}
+
+if(
+oscKind
+){
+return "widget has-rsi";
+}
+
+return "widget";
+
+}
+
 function buildTerminalWidgetChartHtml(
-showRsi
+oscKind
 ){
 
 const chartUi =
 getWidgetChartUiHtml();
 
 if(
-!showRsi
+!oscKind
 ){
 return `
 <div class="widget-chart-wrap chart-wrap">
 <div class="chart"></div>
 ${chartUi}
+</div>`;
+}
+
+if(
+isScreenerHistogramOscillator(
+oscKind
+)
+){
+return `
+<div class="widget-chart-body">
+<div class="widget-chart-wrap chart-wrap">
+<div class="chart"></div>
+${chartUi}
+</div>
+<div class="widget-rsi-wrap">
+<div class="widget-rsi-chart"></div>
+</div>
 </div>`;
 }
 
@@ -648,7 +761,7 @@ ${chartUi}
 function createWidget(
 symbol,
 index,
-showRsi = false
+oscKind = null
 ){
 
 const fixedSymbol =
@@ -669,9 +782,9 @@ const widget =
 document.createElement("div");
 
 widget.className =
-showRsi
-? "widget has-rsi"
-: "widget";
+terminalWidgetClassName(
+oscKind
+);
 widget.dataset.index = String(index);
 widget.dataset.symbol = fixedSymbol;
 
@@ -720,7 +833,7 @@ ${getWidgetToolbarHtml()}
 
 </div>
 
-${buildTerminalWidgetChartHtml(showRsi)}
+${buildTerminalWidgetChartHtml(oscKind)}
 
 `;
 
@@ -872,15 +985,17 @@ setCandles: data=>{ candles = data; },
 unsubKline: null,
 tabletGestures: null,
 resizeObserver: null,
-showRsi,
+oscKind,
 rsiChart: null,
 rsiSeries: null,
 rsiChartEl: null,
-rsiWrapEl: null
+rsiWrapEl: null,
+macdHistSeries: null,
+macdSignalSeries: null
 };
 
 if(
-showRsi
+oscKind
 ){
 
 const rsiWrapEl =
@@ -893,19 +1008,58 @@ widget.querySelector(
 ".widget-rsi-chart"
 );
 
+entry.rsiWrapEl =
+rsiWrapEl;
+entry.rsiChartEl =
+rsiChartEl;
+
+if(
+oscKind ===
+SCREENER_WIDGET_OSCILLATOR_MACD
+){
+
+const macdPair =
+createScreenerMacdChart(
+rsiChartEl
+);
+
+entry.rsiChart =
+macdPair.chart;
+entry.rsiSeries =
+macdPair.macdSeries;
+entry.macdHistSeries =
+macdPair.histSeries;
+entry.macdSignalSeries =
+macdPair.signalSeries;
+
+}else if(
+oscKind ===
+SCREENER_WIDGET_OSCILLATOR_AO
+){
+
+const aoPair =
+createScreenerAoChart(
+rsiChartEl
+);
+
+entry.rsiChart =
+aoPair.chart;
+entry.rsiSeries =
+aoPair.series;
+
+}else{
+
 const rsiPair =
 createRSIChart(
 rsiChartEl
 );
 
-entry.rsiWrapEl =
-rsiWrapEl;
-entry.rsiChartEl =
-rsiChartEl;
 entry.rsiChart =
 rsiPair.chart;
 entry.rsiSeries =
 rsiPair.series;
+
+}
 
 chart.applyOptions({
 timeScale:{
@@ -1163,7 +1317,18 @@ widget.classList.remove(
 "widget-chart-empty"
 );
 
+resizeChart();
+primeDashboardChartScale(
+chart,
+candles.length,
+tf
+);
 series.setData(candles);
+applyDashboardZoom(
+chart,
+candles,
+tf
+);
 
 priceHudCtrl?.refresh?.();
 
@@ -1439,9 +1604,12 @@ series,
 candles[candles.length - 1].close
 );
 
-applyDashboardZoom(chart, candles, tf);
-
 resizeChart();
+applyDashboardZoom(
+chart,
+candles,
+tf
+);
 
 refreshWidgetDrawings(
 entry
@@ -1503,16 +1671,22 @@ more;
 entry.setCandles(
 more
 );
+resizeChart();
+primeDashboardChartScale(
+chart,
+more.length,
+tf
+);
 series.setData(
 more
-);
-updateTerminalWidgetRsiData(
-entry
 );
 applyDashboardZoom(
 chart,
 candles,
 tf
+);
+updateTerminalWidgetRsiData(
+entry
 );
 putHistoryCache(
 getActiveExchangeId(),
@@ -1597,16 +1771,22 @@ merged;
 entry.setCandles(
 merged
 );
+resizeChart();
+primeDashboardChartScale(
+chart,
+merged.length,
+tf
+);
 series.setData(
 merged
-);
-updateTerminalWidgetRsiData(
-entry
 );
 applyDashboardZoom(
 chart,
 candles,
 tf
+);
+updateTerminalWidgetRsiData(
+entry
 );
 
 }
@@ -1824,6 +2004,13 @@ void refreshWatchlistDashboard();
 
 window.addEventListener(
 EXCHANGE_CHANGED_EVENT,
+()=>{
+void refreshWatchlistDashboard();
+}
+);
+
+window.addEventListener(
+SCREENER_WIDGET_OSCILLATOR_CHANGED,
 ()=>{
 void refreshWatchlistDashboard();
 }

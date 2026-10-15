@@ -9,10 +9,21 @@
 let restoreGeneration =
 0;
 
+let preserveDepth =
+0;
+
 export function invalidatePreservedVisibleLogicalRange(){
 
 restoreGeneration +=
 1;
+
+}
+
+/** True while setData is restoring the previous logical range. */
+export function isPreservingVisibleLogicalRange(){
+
+return preserveDepth >
+0;
 
 }
 
@@ -33,6 +44,11 @@ return;
 let range =
 null;
 
+preserveDepth +=
+1;
+
+try{
+
 try{
 range =
 chart.timeScale().getVisibleLogicalRange();
@@ -43,10 +59,25 @@ null;
 
 fn();
 
+}finally{
+
+if(
+range
+){
 restoreVisibleLogicalRange(
 chart,
 range
 );
+}else{
+preserveDepth =
+Math.max(
+0,
+preserveDepth -
+1
+);
+}
+
+}
 
 }
 
@@ -67,6 +98,11 @@ return;
 let range =
 null;
 
+preserveDepth +=
+1;
+
+try{
+
 try{
 range =
 chart.timeScale().getVisibleLogicalRange();
@@ -77,10 +113,25 @@ null;
 
 await fn();
 
+}finally{
+
+if(
+range
+){
 restoreVisibleLogicalRange(
 chart,
 range
 );
+}else{
+preserveDepth =
+Math.max(
+0,
+preserveDepth -
+1
+);
+}
+
+}
 
 }
 
@@ -99,6 +150,18 @@ return;
 const gen =
 ++restoreGeneration;
 
+const release =
+()=>{
+
+preserveDepth =
+Math.max(
+0,
+preserveDepth -
+1
+);
+
+};
+
 const apply =
 ()=>{
 
@@ -106,7 +169,7 @@ if(
 gen !==
 restoreGeneration
 ){
-return;
+return false;
 }
 
 try{
@@ -117,6 +180,8 @@ range
 /* ignore */
 }
 
+return true;
+
 };
 
 apply();
@@ -124,15 +189,17 @@ requestAnimationFrame(
 ()=>{
 
 if(
-gen !==
-restoreGeneration
+!apply()
 ){
+release();
 return;
 }
 
-apply();
 requestAnimationFrame(
-apply
+()=>{
+apply();
+release();
+}
 );
 
 }

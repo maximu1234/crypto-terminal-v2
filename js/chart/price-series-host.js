@@ -35,7 +35,7 @@ mergeLiveBarIntoDisplay
 
 import {
 runWithPreservedVisibleLogicalRange
-} from "../chart-visible-range.js?v=255ee6c8";
+} from "../chart-visible-range.js?v=fe893946";
 
 import {
 isChartPriceScaleLogarithmic

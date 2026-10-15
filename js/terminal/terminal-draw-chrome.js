@@ -7,7 +7,7 @@ import {
 positionTabletProbeCrosshair,
 hideTabletProbeCrosshair,
 isTabletChartViewport
-} from "../chart-import.js?v=21aeb8d5";
+} from "../chart-import.js?v=38a93246";
 
 import {
 TERMINAL_VISIBLE_BARS,
@@ -31,7 +31,7 @@ import {
 buildChartDisplayCandles,
 settleCoinsChartViewport,
 scheduleResizeCharts
-} from "./terminal-chart-layout.js?v=82d250f6";
+} from "./terminal-chart-layout.js?v=d4f3f25d";
 
 import {
 replayVisibleCandles
@@ -52,13 +52,13 @@ const {
 initWidgetDrawings
 } =
 await import(
-"../chart-widget-host.js?v=8c7fbab1"
+"../chart-widget-host.js?v=c85e8ec4"
 );
 const {
 initChartIndicators
 } =
 await import(
-"../chart-indicators.js?v=c8a52033"
+"../chart-indicators.js?v=354f5815"
 );
 const {
 createPattern12EarlyT3Indicator
@@ -211,7 +211,7 @@ deps.drawingTools?.getTool?.() ??
 );
 
 void import(
-"../price-alert-ui.js?v=8bccb848"
+"../price-alert-ui.js?v=6208e2af"
 ).then(
 ({
 mountPriceAlertUi
@@ -836,14 +836,12 @@ id ===
 id ===
 "rsi"
 ){
+/*
+ * Только перекладка высоты панелей. settleCoinsChartViewport
+ * заново ставит окно «последние N свечей» и сдвигает график
+ * туда, где пользователь сейчас не смотрит.
+ */
 scheduleResizeCharts();
-
-if(
-deps.candles.length
-){
-settleCoinsChartViewport();
-}
-
 deps.chartIndicators?.notifyLayoutChange?.();
 
 }
@@ -1043,7 +1041,7 @@ const {
 createTradePlusMenuHandler
 } =
 await import(
-"../trade-order-plus-ui.js?v=40532d51"
+"../trade-order-plus-ui.js?v=c2b40c9e"
 );
 
 tradePlusHandler =
@@ -1074,7 +1072,7 @@ const {
 mountPriceAlertUi
 } =
 await import(
-"../price-alert-ui.js?v=8bccb848"
+"../price-alert-ui.js?v=6208e2af"
 );
 
 let disposeAlertUi =
@@ -1134,7 +1132,7 @@ const {
 mountPriceAlertUi: mountRsiPriceAlertUi
 } =
 await import(
-"../price-alert-ui.js?v=8bccb848"
+"../price-alert-ui.js?v=6208e2af"
 );
 
 mountRsiPriceAlertUi(

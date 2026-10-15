@@ -356,6 +356,11 @@ host.normalizeRsiPaneSettings(
 next ||
 host.rsiPaneSettings
 );
+host.applyRsiSeriesColorMode?.(
+host.rsiSeries,
+host.rsiPaneSettings.colorLines ===
+true
+);
 syncRsiHudPeriod(host);
 syncRsiLevelDom(host);
 rebuildRsiFromCandles(host);
@@ -829,6 +834,12 @@ host.rsiPaneActive
 
 host.rsiPointsCache =
 points;
+
+host.applyRsiSeriesColorMode?.(
+host.rsiSeries,
+host.rsiPaneSettings.colorLines ===
+true
+);
 
 host.rsiSeries.setData(
 buildRsiDisplayPoints(host)
@@ -3957,7 +3968,7 @@ if(
 ){
 host.terminalAlgoEarlyT3ListMod =
 await import(
-"../algo-trading/terminal-early-t3-list.js?v=e5bb31f4"
+"../algo-trading/terminal-early-t3-list.js?v=7c9503e9"
 );
 }
 host.terminalAlgoEarlyT3ListMod.mountTerminalAlgoEarlyT3List();

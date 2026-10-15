@@ -7,7 +7,7 @@ import {
   applyScreenerZoom,
   SCREENER_MAX_BARS,
   SCREENER_VISIBLE_BARS
-} from "../chart-import.js?v=21aeb8d5";
+} from "../chart-import.js?v=38a93246";
 import {
   loadMarketHistory
 } from "../market-api.js?v=00f19708";

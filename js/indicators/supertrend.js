@@ -556,6 +556,9 @@ opt=>
 <span class="ind-ribbon-settings-color-preview"></span>
 </button>
 </div>
+<div class="chart-indicator-settings-reset-row">
+<button type="button" class="chart-indicator-settings-reset">Сбросить в дефолт</button>
+</div>
 `;
 
 function commit(){
@@ -654,6 +657,28 @@ commit();
 );
 }
 );
+}
+);
+
+root.querySelector(
+".chart-indicator-settings-reset"
+)?.addEventListener(
+"click",
+()=>{
+
+persistSettings(
+defaultSettings()
+);
+populateSettingsDialog(
+root
+);
+
+if(
+enabled
+){
+void refreshData();
+}
+
 }
 );
 

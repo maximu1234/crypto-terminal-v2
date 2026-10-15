@@ -372,7 +372,9 @@ body.terminal-page .widget-draw-tools{
     flex-direction:column;
 }
 
-.widget.has-rsi .widget-chart-wrap{
+.widget.has-rsi .widget-chart-wrap,
+.widget.has-macd .widget-chart-wrap,
+.widget.has-ao .widget-chart-wrap{
     flex:1 1 74%;
     max-height:74%;
 }

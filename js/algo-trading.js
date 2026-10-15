@@ -9,10 +9,11 @@ linkChartsCrosshair,
 applyCoinsChartViewport,
 applyChartPriceFormat,
 applyRsiFixedPriceScale,
+applyRsiSeriesColorMode,
 appendFutureWhitespaceBars,
 computeChartFutureMarginBars,
 syncLinkedChartTimescales
-} from "./chart-import.js?v=21aeb8d5";
+} from "./chart-import.js?v=38a93246";
 
 import {
 applyLiveSeriesUpdate,
@@ -42,7 +43,7 @@ ALGO_TICKER_SCAN_HISTORY_REQUESTS
 import {
 defaultRsiPaneSettings,
 normalizeRsiPaneSettings
-} from "./indicators/rsi-pane.js?v=6c63bcae";
+} from "./indicators/rsi-pane.js?v=f7536a67";
 
 import {
 buildChartRsiPoints
@@ -61,7 +62,7 @@ bindLiveCandleCatchup
 import {
 mountAlgoTradingCoinList,
 refreshAlgoMarketListFromFlags
-} from "./algo-trading-list.js?v=d3a05ad0";
+} from "./algo-trading-list.js?v=1f39d317";
 
 import {
 mountAlgoTickerScanUi
@@ -84,7 +85,7 @@ mountAlgoRuntimeUi
 
 import {
 mountAlgoBotStrategyUi
-} from "./algo-trading/bot-strategy-ui.js?v=ab1669bf";
+} from "./algo-trading/bot-strategy-ui.js?v=736690b3";
 
 import {
 ALGO_ANALYSIS_BOT_CHANGE_EVENT,
@@ -100,7 +101,7 @@ setActiveAnalysisBotId
 
 import {
 mountSessionLogServerSettings
-} from "./algo-trading/bot-session-log-server-ui.js?v=0bf9d8ed";
+} from "./algo-trading/bot-session-log-server-ui.js?v=2fd60feb";
 
 import {
 syncBotStrategiesToMain
@@ -108,15 +109,15 @@ syncBotStrategiesToMain
 
 import {
 mountAlgoTradeUi
-} from "./algo-trading/trade/boot.js?v=0d3de3ef";
+} from "./algo-trading/trade/boot.js?v=2b292006";
 
 import {
 mountAlgoTradingDrawings
-} from "./algo-trading/drawings.js?v=6ff6a497";
+} from "./algo-trading/drawings.js?v=bbfa6918";
 
 import {
 mountAlgoTradingIndicators
-} from "./algo-trading/indicators.js?v=82bf2a6c";
+} from "./algo-trading/indicators.js?v=e2dc6e8c";
 
 import {
 mountAlgoPatternEntryOverlay
@@ -202,7 +203,7 @@ isChartLayoutReady
 import {
 invalidatePreservedVisibleLogicalRange,
 runWithPreservedVisibleLogicalRange
-} from "./chart-visible-range.js?v=255ee6c8";
+} from "./chart-visible-range.js?v=fe893946";
 
 import {
 coinsState,
@@ -258,7 +259,7 @@ syncRsiLevelDom as syncRsiLevelDomEl,
 setRsiHud as setRsiHudEl,
 lastRsiValue as lastRsiValueFromCandles,
 layoutRsiPane
-} from "./algo-trading/page-rsi.js?v=18b40217";
+} from "./algo-trading/page-rsi.js?v=a1b6772a";
 
 import {
 bindAlgoStatsPanelResize
@@ -322,7 +323,7 @@ resizeAlgoCharts as resizeAlgoChartsMoved,
 fitViewport as fitViewportMoved,
 mergeOlderAlgoCandles as mergeOlderAlgoCandlesMoved,
 applyLiveCandleTick as applyLiveCandleTickMoved
-} from "./algo-trading/chart-data.js?v=efc06faf";
+} from "./algo-trading/chart-data.js?v=2d942c6c";
 import {
 rsiPaneSettingsFromFlipPrefs as rsiPaneSettingsFromFlipPrefsMoved,
 readFlipPanePatchFromDom as readFlipPanePatchFromDomMoved,
@@ -378,7 +379,7 @@ bindTpShareInputs as bindTpShareInputsMoved,
 bindSide as bindSideMoved,
 setNum as setNumMoved,
 setCheck as setCheckMoved
-} from "./algo-trading/page-controls.js?v=3b6df78e";
+} from "./algo-trading/page-controls.js?v=0ab2f5b3";
 export async function mountAlgoTradingPage(){
 
 setActiveAnalysisBotId(
@@ -951,6 +952,7 @@ get applyChartPriceFormat(){ return applyChartPriceFormat; },
 get applyCoinsChartViewport(){ return applyCoinsChartViewport; },
 get applyLiveSeriesUpdate(){ return applyLiveSeriesUpdate; },
 get applyRsiFixedPriceScale(){ return applyRsiFixedPriceScale; },
+get applyRsiSeriesColorMode(){ return applyRsiSeriesColorMode; },
 get buildChartRsiPoints(){ return buildChartRsiPoints; },
 get buildDisplayCandles(){ return buildDisplayCandles; },
 get buildPatternAnalysisOpts(){ return buildPatternAnalysisOpts; },

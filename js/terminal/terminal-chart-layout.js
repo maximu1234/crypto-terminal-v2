@@ -7,7 +7,7 @@ computeChartFutureMarginBars,
 computeCoinsChartViewportPlan,
 equalizeLinkedPanePriceScales,
 syncLinkedChartTimescales
-} from "../chart-import.js?v=21aeb8d5";
+} from "../chart-import.js?v=38a93246";
 
 import {
 terminalVisibleBars,
@@ -29,7 +29,7 @@ CHART_REDRAW_REASON
 
 import {
 invalidatePreservedVisibleLogicalRange
-} from "../chart-visible-range.js?v=255ee6c8";
+} from "../chart-visible-range.js?v=fe893946";
 
 let layoutCtx =
 null;
