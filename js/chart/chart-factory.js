@@ -20,6 +20,11 @@ lwPriceScaleModeId
 } from "./price-scale-mode.js?v=7deaefee";
 
 import {
+candleSeriesPaint,
+registerCandleSeries
+} from "./candle-color-prefs.js?v=a9347502";
+
+import {
 liveBarPeriodSec
 } from "./live-bar-roll.js?v=6ff2b718";
 
@@ -313,16 +318,16 @@ crosshair:mainChartCrosshairOptions()
 const series =
 chart.addCandlestickSeries({
 
-upColor:"#459782",
-downColor:"#ef4444",
-borderVisible:false,
-wickUpColor:"#459782",
-wickDownColor:"#ef4444",
+...candleSeriesPaint(),
 
 priceLineVisible:true,
 lastValueVisible:false
 
 });
+
+registerCandleSeries(
+series
+);
 
 attachChartWheelDeadband(
 container
@@ -411,15 +416,15 @@ pinch:true
 const series =
 chart.addCandlestickSeries({
 
-upColor:"#459782",
-downColor:"#ef4444",
-borderVisible:false,
-wickUpColor:"#459782",
-wickDownColor:"#ef4444",
+...candleSeriesPaint(),
 priceLineVisible:true,
 lastValueVisible:true
 
 });
+
+registerCandleSeries(
+series
+);
 
 attachChartWheelDeadband(
 container
@@ -1871,7 +1876,7 @@ lineEl.classList.remove(
 
 export {
 linkChartsCrosshair
-} from "./chart-crosshair-link.js?v=e1332dc1";
+} from "./chart-crosshair-link.js?v=58c4889d";
 
 
 

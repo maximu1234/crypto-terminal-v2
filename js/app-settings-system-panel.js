@@ -43,7 +43,14 @@ SCREENER_WIDGET_OSCILLATOR_MACD,
 SCREENER_WIDGET_OSCILLATOR_RSI,
 getScreenerWidgetOscillator,
 setScreenerWidgetOscillator
-} from "./screener-widget-oscillator.js?v=12b57712";
+} from "./screener-widget-oscillator.js?v=8d32ca29";
+
+import {
+CANDLE_COLOR_CLASSIC,
+CANDLE_COLOR_MONO,
+getCandleColorMode,
+setCandleColorMode
+} from "./chart/candle-color-prefs.js?v=a9347502";
 
 import {
 renderHeaderNav
@@ -320,6 +327,16 @@ ${snapshotLogoBlock}
 <input type="number" id="app-settings-terminal-history-depth" class="app-settings-field-select" min="${TERMINAL_HISTORY_DEPTH_MIN}" max="${TERMINAL_HISTORY_DEPTH_MAX}" step="1000" inputmode="numeric" aria-label="Глубина истории свечей на Терминале"/>
 </label>
 <p class="app-settings-panel-hint">Сначала грузится ${TERMINAL_HISTORY_DEPTH_MIN}. При сдвиге графика влево — догрузка до этого лимита (${TERMINAL_HISTORY_DEPTH_MIN}–${TERMINAL_HISTORY_DEPTH_MAX}).</p>
+<p class="app-settings-panel-lead app-settings-panel-lead--spaced">Цвет свечей графика.</p>
+<label class="app-settings-toggle-row">
+<input type="checkbox" class="app-settings-toggle-input" id="app-settings-candle-color-classic" />
+<span class="app-settings-toggle-label">Красно-зеленые</span>
+</label>
+<label class="app-settings-toggle-row">
+<input type="checkbox" class="app-settings-toggle-input" id="app-settings-candle-color-mono" />
+<span class="app-settings-toggle-label">Монохром</span>
+</label>
+<p class="app-settings-panel-hint">Монохром — все свечи белые. Включённый режим действует на всех графиках.</p>
 <p class="app-settings-panel-lead app-settings-panel-lead--spaced">Скринер.</p>
 <label class="app-settings-toggle-row">
 <input type="checkbox" class="app-settings-toggle-input" id="app-settings-screener-widget-rsi" />
@@ -385,6 +402,14 @@ const snapshotLogoStatus =
 host.querySelector(
 "#app-settings-snapshot-logo-status"
 );
+const candleColorClassicInput =
+host.querySelector(
+"#app-settings-candle-color-classic"
+);
+const candleColorMonoInput =
+host.querySelector(
+"#app-settings-candle-color-mono"
+);
 const screenerRsiInput =
 host.querySelector(
 "#app-settings-screener-widget-rsi"
@@ -397,6 +422,28 @@ const screenerAoInput =
 host.querySelector(
 "#app-settings-screener-widget-ao"
 );
+
+function syncCandleColorToggles(){
+
+const mono =
+getCandleColorMode() ===
+CANDLE_COLOR_MONO;
+
+if(
+candleColorClassicInput
+){
+candleColorClassicInput.checked =
+!mono;
+}
+
+if(
+candleColorMonoInput
+){
+candleColorMonoInput.checked =
+mono;
+}
+
+}
 
 function syncScreenerOscillatorToggles(){
 
@@ -516,6 +563,7 @@ syncAlertToastDuration(
 alertToastDurationSelect
 );
 void hydrateSnapshotLogo();
+syncCandleColorToggles();
 syncScreenerOscillatorToggles();
 
 trayInput?.addEventListener(
@@ -759,6 +807,34 @@ alertToastDurationSelect.value
 }
 );
 
+candleColorClassicInput?.addEventListener(
+"change",
+()=>{
+
+setCandleColorMode(
+candleColorClassicInput.checked
+? CANDLE_COLOR_CLASSIC
+: CANDLE_COLOR_MONO
+);
+syncCandleColorToggles();
+
+}
+);
+
+candleColorMonoInput?.addEventListener(
+"change",
+()=>{
+
+setCandleColorMode(
+candleColorMonoInput.checked
+? CANDLE_COLOR_MONO
+: CANDLE_COLOR_CLASSIC
+);
+syncCandleColorToggles();
+
+}
+);
+
 screenerRsiInput?.addEventListener(
 "change",
 ()=>{
@@ -834,6 +910,7 @@ syncAlertToastDuration(
 alertToastDurationSelect
 );
 void hydrateSnapshotLogo();
+syncCandleColorToggles();
 syncScreenerOscillatorToggles();
 }
 };

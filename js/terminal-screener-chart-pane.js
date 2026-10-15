@@ -19,11 +19,11 @@ appendFutureWhitespaceBars,
 computeChartFutureMarginBars,
 coinsTfVisibleBars,
 linkChartsCrosshair
-} from "./chart-import.js?v=63f1c250";
+} from "./chart-import.js?v=21aeb8d5";
 
 import {
 readCoinsPrefs
-} from "./terminal/terminal-prefs.js?v=d0f17867";
+} from "./terminal/terminal-prefs.js?v=2a0000f3";
 
 import {
 calculateRSI,
@@ -50,7 +50,7 @@ paintCatchupLiveSeries
 
 import {
 mountWidgetDomCrosshair
-} from "./chart-widget-host.js?v=7a80ffd3";
+} from "./chart-widget-host.js?v=723ca676";
 
 function buildBodyHtml(
 showRsi

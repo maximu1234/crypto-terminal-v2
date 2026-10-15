@@ -15,6 +15,11 @@ withChartLocalTime
 } from "./chart/chart-local-time.js?v=027bb0cc";
 
 import {
+candleSeriesPaint,
+registerCandleSeries
+} from "./chart/candle-color-prefs.js?v=a9347502";
+
+import {
 getActiveExchangeId
 } from "./market-api.js?v=7b3e6b3c";
 
@@ -25,7 +30,7 @@ getExchangeDefinition
 import {
 getLoadedTradeExchangeModules,
 loadTradeExchangeModules
-} from "./trade/module-router.js?v=0917a3ca";
+} from "./trade/module-router.js?v=dba6baec";
 
 import {
 candleAlignSec,
@@ -726,17 +731,16 @@ true
 
 const series =
 chart.addCandlestickSeries({
-upColor:"#459782",
-downColor:"#ef4444",
-borderVisible:
-false,
-wickUpColor:"#459782",
-wickDownColor:"#ef4444",
+...candleSeriesPaint(),
 priceLineVisible:
 false,
 lastValueVisible:
 false
 });
+
+registerCandleSeries(
+series
+);
 
 series.setData(
 candles

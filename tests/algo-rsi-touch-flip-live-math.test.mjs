@@ -40,9 +40,9 @@ test("entry notional leaves Bybit order cost inside the free balance", () => {
 
   const shortCap = math.maxEntryNotionalUsdt(available, 1, "short");
   const longCap = math.maxEntryNotionalUsdt(available, 1, "long");
-  assert.ok(shortCap < available);
-  assert.ok(longCap < available);
-  assert.ok(shortCap < longCap);
+  assert.equal(math.ONE_X_BALANCE_FRACTION, 0.9);
+  assert.equal(shortCap, available * 0.9);
+  assert.equal(longCap, available * 0.9);
   assert.ok(shortCap * shortRate < available);
   assert.ok(longCap * longRate < available);
 

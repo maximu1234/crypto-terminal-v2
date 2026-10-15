@@ -22,7 +22,7 @@ equalizeLinkedPanePriceScales,
 SCREENER_PAGE_VISIBLE_BARS,
 SCREENER_PAGE_MAX_BARS,
 SCREENER_PAGE_HISTORY_REQUESTS
-} from "./chart-import.js?v=63f1c250";
+} from "./chart-import.js?v=21aeb8d5";
 
 import {
 isIpadWebViewport
@@ -48,7 +48,7 @@ SCREENER_WIDGET_OSCILLATOR_MACD,
 createScreenerAoChart,
 createScreenerMacdChart,
 isScreenerHistogramOscillator
-} from "./screener-widget-oscillator.js?v=12b57712";
+} from "./screener-widget-oscillator.js?v=8d32ca29";
 
 let deps = null;
 

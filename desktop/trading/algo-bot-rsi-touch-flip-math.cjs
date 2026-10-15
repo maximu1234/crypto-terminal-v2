@@ -177,6 +177,9 @@ function equalShareBudget(allocated, tickerCount) {
  */
 const BYBIT_NON_VIP_TAKER_FEE = 0.00055;
 
+/** At 1x the whole notional is margin, so the slice stays under the free balance. */
+const ONE_X_BALANCE_FRACTION = 0.9;
+
 function isShortEntrySide(side) {
   const raw = String(side || "").trim().toLowerCase();
   return raw === "short" || raw === "sell";
@@ -206,12 +209,18 @@ function linearOrderCostRate(leverage, side) {
  */
 function maxEntryNotionalUsdt(available, leverage, side) {
   const wallet = Number(available);
-  const rate = linearOrderCostRate(leverage, side);
-  if (!(wallet > 0) || !(rate > 0) || !Number.isFinite(rate)) {
+  const lev = Math.max(1, Number(leverage) || 1);
+  if (!(wallet > 0)) {
     return 0;
   }
-  const cap = (wallet / rate) * (1 - 1e-6);
-  return cap > 0 ? cap : 0;
+  if (lev <= 1) {
+    return wallet * ONE_X_BALANCE_FRACTION;
+  }
+  const rate = linearOrderCostRate(lev, side);
+  if (!(rate > 0) || !Number.isFinite(rate)) {
+    return 0;
+  }
+  return wallet / rate;
 }
 
 /**
@@ -593,6 +602,7 @@ module.exports = {
   allocatedBalanceUsdt,
   equalShareBudget,
   BYBIT_NON_VIP_TAKER_FEE,
+  ONE_X_BALANCE_FRACTION,
   linearOrderCostRate,
   maxEntryNotionalUsdt,
   rsiTouchFlipCycleSlHit,

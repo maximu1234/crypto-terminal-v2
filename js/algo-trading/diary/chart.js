@@ -15,6 +15,11 @@ withChartLocalTime
 } from "../../chart/chart-local-time.js?v=027bb0cc";
 
 import {
+candleSeriesPaint,
+registerCandleSeries
+} from "../../chart/candle-color-prefs.js?v=a9347502";
+
+import {
 candleAlignSec,
 markerForExecutionSide
 } from "../../trade-markers-sandbox/marker-math.js?v=a5c98186";
@@ -697,17 +702,16 @@ true
 
 const series =
 chart.addCandlestickSeries({
-upColor:"#459782",
-downColor:"#ef4444",
-borderVisible:
-false,
-wickUpColor:"#459782",
-wickDownColor:"#ef4444",
+...candleSeriesPaint(),
 priceLineVisible:
 false,
 lastValueVisible:
 false
 });
+
+registerCandleSeries(
+series
+);
 
 series.setData(
 candles

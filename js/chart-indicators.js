@@ -233,16 +233,16 @@ createIndicatorSettingsDialog
 await Promise.all(
 [
 import(
-"./indicators/rsi-pane.js?v=2687d57d"
+"./indicators/rsi-pane.js?v=6c63bcae"
 ),
 import(
-"./indicators/volume-pane.js?v=83b6b3d8"
+"./indicators/volume-pane.js?v=2105eb41"
 ),
 import(
-"./indicators/ao-pane.js?v=1a035c26"
+"./indicators/ao-pane.js?v=daa19ed6"
 ),
 import(
-"./indicators/macd-pane.js?v=134c8811"
+"./indicators/macd-pane.js?v=ffb8c6e4"
 ),
 import(
 "./indicators/moving-average.js?v=10ad82b5"

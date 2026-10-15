@@ -8,7 +8,7 @@ linkPairedChartTimeScales,
 appendFutureWhitespaceBars,
 computeChartFutureMarginBars,
 coinsTfVisibleBars
-} from "../chart-import.js?v=45dccc88";
+} from "../chart-import.js?v=21aeb8d5";
 
 import {
 calculateMacd,
@@ -41,7 +41,7 @@ isBottomIndicatorPane
 
 import {
 syncPaneViewportAfterData
-} from "./indicator-pane-viewport.js?v=efc01e0e";
+} from "./indicator-pane-viewport.js?v=4e1ffabd";
 
 export const MACD_PANE_ID =
 "macd";

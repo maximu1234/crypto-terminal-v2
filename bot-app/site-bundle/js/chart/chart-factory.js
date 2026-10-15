@@ -20,6 +20,11 @@ lwPriceScaleModeId
 } from "./price-scale-mode.js?v=7deaefee";
 
 import {
+candleSeriesPaint,
+registerCandleSeries
+} from "./candle-color-prefs.js?v=a9347502";
+
+import {
 liveBarPeriodSec
 } from "./live-bar-roll.js?v=6ff2b718";
 
@@ -313,16 +318,16 @@ crosshair:mainChartCrosshairOptions()
 const series =
 chart.addCandlestickSeries({
 
-upColor:"#459782",
-downColor:"#ef4444",
-borderVisible:false,
-wickUpColor:"#459782",
-wickDownColor:"#ef4444",
+...candleSeriesPaint(),
 
 priceLineVisible:true,
 lastValueVisible:false
 
 });
+
+registerCandleSeries(
+series
+);
 
 attachChartWheelDeadband(
 container
@@ -411,15 +416,15 @@ pinch:true
 const series =
 chart.addCandlestickSeries({
 
-upColor:"#459782",
-downColor:"#ef4444",
-borderVisible:false,
-wickUpColor:"#459782",
-wickDownColor:"#ef4444",
+...candleSeriesPaint(),
 priceLineVisible:true,
 lastValueVisible:true
 
 });
+
+registerCandleSeries(
+series
+);
 
 attachChartWheelDeadband(
 container
@@ -436,6 +441,9 @@ export {
 SCREENER_VISIBLE_BARS,
 SCREENER_MAX_BARS,
 SCREENER_LOAD_BARS,
+SCREENER_PAGE_VISIBLE_BARS,
+SCREENER_PAGE_MAX_BARS,
+SCREENER_PAGE_HISTORY_REQUESTS,
 applyDashboardZoom,
 computeChartFutureMarginBars,
 appendFutureWhitespaceBars,
@@ -447,11 +455,11 @@ restoreScreenerViewport,
 applyScreenerZoom,
 tfPeriodSec,
 rsiPlotTimeOffsetSec
-} from "./chart-viewport.js?v=95c948c9";
+} from "./chart-viewport.js?v=c4f4504e";
 
 import {
 tfPeriodSec
-} from "./chart-viewport.js?v=95c948c9";
+} from "./chart-viewport.js?v=c4f4504e";
 
 
 
@@ -1868,7 +1876,7 @@ lineEl.classList.remove(
 
 export {
 linkChartsCrosshair
-} from "./chart-crosshair-link.js?v=9c897298";
+} from "./chart-crosshair-link.js?v=58c4889d";
 
 
 

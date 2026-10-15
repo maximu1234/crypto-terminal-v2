@@ -1,39 +1,105 @@
 /**
- * Volume — вертикальные объёмы на отдельной панели (высота как у RSI).
+ * Volume — гистограмма внизу панели цены (как на TradingView).
  */
 import {
-createVolumeChart,
-syncLinkedChartTimescales,
-linkPairedChartTimeScales,
 appendFutureWhitespaceBars,
 computeChartFutureMarginBars,
 coinsTfVisibleBars
-} from "../chart-import.js?v=45dccc88";
-
-import {
-isChartLayoutReady
-} from "../chart-layout-gate.js?v=4a8798af";
-
-import {
-isCoinsPaneHeightDrag
-} from "../terminal-layout-resize.js?v=671925b0";
-
-import {
-isBottomIndicatorPane
-} from "./indicator-pane-order.js?v=b9987606";
-
-import {
-syncPaneViewportAfterData
-} from "./indicator-pane-viewport.js?v=efc01e0e";
+} from "../chart-import.js?v=21aeb8d5";
 
 export const VOLUME_PANE_ID =
 "volume";
 
-const VOL_UP =
-"rgba(38, 166, 154, 0.72)";
+const VOLUME_OPACITY_KEY =
+"chart_volume_bar_opacity_v1";
 
-const VOL_DOWN =
-"rgba(239, 68, 68, 0.72)";
+const VOLUME_OPACITY_DEFAULT =
+0.72;
+
+const VOLUME_SCALE_ID =
+"volume-overlay";
+
+const VOLUME_SCALE_TOP =
+0.75;
+
+function clampOpacity(
+value
+){
+
+const n =
+Number(
+value
+);
+
+if(
+!Number.isFinite(
+n
+)
+){
+return VOLUME_OPACITY_DEFAULT;
+}
+
+return Math.min(
+1,
+Math.max(
+0.05,
+Math.round(
+n * 100
+) / 100
+)
+);
+
+}
+
+function readOpacity(){
+
+try{
+const raw =
+localStorage.getItem(
+VOLUME_OPACITY_KEY
+);
+
+if(
+raw ==
+null ||
+raw ===
+""
+){
+return VOLUME_OPACITY_DEFAULT;
+}
+
+return clampOpacity(
+raw
+);
+}catch{
+return VOLUME_OPACITY_DEFAULT;
+}
+
+}
+
+function writeOpacity(
+value
+){
+
+const next =
+clampOpacity(
+value
+);
+
+try{
+localStorage.setItem(
+VOLUME_OPACITY_KEY,
+String(
+next
+)
+);
+}catch{
+/* ignore */
+}
+
+return next;
+
+}
 
 function buildVolumeDisplayPoints(
 candles,
@@ -94,7 +160,8 @@ tf
 }
 
 function volumeBarColor(
-bar
+bar,
+opacity
 ){
 
 if(
@@ -106,10 +173,13 @@ bar.volume <=
 return "rgba(120,123,134,0.35)";
 }
 
-return bar.close >=
+const rgb =
+bar.close >=
 bar.open
-? VOL_UP
-: VOL_DOWN;
+? "38, 166, 154"
+: "239, 68, 68";
+
+return `rgba(${rgb}, ${opacity})`;
 
 }
 
@@ -119,12 +189,12 @@ getHost
 
 let enabled =
 false;
-let chart =
-null;
 let series =
 null;
-let unbindTimeSync =
+let boundChart =
 null;
+let opacity =
+readOpacity();
 
 function wrapEl(){
 
@@ -134,226 +204,144 @@ return document.getElementById(
 
 }
 
-function chartEl(){
+function hideSeparatePane(){
 
-return document.getElementById(
-"volume-chart"
+wrapEl()?.classList.add(
+"indicator-pane-hidden"
 );
 
 }
 
-function updateTimeScaleVisibility(){
+function mainChart(){
 
-if(
-!chart
-){
-return;
-}
-
-const showTimeScale =
-isBottomIndicatorPane(
-VOLUME_PANE_ID
-);
-
-chart.timeScale().applyOptions(
-{
-visible:
-showTimeScale,
-timeVisible:
-showTimeScale,
-ticksVisible:
-showTimeScale
-}
-);
-
-}
-
-function bindTimeSync(){
-
-unbindTimeSync?.();
-unbindTimeSync =
+return getHost?.()?.chart ||
 null;
 
-const mainChart =
-getHost?.()?.chart;
+}
+
+function pinVolumeScale(){
 
 if(
-!mainChart ||
-!chart
+!series
 ){
 return;
 }
 
-unbindTimeSync =
-linkPairedChartTimeScales(
-mainChart,
-chart,
-updateTimeScaleVisibility,
+try{
+const hostChart =
+boundChart ||
+mainChart();
+
+hostChart?.priceScale(
+VOLUME_SCALE_ID
+).applyOptions(
 {
-linkedDrivesMain:
+scaleMargins:{
+top:
+VOLUME_SCALE_TOP,
+bottom:
+0
+},
+visible:
 false,
-isLocked:()=>
-!isChartLayoutReady() ||
-isCoinsPaneHeightDrag()
+borderVisible:
+false
 }
 );
-
-syncLinkedChartTimescales(
-mainChart,
-chart
-);
-updateTimeScaleVisibility();
+}catch{
+/* ignore */
+}
 
 }
 
-function ensureChart(){
+function dropSeries(){
 
 if(
-chart
+boundChart &&
+series
 ){
-return true;
+try{
+boundChart.removeSeries(
+series
+);
+}catch{
+/* ignore */
+}
 }
 
-const el =
-chartEl();
+series =
+null;
+boundChart =
+null;
+
+}
+
+function ensureSeries(){
+
+const hostChart =
+mainChart();
 
 if(
-!el
+!hostChart
 ){
 return false;
 }
 
-const created =
-createVolumeChart(
-el
-);
-
-chart =
-created.chart;
-series =
-created.series;
+if(
+series &&
+boundChart ===
+hostChart
+){
 return true;
-
 }
 
-function destroyChart(){
+dropSeries();
 
-unbindTimeSync?.();
-unbindTimeSync =
-null;
-
-if(
-chart
-){
 try{
-chart.remove();
+series =
+hostChart.addHistogramSeries(
+{
+priceFormat:{
+type:
+"volume"
+},
+priceScaleId:
+VOLUME_SCALE_ID,
+priceLineVisible:
+false,
+lastValueVisible:
+false,
+base:
+0
+}
+);
+boundChart =
+hostChart;
+pinVolumeScale();
+return true;
 }catch{
-/* ignore */
-}
-}
-
-chart =
-null;
 series =
 null;
-
+boundChart =
+null;
+return false;
 }
-
-function applyVisibility(){
-
-wrapEl()?.classList.toggle(
-"indicator-pane-hidden",
-!enabled
-);
-
-}
-
-function ensurePaneChartSized(){
-
-if(
-!enabled ||
-!chart
-){
-return;
-}
-
-const host =
-getHost?.();
-
-const w =
-host?.getChartWrapWidth?.() ||
-0;
-
-if(
-w >
-0
-){
-onResize(
-w
-);
-}
-
-}
-
-function pulseVolumeAutoscale(){
-
-if(
-!chart
-){
-return;
-}
-
-try{
-const ps =
-chart.priceScale(
-"right"
-);
-
-ps.applyOptions({
-autoScale:
-false
-});
-
-ps.applyOptions({
-autoScale:
-true,
-scaleMargins:{
-top:
-0.08,
-bottom:
-0
-}
-});
-}catch{
-/* ignore */
-}
-
-}
-
-function syncVolumeAfterData(){
-
-syncPaneViewportAfterData(
-getHost,
-chart,
-{
-pulseAutoscale:
-pulseVolumeAutoscale,
-updateTimeScaleVisibility
-}
-);
 
 }
 
 function refreshData(){
 
 if(
-!enabled ||
-!series
+!enabled
 ){
 return;
 }
 
-ensurePaneChartSized();
+if(
+!ensureSeries()
+){
+return;
+}
 
 const host =
 getHost?.();
@@ -373,6 +361,7 @@ tf,
 host?.getVisibleBarsCap?.()
 );
 
+try{
 series.setData(
 points.map(
 bar=>({
@@ -383,13 +372,16 @@ bar.volume ||
 0,
 color:
 volumeBarColor(
-bar
+bar,
+opacity
 )
 })
 )
 );
-
-syncVolumeAfterData();
+pinVolumeScale();
+}catch{
+dropSeries();
+}
 
 }
 
@@ -398,142 +390,113 @@ function enable(){
 if(
 enabled
 ){
+refreshData();
 return;
 }
 
 if(
-!ensureChart()
+!ensureSeries()
 ){
 return;
 }
 
 enabled =
 true;
-applyVisibility();
-ensurePaneChartSized();
+hideSeparatePane();
 refreshData();
-bindTimeSync();
 
 }
 
 function disable(){
 
 if(
-!enabled
+!enabled &&
+!series
 ){
+hideSeparatePane();
 return;
 }
 
 enabled =
 false;
-unbindTimeSync?.();
-unbindTimeSync =
-null;
+dropSeries();
+hideSeparatePane();
 
-if(
-series
+}
+
+function populateSettingsDialog(
+root
 ){
-series.setData(
-[]
+
+opacity =
+readOpacity();
+
+root.innerHTML =
+`
+<div class="ind-volume-settings">
+<label class="chart-indicator-settings-field">
+<span class="chart-indicator-settings-field-label">Прозрачность</span>
+<input type="number" class="chart-indicator-settings-input" min="0.05" max="1" step="0.01" data-key="opacity" value="${opacity}" inputmode="decimal"/>
+</label>
+</div>
+<div class="chart-indicator-settings-reset-row">
+<button type="button" class="chart-indicator-settings-reset">Сбросить в дефолт</button>
+</div>
+`;
+
+function commit(){
+
+const input =
+root.querySelector(
+"[data-key='opacity']"
 );
-}
 
-applyVisibility();
-
-}
-
-function onSymbolChange(){
+opacity =
+writeOpacity(
+input?.value
+);
 
 if(
-!enabled
+input
 ){
-return;
+input.value =
+String(
+opacity
+);
 }
 
 refreshData();
 
 }
 
-function onCandlesUpdate(){
+root.querySelector(
+"[data-key='opacity']"
+)?.addEventListener(
+"change",
+commit
+);
 
+root.querySelector(
+".chart-indicator-settings-reset"
+)?.addEventListener(
+"click",
+()=>{
+
+opacity =
+writeOpacity(
+VOLUME_OPACITY_DEFAULT
+);
+populateSettingsDialog(
+root
+);
 refreshData();
 
 }
-
-function syncViewport(
-ctx
-){
-
-if(
-!enabled ||
-!chart ||
-!ctx?.mainChart
-){
-return;
-}
-
-/* Copy main viewport — do not recompute barSpacing from this pane's width. */
-syncPaneViewportAfterData(
-getHost,
-chart,
-{
-updateTimeScaleVisibility,
-pulseAutoscale:
-pulseVolumeAutoscale
-}
 );
 
 }
 
-function onLayoutChange(){
-
-updateTimeScaleVisibility();
-
-if(
-enabled &&
-chart
-){
-syncLinkedChartTimescales(
-getHost?.()?.chart,
-chart
-);
-}
-
-}
-
-function onResize(
-width
-){
-
-if(
-!enabled ||
-!chart
-){
-return;
-}
-
-const paneHeight =
-wrapEl()?.getBoundingClientRect().height ||
-0;
-
-if(
-paneHeight <
-2
-){
-return;
-}
-
-chart.applyOptions(
-{
-width,
-height:
-paneHeight
-}
-);
-
-pulseVolumeAutoscale();
-
-}
+hideSeparatePane();
 
 return {
 id:
@@ -542,26 +505,53 @@ label:
 "Volume",
 legendLabel:
 "Vol",
+settingsDialogTitle:
+"Volume",
+settingsDialogClass:
+"chart-indicator-settings-dialog--compact",
 exemptFromLimit:
 false,
 defaultEnabled:
 false,
+supportsSettingsDialog:
+true,
+getSettings:()=>(
+{
+opacity
+}
+),
+populateSettingsDialog,
 enable,
 disable,
 isEnabled:()=>
 enabled,
 getChart:()=>
-enabled
-? chart
-: null,
-onSymbolChange,
-onCandlesUpdate,
-syncViewport,
-onLayoutChange,
-onResize,
-destroy:()=>{
+null,
+onSymbolChange(){
+
+refreshData();
+
+},
+onCandlesUpdate(){
+
+refreshData();
+
+},
+syncViewport(){},
+onLayoutChange(){
+
+hideSeparatePane();
+
+},
+onResize(){
+
+pinVolumeScale();
+
+},
+destroy(){
+
 disable();
-destroyChart();
+
 }
 };
 
