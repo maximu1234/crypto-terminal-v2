@@ -90,6 +90,196 @@ return typeof window !==
 
 }
 
+let desktopCandlesViaRelayPromise =
+null;
+
+function desktopCandlesViaRelay(){
+
+if(
+!isDesktopShell()
+){
+return Promise.resolve(
+false
+);
+}
+
+const desktop =
+window.cryptoTerminalDesktop;
+const getProxy =
+desktop?.getAppProxy;
+const fetchJson =
+desktop?.bybitPublicWs?.fetchJson;
+
+if(
+typeof getProxy !==
+"function" ||
+typeof fetchJson !==
+"function"
+){
+return Promise.resolve(
+false
+);
+}
+
+if(
+!desktopCandlesViaRelayPromise
+){
+desktopCandlesViaRelayPromise =
+getProxy().then(
+result=>
+!!result?.settings?.candlesViaRelay
+).catch(
+()=>
+false
+);
+}
+
+return desktopCandlesViaRelayPromise;
+
+}
+
+async function fetchBybitThroughDesktopRelay(
+pathQuery,
+options =
+{}
+){
+
+const path =
+normalizePath(
+pathQuery
+);
+const timeoutMs =
+options.timeoutMs ??
+10000;
+const retries =
+options.retries ??
+2;
+const fetchJson =
+window.cryptoTerminalDesktop.bybitPublicWs.fetchJson;
+let lastErr =
+null;
+
+for(
+let attempt =
+0;
+attempt <
+retries;
+attempt++
+){
+
+try{
+const result =
+await fetchJson(
+path,
+timeoutMs
+);
+
+if(
+!result?.ok ||
+!result.json
+){
+const err =
+new Error(
+result?.message ||
+"Bybit API недоступен"
+);
+err.retryable =
+true;
+throw err;
+}
+
+const json =
+result.json;
+
+if(
+json.retCode ===
+0
+){
+markBybitSuccess(
+0
+);
+return {
+res:{
+ok:
+true,
+status:
+200
+},
+json,
+base:
+result.base ||
+BYBIT_API_BASES[0]
+};
+}
+
+const err =
+new Error(
+`Bybit ${json.retCode}: ${json.retMsg || ""}`
+);
+err.bybitCode =
+Number(
+json.retCode
+);
+err.retryable =
+json.retCode ===
+10006 ||
+json.retCode ===
+10016;
+throw err;
+
+}catch(
+err
+){
+
+lastErr =
+err;
+
+if(
+isBybitClientReject(
+err
+)
+){
+throw err;
+}
+
+if(
+attempt <
+retries -
+1 &&
+(
+err?.retryable ||
+isNetworkFetchError(
+err
+)
+)
+){
+await sleep(
+backoffMs(
+attempt
+)
+);
+continue;
+}
+
+break;
+
+}
+
+}
+
+markBybitFailure(
+lastErr
+);
+
+throw (
+lastErr ||
+new Error(
+"Bybit API недоступен"
+)
+);
+
+}
+
 function localBybitProxyUrl(
 encodedPath
 ){
@@ -709,7 +899,7 @@ function markBybitSuccess(baseIndex){
 activeApiBaseIndex =
 baseIndex;
 
-void import("./bybit-network-ui.js?v=3b530ded").then(m=>{
+void import("./bybit-network-ui.js?v=2d117b93").then(m=>{
 m.clearBybitNetworkIssue();
 });
 
@@ -728,7 +918,7 @@ err
 return;
 }
 
-void import("./bybit-network-ui.js?v=3b530ded").then(m=>{
+void import("./bybit-network-ui.js?v=2d117b93").then(m=>{
 m.showBybitNetworkIssue(err);
 });
 
@@ -1150,6 +1340,15 @@ pathQuery,
 options = {}
 ){
 
+if(
+await desktopCandlesViaRelay()
+){
+return fetchBybitThroughDesktopRelay(
+pathQuery,
+options
+);
+}
+
 const timeoutMs =
 options.timeoutMs ??
 12000;
@@ -1259,6 +1458,15 @@ export async function fetchBybit(
 pathQuery,
 options = {}
 ){
+
+if(
+await desktopCandlesViaRelay()
+){
+return fetchBybitThroughDesktopRelay(
+pathQuery,
+options
+);
+}
 
 if(
 options.sequential === true

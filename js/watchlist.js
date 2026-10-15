@@ -12,7 +12,7 @@ loadMarketHistory,
 getActiveExchangeId,
 getActiveExchangeDefinition,
 EXCHANGE_CHANGED_EVENT
-} from "./market-api.js?v=7b3e6b3c";
+} from "./market-api.js?v=00f19708";
 
 import {
 peekHistoryCache,
@@ -23,7 +23,7 @@ logicalIndexShift
 
 import {
 clearBybitNetworkIssue
-} from "./bybit-network-ui.js?v=3b530ded";
+} from "./bybit-network-ui.js?v=2d117b93";
 
 import {
 buildAlertChartUrl
@@ -31,7 +31,7 @@ buildAlertChartUrl
 
 import {
 isLocalDevHost
-} from "./bybit-fetch.js?v=1c54517b";
+} from "./bybit-fetch.js?v=e4bd7f1f";
 
 import {
 applyChartPriceFormat,
@@ -55,7 +55,7 @@ alignRsiWithCandleTimes
 import {
 createDashboardChartWidget,
 mountDashboardChartInteractions
-} from "./chart-widget-host.js?v=723ca676";
+} from "./chart-widget-host.js?v=8c7fbab1";
 
 import {
 mountWidgetTabletChart
@@ -65,7 +65,7 @@ import {
 subscribeKline,
 subscribeTicker,
 bindLiveCandleCatchup
-} from "./market-ws.js?v=ab0ef4a1";
+} from "./market-ws.js?v=717ade46";
 
 import {
 applyLiveLastPriceToCandles,
@@ -93,7 +93,7 @@ ensureDrawToolsVisible
 
 import {
 preloadTradingSymbols
-} from "./symbol-autocomplete.js?v=8f25788b";
+} from "./symbol-autocomplete.js?v=caabe55a";
 
 import {
 loadLightweightCharts
@@ -108,7 +108,7 @@ getWidgetFlagHtml,
 wireWidgetFlagUi,
 updateWidgetFlagUi,
 bindWidgetFlagGlobalListeners
-} from "./widget-favorite-flag.js?v=6a2896be";
+} from "./widget-favorite-flag.js?v=be415bb0";
 
 function escapeHtml(
 value
@@ -181,7 +181,7 @@ return;
 
 const mod =
 await import(
-"./trade-widget-mount.js?v=fa48c37c"
+"./trade-widget-mount.js?v=1d49c296"
 );
 
 mountTradeOnDashboardWidget =
@@ -1143,7 +1143,7 @@ widget.classList.add(
 "widget-chart-empty"
 );
 
-void import("./bybit-network-ui.js?v=3b530ded").then(
+void import("./bybit-network-ui.js?v=2d117b93").then(
 m=>{
 m.showBybitNetworkIssue(
 new Error(

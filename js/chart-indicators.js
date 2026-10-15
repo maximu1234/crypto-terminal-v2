@@ -265,7 +265,7 @@ createPattern12IndicatorOverride
 "./indicators/pattern-12.js?v=4570161f"
 ),
 import(
-"./indicators/horizontal-volume.js?v=e74b89e4"
+"./indicators/horizontal-volume.js?v=cbaa09eb"
 ),
 import(
 "./indicators/volume-bubbles.js?v=3cab9f85"

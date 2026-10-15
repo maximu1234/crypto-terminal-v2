@@ -1262,6 +1262,17 @@ getTickers:()=>
 ipcRenderer.invoke(
 "bybitPublic:getTickers"
 ),
+fetchJson:(
+path,
+timeoutMs
+)=>
+ipcRenderer.invoke(
+"bybitPublic:fetchJson",
+{
+path,
+timeoutMs
+}
+),
 onPush:(
 callback
 )=>{

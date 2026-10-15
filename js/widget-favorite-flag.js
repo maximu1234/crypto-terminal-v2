@@ -13,11 +13,11 @@ FAVORITES_BY_EXCHANGE_KEY
 import {
 persistFavoritesToCloud,
 onFavoritesRemoteUpdate
-} from "./cloud-sync.js?v=56def695";
+} from "./cloud-sync.js?v=c4d00dfb";
 
 import {
 EXCHANGE_CHANGED_EVENT
-} from "./market-api.js?v=7b3e6b3c";
+} from "./market-api.js?v=00f19708";
 
 import {
 seedWatchlistTfOnBlueFlag

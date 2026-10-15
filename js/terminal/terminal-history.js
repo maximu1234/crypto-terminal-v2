@@ -129,7 +129,7 @@ if(
 host.isTradePage
 ){
 void import(
-"../trade-volume-presets.js?v=2aa43d15"
+"../trade-volume-presets.js?v=c075f58f"
 ).then(
 ({
 switchTradeVolumeSymbol
@@ -222,7 +222,7 @@ host.currentDataset
 )
 ){
 
-void import("../bybit-network-ui.js?v=3b530ded").then(m=>{
+void import("../bybit-network-ui.js?v=2d117b93").then(m=>{
 m.showBybitNetworkIssue(
 new Error(
 `История свечей ${host.getActiveExchangeDefinition().name} пуста`

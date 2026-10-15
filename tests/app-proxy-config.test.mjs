@@ -4,6 +4,7 @@ import net from "node:net";
 import {
 buildProxyBypassRules,
 buildProxyRules,
+candlesUseMainRelay,
 isProxyConfigReady,
 normalizeProxySettings,
 PROXY_BYPASS_ALWAYS,
@@ -214,13 +215,28 @@ test("Bybit REST from main goes through SOCKS; candle history stays direct; publ
   );
 });
 
-test("ticks only keeps Bybit REST direct; full mode sends history through the proxy", () => {
+test("ticks only keeps Bybit REST direct; SOCKS history uses the main relay", () => {
   const ticksOnly = buildProxyBypassRules(
     normalizeProxySettings({})
   );
-  const full = buildProxyBypassRules(
+  const socksFull = buildProxyBypassRules(
     normalizeProxySettings({
-      ticksOnly: false
+      enabled: true,
+      ticksOnly: false,
+      type: "socks5",
+      host: "10.0.0.8",
+      port: 1080,
+      username: "u",
+      password: "p"
+    })
+  );
+  const httpFull = buildProxyBypassRules(
+    normalizeProxySettings({
+      enabled: true,
+      ticksOnly: false,
+      type: "http",
+      host: "10.0.0.8",
+      port: 8080
     })
   );
 
@@ -228,14 +244,46 @@ test("ticks only keeps Bybit REST direct; full mode sends history through the pr
   assert.match(ticksOnly, /api\.bybit\.com/);
   assert.match(ticksOnly, /api\.bytick\.com/);
   assert.match(ticksOnly, /api-testnet\.bybit\.com/);
-  assert.equal(full, PROXY_BYPASS_ALWAYS);
-  assert.doesNotMatch(full, /api\.bybit\.com/);
-  assert.doesNotMatch(full, /api\.bytick\.com/);
-  assert.match(full, /\*\.supabase\.co/);
-  assert.match(full, /\*\.up\.railway\.app/);
-  assert.match(full, /<-loopback>/);
+  assert.equal(socksFull, PROXY_BYPASS_RULES);
+  assert.match(socksFull, /api\.bybit\.com/);
+  assert.equal(httpFull, PROXY_BYPASS_ALWAYS);
+  assert.doesNotMatch(httpFull, /api\.bybit\.com/);
+  assert.doesNotMatch(httpFull, /api\.bytick\.com/);
+  assert.match(httpFull, /\*\.supabase\.co/);
+  assert.match(httpFull, /\*\.up\.railway\.app/);
+  assert.match(httpFull, /<-loopback>/);
   assert.equal(
     normalizeProxySettings({ ticksOnly: false }).ticksOnly,
+    false
+  );
+  assert.equal(
+    candlesUseMainRelay({
+      enabled: true,
+      ticksOnly: false,
+      type: "socks5",
+      host: "10.0.0.8",
+      port: 1080
+    }),
+    true
+  );
+  assert.equal(
+    candlesUseMainRelay({
+      enabled: true,
+      ticksOnly: true,
+      type: "socks5",
+      host: "10.0.0.8",
+      port: 1080
+    }),
+    false
+  );
+  assert.equal(
+    candlesUseMainRelay({
+      enabled: true,
+      ticksOnly: false,
+      type: "http",
+      host: "10.0.0.8",
+      port: 8080
+    }),
     false
   );
 });

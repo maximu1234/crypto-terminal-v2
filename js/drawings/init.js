@@ -23,7 +23,7 @@ recordDrawingTombstone
 import {
 EXCHANGE_CHANGED_EVENT,
 loadMarketHistory
-} from "../market-api.js?v=7b3e6b3c";
+} from "../market-api.js?v=00f19708";
 
 import {
 registerDrawingsStoragePoller,
@@ -169,11 +169,11 @@ createDrawingsPersist
 
 import {
 createDrawStyleBar
-} from "./draw-style-bar.js?v=bc59416e";
+} from "./draw-style-bar.js?v=7de1e6d6";
 
 import {
 createDrawAlertsChart
-} from "./draw-alerts-chart.js?v=8dde72f4";
+} from "./draw-alerts-chart.js?v=9690aa73";
 
 import {
 createDrawPlacement
@@ -3380,7 +3380,7 @@ lastChartAlertsPullMs =
 Date.now();
 
 void import(
-"../alerts-cloud-sync.js?v=47cd6156"
+"../alerts-cloud-sync.js?v=2e2f0423"
 ).then(
 ({ pullRegistryFromCloudNow })=>
 pullRegistryFromCloudNow({

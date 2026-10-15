@@ -16,7 +16,7 @@ function read(relativePath) {
 
 const require = createRequire(import.meta.url);
 
-const { sanitizeBybitPublicTopic } = (() => {
+const { sanitizeBybitPublicTopic, isPublicBybitMarketPath } = (() => {
   const Module = require("module");
   const originalLoad = Module._load;
   Module._load = function (request, parent, isMain) {
@@ -51,6 +51,8 @@ test("public Bybit WS in main uses SOCKS relay and gated IPC", () => {
   assert.match(source, /planPublicTopicLiveness/);
   assert.match(source, /lastTopicAt/);
   assert.match(source, /bybitPublic:getTickers/);
+  assert.match(source, /bybitPublic:fetchJson/);
+  assert.match(source, /isPublicBybitMarketPath/);
   assert.doesNotMatch(source, /bingx/i);
   assert.doesNotMatch(source, /require\([^)]*algo-bybit-kline/);
 });
@@ -60,6 +62,8 @@ test("desktop preload and main wire public Bybit WS outside trading APIs", () =>
   assert.match(preload, /bybitPublicWs:/);
   assert.match(preload, /bybitPublic:setTopics/);
   assert.match(preload, /bybitPublic:getTickers/);
+  assert.match(preload, /bybitPublic:fetchJson/);
+  assert.match(read("js/bybit-fetch.js"), /candlesViaRelay/);
   assert.doesNotMatch(
     preload.slice(preload.indexOf("trading:{"), preload.indexOf("bybitPublicWs:")),
     /bybitPublic/
@@ -162,5 +166,30 @@ test("sanitizeBybitPublicTopic allows kline and tickers only", () => {
   assert.equal(
     sanitizeBybitPublicTopic("orderbook.BTCUSDT"),
     ""
+  );
+});
+
+test("public market fetch allows kline paths only", () => {
+  assert.equal(
+    isPublicBybitMarketPath(
+      "/v5/market/kline?category=linear&symbol=BTCUSDT&interval=1&limit=1"
+    ),
+    true
+  );
+  assert.equal(
+    isPublicBybitMarketPath("/v5/market/tickers?category=linear"),
+    true
+  );
+  assert.equal(
+    isPublicBybitMarketPath("/v5/order/create"),
+    false
+  );
+  assert.equal(
+    isPublicBybitMarketPath("/v5/market/../order/create"),
+    false
+  );
+  assert.equal(
+    isPublicBybitMarketPath("https://api.bybit.com/v5/market/kline"),
+    false
   );
 });

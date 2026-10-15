@@ -15,7 +15,7 @@ import {
 } from "./nav.js?v=4b83ad99";
 import {
   mountMobileScreenerPage
-} from "./screener-page.js?v=a9743837";
+} from "./screener-page.js?v=3def0714";
 
 async function boot() {
   if (redirectNonPhoneFromMobile("/screener.html")) {

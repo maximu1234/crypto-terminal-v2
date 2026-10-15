@@ -3,10 +3,10 @@
  */
 import {
   mountMobileReadOnlyChart
-} from "./chart-lite.js?v=d896bd6b";
+} from "./chart-lite.js?v=33096058";
 import {
   mountMobileTerminalCoins
-} from "./terminal-coins.js?v=8015c2d1";
+} from "./terminal-coins.js?v=0d78e70e";
 import {
   initMobileTradeLite,
   listCachedPositions,
@@ -15,14 +15,14 @@ import {
   cancelOpenOrder,
   openMarket,
   closeMarket
-} from "./trade-lite.js?v=e030fa23";
+} from "./trade-lite.js?v=434bef29";
 import {
   initMobileAlertsLite,
   listMobileAlerts,
   createMobilePriceAlert,
   removeMobileAlert,
   formatMobileAlertLine
-} from "./alerts-lite.js?v=27f75ae1";
+} from "./alerts-lite.js?v=b4f9e3f9";
 
 const STORAGE_SYMBOL = "mc-mobile-terminal-symbol-v1";
 const STORAGE_TF = "mc-mobile-terminal-tf-v1";

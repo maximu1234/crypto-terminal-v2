@@ -11,7 +11,7 @@ PATTERN_SCAN_DEPTH_OPTIONS,
 normalizePatternScanSideFilter,
 normalizeScriptScanIndicatorId,
 SCRIPT_SCAN_INDICATOR_PATTERN12
-} from "./pattern-12-scanner.js?v=297ef592";
+} from "./pattern-12-scanner.js?v=ee05f486";
 
 import {
 getActiveExchangeId

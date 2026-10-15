@@ -1,6 +1,6 @@
 import {
 symbolListSignature
-} from "./api.js?v=7715ccfd";
+} from "./api.js?v=071ede04";
 
 import {
 loadMarketHistory,
@@ -9,7 +9,7 @@ peekMarketSymbolsCache,
 getActiveExchangeDefinition,
 getActiveExchangeId,
 EXCHANGE_CHANGED_EVENT
-} from "./market-api.js?v=7b3e6b3c";
+} from "./market-api.js?v=00f19708";
 
 import {
 peekHistoryCache,
@@ -62,7 +62,7 @@ alignRsiWithCandleTimes
 import {
 subscribeKline,
 bindLiveCandleCatchup
-} from "./market-ws.js?v=ab0ef4a1";
+} from "./market-ws.js?v=717ade46";
 
 import {
 ensureOhlcRollover,
@@ -76,7 +76,7 @@ paintLiveOhlcSeries
 import {
 connectTickerStream,
 fetchTickersInto
-} from "./tickers.js?v=729ac4e5";
+} from "./tickers.js?v=d4995cf9";
 
 import {
 createTickerUiBatcher
@@ -84,7 +84,7 @@ createTickerUiBatcher
 
 import {
 mountReleaseMarker
-} from "./release-marker.js?v=82ab2c46";
+} from "./release-marker.js?v=d96016c0";
 
 import {
 saveScreenerState,
@@ -103,7 +103,7 @@ FAVORITES_BY_EXCHANGE_KEY
 
 import {
 ensureCloudReady
-} from "./auth-ui.js?v=4e90c7a8";
+} from "./auth-ui.js?v=86535de8";
 
 import {
 ensureSettled,
@@ -113,12 +113,12 @@ withTimeout
 import {
 persistFavoritesToCloud,
 onFavoritesRemoteUpdate
-} from "./cloud-sync.js?v=56def695";
+} from "./cloud-sync.js?v=c4d00dfb";
 
 import {
 attachSymbolAutocomplete,
 preloadTradingSymbols
-} from "./symbol-autocomplete.js?v=8f25788b";
+} from "./symbol-autocomplete.js?v=caabe55a";
 
 import {
 mountQwertyKeyInput,
@@ -175,7 +175,7 @@ if(
 ){
 screenerZoomMountPromise =
 import(
-"./screener-widget-zoom.js?v=924445cd"
+"./screener-widget-zoom.js?v=6e9c08d3"
 ).then(
 mod=>{
 refreshZoomFavoriteUi =
@@ -1443,7 +1443,7 @@ destroyWidgets,
 loadWidgetChart,
 observeWidgetKlineVisibility,
 updateWidgetMeta
-} from "./screener-widgets.js?v=1e1f1d50";
+} from "./screener-widgets.js?v=13cd64c5";
 
 bindScreenerWidgets({
 get activeWidgets(){ return activeWidgets; },
@@ -2366,7 +2366,7 @@ setStatus(
 true
 );
 
-void import("./bybit-network-ui.js?v=3b530ded").then(m=>{
+void import("./bybit-network-ui.js?v=2d117b93").then(m=>{
 m.showBybitNetworkIssue(err);
 });
 
@@ -2549,7 +2549,7 @@ err
 screenerMarketLoadFailed = true;
 allSymbols = [];
 
-void import("./bybit-network-ui.js?v=3b530ded").then(m=>{
+void import("./bybit-network-ui.js?v=2d117b93").then(m=>{
 m.showBybitNetworkIssue(err);
 });
 

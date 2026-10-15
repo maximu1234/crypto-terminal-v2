@@ -1464,6 +1464,147 @@ return tickersInflight;
 
 }
 
+function isPublicBybitMarketPath(
+path
+){
+
+const value =
+String(
+path ||
+""
+);
+
+if(
+value.length <
+12 ||
+value.length >
+2000
+){
+return false;
+}
+
+if(
+!value.startsWith(
+"/v5/market/"
+)
+){
+return false;
+}
+
+if(
+value.includes(
+".."
+) ||
+value.includes(
+"\\"
+) ||
+value.includes(
+"://"
+) ||
+value.includes(
+"\0"
+)
+){
+return false;
+}
+
+return /^\/v5\/market\/[A-Za-z0-9._~-]+(?:\?[A-Za-z0-9._~%&=+,:-]*)?$/.test(
+value
+);
+
+}
+
+async function fetchPublicMarketJson(
+path,
+timeoutMs
+){
+
+if(
+!isPublicBybitMarketPath(
+path
+)
+){
+return {
+ok:
+false,
+message:
+"Непубличный путь Bybit"
+};
+}
+
+const timeout =
+Math.min(
+30000,
+Math.max(
+1000,
+Number(
+timeoutMs
+) ||
+12000
+)
+);
+const agent =
+getRelayHttpsAgent();
+const bases =
+agent
+? [
+"https://api.bytick.com",
+"https://api.bybit.com"
+]
+: [
+"https://api.bybit.com",
+"https://api.bytick.com"
+];
+let lastErr =
+null;
+
+for(
+const base of bases
+){
+
+try{
+const json =
+await httpsGetJson(
+`${base}${path}`,
+timeout
+);
+
+if(
+json &&
+typeof json ===
+"object"
+){
+return {
+ok:
+true,
+json,
+base,
+viaProxy:
+!!agent
+};
+}
+
+}catch(
+err
+){
+lastErr =
+err;
+}
+
+}
+
+return {
+ok:
+false,
+message:
+lastErr?.message ||
+"История свечей через прокси не открылась.",
+viaProxy:
+!!agent
+};
+
+}
+
 function registerBybitPublicWsIpc(
 ipcMain
 ){
@@ -1498,11 +1639,25 @@ ipcMain,
 getLinearTickers()
 );
 
+handleTrustedDesktopUi(
+ipcMain,
+"bybitPublic:fetchJson",
+(
+_event,
+payload
+)=>
+fetchPublicMarketJson(
+payload?.path,
+payload?.timeoutMs
+)
+);
+
 }
 
 module.exports =
 {
 sanitizeBybitPublicTopic,
+isPublicBybitMarketPath,
 planPublicTopicLiveness,
 registerBybitPublicWsIpc,
 setBybitPublicWsTarget
