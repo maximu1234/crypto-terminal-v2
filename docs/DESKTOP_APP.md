@@ -4,7 +4,7 @@
 
 ## Для пользователя
 
-1. Скачайте **Multichart-x.y.z.dmg** из [GitHub Releases](https://github.com/maximu1234/crypto-terminal-v2/releases) (тег `desktop-v*`). Лучше **.dmg**, не .zip.
+1. Скачайте **Multichart-x.y.zf.dmg** / **…zm.dmg** из [GitHub Releases](https://github.com/maximu1234/crypto-terminal-v2/releases) (тег `desktop-v*`). Буква: **f** = full (live+manual), **m** = friends (manual-only). Лучше **.dmg**, не .zip.
 2. Перетащите **Multichart** в «Программы».
 3. **Первый запуск без подписи Apple** — macOS может написать *«повреждено и не может быть открыто»* или просто заблокировать запуск. Приложение не сломано, это Gatekeeper.
 
@@ -20,9 +20,9 @@
    На Sequoia **больше нет** пункта «Открыть» по ПКМ — Apple убрала этот обход Gatekeeper.
 
    **Способ C (macOS Sonoma и старше):** ПКМ по **Multichart.app** → **Открыть** → **Открыть** (один раз), либо тот же путь через Настройки → Конфиденциальность и безопасность.
-4. Обновления: кнопка **«Обновить»** — скачивание → установка → перезапуск. Если зависло на «Устанавливаем…» — **Cmd+Q**, затем снова откройте Multichart (обновление доставится при выходе). Полный авто-перезапуск надёжнее с Apple Developer подписью.
+4. Обновления: **вручную** — скачайте новый `.dmg` / `.exe` из GitHub Releases. In-app auto-updater (`electron-updater`) **не подключён**; файл `latest-mac.yml` в релизе — заготовка, не канал обновлений.
 
-5. **Вход по email:** ссылка из письма открывает приложение (desktop **1.0.6+**). Если откроется браузер — скопируйте адрес страницы и вставьте в поле «Войти по ссылке» в настройках. В Supabase → Redirect URLs должно быть `multichart://auth/callback`.
+5. **Вход по email:** ссылка из письма открывает приложение. Если откроется браузер — скопируйте адрес страницы и вставьте в поле «Войти по ссылке» в настройках. В Supabase → Redirect URLs должно быть `multichart://auth/callback`.
 
 Сборку `.dmg` на своём Mac делать **не нужно** — CI собирает релиз при теге `desktop-v1.0.1` и т.д.
 
@@ -35,7 +35,7 @@ Multichart.app (Electron)
   └─ Bybit REST/WS — напрямую с api.bybit.com
   └─ Supabase / Railway worker — интернет
   └─ preload → window.cryptoTerminalDesktop
-  └─ electron-updater → GitHub Releases
+  └─ обновления — вручную из GitHub Releases (не electron-updater)
 ```
 
 | Компонент | Сайт (Vercel) | Desktop (.app) |
@@ -44,9 +44,15 @@ Multichart.app (Electron)
 | `/api/*` | serverless | **→ Vercel** (прокси в Electron) |
 | Bybit свечи / WS | браузер | **напрямую** |
 | Supabase, алерты | интернет | интернет |
-| **Торговля** (`/trade`), Bybit API keys | ❌ | ✅ |
+| Торговля Bybit | Railway `/trade/*` | IPC `trading.*` |
+| Торговля BingX | ❌ | ✅ IPC |
+| Live-бот Алго | ❌ | ✅ |
 
-При каждом desktop-релизе CI копирует актуальную статику из репо (`npm run bundle:site`). На Vercel `/trade` редиректится на `/coins`; пункт «Торговля» в меню — только в `.app`.
+При каждом desktop-релизе CI копирует актуальную статику из репо (`npm run bundle:site`). Тег `desktop-vX.Y.Z` должен совпадать с `desktop/package.json` и `DESKTOP_APP_VERSION` в `js/release-marker.js` (CI падает при mismatch). Без `SUPABASE_*` secrets релизный build **падает** (`REQUIRE_SUPABASE_ENV=1`).
+
+**WIP vs .app:** незакоммиченные правки не попадают в GitHub Release. Локальный `npm start` в `desktop/` пересобирает site-bundle из текущего дерева (включая dirty WIP).
+
+**Credentials at rest:** на macOS ключи биржи — plaintext JSON в userData (mode `0600`, без Keychain prompts); на Windows — OS encrypt (`safeStorage`), когда доступен. Ожидается FileVault / disk encryption на Mac.
 
 ## Разработка
 
@@ -69,9 +75,9 @@ npm run start:remote   # старый режим — UI с Vercel
 - `SUPABASE_URL`
 - `SUPABASE_ANON_KEY`
 - `ALERT_WORKER_URL`
-- `SYSTEM_ADMIN_EMAIL` (опционально)
+- `SYSTEM_ADMIN_EMAIL` (allowlist для `/system`; попадает в клиентский `supabase-env.js` на билде — не коммитить локальный файл)
 
-Без них соберётся stub — синхронизация в .app не заработает.
+Без `SUPABASE_URL` / `SUPABASE_ANON_KEY` **desktop/algo-bot release workflows падают**.
 
 ## Производительность (только .app)
 

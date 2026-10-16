@@ -237,9 +237,11 @@ container,
 chartOpts
 ){
 
-const chartBg =
-getChartLayoutBgColor();
-
+/*
+ * Прозрачный фон: слой .drawings-layer лежит под #chart (z-index),
+ * цвет даёт #chart-wrap / .widget-chart-wrap (--app-chart-bg).
+ * Иначе непрозрачный canvas LW полностью закрывает рисунки.
+ */
 const chart =
 LightweightCharts.createChart(
 container,
@@ -247,15 +249,22 @@ withChartLocalTime(
 {
 
 layout:{
-background:{ color:chartBg },
+background:{ color:"transparent" },
 textColor:CHART_SCALE_TEXT_COLOR,
 fontSize:effectiveChartScaleFontSize(),
 fontFamily:CHART_SCALE_FONT_FAMILY
 },
 
+/* Без сетки: рисунки под свечами, линии сетки LW шли бы поверх заливок. */
 grid:{
-vertLines:{ color:"#161b26" },
-horzLines:{ color:"#161b26" }
+vertLines:{
+visible:
+false
+},
+horzLines:{
+visible:
+false
+}
 },
 
 rightPriceScale:{
@@ -2012,7 +2021,7 @@ lineEl.classList.remove(
 
 export {
 linkChartsCrosshair
-} from "./chart-crosshair-link.js?v=cf295fe7";
+} from "./chart-crosshair-link.js?v=1f3b9b6b";
 
 
 

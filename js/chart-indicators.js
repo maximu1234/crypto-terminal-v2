@@ -14,6 +14,25 @@ endChromeOverlay,
 isChartLayoutReady
 } from "./chart-layout-gate.js?v=4a8798af";
 
+import {
+captureHealthyVisibleLogicalRange,
+pinVisibleLogicalRangeBriefly,
+suppressTerminalHistoryLazyLoad
+} from "./chart-visible-range.js?v=d523062b";
+
+/** Оверлеи на панели цены — enable/setData иногда гасят свечи на несколько секунд. */
+const MAIN_CHART_OVERLAY_IDS =
+new Set(
+[
+"volume",
+"moving-average",
+"ema-shift-ribbon",
+"supertrend",
+"volume-bubbles",
+"horizontal-volume"
+]
+);
+
 const DEFAULT_STORAGE_KEY =
 "chart_indicators_v1";
 
@@ -235,25 +254,25 @@ createIndicatorSettingsDialog
 await Promise.all(
 [
 import(
-"./indicators/rsi-pane.js?v=f7536a67"
+"./indicators/rsi-pane.js?v=482968f4"
 ),
 import(
-"./indicators/volume-pane.js?v=e48e583a"
+"./indicators/volume-pane.js?v=d4d91006"
 ),
 import(
-"./indicators/ao-pane.js?v=312fa92a"
+"./indicators/ao-pane.js?v=e1f7e07e"
 ),
 import(
-"./indicators/macd-pane.js?v=23a67818"
+"./indicators/macd-pane.js?v=6371c620"
 ),
 import(
-"./indicators/moving-average.js?v=7664f7e3"
+"./indicators/moving-average.js?v=964aad41"
 ),
 import(
-"./indicators/ema-shift-ribbon.js?v=ed6186e1"
+"./indicators/ema-shift-ribbon.js?v=edd78e33"
 ),
 import(
-"./indicators/supertrend.js?v=113e8867"
+"./indicators/supertrend.js?v=c96cb475"
 ),
 typeof createPattern12IndicatorOverride ===
 "function"
@@ -270,10 +289,10 @@ import(
 "./indicators/horizontal-volume.js?v=cbaa09eb"
 ),
 import(
-"./indicators/volume-bubbles.js?v=3cab9f85"
+"./indicators/volume-bubbles.js?v=f2b53aed"
 ),
 import(
-"./indicators/indicator-settings-dialog.js?v=33a501fb"
+"./indicators/indicator-settings-dialog.js?v=006c9340"
 )
 ]
 );
@@ -637,13 +656,32 @@ beginChromeOverlay();
 chromeHeld =
 true;
 
-try{
+const chart =
+getHost?.()?.chart;
+
 pinnedRange =
-getHost?.()?.chart?.timeScale?.().getVisibleLogicalRange?.() ||
-null;
-}catch{
-pinnedRange =
-null;
+captureHealthyVisibleLogicalRange(
+chart
+);
+
+if(
+chart &&
+pinnedRange
+){
+pinVisibleLogicalRangeBriefly(
+chart,
+pinnedRange,
+{
+suppressMs:
+8000,
+afterResizeMs:
+120
+}
+);
+}else{
+suppressTerminalHistoryLazyLoad(
+8000
+);
 }
 
 },
@@ -842,12 +880,33 @@ updateMenuAvailability();
 return false;
 }
 
+const chart =
+getHost?.()?.chart;
+
+captureHealthyVisibleLogicalRange(
+chart
+);
+
 if(
 on
 ){
 ind.enable();
 }else{
 ind.disable();
+}
+
+if(
+MAIN_CHART_OVERLAY_IDS.has(
+id
+) ||
+id ===
+"ao" ||
+id ===
+"macd"
+){
+suppressTerminalHistoryLazyLoad(
+8000
+);
 }
 
 prefs[

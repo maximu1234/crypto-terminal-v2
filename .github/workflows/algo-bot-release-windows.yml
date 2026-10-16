@@ -13,7 +13,7 @@ on:
 
 concurrency:
   group: algo-bot-release-windows-${{ github.event.inputs.bot_version && format('algo-bot-win-v{0}', github.event.inputs.bot_version) || github.ref_name }}
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 permissions:
   contents: write
@@ -48,18 +48,15 @@ jobs:
           else
             VERSION="${{ github.event.inputs.bot_version }}"
             TAG="algo-bot-win-v${VERSION}"
-            PKG=$(node -p "require('./bot-app/package.json').version")
-            if [ "$PKG" != "$VERSION" ]; then
-              echo "Version mismatch: input=${VERSION}, package.json=${PKG}"
-              exit 1
-            fi
+          fi
+          PKG=$(node -p "require('./bot-app/package.json').version")
+          if [ "$PKG" != "$VERSION" ]; then
+            echo "Version mismatch: tag/input=${VERSION}, package.json=${PKG}"
+            exit 1
           fi
           echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
           echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
           echo "Release target: ${TAG} (v${VERSION})"
-
-      - name: Sync bot-app package version
-        run: npm version "${{ steps.release.outputs.version }}" --no-git-tag-version --allow-same-version
 
       - name: Install dependencies
         run: |
@@ -68,6 +65,7 @@ jobs:
       - name: Prepare supabase-env for site bundle
         working-directory: .
         env:
+          REQUIRE_SUPABASE_ENV: "1"
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
           ALERT_WORKER_URL: ${{ secrets.ALERT_WORKER_URL }}

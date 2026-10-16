@@ -8,7 +8,7 @@ linkPairedChartTimeScales,
 appendFutureWhitespaceBars,
 computeChartFutureMarginBars,
 coinsTfVisibleBars
-} from "../chart-import.js?v=38a93246";
+} from "../chart-import.js?v=613e412b";
 
 import {
 calculateAwesomeOscillator,
@@ -22,6 +22,11 @@ isChartLayoutReady
 } from "../chart-layout-gate.js?v=4a8798af";
 
 import {
+captureHealthyVisibleLogicalRange,
+pinVisibleLogicalRangeBriefly
+} from "../chart-visible-range.js?v=d523062b";
+
+import {
 isCoinsPaneHeightDrag
 } from "../terminal-layout-resize.js?v=671925b0";
 
@@ -31,7 +36,7 @@ isBottomIndicatorPane
 
 import {
 syncPaneViewportAfterData
-} from "./indicator-pane-viewport.js?v=c1bad94f";
+} from "./indicator-pane-viewport.js?v=a8633490";
 
 export const AO_PANE_ID =
 "ao";
@@ -661,9 +666,27 @@ getHost?.()?.onIndicatorDataReady?.(
 
 function enable(){
 
+const mainChart =
+getHost?.()?.chart;
+const pinned =
+captureHealthyVisibleLogicalRange(
+mainChart
+);
+
 if(
 enabled
 ){
+refreshData();
+pinVisibleLogicalRangeBriefly(
+mainChart,
+pinned,
+{
+suppressMs:
+8000,
+afterResizeMs:
+120
+}
+);
 return;
 }
 
@@ -679,10 +702,28 @@ applyVisibility();
 ensurePaneChartSized();
 refreshData();
 bindTimeSync();
+/* Показ панели AO жмёт main chart → from≈0; guard как у Volume. */
+pinVisibleLogicalRangeBriefly(
+mainChart,
+pinned,
+{
+suppressMs:
+8000,
+afterResizeMs:
+120
+}
+);
 
 }
 
 function disable(){
+
+const mainChart =
+getHost?.()?.chart;
+const pinned =
+captureHealthyVisibleLogicalRange(
+mainChart
+);
 
 if(
 !enabled
@@ -714,6 +755,16 @@ lastAoMinMove =
 null;
 updateHud();
 applyVisibility();
+pinVisibleLogicalRangeBriefly(
+mainChart,
+pinned,
+{
+suppressMs:
+5000,
+afterResizeMs:
+80
+}
+);
 
 }
 

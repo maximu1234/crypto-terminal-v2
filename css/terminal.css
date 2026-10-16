@@ -1446,11 +1446,12 @@ form.draw-position-risk{
   pointer-events:auto;
 }
 
+/* Под свечами (#chart z-index:1); hit-test всё равно через wrap (pointer-events:none). */
 .drawings-layer{
   position:absolute;
   inset:0;
   pointer-events:none;
-  z-index:3;
+  z-index:0;
 }
 
 /* Линейка (Shift): canvas поверх DOM-перекрестья внутри wrap. */

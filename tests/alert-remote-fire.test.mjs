@@ -42,6 +42,49 @@ test("cloud pull does not treat a vanished row as a fire (manual delete vs worke
   assert.doesNotMatch(chunk, /applyRemoteAlertFired/);
 });
 
+test("hydrate backfills price_alert_events history before registry reconcile", () => {
+  const realtime = src("js/alerts-cloud/polling-realtime.js");
+  const fn = realtime.slice(
+    realtime.indexOf("export async function hydrateAlertsAfterAuth"),
+    realtime.indexOf("export function initAlertsCloudSync")
+  );
+  const histAt = fn.indexOf("pullAlertHistoryFromCloud");
+  const regAt = fn.indexOf("pullRegistryFromCloudNow");
+  assert.ok(histAt >= 0, "history pull present");
+  assert.ok(regAt >= 0, "registry pull present");
+  assert.ok(
+    histAt < regAt,
+    "history must load before reconcile removes fired locals"
+  );
+  assert.doesNotMatch(
+    fn.slice(0, histAt),
+    /isAlertsPage\(\)\s*\{/
+  );
+});
+
+test("algo reduced cloud still pulls alert history (no Active reconcile)", () => {
+  const realtime = src("js/alerts-cloud/polling-realtime.js");
+  const fn = realtime.slice(
+    realtime.indexOf("export async function hydrateAlertsAfterAuth"),
+    realtime.indexOf("export function initAlertsCloudSync")
+  );
+  const algoAt = fn.indexOf("isAlgoReducedCloudClient");
+  assert.ok(algoAt >= 0);
+  const afterAlgo = fn.slice(algoAt, algoAt + 900);
+  assert.match(afterAlgo, /pullAlertHistoryFromCloud/);
+  assert.doesNotMatch(afterAlgo, /pullRegistryFromCloudNow/);
+});
+
+test("worker history insert persists exchange_id from claimed alert", () => {
+  const exec = src("alert-worker/lib/execute-trigger.js");
+  const rowAt = exec.indexOf("const eventRow");
+  assert.ok(rowAt >= 0, "eventRow present");
+  const chunk = exec.slice(rowAt, rowAt + 900);
+  assert.match(chunk, /exchange_id/);
+  assert.match(chunk, /claimed\.exchange_id/);
+  assert.match(chunk, /legacyRow/);
+});
+
 test("worker /delete-alert soft-deletes before any hard DELETE", () => {
   const api = src("alert-worker/lib/client-api.js");
   const fn = api.slice(

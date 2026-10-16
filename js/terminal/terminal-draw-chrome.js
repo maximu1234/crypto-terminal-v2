@@ -7,7 +7,7 @@ import {
 positionTabletProbeCrosshair,
 hideTabletProbeCrosshair,
 isTabletChartViewport
-} from "../chart-import.js?v=38a93246";
+} from "../chart-import.js?v=613e412b";
 
 import {
 TERMINAL_VISIBLE_BARS,
@@ -31,7 +31,11 @@ import {
 buildChartDisplayCandles,
 settleCoinsChartViewport,
 scheduleResizeCharts
-} from "./terminal-chart-layout.js?v=4ef01d8f";
+} from "./terminal-chart-layout.js?v=92faf1fe";
+
+import {
+suppressTerminalHistoryLazyLoad
+} from "../chart-visible-range.js?v=d523062b";
 
 import {
 replayVisibleCandles
@@ -52,13 +56,13 @@ const {
 initWidgetDrawings
 } =
 await import(
-"../chart-widget-host.js?v=2ec401c6"
+"../chart-widget-host.js?v=844f40c7"
 );
 const {
 initChartIndicators
 } =
 await import(
-"../chart-indicators.js?v=bb944351"
+"../chart-indicators.js?v=023adb53"
 );
 const {
 createPattern12EarlyT3Indicator
@@ -211,7 +215,7 @@ deps.drawingTools?.getTool?.() ??
 );
 
 void import(
-"../price-alert-ui.js?v=f271b479"
+"../price-alert-ui.js?v=6817679e"
 ).then(
 ({
 mountPriceAlertUi
@@ -844,6 +848,19 @@ id ===
 scheduleResizeCharts();
 deps.chartIndicators?.notifyLayoutChange?.();
 
+if(
+id ===
+"volume"
+){
+/*
+ * Длинный cool-down: короткий (1.5–1.8с) только откладывал ложную
+ * догрузку истории — blank приходил ~через 5с после включения.
+ */
+suppressTerminalHistoryLazyLoad(
+8000
+);
+}
+
 }
 
 if(
@@ -1041,7 +1058,7 @@ const {
 createTradePlusMenuHandler
 } =
 await import(
-"../trade-order-plus-ui.js?v=8428210d"
+"../trade-order-plus-ui.js?v=b946da8b"
 );
 
 tradePlusHandler =
@@ -1072,7 +1089,7 @@ const {
 mountPriceAlertUi
 } =
 await import(
-"../price-alert-ui.js?v=f271b479"
+"../price-alert-ui.js?v=6817679e"
 );
 
 let disposeAlertUi =
@@ -1132,7 +1149,7 @@ const {
 mountPriceAlertUi: mountRsiPriceAlertUi
 } =
 await import(
-"../price-alert-ui.js?v=f271b479"
+"../price-alert-ui.js?v=6817679e"
 );
 
 mountRsiPriceAlertUi(

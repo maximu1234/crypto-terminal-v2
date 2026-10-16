@@ -13,7 +13,7 @@ applyRsiSeriesColorMode,
 appendFutureWhitespaceBars,
 computeChartFutureMarginBars,
 syncLinkedChartTimescales
-} from "./chart-import.js?v=38a93246";
+} from "./chart-import.js?v=613e412b";
 
 import {
 applyLiveSeriesUpdate,
@@ -43,7 +43,7 @@ ALGO_TICKER_SCAN_HISTORY_REQUESTS
 import {
 defaultRsiPaneSettings,
 normalizeRsiPaneSettings
-} from "./indicators/rsi-pane.js?v=f7536a67";
+} from "./indicators/rsi-pane.js?v=482968f4";
 
 import {
 buildChartRsiPoints
@@ -62,7 +62,7 @@ bindLiveCandleCatchup
 import {
 mountAlgoTradingCoinList,
 refreshAlgoMarketListFromFlags
-} from "./algo-trading-list.js?v=83c5bcba";
+} from "./algo-trading-list.js?v=855348fc";
 
 import {
 mountAlgoTickerScanUi
@@ -85,7 +85,7 @@ mountAlgoRuntimeUi
 
 import {
 mountAlgoBotStrategyUi
-} from "./algo-trading/bot-strategy-ui.js?v=3dcc07e6";
+} from "./algo-trading/bot-strategy-ui.js?v=a9e1d556";
 
 import {
 ALGO_ANALYSIS_BOT_CHANGE_EVENT,
@@ -101,7 +101,7 @@ setActiveAnalysisBotId
 
 import {
 mountSessionLogServerSettings
-} from "./algo-trading/bot-session-log-server-ui.js?v=0debdf98";
+} from "./algo-trading/bot-session-log-server-ui.js?v=ac192567";
 
 import {
 syncBotStrategiesToMain
@@ -109,15 +109,15 @@ syncBotStrategiesToMain
 
 import {
 mountAlgoTradeUi
-} from "./algo-trading/trade/boot.js?v=efaa2f69";
+} from "./algo-trading/trade/boot.js?v=43146b7e";
 
 import {
 mountAlgoTradingDrawings
-} from "./algo-trading/drawings.js?v=78bbb9d6";
+} from "./algo-trading/drawings.js?v=7e74fbaa";
 
 import {
 mountAlgoTradingIndicators
-} from "./algo-trading/indicators.js?v=95da22ac";
+} from "./algo-trading/indicators.js?v=4d56d0ba";
 
 import {
 mountAlgoPatternEntryOverlay
@@ -203,7 +203,7 @@ isChartLayoutReady
 import {
 invalidatePreservedVisibleLogicalRange,
 runWithPreservedVisibleLogicalRange
-} from "./chart-visible-range.js?v=ee220e18";
+} from "./chart-visible-range.js?v=d523062b";
 
 import {
 coinsState,
@@ -259,7 +259,7 @@ syncRsiLevelDom as syncRsiLevelDomEl,
 setRsiHud as setRsiHudEl,
 lastRsiValue as lastRsiValueFromCandles,
 layoutRsiPane
-} from "./algo-trading/page-rsi.js?v=a1b6772a";
+} from "./algo-trading/page-rsi.js?v=c76c91cb";
 
 import {
 bindAlgoStatsPanelResize

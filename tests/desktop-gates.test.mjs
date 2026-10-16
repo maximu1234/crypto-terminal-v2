@@ -261,3 +261,19 @@ test("algo bot shell UI requires desktop", () => {
   assert.match(fn, /!isDesktopShell\(\)/);
 });
 
+test("bundled UI fallback clears local origin and prefers remote getAppOrigin", () => {
+  const source = read("desktop/main.js");
+  const fn = source.slice(
+    source.indexOf("function fallbackToRemoteUi"),
+    source.indexOf("mainWindow.webContents.once")
+  );
+  assert.match(fn, /remoteUiFallbackActive\s*=\s*\ntrue/);
+  assert.match(fn, /localSiteOrigin\s*=\s*\nnull/);
+  assert.match(fn, /setTradingIpcLocked\(\s*\ntrue/);
+  const origin = source.slice(
+    source.indexOf("function getAppOrigin"),
+    source.indexOf("function getStartUrl")
+  );
+  assert.match(origin, /remoteUiFallbackActive/);
+});
+

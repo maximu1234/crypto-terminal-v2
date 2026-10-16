@@ -56,7 +56,18 @@ if (workerUrlRaw && workerUrl && workerUrlRaw !== workerUrl) {
   );
 }
 
+const requireEnv =
+  process.env.REQUIRE_SUPABASE_ENV === "1" ||
+  process.env.REQUIRE_SUPABASE_ENV === "true";
+
 if (!url || !key) {
+  if (requireEnv) {
+    console.error(
+      "supabase-env.js: SUPABASE_URL / SUPABASE_ANON_KEY required (REQUIRE_SUPABASE_ENV=1)"
+    );
+    process.exit(1);
+  }
+
   if (fs.existsSync(out)) {
     console.log(
       "supabase-env.js: env vars missing — keeping existing file"

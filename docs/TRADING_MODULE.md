@@ -6,6 +6,8 @@
 
 Один и тот же продукт. На вебе торговля Bybit идёт через Railway (`/trade/*`), в `.app` — через IPC и ключи на диске.
 
+**Web keys:** AES-GCM на volume Railway; файл `bybit-<emailHash16>.enc` (owner из trade-токена). Legacy `bybit.enc` мигрирует при первом load. Site-gate по-прежнему single-email, но диск уже не общий blob на всех токены.
+
 | | Сайт (Vercel) | Desktop (.app) |
 |---|---------------|------------------|
 | Графики, алерты, синхронизация | ✅ | ✅ |
@@ -35,6 +37,16 @@
 Облегчённый Терминал для алготорговли. Pattern 1-2 — **копии** в
 `js/algo-trading/` (оригинал индикатора не трогать).
 
+**Канон Pattern / Early T3 (не «синхронизировать» между деревьями):**
+
+| Поверхность | Файлы |
+|-------------|--------|
+| Скринер / Терминал / Скрипт (оригинал, **frozen**) | `js/indicators/pattern-12*.js`, `js/indicators/pattern-12-early-t3*` |
+| АлгоТрейдинг / бот | `js/algo-trading/pattern-12*`, `js/algo-trading/pattern-12-early-t3*` |
+| Script scanner | только оригинал `js/indicators/pattern-12-math.js` |
+
+Math Early T3 в indicators и algo **могут отличаться** — править только нужную копию.
+
 | Компонент | Файлы |
 |-----------|--------|
 | Страница / boot | `algo-trading.html`, `js/algo-trading-page-boot.js`, `js/algo-trading.js`, `css/algo-trading.css` |
@@ -50,16 +62,19 @@
 | Редакция сборки | `desktop/trading/algo-trading-edition.cjs`: `f` = full, `m` = manual-only; буква в подписи `vX.Y.Zf` / `vX.Y.Zm` и в именах релизов (`…76f…` / `…76m…`). CI: `build:mac:editions` / `build:win:editions` |
 
 **Cloud на странице Алго (Multichart):** `isAlgoReducedCloudClient()` =
-`isAlgoBotLiteShell() || isAlgoTradingPage()`. Без hydrate/poll/favorites /
-Auth keepalive / chart→`price_alerts`. JWT + push + cloud lock + remote Status —
+`isAlgoBotLiteShell() || isAlgoTradingPage()`. Без Active registry
+hydrate/poll/favorites / chart→`price_alerts`. **History-only**
+`pullAlertHistoryFromCloud` + push — да. JWT + cloud lock + remote Status —
 да. Live-бот на бирже, не на cloud alerts.
 
 **Standalone Algo Bot (`bot-app/`):** lite shell **без графика Терминала**.
 Sync плагина + JS-графа + движка: `node scripts/sync-bot-lite-from-multichart.cjs`
 (см. `bot-app/SITE_BUNDLE.md`). Terminal `trading.*`
 IPC **не регистрируется**; preload отдаёт stub. Ключи — только
-`algo-exchange-credentials`. Движок зеркалится:
-`desktop/trading/algo-*.cjs` ↔ `bot-app/trading/algo-*.cjs`.
+`algo-exchange-credentials`. Движок: зеркало `desktop/trading/algo-*.cjs` ↔
+`bot-app/trading/algo-*.cjs`. Файлы Terminal BingX/Bybit в `bot-app/trading/`
+могут лежать от sync — **не подключать** в bot preload/IPC; не править
+«заодно» с Multichart Terminal.
 
 **Disk pending:** `pendingTriggers` + `pendingMirrorTriggers` + `pendingEntries`
 в `algo-bot-store` (Stop→Start / restart).
@@ -133,7 +148,7 @@ Renderer (/terminal.html — desktop)
 | REST client | `desktop/trading/bingx-rest.cjs` (**не трогать** `bybit-rest.cjs`) |
 | Private WS | `desktop/trading/bingx-private-ws.cjs` |
 | Private stream | `desktop/trading/bingx-trading-stream.cjs` |
-| Credentials | `bingx-api-credentials.json` в userData (plaintext, mode 0600) |
+| Credentials | `bingx-api-credentials.json` в userData; macOS plaintext mode 0600, Win `safeStorage` when available |
 | Подпись | `desktop/trading/bingx-sign.cjs` |
 | Renderer | `js/trade/bingx/*` |
 

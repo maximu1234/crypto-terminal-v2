@@ -4,9 +4,14 @@ isTerminalReplayActive
 } from "./terminal-replay.js?v=1b9e6de6";
 
 import {
+getLastHealthyVisibleLogicalRange,
 isIndicatorSettingsModalOpen,
-isPreservingVisibleLogicalRange
-} from "../chart-visible-range.js?v=ee220e18";
+isPreservingVisibleLogicalRange,
+isTerminalHistoryLazyLoadSuppressed,
+noteHealthyVisibleLogicalRange,
+restoreLastHealthyVisibleLogicalRange,
+suppressTerminalHistoryLazyLoad
+} from "../chart-visible-range.js?v=d523062b";
 
 /**
  * Closure slice. `host` is the surrounding function's bindings.
@@ -134,7 +139,7 @@ if(
 host.isTradePage
 ){
 void import(
-"../trade-volume-presets.js?v=75c6fe3f"
+"../trade-volume-presets.js?v=adb9109d"
 ).then(
 ({
 switchTradeVolumeSymbol
@@ -477,6 +482,22 @@ host.candles[0].time *
 const loadSeq =
 host.symbolLoadSeq;
 
+/*
+ * Диапазон в момент старта загрузки. После await шкала уже может
+ * быть «починена» или снова from≈0 — якорь держим отсюда.
+ */
+let rangeAtStart =
+null;
+
+try{
+rangeAtStart =
+host.chart?.timeScale?.().getVisibleLogicalRange?.() ||
+null;
+}catch{
+rangeAtStart =
+null;
+}
+
 host.historyLoadingOlder =
 true;
 
@@ -584,8 +605,22 @@ true;
 return;
 }
 
-const range =
-host.chart?.timeScale?.().getVisibleLogicalRange?.();
+/*
+ * Если старт был с from≈0 (ложный триггер после Volume), якорь от
+ * «здорового» окна — иначе после setData снова пустой график.
+ */
+const healthy =
+getLastHealthyVisibleLogicalRange();
+const anchor =
+rangeAtStart &&
+rangeAtStart.from >
+80
+? rangeAtStart
+: healthy &&
+healthy.from >
+80
+? healthy
+: rangeAtStart;
 
 host.candles =
 merged;
@@ -598,26 +633,74 @@ host.buildChartDisplayCandles()
  * Сначала вернуть шкалу, потом RSI/индикаторы: их setData иначе
  * захватывает from≈0 после setData свечей и через rAF откатывает вид.
  */
-if(
-range &&
+const restored =
+anchor &&
 host.chart
-){
-host.chart.timeScale().setVisibleLogicalRange(
-{
+? {
 from:
-range.from +
+anchor.from +
 added,
 to:
-range.to +
+anchor.to +
 added
 }
+: null;
+
+if(
+restored
+){
+host.chart.timeScale().setVisibleLogicalRange(
+restored
 );
+noteHealthyVisibleLogicalRange(
+restored
+);
+suppressTerminalHistoryLazyLoad(
+2000
+);
+}
+
+requestAnimationFrame(
+()=>{
+
+if(
+restored &&
+host.chart
+){
+try{
+host.chart.timeScale().setVisibleLogicalRange(
+restored
+);
+}catch{
+/* ignore */
+}
+}
+
+requestAnimationFrame(
+()=>{
+
+if(
+restored &&
+host.chart
+){
+try{
+host.chart.timeScale().setVisibleLogicalRange(
+restored
+);
+}catch{
+/* ignore */
+}
 }
 
 host.rebuildRsiFromCandles();
 host.chartIndicators?.notifyCandlesUpdate?.();
-
 host.scheduleCoinsDrawRedraw();
+
+}
+);
+
+}
+);
 
 if(
 older.length <
@@ -942,18 +1025,23 @@ host.historyExhausted ||
 host.candles.length >=
 host.getTerminalHistoryDepth()
 ){
+host.historyLazyLeftEdgeHits =
+0;
 return;
 }
 
 /*
- * Пока setData индикатора откатывает шкалу или открыты настройки —
- * не грузим историю (ответ через ~5с переписывает свечи → пустой график).
- * Перенесём проверку, а не пропускаем навсегда.
+ * Пока setData индикатора откатывает шкалу, cool-down после preserve,
+ * или открыты настройки — не грузим историю (ответ через ~5с
+ * переписывает свечи → пустой график). Перенесём проверку.
  */
 if(
 isPreservingVisibleLogicalRange() ||
+isTerminalHistoryLazyLoadSuppressed() ||
 isIndicatorSettingsModalOpen()
 ){
+host.historyLazyLeftEdgeHits =
+0;
 host.historyLazyTimer =
 setTimeout(
 onRange,
@@ -974,12 +1062,83 @@ null;
 }
 
 if(
-!range ||
+!range
+){
+host.historyLazyLeftEdgeHits =
+0;
+return;
+}
+
+if(
+range.from >
+120
+){
+noteHealthyVisibleLogicalRange(
+range
+);
+host.historyLazyLeftEdgeHits =
+0;
+return;
+}
+
+if(
 range.from >
 80
 ){
+host.historyLazyLeftEdgeHits =
+0;
 return;
 }
+
+/*
+ * from≈0 скачком (было from≫0) после Volume/resize — шок шкалы,
+ * не уход пользователя влево. Иначе ложная история гасит график на 3–6с.
+ * Плавный pan (healthy.from близко к 80) — не трогаем, грузим историю.
+ */
+const healthy =
+getLastHealthyVisibleLogicalRange();
+
+if(
+healthy &&
+healthy.from -
+range.from >
+400 &&
+restoreLastHealthyVisibleLogicalRange(
+host.chart
+)
+){
+host.historyLazyLeftEdgeHits =
+0;
+suppressTerminalHistoryLazyLoad(
+4000
+);
+return;
+}
+
+/*
+ * Настоящий уход влево без якоря: два стабильных тика подряд.
+ */
+host.historyLazyLeftEdgeHits =
+(
+host.historyLazyLeftEdgeHits ||
+0
+) +
+1;
+
+if(
+host.historyLazyLeftEdgeHits <
+2
+){
+host.historyLazyTimer =
+setTimeout(
+onRange,
+350
+);
+return;
+}
+
+host.historyLazyLeftEdgeHits =
+0;
 
 void maybeLoadOlderTerminalHistory(
 host

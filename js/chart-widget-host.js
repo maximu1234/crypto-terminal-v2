@@ -7,15 +7,15 @@ ensureDomChartCrosshair,
 positionDomChartCrosshair,
 hideDomChartCrosshair,
 mountChartPriceHud
-} from "./chart-import.js?v=38a93246";
+} from "./chart-import.js?v=613e412b";
 
 import {
 initDrawings
-} from "./drawings.js?v=844b8229";
+} from "./drawings.js?v=d05c726d";
 
 import {
 mountPriceAlertUi
-} from "./price-alert-ui.js?v=f271b479";
+} from "./price-alert-ui.js?v=6817679e";
 
 function widgetPlotWidth(
 wrapEl,

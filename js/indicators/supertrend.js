@@ -25,6 +25,11 @@ isChartLayoutReady
 } from "../chart-layout-gate.js?v=4a8798af";
 
 import {
+captureHealthyVisibleLogicalRange,
+pinVisibleLogicalRangeBriefly
+} from "../chart-visible-range.js?v=d523062b";
+
+import {
 closeIndicatorColorPicker,
 openIndicatorColorPicker,
 previewColorHex,
@@ -698,9 +703,32 @@ void refreshData();
 
 function enable(){
 
+const chart =
+getChart();
+const pinned =
+captureHealthyVisibleLogicalRange(
+chart
+);
+
 if(
 enabled
 ){
+void Promise.resolve(
+refreshData()
+).finally(
+()=>{
+pinVisibleLogicalRangeBriefly(
+chart,
+pinned,
+{
+suppressMs:
+8000,
+afterResizeMs:
+120
+}
+);
+}
+);
 return;
 }
 
@@ -717,11 +745,43 @@ return;
 }
 
 bindRedraw();
-void refreshData();
+pinVisibleLogicalRangeBriefly(
+chart,
+pinned,
+{
+suppressMs:
+10000,
+afterResizeMs:
+180
+}
+);
+void Promise.resolve(
+refreshData()
+).finally(
+()=>{
+pinVisibleLogicalRangeBriefly(
+chart,
+pinned,
+{
+suppressMs:
+10000,
+afterResizeMs:
+180
+}
+);
+}
+);
 
 }
 
 function disable(){
+
+const chart =
+getChart();
+const pinned =
+captureHealthyVisibleLogicalRange(
+chart
+);
 
 if(
 !enabled
@@ -737,6 +797,16 @@ downSegments =
 [];
 unbindRedraw();
 requestOverlayRedraw();
+pinVisibleLogicalRangeBriefly(
+chart,
+pinned,
+{
+suppressMs:
+5000,
+afterResizeMs:
+80
+}
+);
 
 }
 

@@ -53,23 +53,51 @@ export async function executeAlertTrigger(
   const triggerPrice =
     Number(meta?.trigger_price ?? meta?.triggerPrice);
 
+  const eventRow = {
+    user_id: claimed.user_id,
+    symbol: claimed.symbol,
+    shape_id: claimed.shape_id,
+    price: claimed.price,
+    trigger_price: Number.isFinite(triggerPrice)
+      ? triggerPrice
+      : null,
+    tf: claimed.tf || "60",
+    exchange_id:
+      String(
+        claimed.exchange_id ||
+        "bybit"
+      ).trim().toLowerCase() ||
+      "bybit",
+    triggered_at: new Date().toISOString()
+  };
+
   try{
-    await restInsertAlertEvent({
-      user_id: claimed.user_id,
-      symbol: claimed.symbol,
-      shape_id: claimed.shape_id,
-      price: claimed.price,
-      trigger_price: Number.isFinite(triggerPrice)
-        ? triggerPrice
-        : null,
-      tf: claimed.tf || "60",
-      triggered_at: new Date().toISOString()
-    });
+    await restInsertAlertEvent(eventRow);
   }catch(err){
-    console.warn(
-      "alert history insert:",
-      err.message
-    );
+    /* До migration-price-alert-events-exchange-id.sql — без exchange_id. */
+    if(
+      /exchange_id/i.test(
+        String(err?.message || "")
+      )
+    ){
+      try{
+        const {
+          exchange_id: _ex,
+          ...legacyRow
+        } = eventRow;
+        await restInsertAlertEvent(legacyRow);
+      }catch(err2){
+        console.warn(
+          "alert history insert:",
+          err2.message
+        );
+      }
+    }else{
+      console.warn(
+        "alert history insert:",
+        err.message
+      );
+    }
   }
 
   const chatId =

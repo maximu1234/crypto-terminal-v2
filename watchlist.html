@@ -15,7 +15,7 @@
 <script src="/js/site-css-ready.js?v=b5c14dd2"></script>
 <link rel="stylesheet" href="/css/common.css?v=b1fbdc2b">
 <link rel="stylesheet" href="/css/chrome-motion.css?v=ce79f4e8">
-<link rel="stylesheet" href="/css/watchlist.css?v=ee8b241d">
+<link rel="stylesheet" href="/css/watchlist.css?v=c3dbd78a">
 <link rel="stylesheet" href="/css/screener.css?v=54187453">
 <link rel="stylesheet" href="/css/watchlist-page.css?v=96a49e61">
 <link rel="stylesheet" href="/css/draw-menus.css?v=ec157f82">
@@ -116,7 +116,7 @@ document.querySelector(
 )
 })
 ){
-import("/js/site-boot.js?v=20c538fc").catch(err=>{
+import("/js/site-boot.js?v=cfa5cd3c").catch(err=>{
 console.warn("site-boot:", err);
 });
 }else{
@@ -128,7 +128,7 @@ if(
 window.cryptoTerminalDesktop?.isDesktop
 ){
 tradeBoot =
-await import("/js/trade-desktop-boot.js?v=1b592f32");
+await import("/js/trade-desktop-boot.js?v=9511f446");
 
 if(
 tradeBoot.isWatchlistTradeMode()
@@ -142,7 +142,7 @@ mode:
 }
 }else{
 tradeBoot =
-await import("/js/trade-web/boot.js?v=fd73f426");
+await import("/js/trade-web/boot.js?v=df0399c0");
 await tradeBoot.initTradeWebBeforeChart(
 {
 mode:
@@ -155,7 +155,7 @@ const { loadLightweightCharts } =
 await import("/js/charts-lib-boot.js?v=04885614");
 
 await loadLightweightCharts();
-await import("./js/watchlist.js?v=1bde1880");
+await import("./js/watchlist.js?v=8ed0d70d");
 
 if(
 window.cryptoTerminalDesktop?.isDesktop
@@ -182,7 +182,7 @@ mode:
 }
 
 await import("./js/watchlist-page.js?v=f273626f");
-import("/js/site-boot.js?v=20c538fc").catch(err=>{
+import("/js/site-boot.js?v=cfa5cd3c").catch(err=>{
 console.warn("site-boot:", err);
 });
 

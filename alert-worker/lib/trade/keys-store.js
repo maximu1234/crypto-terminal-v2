@@ -3,6 +3,9 @@ import fs from "node:fs";
 import path from "node:path";
 import { readEnv } from "../config.js";
 
+/** SHA-256 hex prefix of gate email — empty = legacy single-tenant path. */
+let activeOwnerKey = "";
+
 function keysDir() {
   const fromEnv = readEnv("TRADE_KEYS_DIR");
   if (fromEnv) {
@@ -44,19 +47,51 @@ export function volumeLooksMounted() {
   }
 }
 
-function filePath(exchangeId) {
-  const id = exchangeId === "bybit" ? "bybit" : "bybit";
+/**
+ * Bind disk key file to site-gate email (trade token).
+ * Empty email → legacy `bybit.enc` (single-tenant).
+ */
+export function setTradeKeysOwner(email) {
+  const e = String(email || "").trim().toLowerCase();
+  if (!e) {
+    activeOwnerKey = "";
+    return;
+  }
+  activeOwnerKey = crypto
+    .createHash("sha256")
+    .update(e)
+    .digest("hex")
+    .slice(0, 16);
+}
+
+export function getTradeKeysOwnerKey() {
+  return activeOwnerKey;
+}
+
+function exchangeFileId(exchangeId) {
+  return exchangeId === "bybit" ? "bybit" : "bybit";
+}
+
+function ownerFilePath(exchangeId) {
+  const id = exchangeFileId(exchangeId);
+  if (activeOwnerKey) {
+    return path.join(keysDir(), `${id}-${activeOwnerKey}.enc`);
+  }
   return path.join(keysDir(), `${id}.enc`);
 }
 
-export function loadTradeKeys(exchangeId = "bybit") {
+function legacyFilePath(exchangeId) {
+  return path.join(keysDir(), `${exchangeFileId(exchangeId)}.enc`);
+}
+
+function decryptFile(file) {
   const key = keyBytes();
   if (!key) {
     return null;
   }
   let raw;
   try {
-    raw = fs.readFileSync(filePath(exchangeId));
+    raw = fs.readFileSync(file);
   } catch {
     return null;
   }
@@ -87,6 +122,26 @@ export function loadTradeKeys(exchangeId = "bybit") {
   }
 }
 
+export function loadTradeKeys(exchangeId = "bybit") {
+  const owned = decryptFile(ownerFilePath(exchangeId));
+  if (owned) {
+    return owned;
+  }
+  /* Migrate legacy single-file blob into per-email path once. */
+  if (activeOwnerKey) {
+    const legacy = decryptFile(legacyFilePath(exchangeId));
+    if (legacy) {
+      try {
+        saveTradeKeys(exchangeId, legacy);
+      } catch {
+        /* keep serving legacy in-memory */
+      }
+      return legacy;
+    }
+  }
+  return null;
+}
+
 export function saveTradeKeys(exchangeId, creds) {
   const key = keyBytes();
   if (!key) {
@@ -106,14 +161,21 @@ export function saveTradeKeys(exchangeId, creds) {
   );
   const enc = Buffer.concat([cipher.update(payload), cipher.final()]);
   const tag = cipher.getAuthTag();
-  fs.writeFileSync(filePath(exchangeId), Buffer.concat([iv, tag, enc]));
+  fs.writeFileSync(ownerFilePath(exchangeId), Buffer.concat([iv, tag, enc]));
 }
 
 export function clearTradeKeys(exchangeId = "bybit") {
   try {
-    fs.unlinkSync(filePath(exchangeId));
+    fs.unlinkSync(ownerFilePath(exchangeId));
   } catch {
     /* missing is fine */
+  }
+  if (activeOwnerKey) {
+    try {
+      fs.unlinkSync(legacyFilePath(exchangeId));
+    } catch {
+      /* ignore */
+    }
   }
 }
 

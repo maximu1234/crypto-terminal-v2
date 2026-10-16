@@ -13,7 +13,7 @@ on:
 
 concurrency:
   group: desktop-release-windows-${{ github.event.inputs.desktop_version && format('desktop-win-v{0}', github.event.inputs.desktop_version) || github.ref_name }}
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 permissions:
   contents: write
@@ -48,19 +48,16 @@ jobs:
           else
             VERSION="${{ github.event.inputs.desktop_version }}"
             TAG="desktop-win-v${VERSION}"
-            PKG=$(node -p "require('./desktop/package.json').version")
-            MARKER=$(node --input-type=module -e "import { DESKTOP_APP_VERSION } from './js/release-marker.js'; console.log(DESKTOP_APP_VERSION)")
-            if [ "$PKG" != "$VERSION" ] || [ "$MARKER" != "$VERSION" ]; then
-              echo "Version mismatch: input=${VERSION}, package.json=${PKG}, release-marker=${MARKER}"
-              exit 1
-            fi
+          fi
+          PKG=$(node -p "require('./desktop/package.json').version")
+          MARKER=$(node --input-type=module -e "import { DESKTOP_APP_VERSION } from './js/release-marker.js'; console.log(DESKTOP_APP_VERSION)")
+          if [ "$PKG" != "$VERSION" ] || [ "$MARKER" != "$VERSION" ]; then
+            echo "Version mismatch: tag/input=${VERSION}, package.json=${PKG}, release-marker=${MARKER}"
+            exit 1
           fi
           echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
           echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
           echo "Release target: ${TAG} (v${VERSION})"
-
-      - name: Sync desktop package version
-        run: npm version "${{ steps.release.outputs.version }}" --no-git-tag-version --allow-same-version
 
       - name: Install dependencies
         run: |
@@ -69,6 +66,7 @@ jobs:
       - name: Prepare supabase-env for site bundle
         working-directory: .
         env:
+          REQUIRE_SUPABASE_ENV: "1"
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
           ALERT_WORKER_URL: ${{ secrets.ALERT_WORKER_URL }}

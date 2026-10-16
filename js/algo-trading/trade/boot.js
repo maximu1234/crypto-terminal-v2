@@ -16,7 +16,7 @@ stopAlgoTradeStreamBridge
 
 import {
 initAlgoTradeBookPanel
-} from "./book-panel.js?v=02356366";
+} from "./book-panel.js?v=cc7242b4";
 
 import {
 createTradeChartOverlay

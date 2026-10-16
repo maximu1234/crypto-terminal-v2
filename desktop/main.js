@@ -311,11 +311,24 @@ shouldUseBundle();
 let localSiteOrigin =
 null;
 
+/** True after bundled UI failed → Vercel; getAppOrigin must not claim loopback. */
+let remoteUiFallbackActive =
+false;
+
 /** @type {(() => Promise<void>) | null} */
 let closeLocalSiteServer =
 null;
 
 function getAppOrigin(){
+
+if(
+remoteUiFallbackActive
+){
+return REMOTE_APP_URL.replace(
+/\/$/,
+""
+);
+}
 
 if(
 USE_BUNDLE &&
@@ -1269,6 +1282,10 @@ return;
 
 bundleLoadFallback =
 true;
+remoteUiFallbackActive =
+true;
+localSiteOrigin =
+null;
 
 try{
 const {
@@ -1291,7 +1308,7 @@ err
 }
 
 log.warn(
-`Bundled UI fallback (${reason}) → remote Vercel (trading/algo IPC locked)`
+`Bundled UI fallback (${reason}) → remote Vercel (trading/algo IPC locked; origin=remote)`
 );
 const remote =
 `${REMOTE_APP_URL.replace(

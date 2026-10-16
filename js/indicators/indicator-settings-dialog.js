@@ -362,6 +362,8 @@ bodyEl.innerHTML =
 "";
 dialogEl.className =
 "chart-indicator-settings-dialog";
+dialogEl.style.visibility =
+"";
 resetDialogPosition();
 dragState =
 null;
@@ -405,6 +407,15 @@ onCloseCallback =
 onClose ||
 null;
 
+/*
+ * Сначала guard графика (pin/chrome/modal), потом DOM диалога.
+ * Иначе populate/backdrop успевают дернуть resize/from≈0 до захвата range.
+ */
+onOpen?.();
+document.body.classList.add(
+"chart-indicator-modal-open"
+);
+
 titleEl.textContent =
 indicator.settingsDialogTitle ||
 indicator.label ||
@@ -433,20 +444,20 @@ indicator.settingsDialogClass
 }
 
 resetDialogPosition();
+/* Не показывать диалог в (0,0) до center — иначе «мигание» окна. */
+dialogEl.style.visibility =
+"hidden";
 backdrop.classList.remove(
 "hidden"
 );
-document.body.classList.add(
-"chart-indicator-modal-open"
-);
-
-onOpen?.();
 
 requestAnimationFrame(
 ()=>{
-requestAnimationFrame(
-centerDialogInBounds
-);
+
+centerDialogInBounds();
+dialogEl.style.visibility =
+"";
+
 }
 );
 

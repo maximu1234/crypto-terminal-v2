@@ -48,7 +48,11 @@ export async function handleTradeHttp(req, res) {
   }
 
   try {
-    const result = await runTradeRpc(body.method, body.payload || {});
+    const result = await runTradeRpc(
+      body.method,
+      body.payload || {},
+      session
+    );
     res.writeHead(200, { "Content-Type": "application/json" });
     res.end(JSON.stringify(result ?? { ok: false }));
   } catch (err) {

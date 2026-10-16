@@ -10,8 +10,11 @@ import {
 isChartLayoutReady
 } from "../chart-layout-gate.js?v=4a8798af";
 import {
-runWithPreservedVisibleLogicalRange
-} from "../chart-visible-range.js?v=ee220e18";
+captureHealthyVisibleLogicalRange,
+pinVisibleLogicalRangeBriefly,
+runWithPreservedVisibleLogicalRange,
+suppressTerminalHistoryLazyLoad
+} from "../chart-visible-range.js?v=d523062b";
 import {
 calculateShiftedEmaSeries
 } from "./htf-ema.js?v=b7d2ebae";
@@ -357,6 +360,9 @@ let settings =
 defaultSettings();
 let refreshSeq =
 0;
+/** После enable — тихие тики на BTC не стартуют второй HTF refresh. */
+let enableQuietUntil =
+0;
 const seriesByIndex =
 new Map();
 
@@ -461,6 +467,10 @@ if(
 return false;
 }
 
+runWithPreservedVisibleLogicalRange(
+chart,
+()=>{
+
 for(
 let i =
 0;
@@ -532,6 +542,9 @@ index
 );
 
 }
+
+}
+);
 
 return true;
 
@@ -710,9 +723,34 @@ void refreshData();
 
 function enable(){
 
+const chart =
+getHost?.()?.chart;
+const pinned =
+captureHealthyVisibleLogicalRange(
+chart
+);
+
+enableQuietUntil =
+Date.now() +
+1200;
+
 if(
 enabled
 ){
+void refreshData().finally(
+()=>{
+pinVisibleLogicalRangeBriefly(
+chart,
+pinned,
+{
+suppressMs:
+8000,
+afterResizeMs:
+120
+}
+);
+}
+);
 return;
 }
 
@@ -728,11 +766,42 @@ false;
 return;
 }
 
-void refreshData();
+pinVisibleLogicalRangeBriefly(
+chart,
+pinned,
+{
+suppressMs:
+10000,
+afterResizeMs:
+180
+}
+);
+
+void refreshData().finally(
+()=>{
+pinVisibleLogicalRangeBriefly(
+chart,
+pinned,
+{
+suppressMs:
+10000,
+afterResizeMs:
+220
+}
+);
+}
+);
 
 }
 
 function disable(){
+
+const chart =
+getHost?.()?.chart;
+const pinned =
+captureHealthyVisibleLogicalRange(
+chart
+);
 
 if(
 !enabled
@@ -744,6 +813,16 @@ refreshSeq++;
 enabled =
 false;
 removeSeries();
+pinVisibleLogicalRangeBriefly(
+chart,
+pinned,
+{
+suppressMs:
+5000,
+afterResizeMs:
+80
+}
+);
 
 }
 
@@ -776,8 +855,19 @@ if(
 return;
 }
 
-/* No range preserve: symbol switch will fit viewport next. */
+const chart =
+getHost?.()?.chart;
+
+/* setData([]) тоже даёт from≈0 — preserve до fit на смене тикера. */
+runWithPreservedVisibleLogicalRange(
+chart,
+()=>{
 clearSeriesData();
+}
+);
+suppressTerminalHistoryLazyLoad(
+1500
+);
 
 }
 
@@ -800,6 +890,13 @@ function onCandlesUpdate(){
 
 if(
 !enabled
+){
+return;
+}
+
+if(
+Date.now() <
+enableQuietUntil
 ){
 return;
 }
@@ -1319,6 +1416,8 @@ legendLabel:
 "EMA Shift Ribbon",
 settingsDialogTitle:
 "EMA Shift Ribbon",
+settingsDialogClass:
+"chart-indicator-settings-dialog--ribbon",
 exemptFromLimit:
 false,
 defaultEnabled:

@@ -5,6 +5,7 @@ import {
   keysStatus,
   loadTradeKeys,
   saveTradeKeys,
+  setTradeKeysOwner,
   tradeKeysReady,
   volumeLooksMounted
 } from "./keys-store.js";
@@ -22,7 +23,8 @@ function desktopOnly() {
   };
 }
 
-export async function runTradeRpc(method, payload = {}) {
+export async function runTradeRpc(method, payload = {}, session = null) {
+  setTradeKeysOwner(session?.email || "");
   const name = String(method || "");
   if (payload?.exchangeId && payload.exchangeId !== "bybit") {
     return { ok: false, message: "Web trading: только Bybit" };

@@ -2,8 +2,10 @@
  * Volume — гистограмма внизу панели цены (как на TradingView).
  */
 import {
+captureHealthyVisibleLogicalRange,
+pinVisibleLogicalRangeBriefly,
 runWithPreservedVisibleLogicalRange
-} from "../chart-visible-range.js?v=ee220e18";
+} from "../chart-visible-range.js?v=d523062b";
 
 export const VOLUME_PANE_ID =
 "volume";
@@ -171,6 +173,10 @@ readOpacity();
 let paintedKey =
 "";
 
+/** После enable игнор resize/tick — на ликвидных тикерах они мигают график. */
+let enableQuietUntil =
+0;
+
 function wrapEl(){
 
 return document.getElementById(
@@ -202,12 +208,19 @@ if(
 return;
 }
 
-try{
 const hostChart =
 boundChart ||
 mainChart();
 
-hostChart?.priceScale(
+if(
+!hostChart
+){
+return;
+}
+
+/* Без nested preserve: иначе cancel внутреннего restore снаружи setData. */
+try{
+hostChart.priceScale(
 VOLUME_SCALE_ID
 ).applyOptions(
 {
@@ -431,10 +444,33 @@ dropSeries();
 
 function enable(){
 
+const chart =
+mainChart();
+const pinned =
+captureHealthyVisibleLogicalRange(
+chart
+);
+
+enableQuietUntil =
+Date.now() +
+1200;
+
+hideSeparatePane();
+
 if(
 enabled
 ){
 refreshData();
+pinVisibleLogicalRangeBriefly(
+chart,
+pinned,
+{
+suppressMs:
+8000,
+afterResizeMs:
+120
+}
+);
 return;
 }
 
@@ -446,12 +482,51 @@ return;
 
 enabled =
 true;
-hideSeparatePane();
+/*
+ * addSeries + setData → LW from≈0 на длинной истории (BTC).
+ * Тот же pin, что у MA — без hold/watch (ломали смену тикера).
+ */
+pinVisibleLogicalRangeBriefly(
+chart,
+pinned,
+{
+suppressMs:
+10000,
+afterResizeMs:
+180
+}
+);
+
+requestAnimationFrame(
+()=>{
+requestAnimationFrame(
+()=>{
 refreshData();
+pinVisibleLogicalRangeBriefly(
+chart,
+pinned,
+{
+suppressMs:
+10000,
+afterResizeMs:
+180
+}
+);
+}
+);
+}
+);
 
 }
 
 function disable(){
+
+const chart =
+mainChart();
+const pinned =
+captureHealthyVisibleLogicalRange(
+chart
+);
 
 if(
 !enabled &&
@@ -465,6 +540,16 @@ enabled =
 false;
 dropSeries();
 hideSeparatePane();
+pinVisibleLogicalRangeBriefly(
+chart,
+pinned,
+{
+suppressMs:
+5000,
+afterResizeMs:
+80
+}
+);
 
 }
 
@@ -578,6 +663,13 @@ refreshData();
 },
 onCandlesUpdate(){
 
+if(
+Date.now() <
+enableQuietUntil
+){
+return;
+}
+
 refreshData();
 
 },
@@ -588,6 +680,13 @@ hideSeparatePane();
 
 },
 onResize(){
+
+if(
+Date.now() <
+enableQuietUntil
+){
+return;
+}
 
 pinVolumeScale();
 

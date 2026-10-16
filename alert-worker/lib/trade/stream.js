@@ -2,7 +2,10 @@ import { WebSocketServer, WebSocket } from "ws";
 import { verifySiteGateToken } from "./gate-token.js";
 import { readEnv } from "../config.js";
 import { isAllowedTradeOrigin } from "../client-http.js";
-import { loadTradeKeys } from "./keys-store.js";
+import {
+  loadTradeKeys,
+  setTradeKeysOwner
+} from "./keys-store.js";
 import {
   connectBybitPrivateWs
 } from "./bybit-private-ws.js";
@@ -160,6 +163,7 @@ export function attachTradeStreamWs(server) {
         }
         return;
       }
+      setTradeKeysOwner(session.email || "");
       authed = true;
       clearTimeout(timer);
       admit(ws);

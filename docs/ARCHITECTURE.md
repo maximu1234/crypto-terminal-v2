@@ -56,6 +56,6 @@ npm run check:all
 
 ## Откат
 
-**Текущий релиз:** `metka-200` / веб `v0.200` / desktop `1.1.86` — [MARKER_200.md](./MARKER_200.md), `js/release-marker.js`. Desktop .app: [DESKTOP_APP.md](./DESKTOP_APP.md).
+**Текущий релиз:** `metka-212` / веб `v0.212` / desktop `1.1.97` — [MARKER_212.md](./MARKER_212.md), `js/release-marker.js`. Desktop .app: [DESKTOP_APP.md](./DESKTOP_APP.md).
 
 Откат perf chrome/chart по-прежнему **`metka-181`** — не удалять, см. [PERF_CHROME_CHART.md](./PERF_CHROME_CHART.md).

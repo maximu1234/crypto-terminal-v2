@@ -7,8 +7,10 @@ alignMaPointsToDisplayCandles
 } from "./ma-math.js?v=a42e8535";
 
 import {
+captureHealthyVisibleLogicalRange,
+pinVisibleLogicalRangeBriefly,
 runWithPreservedVisibleLogicalRange
-} from "../chart-visible-range.js?v=ee220e18";
+} from "../chart-visible-range.js?v=d523062b";
 
 import {
 isChartLayoutReady
@@ -961,9 +963,27 @@ visible:
 
 function enable(){
 
+const chart =
+getHost?.()?.chart;
+const pinned =
+captureHealthyVisibleLogicalRange(
+chart
+);
+
 if(
 enabled
 ){
+refreshData();
+pinVisibleLogicalRangeBriefly(
+chart,
+pinned,
+{
+suppressMs:
+8000,
+afterResizeMs:
+120
+}
+);
 return;
 }
 
@@ -981,12 +1001,35 @@ return;
 
 showSeries();
 applySeriesStyle();
+/*
+ * addLineSeries + setData ставят from≈0 — тот же guard, что у Volume.
+ */
+pinVisibleLogicalRangeBriefly(
+chart,
+pinned,
+{
+suppressMs:
+10000,
+afterResizeMs:
+180
+}
+);
 
 requestAnimationFrame(
 ()=>{
 requestAnimationFrame(
 ()=>{
 refreshData();
+pinVisibleLogicalRangeBriefly(
+chart,
+pinned,
+{
+suppressMs:
+10000,
+afterResizeMs:
+180
+}
+);
 }
 );
 }
@@ -995,6 +1038,13 @@ refreshData();
 }
 
 function disable(){
+
+const chart =
+getHost?.()?.chart;
+const pinned =
+captureHealthyVisibleLogicalRange(
+chart
+);
 
 if(
 !enabled
@@ -1005,6 +1055,16 @@ return;
 enabled =
 false;
 hideSeries();
+pinVisibleLogicalRangeBriefly(
+chart,
+pinned,
+{
+suppressMs:
+5000,
+afterResizeMs:
+80
+}
+);
 
 }
 
@@ -1068,7 +1128,7 @@ legendLabel:
 settingsDialogTitle:
 "SMA / EMA",
 settingsDialogClass:
-"chart-indicator-settings-dialog--compact",
+"chart-indicator-settings-dialog--ma",
 exemptFromLimit:
 false,
 defaultEnabled:

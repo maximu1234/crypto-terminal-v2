@@ -1,7 +1,7 @@
 import {
 isCloudLoggedInEffective,
 ensureCloudLoginResolved
-} from "../cloud-sync.js?v=b654cab4";
+} from "../cloud-sync.js?v=21b0e6e9";
 
 import {
 resolveAlertAuthFast,
@@ -30,7 +30,7 @@ markAlertsPullSuccess,
 warnAlertsPullThrottled,
 isAlertsPullInBackoff,
 broadcastAlertsRegistrySync
-} from "./debug.js?v=36d706ad";
+} from "./debug.js?v=b7b7547f";
 
 import {
 runCloudOp,
@@ -46,11 +46,11 @@ clearAllAlertsFromCloud,
 fetchWithTimeout,
 softDeleteAlertViaRest,
 hintWorkerReloadAlerts
-} from "./worker-client.js?v=9820fe56";
+} from "./worker-client.js?v=d92c3e91";
 
 import {
 isAlertsCloudDisabled
-} from "../supabase-usage-prefs.js?v=322f9da3";
+} from "../supabase-usage-prefs.js?v=d191cc82";
 
 function resolveAlertExchangeId(
 entry
@@ -131,7 +131,7 @@ cloudId
 ){
 
 const { markAlertCloudSynced, markAlertCloudId } =
-await import("../alerts.js?v=6bfe0594");
+await import("../alerts.js?v=7d94ac35");
 
 const ok =
 await verifyAlertActiveInCloud(
@@ -398,7 +398,7 @@ null;
 
 if(cloudId){
 const { markAlertCloudId } =
-await import("../alerts.js?v=6bfe0594");
+await import("../alerts.js?v=7d94ac35");
 
 markAlertCloudId(
 symbol,
@@ -622,7 +622,7 @@ registrySyncTimer = null;
 }
 
 const { stripAlertFlagsNotInRegistry } =
-await import("../alerts.js?v=6bfe0594");
+await import("../alerts.js?v=7d94ac35");
 
 const ok =
 await clearAllAlertsFromCloud();
@@ -658,7 +658,7 @@ return 0;
 }
 
 const { getActiveAlerts } =
-await import("../alerts.js?v=6bfe0594");
+await import("../alerts.js?v=7d94ac35");
 
 const localKeys =
 new Set(
@@ -758,7 +758,7 @@ return false;
 }
 
 const { ensureCloudReady } =
-await import("../auth-ui.js?v=6babe0b7");
+await import("../auth-ui.js?v=02e5f877");
 
 await ensureCloudReady();
 
@@ -789,7 +789,7 @@ attempt++
 if(await pushAlertViaWorker(row)){
 
 const { markAlertCloudSynced } =
-await import("../alerts.js?v=6bfe0594");
+await import("../alerts.js?v=7d94ac35");
 
 /* Worker пишет service role — не ждём SELECT по JWT пользователя */
 markAlertCloudSynced(
@@ -820,7 +820,7 @@ ctx
 ){
 
 const { markAlertCloudSynced } =
-await import("../alerts.js?v=6bfe0594");
+await import("../alerts.js?v=7d94ac35");
 
 if(
 await markRowSyncedAfterVerify(
@@ -915,7 +915,7 @@ return 0;
 }
 
 const { getActiveAlerts, countAlertsOnChart } =
-await import("../alerts.js?v=6bfe0594");
+await import("../alerts.js?v=7d94ac35");
 
 const onChart =
 countAlertsOnChart();
@@ -990,7 +990,7 @@ return ok;
 async function syncAllLocalAlertsToCloudImpl(){
 
 const { ensureCloudReady } =
-await import("../auth-ui.js?v=6babe0b7");
+await import("../auth-ui.js?v=02e5f877");
 
 await ensureCloudReady();
 
@@ -1005,7 +1005,7 @@ return 0;
 }
 
 const { getActiveAlerts } =
-await import("../alerts.js?v=6bfe0594");
+await import("../alerts.js?v=7d94ac35");
 
 const list =
 getActiveAlerts();
@@ -1451,7 +1451,7 @@ normalizeAlertTf,
 isAlertDeleted,
 forgetAlertDeleted
 } =
-await import("../alerts.js?v=6bfe0594");
+await import("../alerts.js?v=7d94ac35");
 
 const cloudByKey =
 new Map();
@@ -1569,7 +1569,7 @@ tf: row.tf || "60"
 if(removedRows.length){
 
 const { applyRemoteAlertRemoved } =
-await import("../alerts.js?v=6bfe0594");
+await import("../alerts.js?v=7d94ac35");
 
 for(const row of removedRows){
 
@@ -1889,9 +1889,14 @@ if(
 return null;
 }
 
+/*
+ * select=* — все существующие колонки. Нельзя select=exchange_id до
+ * migration-price-alert-events-exchange-id.sql: PostgREST → 400 в консоли
+ * на каждый hydrate/poll.
+ */
 const url =
 `${base}/rest/v1/price_alert_events?user_id=eq.${encodeURIComponent(uid)}` +
-`&select=id,symbol,shape_id,price,tf,triggered_at` +
+`&select=*` +
 `&order=triggered_at.desc` +
 `&limit=${HISTORY_PULL_LIMIT}`;
 
@@ -1979,7 +1984,7 @@ return null;
 
 /**
  * Один SELECT price_alert_events → local history (без disarm Active).
- * Только по запросу (страница Алерты / force); coalesce ≥60с.
+ * Вызывается при hydrate / focus / страница Алерты; coalesce ≥60с (force обходит).
  */
 export async function pullAlertHistoryFromCloud(
 options = {}
@@ -2092,7 +2097,7 @@ return 0;
 const {
 mergeAlertHistoryFromCloudEvents
 } =
-await import("../alerts.js?v=6bfe0594");
+await import("../alerts.js?v=7d94ac35");
 
 const {
 getActiveExchangeId
@@ -2140,7 +2145,7 @@ const n =
 await reconcileLocalRegistryWithCloud();
 
 const { stripAlertFlagsNotInRegistry } =
-await import("../alerts.js?v=6bfe0594");
+await import("../alerts.js?v=7d94ac35");
 
 stripAlertFlagsNotInRegistry(
 isAlertsPage()
@@ -2190,7 +2195,7 @@ return 0;
 
 try{
 const { ensureCloudLoginResolved } =
-await import("../cloud-sync.js?v=b654cab4");
+await import("../cloud-sync.js?v=21b0e6e9");
 
 await ensureCloudLoginResolved(
 8000
@@ -2218,7 +2223,7 @@ return 0;
 }
 
 const { stripAlertFlagsNotInRegistry } =
-await import("../alerts.js?v=6bfe0594");
+await import("../alerts.js?v=7d94ac35");
 
 stripAlertFlagsNotInRegistry(
 isAlertsPage()
