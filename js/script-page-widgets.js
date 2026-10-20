@@ -57,7 +57,7 @@ getWidgetFlagHtml,
 wireWidgetFlagUi,
 updateWidgetFlagUi,
 bindWidgetFlagGlobalListeners
-} from "./widget-favorite-flag.js?v=ae32741c";
+} from "./widget-favorite-flag.js?v=b08ecf23";
 
 const SCRIPT_MAX_CONCURRENT_CHART_LOADS =
 4;

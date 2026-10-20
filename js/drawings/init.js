@@ -169,11 +169,11 @@ createDrawingsPersist
 
 import {
 createDrawStyleBar
-} from "./draw-style-bar.js?v=0dc30b9f";
+} from "./draw-style-bar.js?v=2bbb8da5";
 
 import {
 createDrawAlertsChart
-} from "./draw-alerts-chart.js?v=093cc99d";
+} from "./draw-alerts-chart.js?v=7f4715e8";
 
 import {
 createDrawPlacement
@@ -3380,7 +3380,7 @@ lastChartAlertsPullMs =
 Date.now();
 
 void import(
-"../alerts-cloud-sync.js?v=fdef072a"
+"../alerts-cloud-sync.js?v=22d4e74a"
 ).then(
 ({ pullRegistryFromCloudNow })=>
 pullRegistryFromCloudNow({

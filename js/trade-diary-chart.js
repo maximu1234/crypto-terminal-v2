@@ -107,8 +107,6 @@ tf
 
 }
 
-}
-
 function markerTimesFromDetail(
 detail,
 trade,

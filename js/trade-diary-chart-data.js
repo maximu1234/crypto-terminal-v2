@@ -9,7 +9,7 @@ getExchangeDefinition
 import {
 getLoadedTradeExchangeModules,
 loadTradeExchangeModules
-} from "./trade/module-router.js?v=82172f7d";
+} from "./trade/module-router.js?v=52a030e6";
 
 export const DIARY_CHART_TFS =
 Object.freeze([
@@ -380,4 +380,6 @@ mount
 );
 
 return shell;
+
+}
 
