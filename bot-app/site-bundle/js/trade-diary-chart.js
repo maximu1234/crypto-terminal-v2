@@ -21,7 +21,7 @@ registerCandleSeries
 
 import {
 getActiveExchangeId
-} from "./market-api.js?v=7b3e6b3c";
+} from "./market-api.js?v=00f19708";
 
 import {
 getExchangeDefinition
@@ -30,7 +30,7 @@ getExchangeDefinition
 import {
 getLoadedTradeExchangeModules,
 loadTradeExchangeModules
-} from "./trade/module-router.js?v=dba6baec";
+} from "./trade/module-router.js?v=c0d9340a";
 
 import {
 candleAlignSec,

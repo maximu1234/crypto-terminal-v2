@@ -13,6 +13,11 @@ isChartLayoutReady
 } from "../chart-layout-gate.js?v=4a8798af";
 
 import {
+captureHealthyVisibleLogicalRange,
+pinVisibleLogicalRangeBriefly
+} from "../chart-visible-range.js?v=543a2459";
+
+import {
 closeIndicatorColorPicker,
 openIndicatorColorPicker,
 previewColorHex,
@@ -1268,9 +1273,27 @@ refreshData();
 
 function enable(){
 
+const chart =
+getChart();
+const pinned =
+captureHealthyVisibleLogicalRange(
+chart
+);
+
 if(
 enabled
 ){
+refreshData();
+pinVisibleLogicalRangeBriefly(
+chart,
+pinned,
+{
+suppressMs:
+10000,
+afterResizeMs:
+180
+}
+);
 return;
 }
 
@@ -1280,10 +1303,27 @@ readSettings();
 bindRedraw();
 bindPointerHandlers();
 refreshData();
+pinVisibleLogicalRangeBriefly(
+chart,
+pinned,
+{
+suppressMs:
+10000,
+afterResizeMs:
+180
+}
+);
 
 }
 
 function disable(){
+
+const chart =
+getChart();
+const pinned =
+captureHealthyVisibleLogicalRange(
+chart
+);
 
 if(
 !enabled
@@ -1303,6 +1343,16 @@ badgeEl?.remove();
 badgeEl =
 null;
 requestOverlayRedraw();
+pinVisibleLogicalRangeBriefly(
+chart,
+pinned,
+{
+suppressMs:
+5000,
+afterResizeMs:
+80
+}
+);
 
 }
 

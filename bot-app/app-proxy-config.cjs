@@ -7,8 +7,11 @@
 /**
  * Chromium session.setProxy гоняет весь renderer через SOCKS.
  * «Только тики» (по умолчанию): REST Bybit в обходе, история свечей напрямую,
- * тики на stream.bybit.com идут через прокси. Без галочки REST-хосты тоже
- * идут через прокси — для страны, где закрыт весь Bybit.
+ * тики идут через локальный SOCKS-релей (у Chromium нет SOCKS5-авторизации).
+ * Без галочки история свечей тоже через прокси, но не через Chromium:
+ * его socks5 резолвит DNS локально и на том же реле забивает тики.
+ * Свечи по SOCKS забирает main-процесс (удалённый DNS). HTTP-прокси без
+ * релея по-прежнему отдаёт REST самому Chromium.
  * Облако (Supabase / Railway) всегда напрямую: кафе-SOCKS часто режет auth.
  */
 const PROXY_BYPASS_ALWAYS =
@@ -357,14 +360,44 @@ function buildProxyBypassRules(
 cfg
 ){
 
+const settings =
+normalizeProxySettings(
+cfg ||
+{}
+);
+
 if(
-cfg?.ticksOnly !==
-false
+settings.ticksOnly !==
+false ||
+settings.type !==
+"http"
 ){
 return PROXY_BYPASS_RULES;
 }
 
 return PROXY_BYPASS_ALWAYS;
+
+}
+
+function candlesUseMainRelay(
+cfg
+){
+
+const settings =
+normalizeProxySettings(
+cfg ||
+{}
+);
+
+return !!(
+settings.ticksOnly ===
+false &&
+settings.type !==
+"http" &&
+isProxyConfigReady(
+settings
+)
+);
 
 }
 
@@ -466,6 +499,7 @@ module.exports =
 PROXY_BYPASS_RULES,
 PROXY_BYPASS_ALWAYS,
 buildProxyBypassRules,
+candlesUseMainRelay,
 normalizeProxySettings,
 isProxyConfigReady,
 buildProxyRules,

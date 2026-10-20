@@ -7,7 +7,7 @@ require(
 );
 
 /**
- * Must match main `desktop/trading/algo-trading-edition.cjs` (passed via additionalArguments).
+ * Must match main `bot-app/trading/algo-trading-edition.cjs` (passed via additionalArguments).
  * Sandboxed preload cannot require local modules.
  * f = full (live + manual), m = manual-only
  */
@@ -41,6 +41,152 @@ return getAlgoDesktopEdition() ===
 "f";
 
 }
+
+/**
+ * Algo Bot: Terminal Bybit/BingX trading IPC is not registered in main.
+ * Expose a soft-fail stub so renderer never invokes dead trading:* channels.
+ */
+function terminalTradingDisabled(
+method
+){
+
+return ()=>
+Promise.resolve(
+{
+ok:
+false,
+message:
+`Algo Bot: terminal trading IPC disabled (${method})`
+}
+);
+
+}
+
+const terminalTradingStub =
+{
+getStatus:
+terminalTradingDisabled(
+"getStatus"
+),
+getRateLimitBackoffMs:
+terminalTradingDisabled(
+"getRateLimitBackoffMs"
+),
+setActiveExchange:
+terminalTradingDisabled(
+"setActiveExchange"
+),
+saveKeys:
+terminalTradingDisabled(
+"saveKeys"
+),
+clearKeys:
+terminalTradingDisabled(
+"clearKeys"
+),
+getWalletBalance:
+terminalTradingDisabled(
+"getWalletBalance"
+),
+getPositions:
+terminalTradingDisabled(
+"getPositions"
+),
+getOpenOrders:
+terminalTradingDisabled(
+"getOpenOrders"
+),
+getPosition:
+terminalTradingDisabled(
+"getPosition"
+),
+closePosition:
+terminalTradingDisabled(
+"closePosition"
+),
+cancelPositionStop:
+terminalTradingDisabled(
+"cancelPositionStop"
+),
+setPositionStop:
+terminalTradingDisabled(
+"setPositionStop"
+),
+placeOrder:
+terminalTradingDisabled(
+"placeOrder"
+),
+cancelOrder:
+terminalTradingDisabled(
+"cancelOrder"
+),
+amendOrder:
+terminalTradingDisabled(
+"amendOrder"
+),
+reconcileOrdersOnPositionOpen:
+terminalTradingDisabled(
+"reconcileOrdersOnPositionOpen"
+),
+reconcileOrdersOnPositionClose:
+terminalTradingDisabled(
+"reconcileOrdersOnPositionClose"
+),
+openPosition:
+terminalTradingDisabled(
+"openPosition"
+),
+getSymbolPositionSettings:
+terminalTradingDisabled(
+"getSymbolPositionSettings"
+),
+applySymbolPositionSettings:
+terminalTradingDisabled(
+"applySymbolPositionSettings"
+),
+pingBybit:
+terminalTradingDisabled(
+"pingBybit"
+),
+getClosedPnl:
+terminalTradingDisabled(
+"getClosedPnl"
+),
+enrichClosedPnlTrades:
+terminalTradingDisabled(
+"enrichClosedPnlTrades"
+),
+getTradeDiaryDetail:
+terminalTradingDisabled(
+"getTradeDiaryDetail"
+),
+replayStream:
+terminalTradingDisabled(
+"replayStream"
+),
+getStreamSnapshot:
+terminalTradingDisabled(
+"getStreamSnapshot"
+),
+requestStreamSeed:
+terminalTradingDisabled(
+"requestStreamSeed"
+),
+generatePnlShareCard:
+terminalTradingDisabled(
+"generatePnlShareCard"
+),
+savePnlShareCard:
+terminalTradingDisabled(
+"savePnlShareCard"
+),
+discardPnlShareCard:
+terminalTradingDisabled(
+"discardPnlShareCard"
+),
+onStream:()=>
+()=>{}
+};
 
 /**
  * Auth callback may arrive before renderer binds onAuthCallback (terminal boot).
@@ -908,339 +1054,8 @@ text
 }
 )
 },
-trading:{
-getStatus:(
-payload
-)=>
-ipcRenderer.invoke(
-"trading:getStatus",
-payload ||
-{}
-),
-getRateLimitBackoffMs:()=>
-ipcRenderer.invoke(
-"trading:getRateLimitBackoffMs"
-),
-setActiveExchange:(
-exchangeId
-)=>
-ipcRenderer.invoke(
-"trading:setActiveExchange",
-{
-exchangeId
-}
-),
-saveKeys:(
-payload
-)=>
-ipcRenderer.invoke(
-"trading:saveKeys",
-payload
-),
-clearKeys:(
-payload
-)=>
-ipcRenderer.invoke(
-"trading:clearKeys",
-payload ||
-{}
-),
-getWalletBalance:(
-payload
-)=>
-ipcRenderer.invoke(
-"trading:getWalletBalance",
-payload ||
-{}
-),
-getPositions:(
-options
-)=>
-ipcRenderer.invoke(
-"trading:getPositions",
-options ||
-{}
-),
-getOpenOrders:(
-options
-)=>
-ipcRenderer.invoke(
-"trading:getOpenOrders",
-options ||
-{}
-),
-getPosition:(
-symbol,
-options =
-{}
-)=>
-ipcRenderer.invoke(
-"trading:getPosition",
-{
-symbol,
-...(
-typeof options ===
-"object" &&
-options
-? options
-: {}
-)
-}
-),
-closePosition:(
-symbol,
-options =
-{}
-)=>
-ipcRenderer.invoke(
-"trading:closePosition",
-{
-symbol,
-...(
-typeof options ===
-"object" &&
-options
-? options
-: {}
-)
-}
-),
-cancelPositionStop:(
-symbol,
-target,
-options =
-{}
-)=>
-ipcRenderer.invoke(
-"trading:cancelPositionStop",
-{
-symbol,
-target,
-...(
-typeof options ===
-"object" &&
-options
-? options
-: {}
-)
-}
-),
-setPositionStop:(
-symbol,
-target,
-price,
-options =
-{}
-)=>
-ipcRenderer.invoke(
-"trading:setPositionStop",
-{
-symbol,
-target,
-price,
-...(
-typeof options ===
-"object" &&
-options
-? options
-: {}
-)
-}
-),
-placeOrder:(
-payload
-)=>
-ipcRenderer.invoke(
-"trading:placeOrder",
-payload
-),
-cancelOrder:(
-symbol,
-orderId
-)=>
-ipcRenderer.invoke(
-"trading:cancelOrder",
-{
-symbol,
-orderId
-}
-),
-amendOrder:(
-payload
-)=>
-ipcRenderer.invoke(
-"trading:amendOrder",
-payload
-),
-reconcileOrdersOnPositionOpen:(
-symbol,
-positionSide
-)=>
-ipcRenderer.invoke(
-"trading:reconcileOrdersOnPositionOpen",
-{
-symbol,
-positionSide
-}
-),
-reconcileOrdersOnPositionClose:(
-symbol
-)=>
-ipcRenderer.invoke(
-"trading:reconcileOrdersOnPositionClose",
-{
-symbol
-}
-),
-openPosition:(
-symbol,
-side,
-volumeUsdt,
-options =
-{}
-)=>
-ipcRenderer.invoke(
-"trading:openPosition",
-{
-symbol,
-side,
-volumeUsdt,
-...options
-}
-),
-getSymbolPositionSettings:(
-symbol
-)=>
-ipcRenderer.invoke(
-"trading:getSymbolPositionSettings",
-{
-symbol
-}
-),
-applySymbolPositionSettings:(
-symbol,
-settings
-)=>
-ipcRenderer.invoke(
-"trading:applySymbolPositionSettings",
-{
-symbol,
-...settings
-}
-),
-pingBybit:(
-payload
-)=>
-ipcRenderer.invoke(
-"trading:pingBybit",
-payload ||
-{}
-),
-getClosedPnl:(
-payload
-)=>
-ipcRenderer.invoke(
-"trading:getClosedPnl",
-payload ||
-{}
-),
-enrichClosedPnlTrades:(
-payload
-)=>
-ipcRenderer.invoke(
-"trading:enrichClosedPnlTrades",
-payload ||
-{}
-),
-getTradeDiaryDetail:(
-payload
-)=>
-ipcRenderer.invoke(
-"trading:getTradeDiaryDetail",
-payload ||
-{}
-),
-replayStream:()=>
-ipcRenderer.invoke(
-"trading:replayStream"
-),
-getStreamSnapshot:()=>
-ipcRenderer.invoke(
-"trading:getStreamSnapshot"
-),
-requestStreamSeed:()=>
-ipcRenderer.invoke(
-"trading:requestStreamSeed"
-),
-generatePnlShareCard:(
-payload
-)=>
-ipcRenderer.invoke(
-"trading:generatePnlShareCard",
-payload ||
-{}
-),
-savePnlShareCard:(
-payload
-)=>
-ipcRenderer.invoke(
-"trading:savePnlShareCard",
-payload ||
-{}
-),
-discardPnlShareCard:(
-tempPath
-)=>
-ipcRenderer.invoke(
-"trading:discardPnlShareCard",
-{
-tempPath
-}
-),
-onStream:(
-callback
-)=>{
-
-if(
-typeof callback !==
-"function"
-){
-return ()=>{};
-}
-
-const fn =
-(
-_event,
-payload
-)=>{
-try{
-callback(
-payload
-);
-}catch(
-err
-){
-console.warn(
-"trading stream listener:",
-err
-);
-}
-};
-
-ipcRenderer.on(
-"trading:stream",
-fn
-);
-
-return ()=>{
-ipcRenderer.removeListener(
-"trading:stream",
-fn
-);
-};
-
-}
-},
+trading:
+terminalTradingStub,
 bybitPublicWs:{
 setTopics:(
 topics,

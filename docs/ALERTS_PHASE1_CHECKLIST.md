@@ -8,6 +8,7 @@ UI «+» на графике **пока не включён** (блок в `term
 
 1. `supabase/migration-price-alert-events.sql` — таблица истории
 2. `supabase/migration-price-alert-events-realtime.sql` — Realtime для истории
+3. `supabase/migration-price-alert-events-exchange-id.sql` — колонка `exchange_id` (bybit|bingx) для hydrate closed-app → Executed
 
 Убедитесь, что раньше уже выполнены:
 

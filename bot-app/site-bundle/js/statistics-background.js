@@ -4,13 +4,13 @@
  */
 import {
 fetchTickersInto
-} from "./tickers.js?v=729ac4e5";
+} from "./tickers.js?v=d4995cf9";
 
 import {
 getActiveExchangeId,
 getActiveExchangeDefinition,
 fetchMarketDailyCandles
-} from "./market-api.js?v=7b3e6b3c";
+} from "./market-api.js?v=00f19708";
 
 export const STATS_JOB_UPDATE_EVENT =
 "stats-job-update";

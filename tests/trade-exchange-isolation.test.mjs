@@ -67,7 +67,15 @@ test("shared renderer trade entrypoints are thin facades", () => {
     "js/trade-chart-overlay.js",
     "js/trade-auto-stops.js",
     "js/trade-market-entry.js",
-    "js/trade-book-panel.js"
+    "js/trade-book-panel.js",
+    "js/trade-volume-presets.js",
+    "js/trade-leverage-settings.js",
+    "js/trade-book-columns.js",
+    "js/trade-pnl-share-modal.js",
+    "js/trade-chart-execution-markers.js",
+    "js/trade-chart-orders.js",
+    "js/trade-diary-page.js",
+    "js/trade-diary-period.js"
   ];
 
   for (const file of facades) {

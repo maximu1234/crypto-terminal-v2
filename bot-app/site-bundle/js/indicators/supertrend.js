@@ -25,6 +25,11 @@ isChartLayoutReady
 } from "../chart-layout-gate.js?v=4a8798af";
 
 import {
+captureHealthyVisibleLogicalRange,
+pinVisibleLogicalRangeBriefly
+} from "../chart-visible-range.js?v=543a2459";
+
+import {
 closeIndicatorColorPicker,
 openIndicatorColorPicker,
 previewColorHex,
@@ -556,6 +561,9 @@ opt=>
 <span class="ind-ribbon-settings-color-preview"></span>
 </button>
 </div>
+<div class="chart-indicator-settings-reset-row">
+<button type="button" class="chart-indicator-settings-reset">Сбросить в дефолт</button>
+</div>
 `;
 
 function commit(){
@@ -657,6 +665,28 @@ commit();
 }
 );
 
+root.querySelector(
+".chart-indicator-settings-reset"
+)?.addEventListener(
+"click",
+()=>{
+
+persistSettings(
+defaultSettings()
+);
+populateSettingsDialog(
+root
+);
+
+if(
+enabled
+){
+void refreshData();
+}
+
+}
+);
+
 }
 
 function applySettings(){
@@ -673,9 +703,32 @@ void refreshData();
 
 function enable(){
 
+const chart =
+getChart();
+const pinned =
+captureHealthyVisibleLogicalRange(
+chart
+);
+
 if(
 enabled
 ){
+void Promise.resolve(
+refreshData()
+).finally(
+()=>{
+pinVisibleLogicalRangeBriefly(
+chart,
+pinned,
+{
+suppressMs:
+8000,
+afterResizeMs:
+120
+}
+);
+}
+);
 return;
 }
 
@@ -692,11 +745,43 @@ return;
 }
 
 bindRedraw();
-void refreshData();
+pinVisibleLogicalRangeBriefly(
+chart,
+pinned,
+{
+suppressMs:
+10000,
+afterResizeMs:
+180
+}
+);
+void Promise.resolve(
+refreshData()
+).finally(
+()=>{
+pinVisibleLogicalRangeBriefly(
+chart,
+pinned,
+{
+suppressMs:
+10000,
+afterResizeMs:
+180
+}
+);
+}
+);
 
 }
 
 function disable(){
+
+const chart =
+getChart();
+const pinned =
+captureHealthyVisibleLogicalRange(
+chart
+);
 
 if(
 !enabled
@@ -712,6 +797,16 @@ downSegments =
 [];
 unbindRedraw();
 requestOverlayRedraw();
+pinVisibleLogicalRangeBriefly(
+chart,
+pinned,
+{
+suppressMs:
+5000,
+afterResizeMs:
+80
+}
+);
 
 }
 

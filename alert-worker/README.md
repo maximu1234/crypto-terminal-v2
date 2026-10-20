@@ -19,6 +19,8 @@
 
 `bybit-api-bases.json` в корне worker — копия `shared/bybit-api-bases.json` (Vercel); при смене баз обновлять оба файла.
 
+**Schema:** `price_alert_events.exchange_id` — см. `supabase/migration-price-alert-events-exchange-id.sql`. Worker пишет `exchange_id` и при 400 (колонки нет) ретраит без поля. Применить миграцию в Supabase SQL Editor один раз.
+
 ## Railway (пустой дашборд)
 
 1. **New Project** → **Deploy from GitHub repo** → `crypto-terminal-v2`.

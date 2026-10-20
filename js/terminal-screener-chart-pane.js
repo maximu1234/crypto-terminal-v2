@@ -23,7 +23,7 @@ linkChartsCrosshair
 
 import {
 readCoinsPrefs
-} from "./terminal/terminal-prefs.js?v=727592fc";
+} from "./terminal/terminal-prefs.js?v=d3a5b1a0";
 
 import {
 calculateRSI,
@@ -50,7 +50,7 @@ paintCatchupLiveSeries
 
 import {
 mountWidgetDomCrosshair
-} from "./chart-widget-host.js?v=844f40c7";
+} from "./chart-widget-host.js?v=40acbd85";
 
 function buildBodyHtml(
 showRsi

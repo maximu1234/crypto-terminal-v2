@@ -273,6 +273,76 @@ err?.message ||
 
 async function probeBybitKlineHistory(){
 
+const desktop =
+window.cryptoTerminalDesktop;
+let viaRelay =
+false;
+
+try{
+const current =
+await desktop?.getAppProxy?.();
+viaRelay =
+!!current?.settings?.candlesViaRelay;
+}catch{
+viaRelay =
+false;
+}
+
+const fetchJson =
+desktop?.bybitPublicWs?.fetchJson;
+
+if(
+viaRelay &&
+typeof fetchJson ===
+"function"
+){
+
+try{
+const result =
+await fetchJson(
+"/v5/market/kline?category=linear&symbol=BTCUSDT&interval=1&limit=1",
+12000
+);
+const list =
+result?.json?.result?.list;
+
+if(
+result?.ok &&
+result.json?.retCode ===
+0 &&
+Array.isArray(
+list
+) &&
+list.length
+){
+return {
+ok:
+true
+};
+}
+
+return {
+ok:
+false,
+message:
+"Bybit не отдал историю свечей через прокси."
+};
+}catch(
+err
+){
+return {
+ok:
+false,
+message:
+err?.name ===
+"AbortError"
+? "Таймаут истории свечей через прокси."
+: "История свечей через прокси не открылась."
+};
+}
+
+}
+
 const ctrl =
 new AbortController();
 const timer =

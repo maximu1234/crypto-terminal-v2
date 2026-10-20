@@ -5,7 +5,7 @@ import {
 captureHealthyVisibleLogicalRange,
 pinVisibleLogicalRangeBriefly,
 runWithPreservedVisibleLogicalRange
-} from "../chart-visible-range.js?v=d523062b";
+} from "../chart-visible-range.js?v=543a2459";
 
 export const VOLUME_PANE_ID =
 "volume";
@@ -405,13 +405,10 @@ key ===
 paintedKey;
 
 try{
-runWithPreservedVisibleLogicalRange(
-hostChart,
-()=>{
-
 if(
 lastOnly
 ){
+/* update последней свечи шкалу не двигает — без preserve/suppress. */
 try{
 series.update(
 rows[
@@ -420,22 +417,30 @@ rows.length -
 ]
 );
 }catch{
+runWithPreservedVisibleLogicalRange(
+hostChart,
+()=>{
 series.setData(
 rows
 );
 }
+);
+}
+pinVolumeScale();
 }else{
+runWithPreservedVisibleLogicalRange(
+hostChart,
+()=>{
 series.setData(
 rows
+);
+pinVolumeScale();
+}
 );
 }
 
 paintedKey =
 key;
-pinVolumeScale();
-
-}
-);
 }catch{
 dropSeries();
 }

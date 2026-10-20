@@ -1,24 +1,13 @@
 /**
- * Main-process tray feed (macOS menu bar / Windows tray): positions/PnL/balance
+ * Main-process tray feed (macOS menu bar / Windows tray): algo positions/PnL/balance
  * without renderer.
  *
- * PnL must match Terminal «Позиции»: mark-based unrealised (not stale stream
- * exchange pnl). Prefer REST positions for fresh markPrice; fall back to stream.
- *
- * Popup: main (Terminal) account on top; algo account below when algo keys exist.
+ * Algo Bot quarantine: Terminal Bybit/BingX trading stack is not registered —
+ * tray shows **algo account only** (no Terminal main-account section).
  */
 const log =
 require(
 "electron-log"
-);
-const {
-getActiveExchange,
-getStatusFor,
-getWalletBalance,
-getPositions
-} =
-require(
-"./trading/trading-router.cjs"
 );
 const {
 getAlgoCredentialsStatus
@@ -29,12 +18,6 @@ require(
 const algoRest =
 require(
 "./trading/algo-bybit-rest.cjs"
-);
-const {
-getTradingSnapshot
-} =
-require(
-"./trading/trading-stream.cjs"
 );
 const {
 withResolvedPnl
@@ -59,9 +42,6 @@ null;
 /** @type {ReturnType<typeof setInterval> | null} */
 let balanceTimer =
 null;
-
-let cachedBalanceLabel =
-"—";
 
 let cachedAlgoBalanceLabel =
 "—";
@@ -96,14 +76,8 @@ num >
 ? "+"
 : "";
 
-return `${sign}${num.toLocaleString(
-"ru-RU",
-{
-minimumFractionDigits:
-2,
-maximumFractionDigits:
+return `${sign}${num.toFixed(
 2
-}
 )}`;
 
 }
@@ -125,21 +99,9 @@ num
 return "—";
 }
 
-return num.toLocaleString(
-"ru-RU",
-{
-maximumFractionDigits:
+return `${num.toFixed(
 2
-}
-);
-
-}
-
-function isAlgoTrayAccount(){
-
-return !!getAlgoCredentialsStatus(
-"bybit"
-)?.configured;
+)} USDT`;
 
 }
 
@@ -147,23 +109,34 @@ function exchangeDisplayName(
 exchangeId
 ){
 
-return exchangeId ===
+const id =
+String(
+exchangeId ||
+""
+).toLowerCase();
+
+if(
+id ===
 "bingx"
-? "BingX"
-: "Bybit";
+){
+return "BingX";
+}
+
+return "Bybit";
 
 }
 
 function isOpenPosition(
-row
+pos
 ){
 
 const size =
 Math.abs(
 Number(
-row?.size
-) ||
+pos?.size ??
+pos?.qty ??
 0
+)
 );
 
 return size >
@@ -171,140 +144,112 @@ return size >
 
 }
 
-function sumOpenPnl(
-rows
-){
+function isAlgoTrayAccount(){
 
-let total =
-0;
-let has =
-false;
+try{
+const status =
+getAlgoCredentialsStatus();
 
-for(
-const row of
-rows ||
-[]
-){
-const num =
-Number(
-row?.pnl
-);
-
-if(
-!Number.isFinite(
-num
-)
-){
-continue;
+return !!status?.configured;
+}catch{
+return false;
 }
-
-total +=
-num;
-has =
-true;
-}
-
-return has
-? total
-: null;
 
 }
 
 function mapPositions(
-rows,
-pnlHidden =
-false
+positions,
+pnlHidden
 ){
 
 return (
-rows ||
-[]
+Array.isArray(
+positions
+)
+? positions
+: []
 ).map(
-row=>({
-symbol:
-row?.symbol,
-ticker:
-row?.ticker ||
-row?.symbol,
-side:
-row?.side,
-pnl:
-row?.pnl,
+(
+pos
+)=>{
+
+const symbol =
+String(
+pos?.symbol ||
+""
+);
+const side =
+String(
+pos?.side ||
+""
+).toLowerCase();
+const size =
+Number(
+pos?.size ??
+pos?.qty ??
+0
+);
+const unrealised =
+Number(
+pos?.unrealisedPnl ??
+pos?.unrealizedPnl ??
+0
+);
+
+return {
+symbol,
+side,
+size,
 pnlLabel:
 pnlHidden
-? "***"
+? "•••"
 : formatPnlLabel(
-row?.pnl
-)
-})
+unrealised
+),
+pnl:
+pnlHidden
+? null
+: unrealised
+};
+
+}
 );
 
 }
 
-function readPositionsFromStreamOrEmpty(){
+function sumOpenPnl(
+positions
+){
 
-const snap =
-getTradingSnapshot();
+let total =
+0;
+
+for(
+const pos of Array.isArray(
+positions
+)
+? positions
+: []
+){
+const n =
+Number(
+pos?.unrealisedPnl ??
+pos?.unrealizedPnl ??
+0
+);
 
 if(
-snap?.ok &&
-Array.isArray(
-snap.positions
+Number.isFinite(
+n
 )
 ){
-return snap.positions.filter(
-isOpenPosition
-);
+total +=
+n;
 }
-
-return null;
 
 }
 
-async function loadTerminalOpenPositions(
-exchangeId
-){
-
-try{
-const rest =
-await getPositions({
-exchangeId
-});
-
-if(
-rest?.ok &&
-Array.isArray(
-rest.positions
-)
-){
-return rest.positions.filter(
-isOpenPosition
-).map(
-withResolvedPnl
-);
-}
-}catch(
-err
-){
-log.warn(
-"tray-feed positions:",
-err?.message ||
-err
-);
-}
-
-const fromStream =
-readPositionsFromStreamOrEmpty();
-
-if(
-fromStream
-){
-return fromStream.map(
-withResolvedPnl
-);
-}
-
-return [];
+return total;
 
 }
 
@@ -343,48 +288,6 @@ err
 }
 
 return [];
-
-}
-
-async function refreshTerminalBalance(){
-
-try{
-const status =
-getStatusFor();
-
-if(
-!status?.configured
-){
-cachedBalanceLabel =
-"—";
-return;
-}
-
-const bal =
-await getWalletBalance();
-
-if(
-bal?.ok
-){
-cachedBalanceLabel =
-formatBalanceLabel(
-bal.usdt
-);
-}else{
-cachedBalanceLabel =
-"ошибка";
-}
-}catch(
-err
-){
-log.warn(
-"tray-feed balance:",
-err?.message ||
-err
-);
-cachedBalanceLabel =
-"ошибка";
-}
 
 }
 
@@ -429,12 +332,7 @@ cachedAlgoBalanceLabel =
 
 async function refreshBalances(){
 
-await Promise.all(
-[
-refreshTerminalBalance(),
-refreshAlgoBalance()
-]
-);
+await refreshAlgoBalance();
 
 }
 
@@ -451,64 +349,14 @@ feedBusy =
 true;
 
 try{
-const exchangeId =
-getActiveExchange();
-const status =
-getStatusFor({
-exchangeId
-});
 const configured =
-!!status?.configured;
-const exchange =
-exchangeDisplayName(
-exchangeId
-);
-
-const positions =
-configured
-? await loadTerminalOpenPositions(
-exchangeId
-)
-: [];
-
-const statusLabel =
-configured
-? "Активно"
-: "Не подключено";
-
+isAlgoTrayAccount();
 const pnlHidden =
 !!trayPrefsStore.readPrefs().pnlHidden;
-
-let algo =
-null;
-
-if(
-isAlgoTrayAccount()
-){
-const algoPositions =
-await loadAlgoOpenPositions();
-
-algo =
-{
-exchange:
-exchangeDisplayName(
-"bybit"
-),
-statusLabel:
-"Активно",
-balanceLabel:
-cachedAlgoBalanceLabel,
-totalPnl:
-sumOpenPnl(
-algoPositions
-),
-positions:
-mapPositions(
-algoPositions,
-pnlHidden
-)
-};
-}
+const positions =
+configured
+? await loadAlgoOpenPositions()
+: [];
 
 publishTrayState(
 {
@@ -519,11 +367,17 @@ positions
 )
 : null,
 pnlHidden,
-exchange,
-statusLabel,
+exchange:
+exchangeDisplayName(
+"bybit"
+),
+statusLabel:
+configured
+? "Активно"
+: "Не подключено",
 balanceLabel:
 configured
-? cachedBalanceLabel
+? cachedAlgoBalanceLabel
 : "—",
 positions:
 configured
@@ -532,7 +386,9 @@ positions,
 pnlHidden
 )
 : [],
-algo
+/* No nested Terminal account — Algo Bot is algo-only. */
+algo:
+null
 }
 );
 }finally{

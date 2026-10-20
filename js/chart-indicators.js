@@ -18,7 +18,7 @@ import {
 captureHealthyVisibleLogicalRange,
 pinVisibleLogicalRangeBriefly,
 suppressTerminalHistoryLazyLoad
-} from "./chart-visible-range.js?v=d523062b";
+} from "./chart-visible-range.js?v=543a2459";
 
 /** Оверлеи на панели цены — enable/setData иногда гасят свечи на несколько секунд. */
 const MAIN_CHART_OVERLAY_IDS =
@@ -257,22 +257,22 @@ import(
 "./indicators/rsi-pane.js?v=482968f4"
 ),
 import(
-"./indicators/volume-pane.js?v=d4d91006"
+"./indicators/volume-pane.js?v=4072f277"
 ),
 import(
-"./indicators/ao-pane.js?v=e1f7e07e"
+"./indicators/ao-pane.js?v=a13d2bc8"
 ),
 import(
-"./indicators/macd-pane.js?v=6371c620"
+"./indicators/macd-pane.js?v=75050516"
 ),
 import(
-"./indicators/moving-average.js?v=964aad41"
+"./indicators/moving-average.js?v=29854dea"
 ),
 import(
-"./indicators/ema-shift-ribbon.js?v=edd78e33"
+"./indicators/ema-shift-ribbon.js?v=dc58ca22"
 ),
 import(
-"./indicators/supertrend.js?v=c96cb475"
+"./indicators/supertrend.js?v=a2d9753d"
 ),
 typeof createPattern12IndicatorOverride ===
 "function"
@@ -289,7 +289,7 @@ import(
 "./indicators/horizontal-volume.js?v=cbaa09eb"
 ),
 import(
-"./indicators/volume-bubbles.js?v=f2b53aed"
+"./indicators/volume-bubbles.js?v=27daa08e"
 ),
 import(
 "./indicators/indicator-settings-dialog.js?v=006c9340"

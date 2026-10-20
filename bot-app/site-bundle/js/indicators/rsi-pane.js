@@ -14,7 +14,7 @@ normalizeHtfTf
 
 import {
 syncPaneViewportAfterData
-} from "./indicator-pane-viewport.js?v=4e1ffabd";
+} from "./indicator-pane-viewport.js?v=a8633490";
 
 export const RSI_PANE_ID =
 "rsi";
@@ -29,7 +29,9 @@ overbought:
 oversold:
 30,
 tf:
-""
+"",
+colorLines:
+false
 };
 
 }
@@ -98,7 +100,10 @@ base.oversold
 tf:
 normalizeHtfTf(
 raw?.tf
-)
+),
+colorLines:
+raw?.colorLines ===
+true
 };
 
 if(
@@ -387,6 +392,9 @@ root.innerHTML =
 ${htfTfSelectHtml(
 settings.tf
 )}
+<label class="chart-indicator-settings-check">
+<input type="checkbox" data-key="colorLines"${settings.colorLines ? " checked" : ""}/> Линии цветом
+</label>
 </div>
 <div class="chart-indicator-settings-reset-row">
 <button type="button" class="chart-indicator-settings-reset">Сбросить в дефолт</button>
@@ -416,6 +424,18 @@ next[
 key
 ] =
 el.value;
+return;
+}
+
+if(
+el.type ===
+"checkbox"
+){
+next[
+key
+] =
+el.checked ===
+true;
 return;
 }
 

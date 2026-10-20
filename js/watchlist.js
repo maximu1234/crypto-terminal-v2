@@ -68,7 +68,7 @@ setScreenerMacdData
 import {
 createDashboardChartWidget,
 mountDashboardChartInteractions
-} from "./chart-widget-host.js?v=844f40c7";
+} from "./chart-widget-host.js?v=40acbd85";
 
 import {
 mountWidgetTabletChart
@@ -121,7 +121,7 @@ getWidgetFlagHtml,
 wireWidgetFlagUi,
 updateWidgetFlagUi,
 bindWidgetFlagGlobalListeners
-} from "./widget-favorite-flag.js?v=0574ab3f";
+} from "./widget-favorite-flag.js?v=997a556b";
 
 function escapeHtml(
 value
@@ -194,7 +194,7 @@ return;
 
 const mod =
 await import(
-"./trade-widget-mount.js?v=b9a3fec5"
+"./trade-widget-mount.js?v=16f06641"
 );
 
 mountTradeOnDashboardWidget =

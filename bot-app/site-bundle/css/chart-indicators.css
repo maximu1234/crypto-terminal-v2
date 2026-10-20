@@ -152,7 +152,7 @@ color:#f0f3fa;
 position:absolute;
 top:8px;
 left:10px;
-z-index:20;
+z-index:35;
 display:flex;
 flex-direction:column;
 align-items:flex-start;
@@ -168,7 +168,7 @@ display:none;
 
 .chart-indicator-legend-item{
 margin:0;
-padding:0;
+padding:1px 6px 1px 0;
 border:none;
 background:transparent;
 font:500 11px/1.35 system-ui,-apple-system,sans-serif;
@@ -184,6 +184,8 @@ text-align:left;
 .chart-indicator-legend-item--settings{
 pointer-events:auto;
 cursor:pointer;
+position:relative;
+z-index:1;
 }
 
 .chart-indicator-legend-item--settings:hover{
@@ -209,7 +211,11 @@ inset:0;
 z-index:15000;
 display:block;
 padding:0;
-background:rgba(0,0,0,0.45);
+/*
+ * Лёгкое затемнение: 0.45 гасило тонкие свечи на log-шкале, пока
+ * толстые линии EMA/AO оставались видны — казалось, что график пропал.
+ */
+background:rgba(0,0,0,0.18);
 box-sizing:border-box;
 pointer-events:auto;
 }
@@ -218,12 +224,9 @@ pointer-events:auto;
 display:none;
 }
 
+/* Клики ловит fixed backdrop (z-index 15000). Не ставим pointer-events:none
+   на #chart-wrap * — в Electron это могло гасить отрисовку canvas свечей. */
 body.chart-indicator-modal-open #charts-stack{
-pointer-events:none !important;
-}
-
-body.chart-indicator-modal-open #chart-wrap,
-body.chart-indicator-modal-open #chart-wrap *{
 pointer-events:none !important;
 }
 
@@ -432,8 +435,19 @@ margin-top:4px;
 }
 }
 
+/* Простые формы (RSI / Volume / MACD / Supertrend). */
 .chart-indicator-settings-dialog--compact{
-width:min(234px,100%);
+width:min(280px,calc(100vw - 24px));
+}
+
+/* SMA/EMA: колонки Линия / Цвет / Период. */
+.chart-indicator-settings-dialog--ma{
+width:min(320px,calc(100vw - 24px));
+}
+
+/* EMA Shift Ribbon: Цвет / Длина / Сдвиг / TF. */
+.chart-indicator-settings-dialog--ribbon{
+width:min(400px,calc(100vw - 24px));
 }
 
 .chart-indicator-settings-header{
@@ -698,6 +712,62 @@ min-width:0;
 padding:3px 4px;
 font-size:11px;
 border-radius:5px;
+}
+
+.ind-ribbon-settings-row--auto{
+margin-top:4px;
+padding-top:6px;
+border-top:1px solid rgba(255,255,255,0.06);
+}
+
+.ind-ribbon-settings-auto-tools{
+display:flex;
+align-items:center;
+justify-content:space-between;
+gap:10px;
+margin:2px 0 4px;
+padding:0 0 0 68px;
+}
+
+.ind-ribbon-settings-auto-spacer{
+flex:1 1 auto;
+}
+
+.ind-ribbon-settings-auto-lookback{
+display:flex;
+align-items:center;
+gap:8px;
+margin:0;
+font:500 11px/1.2 system-ui,-apple-system,sans-serif;
+color:#9ca3af;
+}
+
+.ind-ribbon-settings-auto-lookback select{
+width:72px;
+min-width:0;
+padding:3px 4px;
+font-size:11px;
+border-radius:5px;
+}
+
+.ind-ribbon-settings-fit-btn{
+margin:0;
+padding:4px 10px;
+border:1px solid rgba(129,140,248,0.45);
+border-radius:6px;
+background:rgba(129,140,248,0.12);
+color:#c7d2fe;
+font:500 11px/1.2 system-ui,-apple-system,sans-serif;
+cursor:pointer;
+}
+
+.ind-ribbon-settings-fit-btn:hover:not(:disabled){
+background:rgba(129,140,248,0.22);
+}
+
+.ind-ribbon-settings-fit-btn:disabled{
+opacity:.65;
+cursor:default;
 }
 
 .ind-ribbon-settings-width{

@@ -5,7 +5,7 @@ import {
 scanAlgoTickersByWinRate,
 normalizeAlgoScanTf,
 ALGO_TICKER_SCAN_TF
-} from "./ticker-scanner.js?v=3aa0a47d";
+} from "./ticker-scanner.js?v=ee2eb575";
 
 import {
 ALGO_FLAG_LONG_5M,
@@ -17,11 +17,11 @@ replaceAlgoTickerFlagList
 
 import {
 mountAlgoStrategyUniverseUi
-} from "./strategy-universe-ui.js?v=295f1f93";
+} from "./strategy-universe-ui.js?v=b484e450";
 
 import {
 mountAlgoStrategyParamOptimizeUniverseUi
-} from "./strategy-param-optimize-universe-ui.js?v=c106163a";
+} from "./strategy-param-optimize-universe-ui.js?v=5a587cf0";
 
 /**
  * @param {{

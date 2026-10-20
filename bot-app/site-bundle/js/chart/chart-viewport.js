@@ -22,13 +22,16 @@ export const SCREENER_PAGE_VISIBLE_BARS = 2500;
 export const SCREENER_PAGE_MAX_BARS = 3000;
 export const SCREENER_PAGE_HISTORY_REQUESTS = 3;
 
-export function applyDashboardZoom(chart, candles, tf){
+const DASHBOARD_FUTURE_BARS =
+25;
 
-if(!candles.length){
-return;
-}
+function dashboardVisibleBarCount(
+tf,
+candleCount
+){
 
-let visibleBars = 900;
+let visibleBars =
+900;
 
 if(tf === "1"){
 visibleBars = 300;
@@ -58,14 +61,100 @@ if(tf === "W"){
 visibleBars = 200;
 }
 
-visibleBars =
-Math.min(visibleBars, candles.length);
+const total =
+Math.max(
+0,
+Number(
+candleCount
+) ||
+0
+);
+
+return Math.min(
+visibleBars,
+total ||
+visibleBars
+);
+
+}
+
+/**
+ * До setData: иначе первый кадр берёт barSpacing 6
+ * и виджет вспыхивает несколькими крупными свечами.
+ */
+export function primeDashboardChartScale(
+chart,
+candleCount,
+tf
+){
+
+if(
+!chart ||
+!(
+candleCount >
+0
+)
+){
+return;
+}
+
+const visibleBars =
+dashboardVisibleBarCount(
+tf,
+candleCount
+);
+const plotWidth =
+chart.timeScale().width();
+
+if(
+!(
+plotWidth >
+0
+)
+){
+return;
+}
+
+const span =
+visibleBars +
+DASHBOARD_FUTURE_BARS;
+
+chart.timeScale().applyOptions({
+barSpacing:
+Math.max(
+0.01,
+plotWidth /
+span
+),
+minBarSpacing:
+0.01
+});
+
+}
+
+export function applyDashboardZoom(chart, candles, tf){
+
+if(!candles.length){
+return;
+}
+
+const visibleBars =
+dashboardVisibleBarCount(
+tf,
+candles.length
+);
+
+primeDashboardChartScale(
+chart,
+candles.length,
+tf
+);
 
 chart.timeScale().setVisibleLogicalRange({
 
 from: candles.length - visibleBars,
 
-to: candles.length + 25
+to: candles.length + DASHBOARD_FUTURE_BARS
 
 });
 

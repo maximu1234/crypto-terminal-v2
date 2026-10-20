@@ -1,6 +1,7 @@
 /**
  * Gate trading / algoTrading IPC to trusted local desktop UI only.
  * Remote Vercel / DESKTOP_REMOTE_UI / bundle→remote fallback must not place orders.
+ * Keep in sync with desktop/trading/desktop-ui-gate.cjs (origin compare, not any localhost).
  */
 const log =
 require(
@@ -65,6 +66,36 @@ return tradingIpcLocked;
 
 }
 
+function parseHttpOrigin(
+url
+){
+
+try{
+return new URL(
+String(
+url ||
+""
+).trim()
+).origin;
+}catch{
+return "";
+}
+
+}
+
+function isLoopbackHttpOrigin(
+origin
+){
+
+return /^http:\/\/(127\.0\.0\.1|localhost)(:\d+)?$/i.test(
+String(
+origin ||
+""
+)
+);
+
+}
+
 function isTrustedDesktopUiUrl(
 url
 ){
@@ -81,21 +112,6 @@ if(
 return false;
 }
 
-const origin =
-typeof getLocalSiteOrigin ===
-"function"
-? getLocalSiteOrigin()
-: null;
-
-if(
-origin &&
-value.startsWith(
-origin
-)
-){
-return true;
-}
-
 if(
 value.startsWith(
 "multichart://"
@@ -104,12 +120,35 @@ value.startsWith(
 return true;
 }
 
+const configured =
+typeof getLocalSiteOrigin ===
+"function"
+? getLocalSiteOrigin()
+: null;
+const localOrigin =
+configured
+? parseHttpOrigin(
+configured
+)
+: "";
+const pageOrigin =
+parseHttpOrigin(
+value
+);
+
 if(
-value.startsWith(
-"http://127.0.0.1:"
-) ||
-value.startsWith(
-"http://localhost:"
+localOrigin &&
+pageOrigin &&
+pageOrigin ===
+localOrigin
+){
+return true;
+}
+
+if(
+!localOrigin &&
+isLoopbackHttpOrigin(
+pageOrigin
 )
 ){
 return true;
@@ -150,12 +189,6 @@ message:
 };
 }
 
-const useBundle =
-typeof getUseBundle ===
-"function"
-? !!getUseBundle()
-: true;
-
 const url =
 String(
 event?.sender?.getURL?.() ||
@@ -163,7 +196,6 @@ event?.sender?.getURL?.() ||
 );
 
 if(
-useBundle &&
 !isTrustedDesktopUiUrl(
 url
 )

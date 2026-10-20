@@ -4,7 +4,7 @@
 
 `site-boot.js` — алерты, cloud, auth, lazy sync модулей.
 
-`js/page-routes.js` — единое определение страницы (`isAlertsPage`, `isTerminalPage`, …).
+`js/page-routes.js` — единое определение страницы (`isAlertsPage`, `isTerminalPage`, `isScriptPage`, `isAlgoTradingPage`, …).
 
 ## Имена страниц (не путать)
 
@@ -13,6 +13,11 @@
 | `/`, `/screener.html` | Скринер | `screener.js` (`index.html` редиректит сюда) |
 | `/terminal.html` | Терминал | `terminal-page-boot.js` → `terminal-entry.js` → `terminal.js` |
 | `/watchlist.html` | Вотчлист | `watchlist.js` |
+| `/script.html` | Скрипт (pattern scan) | `script-page-boot.js` → `script-page.js` (тоггл в Системных) |
+| `/algo-trading.html` | АлгоТрейдинг | `algo-trading-page-boot.js` / `algo-trading.js` (тоггл; live-бот только `.app`) |
+| `/diary/index.html` | Дневник | `trade-diary-page.js` → `js/trade/{bybit\|bingx}/diary/*` |
+| `/alerts/index.html` | Алерты | `alerts-page.js` |
+| `/m-terminal.html`, `/m-screener.html` | Mobile lite | `js/mobile/*` |
 
 `/coins` и `/trade` на сайте открывают Терминал (`vercel.json`). Файла `coins.html` нет.
 
@@ -20,16 +25,27 @@
 
 `js/asset-manifest.js` + `scripts/sync-asset-versions.cjs` — версии `?v=`.
 
-Desktop: `npm run bundle:sync` после правок web-статики; `npm run bundle:check` в CI.
+Desktop Multichart: `npm run bundle:sync` после правок web-статики; `npm run bundle:check` в CI.  
+Algo Bot: `npm run bundle:bot` + `npm run bundle:bot:check` (lite fork; не wholesale Multichart overwrite).
+
+## Продукты в репо
+
+| Дерево | Роль |
+|--------|------|
+| корень (Vercel) | Сайт + `/api/*` |
+| `desktop/` | Multichart Electron |
+| `bot-app/` | Standalone Algo Bot (lite UI, algo keys only) |
+| `alert-worker/` | Railway worker (triggers, Telegram, events) |
 
 ## Модули (facade → подмодули)
 
 | Facade | Подмодули |
 |--------|-----------|
-| `alerts-cloud-sync.js` | ✅ barrel → `alerts-cloud/{debug,worker-client,telegram-id,registry-sync,polling-realtime}.js` |
-| `chart.js` | `chart/{chart-options,chart-dom-crosshair,chart-factory}.js` |
-| `terminal.js` | `terminal/{coins-state,coins-prefs,coins-table,coins-chart-*}.js`; entry alias `terminal-entry.js` |
-| `drawings.js` | `drawings/{init, persist, style-bar, placement, edit-interaction, chart-input, redraw-loop, price-scale, draw-hit, draw-render, …}.js` |
+| `alerts-cloud-sync.js` | ✅ barrel → `alerts-cloud/{debug,worker-client,telegram-id,registry-sync,polling-realtime,garbage-purge}.js` |
+| `chart.js` | `chart/{chart-options,chart-dom-crosshair,chart-factory,…}.js` |
+| `terminal.js` | `terminal/{terminal-coins-page,terminal-history,terminal-table,…}.js`; entry alias `terminal-entry.js` |
+| `drawings.js` | `drawings/{init, persist, style-bar, placement, edit-interaction, chart-input, …}.js` |
+| `js/trade-*.js` | тонкие facades → `js/trade/{bybit\|bingx}/**` (исключение: fat `trade-diary-detail.js` / `trade-diary-chart.js` — долг) |
 
 ## Performance
 
@@ -45,17 +61,24 @@ Desktop: `npm run bundle:sync` после правок web-статики; `npm 
 
 ## CI
 
-`.github/workflows/ci.yml` — syntax, manifest check, **desktop bundle check**, site-nav check, unit tests.
+`.github/workflows/ci.yml` — syntax (без site-bundle), manifest check, **desktop + bot-lite bundle check**, site-nav, unit tests.
 
 ```bash
 npm run check:all
 ```
 
 Регрессия рисования (ручная): [DRAWINGS_REGRESSION.md](./DRAWINGS_REGRESSION.md)  
-План refactor: [REFACTOR_DRAWINGS.md](./REFACTOR_DRAWINGS.md)
+План refactor: [REFACTOR_DRAWINGS.md](./REFACTOR_DRAWINGS.md)  
+Handoff: [HANDOFF.md](./HANDOFF.md)
+
+## Известный долг (не баг-регресс)
+
+- Мегафайлы: `terminal.js`, `drawings/init.js`, exchange diary `page.js` — вертикальный split по мере фич, не блочит релизы.
+- Fat shared diary UI: `trade-diary-detail.js`, `trade-diary-chart.js` ещё не полностью в `js/trade/{ex}/diary/`.
+- Pattern 1-2 оригинал заморожен; алго — только копии в `js/algo-trading/`.
 
 ## Откат
 
-**Текущий релиз:** `metka-212` / веб `v0.212` / desktop `1.1.97` — [MARKER_212.md](./MARKER_212.md), `js/release-marker.js`. Desktop .app: [DESKTOP_APP.md](./DESKTOP_APP.md).
+**Текущий релиз:** `metka-213` / веб `v0.213` / desktop `1.1.98` — [MARKER_213.md](./MARKER_213.md), `js/release-marker.js`. Desktop .app: [DESKTOP_APP.md](./DESKTOP_APP.md).
 
 Откат perf chrome/chart по-прежнему **`metka-181`** — не удалять, см. [PERF_CHROME_CHART.md](./PERF_CHROME_CHART.md).

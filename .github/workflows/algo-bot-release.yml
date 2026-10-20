@@ -61,6 +61,12 @@ jobs:
         run: |
           if [ -f package-lock.json ]; then npm ci; else npm install; fi
 
+      - name: Sync Algo Bot lite site-bundle from Multichart
+        working-directory: .
+        run: |
+          npm run bundle:site --prefix bot-app
+          node scripts/check-bot-lite-bundle.cjs
+
       - name: Prepare supabase-env for site bundle
         working-directory: .
         env:

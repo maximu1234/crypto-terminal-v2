@@ -1446,11 +1446,24 @@ form.draw-position-risk{
   pointer-events:auto;
 }
 
+/* Под свечами (#chart z-index:1); hit-test всё равно через wrap (pointer-events:none). */
 .drawings-layer{
   position:absolute;
   inset:0;
   pointer-events:none;
-  z-index:3;
+  z-index:0;
+}
+
+/*
+ * Панели индикаторов: рисунки поверх LW (заливка RSI 30–70 и т.п.),
+ * но под HUD (3) и DOM-crosshair (vert 4 / horz 10).
+ * На #chart-wrap остаётся z-index:0 под свечами.
+ */
+#rsi-wrap .drawings-layer,
+#macd-wrap .drawings-layer,
+#ao-wrap .drawings-layer,
+#volume-wrap .drawings-layer{
+  z-index:2;
 }
 
 /* Линейка (Shift): canvas поверх DOM-перекрестья внутри wrap. */
@@ -1642,6 +1655,7 @@ body.terminal-page:not(.algo-trading-page) .chart-symbol-fullname[hidden]{
 
 body.terminal-page:not(.algo-trading-page) #chart-wrap:has(.chart-symbol-fullname:not([hidden])) .chart-indicator-legend{
   top:26px;
+  z-index:35;
 }
 
 .coins-chart-turnover24{
@@ -2112,6 +2126,7 @@ body.tablet-chart .price-alert-scale-plus-icon{
   inset:0;
   width:100%;
   height:100%;
+  z-index:1;
 }
 
 #ao-chart,
@@ -2120,6 +2135,7 @@ body.tablet-chart .price-alert-scale-plus-icon{
   inset:0;
   width:100%;
   height:100%;
+  z-index:1;
 }
 
 @media (pointer:coarse) and (min-width:768px){
@@ -2207,7 +2223,7 @@ body.tablet-chart #rsi-wrap .rsi-level-line:not(.hidden){
   position:absolute;
   left:10px;
   top:6px;
-  z-index:2;
+  z-index:3;
   font-size:12px;
   line-height:16px;
   letter-spacing:0.01em;

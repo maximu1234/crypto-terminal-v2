@@ -1228,6 +1228,8 @@ return;
 
 bundleLoadFallback =
 true;
+localSiteOrigin =
+null;
 
 try{
 const {
@@ -1250,7 +1252,7 @@ err
 }
 
 log.warn(
-`Bundled UI fallback (${reason}) → remote algo-trading (trading/algo IPC locked)`
+`Bundled UI fallback (${reason}) → remote algo-trading (trading/algo IPC locked; origin=remote)`
 );
 const remote =
 `${REMOTE_APP_URL.replace(

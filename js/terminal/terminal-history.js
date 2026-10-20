@@ -4,14 +4,12 @@ isTerminalReplayActive
 } from "./terminal-replay.js?v=1b9e6de6";
 
 import {
-getLastHealthyVisibleLogicalRange,
+bumpVisibleRangeRestoreGeneration,
 isIndicatorSettingsModalOpen,
 isPreservingVisibleLogicalRange,
 isTerminalHistoryLazyLoadSuppressed,
-noteHealthyVisibleLogicalRange,
-restoreLastHealthyVisibleLogicalRange,
-suppressTerminalHistoryLazyLoad
-} from "../chart-visible-range.js?v=d523062b";
+noteHealthyVisibleLogicalRange
+} from "../chart-visible-range.js?v=543a2459";
 
 /**
  * Closure slice. `host` is the surrounding function's bindings.
@@ -139,7 +137,7 @@ if(
 host.isTradePage
 ){
 void import(
-"../trade-volume-presets.js?v=adb9109d"
+"../trade-volume-presets.js?v=64f3635c"
 ).then(
 ({
 switchTradeVolumeSymbol
@@ -606,21 +604,78 @@ return;
 }
 
 /*
- * Если старт был с from≈0 (ложный триггер после Volume), якорь от
- * «здорового» окна — иначе после setData снова пустой график.
+ * Якорь = видимое окно ДО prepend (обычно левый край, from≤80).
+ * Нельзя брать lastHealthy: там дефолт справа у «текущих» свечей —
+ * после setData прыжок вправо на каждый батч.
+ * После await LW может отдать shocked from≈0 — тогда rangeAtStart.
  */
-const healthy =
-getLastHealthyVisibleLogicalRange();
-const anchor =
-rangeAtStart &&
-rangeAtStart.from >
-80
-? rangeAtStart
-: healthy &&
-healthy.from >
-80
-? healthy
-: rangeAtStart;
+const SHOCK_FROM_MAX =
+5;
+
+const rangeOk =
+(
+r
+)=>
+r &&
+Number.isFinite(
+r.from
+) &&
+Number.isFinite(
+r.to
+) &&
+r.to >
+r.from;
+
+let live =
+null;
+
+try{
+live =
+host.chart?.timeScale?.().getVisibleLogicalRange?.() ||
+null;
+}catch{
+live =
+null;
+}
+
+let anchor =
+null;
+
+if(
+rangeOk(
+live
+) &&
+live.from >=
+SHOCK_FROM_MAX
+){
+anchor =
+live;
+}else if(
+rangeOk(
+rangeAtStart
+) &&
+rangeAtStart.from >=
+SHOCK_FROM_MAX
+){
+anchor =
+rangeAtStart;
+}else if(
+rangeOk(
+live
+)
+){
+anchor =
+live;
+}else if(
+rangeOk(
+rangeAtStart
+)
+){
+anchor =
+rangeAtStart;
+}
+
+bumpVisibleRangeRestoreGeneration();
 
 host.candles =
 merged;
@@ -629,13 +684,15 @@ host.candleSeries?.setData(
 host.buildChartDisplayCandles()
 );
 
-/*
- * Сначала вернуть шкалу, потом RSI/индикаторы: их setData иначе
- * захватывает from≈0 после setData свечей и через rAF откатывает вид.
- */
 const restored =
 anchor &&
-host.chart
+host.chart &&
+Number.isFinite(
+anchor.from
+) &&
+Number.isFinite(
+anchor.to
+)
 ? {
 from:
 anchor.from +
@@ -646,55 +703,51 @@ added
 }
 : null;
 
+const applyRestored =
+()=>{
+
 if(
-restored
+!restored ||
+!host.chart
 ){
+return;
+}
+
+try{
 host.chart.timeScale().setVisibleLogicalRange(
 restored
 );
 noteHealthyVisibleLogicalRange(
 restored
 );
-suppressTerminalHistoryLazyLoad(
-2000
-);
+}catch{
+/* ignore */
 }
+
+};
+
+/* Сразу после setData — до того как LW/оверлеи утащат на right-edge. */
+applyRestored();
 
 requestAnimationFrame(
 ()=>{
 
-if(
-restored &&
-host.chart
-){
-try{
-host.chart.timeScale().setVisibleLogicalRange(
-restored
-);
-}catch{
-/* ignore */
-}
-}
+applyRestored();
 
 requestAnimationFrame(
 ()=>{
 
-if(
-restored &&
-host.chart
-){
-try{
-host.chart.timeScale().setVisibleLogicalRange(
-restored
-);
-}catch{
-/* ignore */
-}
-}
+applyRestored();
 
 host.rebuildRsiFromCandles();
 host.chartIndicators?.notifyCandlesUpdate?.();
 host.scheduleCoinsDrawRedraw();
+
+/* Индикаторы могли снова сдвинуть шкалу — вернуть окно pan. */
+applyRestored();
+requestAnimationFrame(
+applyRestored
+);
 
 }
 );
@@ -1031,17 +1084,15 @@ return;
 }
 
 /*
- * Пока setData индикатора откатывает шкалу, cool-down после preserve,
- * или открыты настройки — не грузим историю (ответ через ~5с
- * переписывает свечи → пустой график). Перенесём проверку.
+ * Пока setData индикатора откатывает шкалу или открыты настройки —
+ * ждём. Cool-down pin (suppress) на краю (from≤80) игнорируем:
+ * иначе после Volume enable pan влево 3с молчал, а потом restore
+ * успевал откатить вид.
  */
 if(
 isPreservingVisibleLogicalRange() ||
-isTerminalHistoryLazyLoadSuppressed() ||
 isIndicatorSettingsModalOpen()
 ){
-host.historyLazyLeftEdgeHits =
-0;
 host.historyLazyTimer =
 setTimeout(
 onRange,
@@ -1091,33 +1142,19 @@ return;
 }
 
 /*
- * from≈0 скачком (было from≫0) после Volume/resize — шок шкалы,
- * не уход пользователя влево. Иначе ложная история гасит график на 3–6с.
- * Плавный pan (healthy.from близко к 80) — не трогаем, грузим историю.
+ * Не restoreLastHealthy здесь: pan к from≈0 — нормальный уход за
+ * историю; restore прыгал обратно на «текущие» свечи и блокировал load.
+ * Ложный from≈0 от setData: debounce 400ms + 2 тика; suppress только
+ * в зоне шока (from < 5), не на реальном left-edge pan (5…80).
  */
-const healthy =
-getLastHealthyVisibleLogicalRange();
-
 if(
-healthy &&
-healthy.from -
-range.from >
-400 &&
-restoreLastHealthyVisibleLogicalRange(
-host.chart
-)
+range.from <
+5 &&
+isTerminalHistoryLazyLoadSuppressed()
 ){
-host.historyLazyLeftEdgeHits =
-0;
-suppressTerminalHistoryLazyLoad(
-4000
-);
 return;
 }
 
-/*
- * Настоящий уход влево без якоря: два стабильных тика подряд.
- */
 host.historyLazyLeftEdgeHits =
 (
 host.historyLazyLeftEdgeHits ||
@@ -1132,13 +1169,15 @@ host.historyLazyLeftEdgeHits <
 host.historyLazyTimer =
 setTimeout(
 onRange,
-350
+280
 );
 return;
 }
 
 host.historyLazyLeftEdgeHits =
 0;
+/* Отменить отложенный pin оверлея, чтобы не откатил pan. */
+bumpVisibleRangeRestoreGeneration();
 
 void maybeLoadOlderTerminalHistory(
 host

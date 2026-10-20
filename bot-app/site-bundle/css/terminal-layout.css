@@ -18,8 +18,8 @@ min-width:0;
 }
 
 body.terminal-page .app-page-header{
-height:var(--app-header-h, 56px);
-min-height:var(--app-header-h, 56px);
+height:var(--app-header-h, 44px);
+min-height:var(--app-header-h, 44px);
 padding:0 16px;
 gap:20px;
 align-items:center;
@@ -27,8 +27,8 @@ flex-wrap:nowrap;
 }
 
 body.terminal-page .app-page-header.header-three-cells{
-height:var(--app-header-h, 56px);
-min-height:var(--app-header-h, 56px);
+height:var(--app-header-h, 44px);
+min-height:var(--app-header-h, 44px);
 padding-top:0;
 padding-bottom:0;
 }

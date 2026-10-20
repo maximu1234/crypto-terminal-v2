@@ -94,7 +94,7 @@ async function loadScanner(){
 
 const mod =
 await import(
-"./strategy-param-optimize-scan.js?v=2602832e"
+"./strategy-param-optimize-scan.js?v=fef69ab2"
 );
 
 return mod.scanAlgoStrategyParamOptimizeUniverse;

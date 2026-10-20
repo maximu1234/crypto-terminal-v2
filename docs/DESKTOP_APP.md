@@ -110,9 +110,10 @@ npm run start:remote   # старый режим — UI с Vercel
    ```
 3. Workflow **Desktop release (macOS)** соберёт `.dmg`, `.zip` и `latest-mac.yml`.
 
-## Подпись Apple (рекомендуется для автообновления)
+## Подпись Apple (Gatekeeper / notarization)
 
-Без notarization macOS может блокировать обновления. Для production добавьте secrets в GitHub:
+In-app auto-updater **не подключён** — обновления вручную из GitHub Releases.
+Подпись и notarization нужны, чтобы macOS не блокировала **первый запуск** и чтобы `.dmg`/`.app` не помечались как повреждённые. Secrets для CI:
 
 | Secret | Назначение |
 |--------|------------|
@@ -122,17 +123,6 @@ npm run start:remote   # старый режим — UI с Vercel
 | `CSC_LINK` | base64 `.p12` сертификата |
 | `CSC_KEY_PASSWORD` | пароль p12 |
 
-И в workflow перед `build:mac:publish`:
-
-```yaml
-env:
-  CSC_LINK: ${{ secrets.CSC_LINK }}
-  CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
-  APPLE_ID: ${{ secrets.APPLE_ID }}
-  APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
-  APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
-```
-
 ## Дальше: торговля
 
-См. [TRADING_MODULE.md](./TRADING_MODULE.md) — фаза 1 (Keychain + IPC) в `desktop/trading/`.
+См. [TRADING_MODULE.md](./TRADING_MODULE.md) — credentials + IPC в `desktop/trading/`.

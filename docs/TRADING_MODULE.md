@@ -114,7 +114,7 @@ Pattern на графике Алго и у бота — **копии** math
 
 | # | Задача | Статус |
 |---|--------|--------|
-| T-1 | Keychain для apiKey / apiSecret | ✅ |
+| T-1 | Credentials at rest (macOS: plaintext JSON `0600` в userData; Win: `safeStorage` когда доступен) | ✅ |
 | T-2 | IPC `cryptoTerminalDesktop.trading` | ✅ |
 | T-3 | Bybit REST: баланс, позиции, ордера | ✅ |
 | T-4 | UI: dropdown Bybit (ключи, баланс, пинг) | ✅ |
@@ -133,7 +133,7 @@ Renderer (/terminal.html — desktop)
   └─ preload → cryptoTerminalDesktop.trading.*
        └─ ipcMain (desktop/trading/register-ipc.cjs)
             ├─ trading-router.cjs → active exchange
-            ├─ exchange-credentials.cjs → per-exchange Keychain files
+            ├─ exchange-credentials.cjs → per-exchange files (Mac plaintext 0600 / Win safeStorage)
             ├─ bybit-rest.cjs / bingx-rest.cjs → signed REST
             └─ trading-stream.cjs → private WS + REST seed
 ```
@@ -269,7 +269,7 @@ Bybit history не импортирует BingX history и наоборот. И�
 |---------|----------|
 | `trading:setActiveExchange` | Активная биржа для IPC/потока |
 | `trading:getStatus` | configured, testnet, apiKey prefix (`exchangeId`) |
-| `trading:saveKeys` / `clearKeys` | Keychain (`exchangeId`) |
+| `trading:saveKeys` / `clearKeys` | Credentials files (`exchangeId`; Mac plaintext 0600 / Win safeStorage) |
 | `trading:getWalletBalance` | USDT unified |
 | `trading:getPositions` / `getPosition` | Открытые позиции |
 | `trading:openPosition` | Market entry |
@@ -287,5 +287,5 @@ Bybit history не импортирует BingX history и наоборот. И�
 
 ## Связанные документы
 
-- [MARKER_29.md](./MARKER_29.md) — текущий эталон
+- [MARKER_212.md](./MARKER_212.md) — текущий эталон
 - [DESKTOP_APP.md](./DESKTOP_APP.md) — Electron shell

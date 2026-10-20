@@ -16,12 +16,25 @@ jobs:
           node-version: "20"
       - name: Syntax check JS
         run: |
-          find . -name '*.js' -not -path './node_modules/*' -not -path './vendor/*' | while read f; do
+          find . -name '*.js' \
+            -not -path './node_modules/*' \
+            -not -path './vendor/*' \
+            -not -path './desktop/site-bundle/*' \
+            -not -path './bot-app/site-bundle/*' \
+            -not -path './desktop/node_modules/*' \
+            -not -path './bot-app/node_modules/*' \
+            | while read f; do
             node --check "$f" || exit 1
           done
       - name: Syntax check CJS
         run: |
-          find . -name '*.cjs' -not -path './node_modules/*' | while read f; do
+          find . -name '*.cjs' \
+            -not -path './node_modules/*' \
+            -not -path './desktop/node_modules/*' \
+            -not -path './bot-app/node_modules/*' \
+            -not -path './desktop/site-bundle/*' \
+            -not -path './bot-app/site-bundle/*' \
+            | while read f; do
             node --check "$f" || exit 1
           done
       - name: Asset manifest sync
@@ -30,6 +43,10 @@ jobs:
         run: npm run bundle:sync
       - name: Desktop bundle drift check
         run: node scripts/check-desktop-bundle.cjs
+      - name: Sync Algo Bot lite site-bundle
+        run: npm run bundle:site --prefix bot-app
+      - name: Algo Bot lite bundle check
+        run: node scripts/check-bot-lite-bundle.cjs
       - name: Site nav links
         run: node scripts/check-site-nav.cjs
       - name: Unit tests

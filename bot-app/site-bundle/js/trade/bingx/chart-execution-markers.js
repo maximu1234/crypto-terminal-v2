@@ -8,7 +8,7 @@ coinsState
 import {
 EXCHANGE_CHANGED_EVENT,
 getActiveExchangeId
-} from "../../market-api.js?v=7b3e6b3c";
+} from "../../market-api.js?v=00f19708";
 
 import {
 buildMarkersForCandles,
@@ -17,7 +17,7 @@ normalizeSymbol
 
 import {
 fetchTradesForSymbol
-} from "../../trade-markers-sandbox/trade-fetch.js?v=b9a2004d";
+} from "../../trade-markers-sandbox/trade-fetch.js?v=4a65fc13";
 
 import {
 clearDiaryTradeDeepLinkParams

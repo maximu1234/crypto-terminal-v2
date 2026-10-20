@@ -14,7 +14,7 @@ captureHealthyVisibleLogicalRange,
 pinVisibleLogicalRangeBriefly,
 runWithPreservedVisibleLogicalRange,
 suppressTerminalHistoryLazyLoad
-} from "../chart-visible-range.js?v=d523062b";
+} from "../chart-visible-range.js?v=543a2459";
 import {
 calculateShiftedEmaSeries
 } from "./htf-ema.js?v=b7d2ebae";

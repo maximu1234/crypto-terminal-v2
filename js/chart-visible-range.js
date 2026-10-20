@@ -33,6 +33,10 @@ let lastHealthyVisibleRangeAt =
 const HEALTHY_FROM_MIN =
 120;
 
+/** from ниже этого — почти всегда LW setData-шок, не реальный pan. */
+const SHOCK_FROM_MAX =
+5;
+
 const HEALTHY_RANGE_TTL_MS =
 20000;
 
@@ -46,6 +50,14 @@ lastHealthyVisibleRange =
 null;
 lastHealthyVisibleRangeAt =
 0;
+
+}
+
+/** Отменить отложенные pin/preserve restore без сброса healthy-якоря. */
+export function bumpVisibleRangeRestoreGeneration(){
+
+restoreGeneration +=
+1;
 
 }
 
@@ -141,7 +153,8 @@ return ()=>{};
 }
 
 /**
- * Если шкала ушла в from≈0 относительно якоря — вернуть якорь.
+ * Legacy helper (unused after hold/watch revert — kept for call-site safety).
+ * Prefer captureHealthy + pin + preserve; do not wire into history edge.
  * @returns {boolean} true если был шок (восстановили или нужно игнорить load)
  */
 export function healVisibleRangeShockIfNeeded(
@@ -265,7 +278,9 @@ lastHealthyVisibleRange.to
 
 /**
  * Снимок шкалы до addSeries/setData оверлея (Volume / SMA / EMA Shift / …).
- * Если сейчас уже from≈0 — вернуть последний здоровый якорь, не пинить глитч.
+ * Right-edge (≥HEALTHY_FROM_MIN) — пиним и запоминаем.
+ * Левый край / mid-pan (from≥SHOCK_FROM_MAX) — пиним КАК ЕСТЬ, без yank на lastHealthy.
+ * Только from≈0 (шок) — fallback на lastHealthy.
  */
 export function captureHealthyVisibleLogicalRange(
 chart
@@ -288,6 +303,10 @@ range.from
 ) ||
 !Number.isFinite(
 range.to
+) ||
+!(
+range.to >
+range.from
 )
 ){
 return getLastHealthyVisibleLogicalRange();
@@ -300,6 +319,19 @@ HEALTHY_FROM_MIN
 noteHealthyVisibleLogicalRange(
 range
 );
+return {
+from:
+range.from,
+to:
+range.to
+};
+}
+
+/* Реальный pan влево / mid-history — не подменять правым краем. */
+if(
+range.from >=
+SHOCK_FROM_MAX
+){
 return {
 from:
 range.from,
@@ -357,7 +389,7 @@ chart,
 range,
 {
 suppressMs =
-8000,
+2500,
 afterResizeMs =
 120,
 watchMs =
@@ -366,13 +398,16 @@ watchMs =
 ){
 
 suppressTerminalHistoryLazyLoad(
-suppressMs
+Math.min(
+suppressMs,
+3000
+)
 );
 
 const healthyFallback =
 getLastHealthyVisibleLogicalRange();
 
-const source =
+const rangeOk =
 range &&
 Number.isFinite(
 range.from
@@ -380,11 +415,21 @@ range.from
 Number.isFinite(
 range.to
 ) &&
+range.to >
+range.from;
+
+/* Left-edge / mid-pan: pin current window. Shock from≈0 → lastHealthy. */
+const source =
+rangeOk &&
 range.from >=
-HEALTHY_FROM_MIN
+SHOCK_FROM_MAX
 ? range
 : healthyFallback ||
-range;
+(
+rangeOk
+? range
+: null
+);
 
 if(
 !chart ||
@@ -662,12 +707,11 @@ preserveDepth -
 );
 
 /*
- * После отпускания preserve resize/setData ещё могут дернуть from≈0.
- * Не даём ленивой истории стартовать в этом окне.
+ * Не глушим lazy-history здесь: Volume/MA на каждом тике
+ * вызывают preserve → suppress навсегда блокировал догрузку
+ * при pan влево. Во время preserve уже стоит isPreserving…;
+ * короткий cool-down — только у pinVisibleLogicalRangeBriefly.
  */
-suppressTerminalHistoryLazyLoad(
-1500
-);
 
 };
 

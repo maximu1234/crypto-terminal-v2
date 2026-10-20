@@ -33,6 +33,7 @@ require(
 );
 const {
 buildProxyBypassRules,
+candlesUseMainRelay,
 normalizeProxySettings,
 isProxyConfigReady,
 buildProxyRules
@@ -41,7 +42,6 @@ require(
 "./app-proxy-config.cjs"
 );
 const {
-needsSocksAuthRelay,
 startSocksAuthRelay,
 stopSocksAuthRelay
 } =
@@ -235,9 +235,8 @@ if(
 isProxyConfigReady(
 settings
 ) &&
-needsSocksAuthRelay(
-settings
-)
+settings.type !==
+"http"
 ){
 localSocksPort =
 await startSocksAuthRelay(
@@ -326,6 +325,10 @@ hasPassword:
 !!cfg.password,
 ready:
 isProxyConfigReady(
+cfg
+),
+candlesViaRelay:
+candlesUseMainRelay(
 cfg
 )
 };

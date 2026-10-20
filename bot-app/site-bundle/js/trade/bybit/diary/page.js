@@ -19,7 +19,7 @@ sideToneClass
 import {
 closeTradeDetail,
 openTradeDetail
-} from "../../../trade-diary-detail.js?v=096d1c11";
+} from "../../../trade-diary-detail.js?v=46964134";
 
 import {
 mountTradeDiaryPeriodPicker
@@ -32,7 +32,7 @@ saveDiaryPeriod
 
 import {
 EXCHANGE_CHANGED_EVENT
-} from "../../../market-api.js?v=7b3e6b3c";
+} from "../../../market-api.js?v=00f19708";
 
 import {
 initTradeDiaryNav
@@ -72,7 +72,7 @@ import {
 getLoadedTradeExchangeModules,
 loadTradeExchangeModules,
 resetTradeExchangeModules
-} from "../../module-router.js?v=dba6baec";
+} from "../../module-router.js?v=c0d9340a";
 
 const EXCHANGE_ID =
 "bybit";

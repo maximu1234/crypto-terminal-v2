@@ -17,13 +17,13 @@ loadAllAlerts,
 removeAlert,
 formatAlertDate,
 formatAlertTicker
-} from "../../alerts.js?v=7d94ac35";
+} from "../../alerts.js?v=aaef47c8";
 
 import {
 isAlgoBotAlertRow,
 rememberBotAlertShapeId,
 retagKnownAlgoBotAlerts
-} from "../bot-alert-bridge.js?v=6bf922f1";
+} from "../bot-alert-bridge.js?v=94caec6c";
 
 import {
 fetchAlgoBotStatus,

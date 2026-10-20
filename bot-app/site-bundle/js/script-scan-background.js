@@ -10,13 +10,13 @@ filterPatternScanRowsBySide,
 normalizePatternScanSideFilter,
 normalizeScriptScanIndicatorId,
 loadPatternScanSymbols
-} from "./pattern-12-scanner.js?v=297ef592";
+} from "./pattern-12-scanner.js?v=ee05f486";
 
 import {
 loadScriptPageState,
 saveScriptPageState,
 periodMsById
-} from "./script-page-storage.js?v=bb1a5524";
+} from "./script-page-storage.js?v=53606dd5";
 
 import {
 loadScriptFavoritesForScan,
@@ -26,7 +26,7 @@ intersectFavoritesWithMarket
 import {
 EXCHANGE_CHANGED_EVENT,
 getActiveExchangeId
-} from "./market-api.js?v=7b3e6b3c";
+} from "./market-api.js?v=00f19708";
 
 import {
 shouldRunScriptBackgroundJobs

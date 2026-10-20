@@ -2,10 +2,10 @@
  * Volume — гистограмма внизу панели цены (как на TradingView).
  */
 import {
-appendFutureWhitespaceBars,
-computeChartFutureMarginBars,
-coinsTfVisibleBars
-} from "../chart-import.js?v=21aeb8d5";
+captureHealthyVisibleLogicalRange,
+pinVisibleLogicalRangeBriefly,
+runWithPreservedVisibleLogicalRange
+} from "../chart-visible-range.js?v=543a2459";
 
 export const VOLUME_PANE_ID =
 "volume";
@@ -102,9 +102,7 @@ return next;
 }
 
 function buildVolumeDisplayPoints(
-candles,
-tf,
-visibleBarsCap
+candles
 ){
 
 if(
@@ -113,32 +111,12 @@ if(
 return [];
 }
 
-const cap =
-typeof visibleBarsCap ===
-"number"
-? visibleBarsCap
-: null;
-const visibleBars =
-typeof cap ===
-"number" &&
-cap >
-0
-? Math.min(
-cap,
-candles.length
-)
-: coinsTfVisibleBars(
-tf,
-candles.length
-);
-
-const futureMargin =
-computeChartFutureMarginBars(
-visibleBars
-);
-
-return appendFutureWhitespaceBars(
-candles.map(
+/*
+ * Только реальные свечи. Пустые точки «в будущее» уже стоят
+ * на серии цены. Нули на тех же временах сдвигают шкалу и
+ * на несколько секунд оставляют график пустым.
+ */
+return candles.map(
 bar=>({
 time:
 bar.time,
@@ -152,9 +130,6 @@ bar.open,
 close:
 bar.close
 })
-),
-futureMargin,
-tf
 );
 
 }
@@ -195,6 +170,12 @@ let boundChart =
 null;
 let opacity =
 readOpacity();
+let paintedKey =
+"";
+
+/** После enable игнор resize/tick — на ликвидных тикерах они мигают график. */
+let enableQuietUntil =
+0;
 
 function wrapEl(){
 
@@ -227,12 +208,19 @@ if(
 return;
 }
 
-try{
 const hostChart =
 boundChart ||
 mainChart();
 
-hostChart?.priceScale(
+if(
+!hostChart
+){
+return;
+}
+
+/* Без nested preserve: иначе cancel внутреннего restore снаружи setData. */
+try{
+hostChart.priceScale(
 VOLUME_SCALE_ID
 ).applyOptions(
 {
@@ -256,23 +244,39 @@ false
 
 function dropSeries(){
 
-if(
-boundChart &&
-series
-){
-try{
-boundChart.removeSeries(
-series
-);
-}catch{
-/* ignore */
-}
-}
+const chart =
+boundChart;
+const histogram =
+series;
 
 series =
 null;
 boundChart =
 null;
+paintedKey =
+"";
+
+if(
+!chart ||
+!histogram
+){
+return;
+}
+
+runWithPreservedVisibleLogicalRange(
+chart,
+()=>{
+
+try{
+chart.removeSeries(
+histogram
+);
+}catch{
+/* ignore */
+}
+
+}
+);
 
 }
 
@@ -298,6 +302,10 @@ return true;
 dropSeries();
 
 try{
+runWithPreservedVisibleLogicalRange(
+hostChart,
+()=>{
+
 series =
 hostChart.addHistogramSeries(
 {
@@ -318,6 +326,9 @@ base:
 boundChart =
 hostChart;
 pinVolumeScale();
+
+}
+);
 return true;
 }catch{
 series =
@@ -350,19 +361,16 @@ const raw =
 host?.getCandles?.() ||
 [];
 
-const tf =
-host?.getTf?.() ||
-"D";
-
 const points =
 buildVolumeDisplayPoints(
-raw,
-tf,
-host?.getVisibleBarsCap?.()
+raw
 );
 
-try{
-series.setData(
+const hostChart =
+boundChart ||
+mainChart();
+
+const rows =
 points.map(
 bar=>({
 time:
@@ -376,9 +384,63 @@ bar,
 opacity
 )
 })
-)
+);
+
+const prev =
+rows.length >
+1
+? rows[
+rows.length -
+2
+]
+: null;
+const key =
+rows.length
+? `${rows.length}:${rows[0].time}:${prev?.time || 0}`
+: "0";
+const lastOnly =
+key !==
+"0" &&
+key ===
+paintedKey;
+
+try{
+if(
+lastOnly
+){
+/* update последней свечи шкалу не двигает — без preserve/suppress. */
+try{
+series.update(
+rows[
+rows.length -
+1
+]
+);
+}catch{
+runWithPreservedVisibleLogicalRange(
+hostChart,
+()=>{
+series.setData(
+rows
+);
+}
+);
+}
+pinVolumeScale();
+}else{
+runWithPreservedVisibleLogicalRange(
+hostChart,
+()=>{
+series.setData(
+rows
 );
 pinVolumeScale();
+}
+);
+}
+
+paintedKey =
+key;
 }catch{
 dropSeries();
 }
@@ -387,10 +449,33 @@ dropSeries();
 
 function enable(){
 
+const chart =
+mainChart();
+const pinned =
+captureHealthyVisibleLogicalRange(
+chart
+);
+
+enableQuietUntil =
+Date.now() +
+1200;
+
+hideSeparatePane();
+
 if(
 enabled
 ){
 refreshData();
+pinVisibleLogicalRangeBriefly(
+chart,
+pinned,
+{
+suppressMs:
+8000,
+afterResizeMs:
+120
+}
+);
 return;
 }
 
@@ -402,12 +487,51 @@ return;
 
 enabled =
 true;
-hideSeparatePane();
+/*
+ * addSeries + setData → LW from≈0 на длинной истории (BTC).
+ * Тот же pin, что у MA — без hold/watch (ломали смену тикера).
+ */
+pinVisibleLogicalRangeBriefly(
+chart,
+pinned,
+{
+suppressMs:
+10000,
+afterResizeMs:
+180
+}
+);
+
+requestAnimationFrame(
+()=>{
+requestAnimationFrame(
+()=>{
 refreshData();
+pinVisibleLogicalRangeBriefly(
+chart,
+pinned,
+{
+suppressMs:
+10000,
+afterResizeMs:
+180
+}
+);
+}
+);
+}
+);
 
 }
 
 function disable(){
+
+const chart =
+mainChart();
+const pinned =
+captureHealthyVisibleLogicalRange(
+chart
+);
 
 if(
 !enabled &&
@@ -421,6 +545,16 @@ enabled =
 false;
 dropSeries();
 hideSeparatePane();
+pinVisibleLogicalRangeBriefly(
+chart,
+pinned,
+{
+suppressMs:
+5000,
+afterResizeMs:
+80
+}
+);
 
 }
 
@@ -534,6 +668,13 @@ refreshData();
 },
 onCandlesUpdate(){
 
+if(
+Date.now() <
+enableQuietUntil
+){
+return;
+}
+
 refreshData();
 
 },
@@ -544,6 +685,13 @@ hideSeparatePane();
 
 },
 onResize(){
+
+if(
+Date.now() <
+enableQuietUntil
+){
+return;
+}
 
 pinVolumeScale();
 

@@ -10,7 +10,7 @@ import {
 captureHealthyVisibleLogicalRange,
 pinVisibleLogicalRangeBriefly,
 runWithPreservedVisibleLogicalRange
-} from "../chart-visible-range.js?v=d523062b";
+} from "../chart-visible-range.js?v=543a2459";
 
 import {
 isChartLayoutReady

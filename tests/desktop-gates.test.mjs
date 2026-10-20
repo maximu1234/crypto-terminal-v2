@@ -277,3 +277,31 @@ test("bundled UI fallback clears local origin and prefers remote getAppOrigin", 
   assert.match(origin, /remoteUiFallbackActive/);
 });
 
+test("bot-app UI gate matches Multichart origin rules", () => {
+  const source = read("bot-app/trading/desktop-ui-gate.cjs");
+  assert.match(source, /pageOrigin ===\s*\nlocalOrigin/);
+  assert.match(source, /!localOrigin &&\s*\nisLoopbackHttpOrigin/);
+  assert.doesNotMatch(
+    source,
+    /value\.startsWith\(\s*\n"http:\/\/127\.0\.0\.1:"/
+  );
+});
+
+test("bot-app bundled UI fallback clears localSiteOrigin", () => {
+  const source = read("bot-app/main.js");
+  const fn = source.slice(
+    source.indexOf("function fallbackToRemoteUi"),
+    source.indexOf("mainWindow.webContents.once")
+  );
+  assert.match(fn, /localSiteOrigin\s*=\s*\nnull/);
+  assert.match(fn, /setTradingIpcLocked\(\s*\ntrue/);
+});
+
+test("bot-app preload stubs terminal trading IPC", () => {
+  const preload = read("bot-app/preload.js");
+  assert.match(preload, /terminalTradingStub/);
+  assert.match(preload, /terminal trading IPC disabled/);
+  assert.doesNotMatch(preload, /ipcRenderer\.invoke\(\s*\n"trading:placeOrder"/);
+  assert.doesNotMatch(preload, /ipcRenderer\.invoke\(\s*\n"trading:getPositions"/);
+});
+

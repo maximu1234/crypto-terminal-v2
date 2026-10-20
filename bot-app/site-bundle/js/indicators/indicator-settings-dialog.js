@@ -343,6 +343,9 @@ event.pointerId
 
 function hide(){
 
+const closeCb =
+onCloseCallback;
+
 backdrop.classList.add(
 "hidden"
 );
@@ -359,6 +362,8 @@ bodyEl.innerHTML =
 "";
 dialogEl.className =
 "chart-indicator-settings-dialog";
+dialogEl.style.visibility =
+"";
 resetDialogPosition();
 dragState =
 null;
@@ -366,12 +371,19 @@ headerEl?.classList.remove(
 "chart-indicator-settings-header--dragging"
 );
 
+if(
+closeCb
+){
+closeCb();
+}
+
 }
 
 function show(
 indicator,
 {
-onClose
+onClose,
+onOpen
 } = {}
 ){
 
@@ -381,11 +393,28 @@ if(
 return;
 }
 
+if(
+!backdrop.classList.contains(
+"hidden"
+)
+){
+hide();
+}
+
 activeIndicator =
 indicator;
 onCloseCallback =
 onClose ||
 null;
+
+/*
+ * Сначала guard графика (pin/chrome/modal), потом DOM диалога.
+ * Иначе populate/backdrop успевают дернуть resize/from≈0 до захвата range.
+ */
+onOpen?.();
+document.body.classList.add(
+"chart-indicator-modal-open"
+);
 
 titleEl.textContent =
 indicator.settingsDialogTitle ||
@@ -415,18 +444,20 @@ indicator.settingsDialogClass
 }
 
 resetDialogPosition();
+/* Не показывать диалог в (0,0) до center — иначе «мигание» окна. */
+dialogEl.style.visibility =
+"hidden";
 backdrop.classList.remove(
 "hidden"
-);
-document.body.classList.add(
-"chart-indicator-modal-open"
 );
 
 requestAnimationFrame(
 ()=>{
-requestAnimationFrame(
-centerDialogInBounds
-);
+
+centerDialogInBounds();
+dialogEl.style.visibility =
+"";
+
 }
 );
 
@@ -443,13 +474,6 @@ event.target ===
 backdrop
 ){
 hide();
-
-if(
-onCloseCallback
-){
-onCloseCallback();
-}
-
 }
 
 }
@@ -490,13 +514,6 @@ closeBtn?.addEventListener(
 event=>{
 event.stopPropagation();
 hide();
-
-if(
-onCloseCallback
-){
-onCloseCallback();
-}
-
 }
 );
 
@@ -505,13 +522,6 @@ doneBtn?.addEventListener(
 event=>{
 event.stopPropagation();
 hide();
-
-if(
-onCloseCallback
-){
-onCloseCallback();
-}
-
 }
 );
 
@@ -530,12 +540,6 @@ return;
 }
 
 hide();
-
-if(
-onCloseCallback
-){
-onCloseCallback();
-}
 
 }
 );
