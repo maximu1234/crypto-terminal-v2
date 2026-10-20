@@ -371,7 +371,8 @@ test("Bybit and BingX bundles export facade-required APIs", () => {
 
 test("diary chart markers use detail open/close and side", () => {
   const source = read("js/trade-diary-chart.js");
-  assert.match(source, /DIARY_CHART_BARS_EACH_SIDE\s*=\s*200/);
+  const data = read("js/trade-diary-chart-data.js");
+  assert.match(data, /DIARY_CHART_BARS_EACH_SIDE\s*=\s*200/);
   assert.match(source, /candleAlignSec\(\s*entryMs/);
   assert.match(source, /candleAlignSec\(\s*exitMs/);
   assert.match(source, /markerTimesFromDetail/);
@@ -387,6 +388,8 @@ test("fat shared trade UI has no exchange policy branches", () => {
   for (const file of [
     "js/trade-exchange-settings.js",
     "js/trade-diary-chart.js",
+    "js/trade-diary-chart-data.js",
+    "js/trade-diary-detail-view.js",
     "js/trade-widget-mount.js",
     "js/trade-order-plus-ui.js",
     "js/trade-diary-time.js",
@@ -470,7 +473,7 @@ test("widget mount opens via exchange market-entry module", () => {
 });
 
 test("diary chart fetches klines only via exchange module", () => {
-  const source = read("js/trade-diary-chart.js");
+  const source = read("js/trade-diary-chart-data.js");
   assert.match(source, /diaryFetchKlineBatch/);
   assert.match(source, /loadTradeExchangeModules|getLoadedTradeExchangeModules/);
   assert.doesNotMatch(

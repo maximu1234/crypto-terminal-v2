@@ -43,13 +43,8 @@ __dirname,
 
 function getActiveExchangeId(){
 
-try{
-return require(
-"./trading-router.cjs"
-).getActiveExchange();
-}catch{
+/* Algo Bot has no Terminal exchange router — PnL cards are Bybit. */
 return "bybit";
-}
 
 }
 

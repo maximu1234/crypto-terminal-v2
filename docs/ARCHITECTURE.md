@@ -45,7 +45,7 @@ Algo Bot: `npm run bundle:bot` + `npm run bundle:bot:check` (lite fork; не who
 | `chart.js` | `chart/{chart-options,chart-dom-crosshair,chart-factory,…}.js` |
 | `terminal.js` | `terminal/{terminal-coins-page,terminal-history,terminal-table,…}.js`; entry alias `terminal-entry.js` |
 | `drawings.js` | `drawings/{init, persist, style-bar, placement, edit-interaction, chart-input, …}.js` |
-| `js/trade-*.js` | тонкие facades → `js/trade/{bybit\|bingx}/**` (исключение: fat `trade-diary-detail.js` / `trade-diary-chart.js` — долг) |
+| `js/trade-*.js` | тонкие facades → `js/trade/{bybit\|bingx}/**`; дневник: `page-render.js`, `trade-diary-chart-data.js`, `trade-diary-detail-view.js` |
 
 ## Performance
 
@@ -73,12 +73,12 @@ Handoff: [HANDOFF.md](./HANDOFF.md)
 
 ## Известный долг (не баг-регресс)
 
-- Мегафайлы: `terminal.js`, `drawings/init.js`, exchange diary `page.js` — вертикальный split по мере фич, не блочит релизы.
-- Fat shared diary UI: `trade-diary-detail.js`, `trade-diary-chart.js` ещё не полностью в `js/trade/{ex}/diary/`.
+- `terminal.js` и `drawings/init.js` — оркестраторы: логика уже в `terminal/*` и `drawings/*`, в файлах остались замыкания wiring/host.
 - Pattern 1-2 оригинал заморожен; алго — только копии в `js/algo-trading/`.
+- Algo Bot не содержит Terminal Bybit/BingX REST (`bot-app/trading/algo-*` + PnL Bybit).
 
 ## Откат
 
-**Текущий релиз:** `metka-213` / веб `v0.213` / desktop `1.1.98` — [MARKER_213.md](./MARKER_213.md), `js/release-marker.js`. Desktop .app: [DESKTOP_APP.md](./DESKTOP_APP.md).
+**Текущий релиз:** `metka-214` / веб `v0.214` / desktop `1.1.99` — [MARKER_214.md](./MARKER_214.md), `js/release-marker.js`. Desktop .app: [DESKTOP_APP.md](./DESKTOP_APP.md).
 
 Откат perf chrome/chart по-прежнему **`metka-181`** — не удалять, см. [PERF_CHROME_CHART.md](./PERF_CHROME_CHART.md).
