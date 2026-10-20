@@ -61,12 +61,6 @@ jobs:
         run: |
           if [ -f package-lock.json ]; then npm ci; else npm install; fi
 
-      - name: Sync Algo Bot lite site-bundle from Multichart
-        working-directory: .
-        run: |
-          npm run bundle:site --prefix bot-app
-          node scripts/check-bot-lite-bundle.cjs
-
       - name: Prepare supabase-env for site bundle
         working-directory: .
         env:
@@ -77,6 +71,12 @@ jobs:
           SYSTEM_ADMIN_EMAIL: ${{ secrets.SYSTEM_ADMIN_EMAIL }}
         run: |
           node scripts/write-supabase-env.cjs
+
+      - name: Sync Algo Bot lite site-bundle from Multichart
+        working-directory: .
+        run: |
+          npm run bundle:site --prefix bot-app
+          node scripts/check-bot-lite-bundle.cjs
           cp js/supabase-env.js bot-app/site-bundle/js/supabase-env.js
 
       - name: Build macOS Algo Bot (.dmg / .zip)
