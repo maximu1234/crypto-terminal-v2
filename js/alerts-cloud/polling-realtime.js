@@ -8,7 +8,7 @@ isCloudLoggedIn,
 isCloudLoggedInEffective,
 onCloudSyncChange,
 ensureCloudLoginResolved
-} from "../cloud-sync.js?v=ff3530ae";
+} from "../cloud-sync.js?v=f906dc76";
 
 import {
 clearAlertAuthCache,
@@ -34,12 +34,12 @@ isAlertsPullInBackoff,
 broadcastAlertsRegistrySync,
 setAlertsRealtimeChannel,
 setAlertsRealtimeUserId
-} from "./debug.js?v=13cbe9f2";
+} from "./debug.js?v=bd925bab";
 
 import {
 getAuthed,
 runCloudOp
-} from "./worker-client.js?v=19abbfbb";
+} from "./worker-client.js?v=899f9c3b";
 
 import {
 pullRegistryFromCloudNow,
@@ -47,12 +47,12 @@ pushUnsyncedAlerts,
 scheduleRegistryCloudSync,
 isRegistryCloudSyncPaused,
 syncAllLocalAlertsToCloud
-} from "./registry-sync.js?v=1a1a5294";
+} from "./registry-sync.js?v=0d18b567";
 
 import {
 isAlertsCloudDisabled,
 syncAlertsCloudPauseToServer
-} from "../supabase-usage-prefs.js?v=60ed72be";
+} from "../supabase-usage-prefs.js?v=c608a766";
 
 import {
 isAlgoReducedCloudClient
@@ -220,7 +220,7 @@ immediate: true
 async n=>{
 
 const { stripAlertFlagsNotInRegistry } =
-await import("../alerts.js?v=5e873458");
+await import("../alerts.js?v=41062ffb");
 
 stripAlertFlagsNotInRegistry({
 emitDrawingsEvents: false
@@ -258,7 +258,7 @@ oldRow
 ){
 
 const { applyRemoteAlertFired } =
-await import("../alerts.js?v=5e873458");
+await import("../alerts.js?v=41062ffb");
 
 applyRemoteAlertFired(
 oldRow
@@ -300,7 +300,7 @@ row?.deleted_at &&
 row.symbol &&
 row.shape_id
 ){
-void import("../alerts.js?v=5e873458").then(
+void import("../alerts.js?v=41062ffb").then(
 ({ applyRemoteAlertRemoved })=>{
 applyRemoteAlertRemoved(row);
 }
@@ -322,7 +322,7 @@ row?.symbol &&
 row?.shape_id &&
 triggered
 ){
-void import("../alerts.js?v=5e873458").then(
+void import("../alerts.js?v=41062ffb").then(
 ({ applyRemoteAlertFired })=>{
 applyRemoteAlertFired(row);
 }
@@ -338,7 +338,7 @@ row.symbol &&
 row.shape_id
 ){
 
-void import("../alerts.js?v=5e873458").then(
+void import("../alerts.js?v=41062ffb").then(
 ({ applyRemoteAlertUpsert })=>{
 
 if(
@@ -384,7 +384,7 @@ if(
 return;
 }
 
-void import("../alerts.js?v=5e873458").then(
+void import("../alerts.js?v=41062ffb").then(
 ({ applyRemoteAlertFired })=>{
 applyRemoteAlertFired(
 row
@@ -963,7 +963,7 @@ isAlgoReducedCloudClient()
 /* История без reconcile Active — closed-app fires на странице Алго. */
 try{
 const { pullAlertHistoryFromCloud } =
-await import("./registry-sync.js?v=1a1a5294");
+await import("./registry-sync.js?v=0d18b567");
 
 await pullAlertHistoryFromCloud({
 force: true
@@ -1027,7 +1027,7 @@ if(
 !isAlertsPage()
 ){
 const { mergeRegistryFromChartDrawings } =
-await import("../alerts.js?v=5e873458");
+await import("../alerts.js?v=41062ffb");
 
 mergeRegistryFromChartDrawings({
 stripFlags: stripOpts
@@ -1040,7 +1040,7 @@ await pushUnsyncedAlerts();
  * сработавших в воркере (пока приложение было закрыто). */
 {
 const { pullAlertHistoryFromCloud } =
-await import("./registry-sync.js?v=1a1a5294");
+await import("./registry-sync.js?v=0d18b567");
 
 await pullAlertHistoryFromCloud({
 force: !!opts.force
@@ -1052,7 +1052,7 @@ immediate: true
 });
 
 const { stripAlertFlagsNotInRegistry } =
-await import("../alerts.js?v=5e873458");
+await import("../alerts.js?v=41062ffb");
 
 stripAlertFlagsNotInRegistry(
 stripOpts
@@ -1303,7 +1303,7 @@ void ensureCloudLoginResolved(8000)
 .then(async()=>{
 
 const { pullAlertHistoryFromCloud } =
-await import("./registry-sync.js?v=1a1a5294");
+await import("./registry-sync.js?v=0d18b567");
 
 await pullAlertHistoryFromCloud();
 await pullRegistryFromCloudNow({

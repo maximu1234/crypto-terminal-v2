@@ -3968,7 +3968,7 @@ if(
 ){
 host.terminalAlgoEarlyT3ListMod =
 await import(
-"../algo-trading/terminal-early-t3-list.js?v=4921976c"
+"../algo-trading/terminal-early-t3-list.js?v=73e66a82"
 );
 }
 host.terminalAlgoEarlyT3ListMod.mountTerminalAlgoEarlyT3List();

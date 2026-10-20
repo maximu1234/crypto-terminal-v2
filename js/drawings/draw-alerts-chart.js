@@ -8,7 +8,7 @@ ALERT_LINE_DASH,
 alertPriceForDisplay,
 getActiveAlerts,
 isOscillatorAlert
-} from "../alerts.js?v=5e873458";
+} from "../alerts.js?v=41062ffb";
 
 import {
 isChartLayoutReady
