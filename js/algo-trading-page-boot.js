@@ -7,7 +7,7 @@ waitForSiteCssReady
 
 import {
 jsImport
-} from "./asset-manifest.js?v=5761dc2b";
+} from "./asset-manifest.js?v=c3d3f6ca";
 
 import {
 isAlgoBotLiteShell
@@ -20,6 +20,22 @@ isAlgoTradingNavEnabled
 import {
 mountMoexUnavailableStub
 } from "./exchanges/moex-readonly-stub.js?v=4606d3be";
+
+async function dismissSplash(){
+
+try{
+const {
+dismissAppBootSplash
+} =
+await import(
+"./app-boot-splash.js?v=6c280d61"
+);
+dismissAppBootSplash();
+}catch{
+/* optional */
+}
+
+}
 
 async function boot(){
 
@@ -36,17 +52,6 @@ return;
 await waitForSiteCssReady();
 
 try{
-const {
-dismissAppBootSplash
-} =
-await import(
-"./app-boot-splash.js?v=6c280d61"
-);
-dismissAppBootSplash();
-}catch{
-/* optional */
-}
-
 if(
 mountMoexUnavailableStub({
 title:
@@ -91,6 +96,9 @@ jsImport(
 );
 
 await mountAlgoTradingPage();
+}finally{
+await dismissSplash();
+}
 
 }
 

@@ -37,7 +37,7 @@ createTickerUiBatcher
 
 import {
 processAlertCandle
-} from "../alert-monitor.js?v=9930c3db";
+} from "../alert-monitor.js?v=f284cd39";
 
 import {
 getFavoriteGroup,
@@ -96,7 +96,7 @@ isTradePage
 ){
 const tradePositions =
 await import(
-"../trade-open-positions.js?v=d955828f"
+"../trade-open-positions.js?v=0200da43"
 );
 hasOpenPosition =
 tradePositions.hasOpenPosition;

@@ -19,7 +19,7 @@ sideToneClass
 import {
 closeTradeDetail,
 openTradeDetail
-} from "../../../trade-diary-detail.js?v=fee9e380";
+} from "../../../trade-diary-detail.js?v=5820f0df";
 
 import {
 mountTradeDiaryPeriodPicker
@@ -72,7 +72,7 @@ import {
 getLoadedTradeExchangeModules,
 loadTradeExchangeModules,
 resetTradeExchangeModules
-} from "../../module-router.js?v=3f82052c";
+} from "../../module-router.js?v=f9d37714";
 
 import {
 escapeHtml,

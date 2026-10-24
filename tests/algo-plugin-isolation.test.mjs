@@ -315,3 +315,17 @@ test("RSI Flip commission sits in Overview, trade marks in Train/Test", () => {
   assert.equal(block.indexOf('id="algo-rsi-flip-commission"', commission + 1), -1);
   assert.equal(block.indexOf('id="algo-rsi-flip-marks"', marks + 1), -1);
 });
+
+test("AlgoTrading splash stays up until the page is mounted", () => {
+  const boot = fs.readFileSync(
+    path.join(root, "js/algo-trading-page-boot.js"),
+    "utf8"
+  );
+  const bootFn = boot.indexOf("async function boot()");
+  const mountIdx = boot.indexOf("await mountAlgoTradingPage()");
+  const finallyIdx = boot.indexOf("}finally{");
+  const dismissIdx = boot.indexOf("await dismissSplash();");
+  assert.ok(bootFn > 0 && mountIdx > bootFn && finallyIdx > mountIdx);
+  assert.ok(dismissIdx > finallyIdx);
+  assert.equal(boot.indexOf("dismissAppBootSplash()", bootFn), -1);
+});

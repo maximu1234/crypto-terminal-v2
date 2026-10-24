@@ -250,6 +250,21 @@ test("live engine and LAN accept a full RSI book replace without restart", () =>
   }
 });
 
+test("RSI leverage change is stored even while the bot is stopped", () => {
+  const ui = fs.readFileSync(
+    path.join(root, "js/algo-trading/bot-strategy-ui.js"),
+    "utf8"
+  );
+  const id = '"algo-bot-rsi-flip-leverage"';
+  const changeIdx = ui.indexOf(id, ui.indexOf(id) + 1);
+  const nextId = ui.indexOf('"algo-bot-macd-flip-balance-pct"', changeIdx);
+  const chunk = ui.slice(changeIdx, nextId);
+  assert.ok(changeIdx > 0 && nextId > changeIdx);
+  assert.match(chunk, /saveRsiTouchFlipLeverage/);
+  assert.match(chunk, /syncRsiTouchFlipBookToLive/);
+  assert.doesNotMatch(chunk, /rsiTouchFlipRunning &&/);
+});
+
 test("changing live % gates share and reverts a rejected book apply", () => {
   const ui = fs.readFileSync(
     path.join(root, "js/algo-trading/bot-strategy-ui.js"),

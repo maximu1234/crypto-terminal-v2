@@ -100,12 +100,12 @@ persistBotTickerBookToMain
 } from "./bot-ticker-book.js?v=24739acf";
 import {
 isMultichartRemoteControlHost
-} from "./bot-remote-client.js?v=6b70b6a3";
+} from "./bot-remote-client.js?v=2c212bc1";
 import {
 mountRemoteSessionLogsEntry,
 mountRemoteWatchlistsPushEntry,
 mountLocalSessionLogsEntry
-} from "./bot-session-logs-viewer.js?v=f791d8cd";
+} from "./bot-session-logs-viewer.js?v=e9e514f9";
 import {
 rebalanceTpShares
 } from "./pattern-trade-stats-partial.js?v=a92ca5c3";
@@ -4603,11 +4603,6 @@ rsiBookLiveSyncChain.then(
 async()=>{
 const book =
 snapshotRsiTouchFlipBook();
-
-if(
-rsiTouchFlipRunning &&
-book.length
-){
 const result =
 await syncRsiTouchFlipBookToLive(
 book
@@ -4633,9 +4628,6 @@ result.message
 }
 
 return result;
-}
-
-return null;
 }
 ).catch(
 err=>{

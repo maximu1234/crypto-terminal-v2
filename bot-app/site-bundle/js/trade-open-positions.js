@@ -3,7 +3,7 @@
  */
 import {
 syncTradePositionsCache
-} from "./trade-positions-cache.js?v=0709efb4";
+} from "./trade-positions-cache.js?v=cd271402";
 
 import {
 isExchangeTradingEnabled
@@ -163,7 +163,7 @@ new CustomEvent(
 );
 
 void import(
-"./terminal/terminal-table.js?v=46c8aadc"
+"./terminal/terminal-table.js?v=2863860d"
 ).then(
 ({
 renderList
