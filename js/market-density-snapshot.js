@@ -278,6 +278,15 @@ running
 return;
 }
 
+if(
+typeof document !==
+"undefined" &&
+document.visibilityState ===
+"hidden"
+){
+return;
+}
+
 running =
 true;
 

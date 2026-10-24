@@ -397,6 +397,8 @@ test("depth-feed does not poll REST on an interval", () => {
   assert.match(source, /restSnapshot\("boot"\)/);
   assert.doesNotMatch(source, /rebuildWs:\s*true/);
   assert.match(source, /bybitDepthWs/);
+  assert.match(source, /bookBatch/);
+  assert.match(source, /document\.hidden/);
   assert.match(source, /onlyIfEmpty/);
   assert.match(source, /drawing-overlay/);
   assert.match(source, /drawings-updated/);

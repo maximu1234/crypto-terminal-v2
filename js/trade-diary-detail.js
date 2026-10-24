@@ -17,7 +17,7 @@ renderDetailShell
 import {
 getLoadedTradeExchangeModules,
 loadTradeExchangeModules
-} from "./trade/module-router.js?v=0e50d613";
+} from "./trade/module-router.js?v=b2618ee7";
 
 function diaryMod() {
   return getLoadedTradeExchangeModules();

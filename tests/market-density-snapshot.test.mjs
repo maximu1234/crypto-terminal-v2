@@ -6,6 +6,14 @@ import {
   wallsFromBook
 } from "../js/market-density-snapshot.js";
 
+test("density snapshot sleeps while the page is hidden", () => {
+  const src = readFileSync(
+    new URL("../js/market-density-snapshot.js", import.meta.url),
+    "utf8"
+  );
+  assert.match(src, /document\.visibilityState ===\s*"hidden"/);
+});
+
 test("density walls use a shallow book and keep only large notionals", () => {
   assert.equal(DENSITY_BOOK_DEPTH, 50);
   const walls = wallsFromBook({
@@ -63,6 +71,8 @@ test("offscreen screener cells drop the chart instance and the kline socket", ()
     "utf8"
   );
   assert.match(src, /function parkWidgetSurface/);
+  assert.match(src, /scheduleParkWidgetSurface/);
+  assert.match(src, /SCREENER_PARK_DELAY_MS/);
   assert.match(src, /isScreenerWidgetInView\(\s*widget\.root\s*\)/);
   assert.match(src, /widget\.mountCharts =\s*mountWidgetCharts;\s*mountWidgetCharts\(\)/);
   assert.match(src, /deps\.updateWidgetRsiData\(\s*widget\s*\)/);

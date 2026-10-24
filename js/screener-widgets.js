@@ -141,6 +141,10 @@ deps.activeWidgets.forEach(w=>{
 w.disposed =
 true;
 
+cancelScheduledPark(
+w
+);
+
 unobserveWidgetKlineVisibility(
 w
 );
@@ -254,8 +258,83 @@ window.location.href =
 const SCREENER_KLINE_VISIBILITY_MARGIN =
 "200px 0px";
 
+const SCREENER_PARK_DELAY_MS =
+400;
+
+const screenerParkTimers =
+new WeakMap();
+
 let screenerKlineVisibilityObserver =
 null;
+
+function cancelScheduledPark(
+widget
+){
+
+const timer =
+screenerParkTimers.get(
+widget
+);
+
+if(
+!timer
+){
+return;
+}
+
+clearTimeout(
+timer
+);
+screenerParkTimers.delete(
+widget
+);
+
+}
+
+function scheduleParkWidgetSurface(
+widget
+){
+
+if(
+!widget ||
+widget.disposed ||
+widget.chartParked ||
+screenerParkTimers.has(
+widget
+)
+){
+return;
+}
+
+const timer =
+setTimeout(
+()=>{
+screenerParkTimers.delete(
+widget
+);
+
+if(
+widget.disposed ||
+isScreenerWidgetInView(
+widget.root
+)
+){
+return;
+}
+
+parkWidgetSurface(
+widget
+);
+},
+SCREENER_PARK_DELAY_MS
+);
+
+screenerParkTimers.set(
+widget,
+timer
+);
+
+}
 
 function ensureScreenerKlineVisibilityObserver(){
 
@@ -293,11 +372,14 @@ isScreenerWidgetInView(
 widget.root
 )
 ){
+cancelScheduledPark(
+widget
+);
 resumeWidgetSurface(
 widget
 );
 }else{
-parkWidgetSurface(
+scheduleParkWidgetSurface(
 widget
 );
 }
@@ -333,6 +415,9 @@ widget
 
 screenerKlineVisibilityObserver?.unobserve(
 widget.root
+);
+cancelScheduledPark(
+widget
 );
 
 }

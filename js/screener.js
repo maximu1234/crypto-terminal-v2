@@ -85,7 +85,7 @@ createTickerUiBatcher
 
 import {
 mountReleaseMarker
-} from "./release-marker.js?v=0406fc0b";
+} from "./release-marker.js?v=99defd73";
 
 import {
 saveScreenerState,
@@ -104,7 +104,7 @@ FAVORITES_BY_EXCHANGE_KEY
 
 import {
 ensureCloudReady
-} from "./auth-ui.js?v=b61c1b8b";
+} from "./auth-ui.js?v=2c412c7f";
 
 import {
 ensureSettled,
@@ -114,7 +114,7 @@ withTimeout
 import {
 persistFavoritesToCloud,
 onFavoritesRemoteUpdate
-} from "./cloud-sync.js?v=91be4dd5";
+} from "./cloud-sync.js?v=cfbdaa32";
 
 import {
 attachSymbolAutocomplete,
@@ -1445,11 +1445,11 @@ listInViewWidgetSymbols,
 loadWidgetChart,
 observeWidgetKlineVisibility,
 updateWidgetMeta
-} from "./screener-widgets.js?v=fc6b2442";
+} from "./screener-widgets.js?v=16ae2239";
 
 import {
 startMarketDensitySnapshot
-} from "./market-density-snapshot.js?v=f1337edc";
+} from "./market-density-snapshot.js?v=7c50daea";
 
 bindScreenerWidgets({
 get activeWidgets(){ return activeWidgets; },
@@ -1680,12 +1680,25 @@ return;
 list.dataset.fitWatch =
 "1";
 
+let fitWidth =
+-1;
+
 const observer =
 new ResizeObserver(
 ()=>{
+const width =
+list.clientWidth;
+if(
+width ===
+fitWidth
+){
+return;
+}
 fitDensityList(
 list
 );
+fitWidth =
+list.clientWidth;
 }
 );
 

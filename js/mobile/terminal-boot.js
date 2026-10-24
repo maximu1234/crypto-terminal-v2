@@ -15,7 +15,7 @@ import {
 } from "./nav.js?v=4b83ad99";
 import {
   mountMobileTerminalPage
-} from "./terminal-page.js?v=05752b15";
+} from "./terminal-page.js?v=c964290f";
 
 async function boot() {
   if (redirectNonPhoneFromMobile("/terminal.html")) {

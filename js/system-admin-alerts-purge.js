@@ -1,10 +1,10 @@
 import {
 loadAllAlerts
-} from "./alerts.js?v=fa9ab6d0";
+} from "./alerts.js?v=d43c060f";
 
 import {
 purgeAlertGarbageFromCloud
-} from "./alerts-cloud/garbage-purge.js?v=cadb4052";
+} from "./alerts-cloud/garbage-purge.js?v=f1122dfe";
 
 const CONFIRM_PHRASE =
 "PURGE_ALERT_GARBAGE";

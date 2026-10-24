@@ -21,6 +21,12 @@ handleTrustedDesktopUi
 require(
 "./desktop-ui-gate.cjs"
 );
+const {
+createDepthBatcher
+} =
+require(
+"./bybit-depth-batch.cjs"
+);
 
 const WS_URL_BYBIT =
 "wss://stream.bybit.com/v5/public/linear";
@@ -136,10 +142,32 @@ return null;
 
 }
 
+const depthBatch =
+createDepthBatcher(
+messages=>{
+
+if(
+!symbol
+){
+return;
+}
+
+pushToRenderer({
+topic:
+depthTopicFor(
+symbol
+),
+messages
+});
+
+}
+);
+
 function closeSocket(){
 
 intentionalClose =
 true;
+depthBatch.stop();
 reconnectTimer =
 clearTimer(
 reconnectTimer
@@ -404,15 +432,9 @@ symbol
 return;
 }
 
-pushToRenderer({
-topic:
-nextTopic,
-type:
-msg.type ||
-"",
-data:
-msg.data
-});
+depthBatch.push(
+msg
+);
 
 }
 );

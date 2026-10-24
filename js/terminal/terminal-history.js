@@ -137,7 +137,7 @@ if(
 host.isTradePage
 ){
 void import(
-"../trade-volume-presets.js?v=372d34f9"
+"../trade-volume-presets.js?v=a9a7f6a3"
 ).then(
 ({
 switchTradeVolumeSymbol

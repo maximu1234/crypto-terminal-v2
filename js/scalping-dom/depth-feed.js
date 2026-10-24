@@ -3,7 +3,7 @@
  */
 import {
 jsUrl
-} from "../asset-manifest.js?v=9207328d";
+} from "../asset-manifest.js?v=bf62d508";
 
 import {
 loadMarketOrderbook
@@ -28,12 +28,12 @@ applyPositionOverlays,
 applySlTpHighlights,
 resolvePositionOverlays,
 resolveSlTpPrices
-} from "./position-overlay.js?v=d6559e65";
+} from "./position-overlay.js?v=d4589930";
 
 import {
 applyAlertUnderlines,
 resolveAlertPrices
-} from "./alert-overlay.js?v=c651f76e";
+} from "./alert-overlay.js?v=170bae0f";
 
 import {
 applyTriggerUnderlines,
@@ -269,6 +269,13 @@ export function createDepthFeed(handlers){
       if(topicSymbol && topicSymbol !== symbol){
         return;
       }
+      if(Array.isArray(payload.messages)){
+        post({
+          type: "bookBatch",
+          messages: payload.messages
+        });
+        return;
+      }
       post({
         type: "bookMsg",
         kind: payload.type === "delta" ? "delta" : "snapshot",
@@ -282,7 +289,7 @@ export function createDepthFeed(handlers){
     if(typeof api?.setSymbol !== "function"){
       return;
     }
-    if(useDesktopBybitDepth() && sym){
+    if(useDesktopBybitDepth() && sym && !document.hidden){
       bindDesktopDepth();
       void api.setSymbol(sym);
       return;
@@ -291,7 +298,7 @@ export function createDepthFeed(handlers){
   }
 
   async function restSnapshot(reason){
-    if(stopped || !symbol || restInflight){
+    if(stopped || !symbol || restInflight || document.hidden){
       return;
     }
     if(reason === "reconnect"){
@@ -446,6 +453,13 @@ export function createDepthFeed(handlers){
     }
   };
 
+  const onVisibility = () => {
+    if(stopped){
+      return;
+    }
+    syncDesktopDepth(symbol);
+  };
+
   const onExchangeChanged = () => {
     if(stopped){
       return;
@@ -481,6 +495,7 @@ export function createDepthFeed(handlers){
     }
     symbol = readChartSymbol();
     handlers.onSymbol?.(symbol);
+    document.addEventListener("visibilitychange", onVisibility);
     window.addEventListener("coins-chart-symbol-changed", onSymbolChanged);
     window.addEventListener("chart-candles-loaded", onCandlesLoaded);
     window.addEventListener(EXCHANGE_CHANGED_EVENT, onExchangeChanged);
@@ -511,6 +526,7 @@ export function createDepthFeed(handlers){
     depthUnsub = null;
     destroyWorker();
     overlayCache = null;
+    document.removeEventListener("visibilitychange", onVisibility);
     window.removeEventListener("coins-chart-symbol-changed", onSymbolChanged);
     window.removeEventListener("chart-candles-loaded", onCandlesLoaded);
     window.removeEventListener(EXCHANGE_CHANGED_EVENT, onExchangeChanged);

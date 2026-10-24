@@ -13,7 +13,7 @@ withTimeout
 import {
 pauseRegistryCloudSync,
 scheduleRemoteRegistrySync
-} from "./alerts-cloud-sync.js?v=7f895452";
+} from "./alerts-cloud-sync.js?v=caa3d5b1";
 
 import {
 drawingsStorageKey as exchangeDrawingsStorageKey,
@@ -150,7 +150,7 @@ return job;
 
 function queueAlertsCloud(fn){
 
-import("./alerts-cloud-sync.js?v=7f895452")
+import("./alerts-cloud-sync.js?v=caa3d5b1")
 .then(m=>fn(m))
 .catch(err=>{
 console.warn("alerts cloud:", err);
@@ -1454,7 +1454,7 @@ opts =
 ){
 
 const { isCloudLoggedIn } =
-await import("./cloud-sync.js?v=91be4dd5");
+await import("./cloud-sync.js?v=cfbdaa32");
 
 if(
 !isCloudLoggedIn()
@@ -1463,7 +1463,7 @@ return null;
 }
 
 const { getTelegramChatId } =
-await import("./alerts-cloud-sync.js?v=7f895452");
+await import("./alerts-cloud-sync.js?v=caa3d5b1");
 
 if(
 await getTelegramChatId() == null
@@ -1551,12 +1551,12 @@ sym
 );
 
 const { ensureCloudReady } =
-await import("./auth-ui.js?v=b61c1b8b");
+await import("./auth-ui.js?v=2c412c7f");
 
 await ensureCloudReady();
 
 const m =
-await import("./alerts-cloud-sync.js?v=7f895452");
+await import("./alerts-cloud-sync.js?v=caa3d5b1");
 
 const pushed =
 await m.pushOneAlertRow(
@@ -1648,14 +1648,14 @@ list.push(row);
 saveAlerts(list);
 
 const { ensureCloudReady } =
-await import("./auth-ui.js?v=b61c1b8b");
+await import("./auth-ui.js?v=2c412c7f");
 
 await ensureCloudReady();
 
 mergeRegistryFromChartDrawings();
 
 const m =
-await import("./alerts-cloud-sync.js?v=7f895452");
+await import("./alerts-cloud-sync.js?v=caa3d5b1");
 
 const pushed =
 await m.pushOneAlertRow(
@@ -1793,7 +1793,7 @@ dispatchPriceAlertsChanged(
 sym
 );
 
-void import("./alerts-cloud-sync.js?v=7f895452").then(async m=>{
+void import("./alerts-cloud-sync.js?v=caa3d5b1").then(async m=>{
 
 const ok =
 await m.flushAlertCloudPush(
@@ -1824,7 +1824,7 @@ pauseRegistryCloudSync(
 );
 });
 
-void import("./alert-monitor.js?v=07bf803a").then(m=>{
+void import("./alert-monitor.js?v=dfefd3a3").then(m=>{
 m.armAlertQuietAfterDrag(
 sym,
 sid
@@ -2614,7 +2614,7 @@ sym
 );
 
 if(existing){
-void import("./alert-monitor.js?v=07bf803a").then(m=>{
+void import("./alert-monitor.js?v=dfefd3a3").then(m=>{
 m.notifyAlertTriggered({
 symbol: sym,
 shapeId: sid,
@@ -2885,7 +2885,7 @@ dispatchPriceAlertsChanged(
 sym
 );
 
-void import("./alert-monitor.js?v=07bf803a").then(m=>{
+void import("./alert-monitor.js?v=dfefd3a3").then(m=>{
 m.notifyAlertTriggered({
 symbol: sym,
 shapeId: sid,
@@ -2895,7 +2895,7 @@ source: existing?.source
 });
 });
 
-void import("./alerts-cloud-sync.js?v=7f895452").then(m=>{
+void import("./alerts-cloud-sync.js?v=caa3d5b1").then(m=>{
 m.fireAlertCloudTrigger(
 sym,
 sid,
@@ -2989,7 +2989,7 @@ remaining
 );
 stripAlertFlagsNotInRegistry();
 
-void import("./alerts-cloud-sync.js?v=7f895452").then(m=>{
+void import("./alerts-cloud-sync.js?v=caa3d5b1").then(m=>{
 m.runCloudOp(()=>
 m.removeAllAlertsEverywhere()
 ).then(ok=>{

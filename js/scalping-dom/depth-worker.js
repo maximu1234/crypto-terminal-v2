@@ -234,12 +234,27 @@ function applyBookMsg(msg){
         exchange: "bybit",
         depth: BYBIT_DOM_DEPTH
       });
-      return;
+      return "resync";
     }
-    scheduleFrame();
-    return;
+    return result;
   }
   book.applySnapshot(data);
+  return "ok";
+}
+
+function applyBookBatch(messages){
+  if(!Array.isArray(messages)){
+    return;
+  }
+  for(const item of messages){
+    const result = applyBookMsg({
+      kind: item?.type === "delta" ? "delta" : "snapshot",
+      data: item?.data
+    });
+    if(result === "resync"){
+      break;
+    }
+  }
   scheduleFrame();
 }
 
@@ -291,6 +306,13 @@ self.onmessage = (event) => {
     case "bookMsg":
       if(!stopped){
         applyBookMsg(msg);
+        scheduleFrame();
+      }
+      break;
+
+    case "bookBatch":
+      if(!stopped){
+        applyBookBatch(msg.messages);
       }
       break;
 
