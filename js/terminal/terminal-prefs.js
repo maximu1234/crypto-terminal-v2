@@ -20,7 +20,7 @@ import {
 getCurrentSymbols,
 getFirstVisibleSymbol,
 getExtraCoinMarkets
-} from "./terminal-table.js?v=e01c7385";
+} from "./terminal-table.js?v=9dc1c725";
 
 import {
 parseAlertDeepLinkExchange
@@ -764,12 +764,72 @@ return coinsState().currentSymbol;
 
 }
 
+function keepSavedTfWhenUrlHasNoTf(){
+
+let urlTf =
+"";
+
+try{
+urlTf =
+new URLSearchParams(
+window.location.search
+).get(
+"tf"
+) ||
+"";
+}catch{
+urlTf =
+"";
+}
+
+if(
+String(
+urlTf
+).trim()
+){
+return;
+}
+
+let exchangeId =
+"";
+
+try{
+exchangeId =
+parseAlertDeepLinkExchange(
+new URLSearchParams(
+window.location.search
+)
+);
+}catch{
+exchangeId =
+"";
+}
+
+const last =
+readLastViewForExchange(
+exchangeId ||
+getActiveExchangeId()
+);
+
+if(
+last.tf &&
+COINS_TF_VALUES.has(
+last.tf
+)
+){
+coinsState().currentTF =
+last.tf;
+}
+
+}
+
 export function bootstrapCoinsPageState(){
 
 readUrlParams();
 applyCoinsPrefs();
 
 if(coinsState().hasUrlSymbol){
+keepSavedTfWhenUrlHasNoTf();
 return;
 }
 

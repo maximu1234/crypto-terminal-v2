@@ -287,5 +287,5 @@ Bybit history не импортирует BingX history и наоборот. И�
 
 ## Связанные документы
 
-- [MARKER_217.md](./MARKER_217.md) — текущий эталон
+- [MARKER_218.md](./MARKER_218.md) — текущий эталон
 - [DESKTOP_APP.md](./DESKTOP_APP.md) — Electron shell

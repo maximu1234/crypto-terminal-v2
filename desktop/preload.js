@@ -1324,6 +1324,60 @@ fn
 };
 
 }
+},
+bybitDepthWs:{
+setSymbol:(
+symbol
+)=>
+ipcRenderer.invoke(
+"bybitDepth:setSymbol",
+{
+symbol
+}
+),
+onPush:(
+callback
+)=>{
+
+if(
+typeof callback !==
+"function"
+){
+return ()=>{};
+}
+
+const fn =
+(
+_event,
+payload
+)=>{
+try{
+callback(
+payload
+);
+}catch(
+err
+){
+console.warn(
+"bybit depth ws listener:",
+err
+);
+}
+};
+
+ipcRenderer.on(
+"bybitDepth:push",
+fn
+);
+
+return ()=>{
+ipcRenderer.removeListener(
+"bybitDepth:push",
+fn
+);
+};
+
+}
 }
 }
 );

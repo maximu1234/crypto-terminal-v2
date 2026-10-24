@@ -3,7 +3,7 @@
  */
 import {
 jsUrl
-} from "../asset-manifest.js?v=07630746";
+} from "../asset-manifest.js?v=9207328d";
 
 import {
 loadMarketOrderbook
@@ -28,12 +28,12 @@ applyPositionOverlays,
 applySlTpHighlights,
 resolvePositionOverlays,
 resolveSlTpPrices
-} from "./position-overlay.js?v=e897f814";
+} from "./position-overlay.js?v=d6559e65";
 
 import {
 applyAlertUnderlines,
 resolveAlertPrices
-} from "./alert-overlay.js?v=e1702975";
+} from "./alert-overlay.js?v=c651f76e";
 
 import {
 applyTriggerUnderlines,
@@ -54,10 +54,13 @@ getScalpingDomPriceScale
 
 import {
 BYBIT_DOM_DEPTH
-} from "./depth-ws-bybit.js?v=88ccac1e";
+} from "./depth-ws-bybit.js?v=8860be44";
 
 const REST_WAIT_MS =
 1800;
+
+const RECONNECT_REST_MS =
+5000;
 
 function normalizeSymbol(raw){
   return String(raw || "")
@@ -124,7 +127,9 @@ export function createDepthFeed(handlers){
   let worker = null;
   let restInflight = false;
   let restWaitTimer = 0;
+  let lastReconnectRestAt = 0;
   let gotFrame = false;
+  let depthUnsub = null;
   let overlayCache = null;
   let overlayCacheAt = 0;
   let viewRows = 48;
@@ -226,8 +231,7 @@ export function createDepthFeed(handlers){
       rotateBybitWsEndpoint();
       post({
         type: "config",
-        ...workerConfig(),
-        rebuildWs: true
+        ...workerConfig()
       });
       return;
     }
@@ -236,9 +240,66 @@ export function createDepthFeed(handlers){
     }
   }
 
+  function desktopDepthApi(){
+    return window.cryptoTerminalDesktop?.bybitDepthWs || null;
+  }
+
+  function useDesktopBybitDepth(){
+    return getActiveExchangeId() !== "bingx"
+      && typeof desktopDepthApi()?.setSymbol === "function";
+  }
+
+  function bindDesktopDepth(){
+    if(depthUnsub){
+      return;
+    }
+    const onPush = desktopDepthApi()?.onPush;
+    if(typeof onPush !== "function"){
+      return;
+    }
+    depthUnsub = onPush((payload) => {
+      if(stopped || !payload){
+        return;
+      }
+      const topic = String(payload.topic || "");
+      if(!topic.startsWith("orderbook.")){
+        return;
+      }
+      const topicSymbol = topic.split(".")[2] || "";
+      if(topicSymbol && topicSymbol !== symbol){
+        return;
+      }
+      post({
+        type: "bookMsg",
+        kind: payload.type === "delta" ? "delta" : "snapshot",
+        data: payload.data
+      });
+    });
+  }
+
+  function syncDesktopDepth(sym){
+    const api = desktopDepthApi();
+    if(typeof api?.setSymbol !== "function"){
+      return;
+    }
+    if(useDesktopBybitDepth() && sym){
+      bindDesktopDepth();
+      void api.setSymbol(sym);
+      return;
+    }
+    void api.setSymbol("");
+  }
+
   async function restSnapshot(reason){
     if(stopped || !symbol || restInflight){
       return;
+    }
+    if(reason === "reconnect"){
+      const now = Date.now();
+      if(now - lastReconnectRestAt < RECONNECT_REST_MS){
+        return;
+      }
+      lastReconnectRestAt = now;
     }
     restInflight = true;
     try{
@@ -321,8 +382,10 @@ export function createDepthFeed(handlers){
     post({
       type: "start",
       symbol: sym,
+      externalWs: useDesktopBybitDepth(),
       ...workerConfig()
     });
+    syncDesktopDepth(sym);
     void restSnapshot("boot");
     armRestWait();
   }
@@ -435,6 +498,17 @@ export function createDepthFeed(handlers){
 
   function stop(){
     stopped = true;
+    try{
+      desktopDepthApi()?.setSymbol?.("");
+    }catch{
+      /* ignore */
+    }
+    try{
+      depthUnsub?.();
+    }catch{
+      /* ignore */
+    }
+    depthUnsub = null;
     destroyWorker();
     overlayCache = null;
     window.removeEventListener("coins-chart-symbol-changed", onSymbolChanged);

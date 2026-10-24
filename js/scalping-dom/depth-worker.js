@@ -13,7 +13,7 @@ buildVisibleSliceFromTickBook
 import {
 createBybitDepthWs,
 BYBIT_DOM_DEPTH
-} from "./depth-ws-bybit.js?v=88ccac1e";
+} from "./depth-ws-bybit.js?v=8860be44";
 
 import {
 createBingxDepthWs
@@ -39,6 +39,8 @@ let viewRows =
 let viewOffset =
 0;
 let hover =
+false;
+let externalWs =
 false;
 let sticky =
 null;
@@ -212,11 +214,33 @@ function startWs(){
   destroyWs();
   book.clear();
   sticky = null;
-  if(!symbol){
+  if(!symbol || (externalWs && exchange === "bybit")){
     return;
   }
   ws = exchange === "bingx" ? attachBingx() : attachBybit();
   ws.start(symbol);
+}
+
+function applyBookMsg(msg){
+  const data = Array.isArray(msg.data) ? msg.data[0] : msg.data;
+  if(msg.kind === "delta"){
+    if(!book.isReady()){
+      return;
+    }
+    const result = book.applyDelta(data);
+    if(result === "resync"){
+      postMessage({
+        type: "needResync",
+        exchange: "bybit",
+        depth: BYBIT_DOM_DEPTH
+      });
+      return;
+    }
+    scheduleFrame();
+    return;
+  }
+  book.applySnapshot(data);
+  scheduleFrame();
 }
 
 function applyConfig(msg){
@@ -259,8 +283,15 @@ self.onmessage = (event) => {
       exchange = String(msg.exchange || "bybit").toLowerCase() === "bingx"
         ? "bingx"
         : "bybit";
+      externalWs = msg.externalWs === true && exchange === "bybit";
       symbol = String(msg.symbol || "").trim().toUpperCase();
       startWs();
+      break;
+
+    case "bookMsg":
+      if(!stopped){
+        applyBookMsg(msg);
+      }
       break;
 
     case "setSymbol":
@@ -275,7 +306,7 @@ self.onmessage = (event) => {
 
     case "config":
       applyConfig(msg);
-      if(msg.rebuildWs){
+      if(msg.rebuildWs && !(externalWs && exchange === "bybit")){
         startWs();
       }else{
         scheduleFrame();

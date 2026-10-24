@@ -288,27 +288,18 @@ return;
 }
 
 if(
-entry.isIntersecting
-){
-
-if(
-widget.candles.length &&
-!widget.unsubKline &&
-deps.isScreenerWidgetCurrent(
-widget
+entry.isIntersecting ||
+isScreenerWidgetInView(
+widget.root
 )
 ){
-attachWidgetKlineStream(
+resumeWidgetSurface(
 widget
 );
-}
-
 }else{
-
-widget.unsubKline?.();
-widget.unsubKline =
-null;
-
+parkWidgetSurface(
+widget
+);
 }
 
 }
@@ -342,6 +333,144 @@ widget
 
 screenerKlineVisibilityObserver?.unobserve(
 widget.root
+);
+
+}
+
+function parkWidgetSurface(
+widget
+){
+
+if(
+!widget ||
+widget.disposed ||
+widget.chartParked
+){
+return;
+}
+
+widget.unsubKline?.();
+widget.unsubKline =
+null;
+
+try{
+widget.unlinkTimeScales?.();
+}catch{
+/* ignore */
+}
+
+widget.unlinkTimeScales =
+null;
+
+try{
+widget.chart?.remove();
+}catch{
+/* ignore */
+}
+
+try{
+widget.rsiChart?.remove();
+}catch{
+/* ignore */
+}
+
+widget.chart =
+null;
+widget.series =
+null;
+widget.rsiChart =
+null;
+widget.rsiSeries =
+null;
+widget.macdHistSeries =
+null;
+widget.macdSignalSeries =
+null;
+widget.chartParked =
+true;
+widget._rsiPlaced =
+false;
+widget._lastRsiSizeKey =
+"";
+widget._lastChartSizeKey =
+"";
+widget._lastZoomCandleLen =
+0;
+
+}
+
+function resumeWidgetSurface(
+widget
+){
+
+if(
+!widget ||
+widget.disposed ||
+!deps.isScreenerWidgetCurrent(
+widget
+)
+){
+return;
+}
+
+if(
+widget.chartParked ||
+!widget.chart
+){
+widget.mountCharts?.();
+widget.chartParked =
+false;
+widget._rsiPlaced =
+false;
+widget._lastRsiSizeKey =
+"";
+widget._lastChartSizeKey =
+"";
+widget._lastZoomCandleLen =
+0;
+
+if(
+widget.candles?.length
+){
+widget.syncChartSize?.();
+}
+
+widget.chartEl?.classList.remove(
+"loading"
+);
+widget.rsiWrapEl?.classList.remove(
+"screener-rsi-pending"
+);
+widget.root?.classList.remove(
+"screener-osc-settling"
+);
+}
+
+if(
+widget.candles?.length &&
+!widget.unsubKline
+){
+attachWidgetKlineStream(
+widget
+);
+}
+
+}
+
+export function listInViewWidgetSymbols(){
+
+return deps.activeWidgets
+.filter(
+widget=>
+widget?.root &&
+!widget.disposed &&
+isScreenerWidgetInView(
+widget.root
+)
+)
+.map(
+widget=>
+widget.symbol
 );
 
 }
@@ -618,6 +747,14 @@ logicalIndexShift(
 previous,
 merged
 );
+if(
+!widget.chart
+){
+widget.candles =
+merged;
+return;
+}
+
 const range =
 widget.userAdjustedZoom
 ? widget.chart.timeScale().getVisibleLogicalRange()
@@ -677,8 +814,6 @@ export async function loadWidgetChart(widget){
 
 const {
 symbol,
-chart,
-series,
 chartEl,
 loadId
 } = widget;
@@ -773,10 +908,20 @@ widget
 return;
 }
 
+if(
+!widget.chart ||
+!widget.series
+){
+chartEl.classList.remove(
+"loading"
+);
+return;
+}
+
 try{
 
 applyChartPriceFormat(
-series,
+widget.series,
 loaded[loaded.length - 1].close
 );
 
@@ -1118,20 +1263,16 @@ openTerminal(symbol, e);
 const chartEl =
 root.querySelector(".screener-chart");
 
-const {
-chart,
-series
-} =
-createScreenerChart(chartEl);
-
 const widget = {
 symbol,
 root,
-chart,
-series,
+chart: null,
+series: null,
 chartEl,
 loadId,
 disposed:
+false,
+chartParked:
 false,
 unlinkTimeScales:
 null,
@@ -1146,8 +1287,30 @@ rsiSeries:null,
 rsiChartEl:null,
 rsiWrapEl:null,
 macdHistSeries:null,
-macdSignalSeries:null
+macdSignalSeries:null,
+mountCharts: null,
+syncChartSize: null
 };
+
+function mountWidgetCharts(){
+
+if(
+widget.disposed ||
+widget.chart
+){
+return;
+}
+
+const {
+chart,
+series
+} =
+createScreenerChart(chartEl);
+
+widget.chart =
+chart;
+widget.series =
+series;
 
 if(
 showOscillator
@@ -1261,6 +1424,12 @@ widget,
 deps.invertCharts
 );
 
+}
+
+widget.mountCharts =
+mountWidgetCharts;
+mountWidgetCharts();
+
 function markUserZoom(){
 
 widget.userAdjustedZoom = true;
@@ -1305,7 +1474,14 @@ widget.rsiWrapEl?.style.setProperty(
 
 function syncChartSize(){
 
+const chart =
+widget.chart;
+const series =
+widget.series;
+
 if(
+!chart ||
+!series ||
 !deps.isScreenerWidgetCurrent(
 widget
 )
@@ -1396,6 +1572,27 @@ height: rh
 deps.layoutWidgetRsi(
 widget
 );
+}
+
+}
+
+if(
+!widget._rsiPlaced &&
+widget.candles.length &&
+(
+widget.rsiSeries ||
+widget.macdHistSeries
+)
+){
+
+try{
+deps.updateWidgetRsiData(
+widget
+);
+widget._rsiPlaced =
+true;
+}catch{
+/* chart disposed during page change */
 }
 
 }

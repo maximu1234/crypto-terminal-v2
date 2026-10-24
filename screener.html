@@ -16,7 +16,7 @@
 <script src="/js/site-css-ready.js?v=b5c14dd2"></script>
 <link rel="stylesheet" href="/css/common.css?v=b1fbdc2b">
 <link rel="stylesheet" href="/css/chrome-motion.css?v=ce79f4e8">
-<link rel="stylesheet" href="/css/screener.css?v=54187453">
+<link rel="stylesheet" href="/css/screener.css?v=02d859a7">
 
 <link rel="preload" href="/vendor/lightweight-charts.standalone.production.js" as="script">
 
@@ -157,6 +157,15 @@ aria-expanded="false"
 
 <footer id="pagination" aria-label="Страницы"></footer>
 
+<section id="screener-density" class="screener-density" aria-label="Крупные заявки" title="Снимок 50 уровней по видимым монетам, не полный стакан">
+<div class="screener-density-head">
+<span>Крупные заявки</span>
+</div>
+<ul id="screener-density-list" class="screener-density-list">
+<li class="screener-density-empty">Снимок видимых монет…</li>
+</ul>
+</section>
+
 <div id="screener-status" class="hidden">Загрузка…</div>
 
 <script type="module">
@@ -211,8 +220,8 @@ const { loadLightweightCharts } =
 await import("/js/charts-lib-boot.js?v=04885614");
 
 await loadLightweightCharts();
-await import("/js/screener.js?v=55f66c7b");
-import("/js/site-boot.js?v=38862096").catch(err=>{
+await import("/js/screener.js?v=eb1f8e06");
+import("/js/site-boot.js?v=023d818b").catch(err=>{
 console.warn("site-boot:", err);
 });
 

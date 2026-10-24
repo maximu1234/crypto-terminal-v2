@@ -13,6 +13,9 @@ BYBIT_DOM_DEPTH;
 const RECONNECT_MS =
 2000;
 
+const RECONNECT_MAX_MS =
+15000;
+
 function topicFor(
 symbol
 ){
@@ -120,7 +123,9 @@ prevTopic
 
 }
 
-function scheduleReconnect(){
+function scheduleReconnect(
+delayMs
+){
 
 clearReconnect();
 
@@ -130,6 +135,18 @@ intentionalClose
 return;
 }
 
+const delay =
+Math.max(
+RECONNECT_MS,
+Math.min(
+RECONNECT_MAX_MS,
+Number(
+delayMs
+) ||
+RECONNECT_MS
+)
+);
+
 reconnectTimer =
 setTimeout(
 ()=>{
@@ -137,7 +154,7 @@ reconnectTimer =
 null;
 connect();
 },
-RECONNECT_MS
+delay
 );
 
 }
@@ -281,14 +298,31 @@ return;
 intentionalClose =
 false;
 
+const prev =
+socket;
+
+socket =
+null;
+
+if(
+prev
+){
+prev.onopen =
+null;
+prev.onmessage =
+null;
+prev.onerror =
+null;
+prev.onclose =
+null;
+
 try{
-socket?.close();
+prev.close();
 }catch{
 /* ignore */
 }
 
-socket =
-null;
+}
 
 const url =
 String(
@@ -368,6 +402,8 @@ return;
 const lived =
 Date.now() -
 openedAt;
+let delay =
+RECONNECT_MS;
 
 if(
 lived <
@@ -375,6 +411,19 @@ lived <
 ){
 shortFails +=
 1;
+delay =
+Math.min(
+RECONNECT_MAX_MS,
+RECONNECT_MS *
+(
+2 **
+Math.min(
+shortFails -
+1,
+3
+)
+)
+);
 
 if(
 shortFails >=
@@ -387,7 +436,9 @@ shortFails =
 
 }
 
-scheduleReconnect();
+scheduleReconnect(
+delay
+);
 };
 
 }

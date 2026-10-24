@@ -4,6 +4,7 @@ symbolListSignature
 
 import {
 loadMarketHistory,
+loadMarketOrderbook,
 loadMarketSymbols,
 peekMarketSymbolsCache,
 getActiveExchangeDefinition,
@@ -84,7 +85,7 @@ createTickerUiBatcher
 
 import {
 mountReleaseMarker
-} from "./release-marker.js?v=69a20494";
+} from "./release-marker.js?v=0406fc0b";
 
 import {
 saveScreenerState,
@@ -103,7 +104,7 @@ FAVORITES_BY_EXCHANGE_KEY
 
 import {
 ensureCloudReady
-} from "./auth-ui.js?v=bb64b118";
+} from "./auth-ui.js?v=b61c1b8b";
 
 import {
 ensureSettled,
@@ -113,7 +114,7 @@ withTimeout
 import {
 persistFavoritesToCloud,
 onFavoritesRemoteUpdate
-} from "./cloud-sync.js?v=d2544836";
+} from "./cloud-sync.js?v=91be4dd5";
 
 import {
 attachSymbolAutocomplete,
@@ -1440,10 +1441,15 @@ import {
 bindScreenerWidgets,
 createWidget,
 destroyWidgets,
+listInViewWidgetSymbols,
 loadWidgetChart,
 observeWidgetKlineVisibility,
 updateWidgetMeta
-} from "./screener-widgets.js?v=510f463e";
+} from "./screener-widgets.js?v=fc6b2442";
+
+import {
+startMarketDensitySnapshot
+} from "./market-density-snapshot.js?v=f1337edc";
 
 bindScreenerWidgets({
 get activeWidgets(){ return activeWidgets; },
@@ -1495,6 +1501,221 @@ persistState();
 renderPage();
 
 }
+});
+
+}
+
+function formatDensityNotional(
+value
+){
+
+if(
+value >=
+1_000_000
+){
+return `${(value / 1_000_000).toFixed(1)}M`;
+}
+
+if(
+value >=
+10_000
+){
+return `${Math.round(value / 1000)}K`;
+}
+
+return `${(value / 1000).toFixed(1)}K`;
+
+}
+
+function densityTerminalHref(
+symbol
+){
+
+const params =
+new URLSearchParams({
+symbol:
+String(
+symbol ||
+""
+).trim().toUpperCase()
+});
+
+const exchangeId =
+String(
+getActiveExchangeId() ||
+""
+).trim().toLowerCase();
+
+if(
+exchangeId ===
+"bybit" ||
+exchangeId ===
+"bingx"
+){
+params.set(
+"exchange",
+exchangeId
+);
+}
+
+return `/terminal.html?${params.toString()}`;
+
+}
+
+function renderDensitySnapshot(
+snapshot
+){
+
+const list =
+document.getElementById(
+"screener-density-list"
+);
+
+if(
+!list
+){
+return;
+}
+
+if(
+!snapshot.rows.length
+){
+list.innerHTML =
+`<li class="screener-density-empty">На видимых монетах нет заявок от 1K</li>`;
+return;
+}
+
+list.innerHTML =
+snapshot.rows.slice(
+0,
+12
+).map(
+row=>{
+
+const side =
+row.side ===
+"bid"
+? "Buy"
+: "Sell";
+const dist =
+`${row.distancePct >= 0 ? "+" : ""}${row.distancePct.toFixed(2)}%`;
+
+return `<li class="screener-density-row is-${row.side}"><a class="screener-density-symbol" href="${escapeHtml(densityTerminalHref(row.symbol))}">${escapeHtml(row.symbol)}</a><span>${side}</span><span>${formatDensityNotional(row.notional)}</span><span>${dist}</span></li>`;
+
+}
+).join(
+""
+);
+
+fitDensityList(
+list
+);
+
+}
+
+function fitDensityList(
+list
+){
+
+if(
+!list ||
+list.clientWidth <
+8
+){
+return;
+}
+
+const rows =
+[
+...list.querySelectorAll(
+".screener-density-row"
+)
+];
+
+for(
+const row of rows
+){
+row.hidden =
+false;
+}
+
+const limit =
+list.clientWidth;
+
+for(
+const row of rows
+){
+
+if(
+row.offsetLeft +
+row.offsetWidth >
+limit +
+1
+){
+row.hidden =
+true;
+}
+
+}
+
+}
+
+function watchDensityListFit(){
+
+const list =
+document.getElementById(
+"screener-density-list"
+);
+
+if(
+!list ||
+list.dataset.fitWatch ===
+"1" ||
+typeof ResizeObserver ===
+"undefined"
+){
+return;
+}
+
+list.dataset.fitWatch =
+"1";
+
+const observer =
+new ResizeObserver(
+()=>{
+fitDensityList(
+list
+);
+}
+);
+
+observer.observe(
+list
+);
+
+}
+
+let densitySnapshot =
+null;
+
+function ensureDensitySnapshot(){
+
+if(
+densitySnapshot
+){
+return;
+}
+
+watchDensityListFit();
+
+densitySnapshot =
+startMarketDensitySnapshot({
+getSymbols:
+listInViewWidgetSymbols,
+loadOrderbook:
+loadMarketOrderbook,
+onSnapshot:
+renderDensitySnapshot
 });
 
 }
@@ -1582,6 +1803,8 @@ widget
 );
 }
 );
+
+ensureDensitySnapshot();
 
 const chartLoads =
 mapWithConcurrency(

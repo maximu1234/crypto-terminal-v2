@@ -70,6 +70,13 @@ require(
 "./trading/bybit-public-ws.cjs"
 );
 const {
+registerBybitDepthWsIpc,
+setBybitDepthWsTarget
+} =
+require(
+"./trading/bybit-depth-ws.cjs"
+);
+const {
 registerChartSnapshotIpc
 } =
 require(
@@ -590,6 +597,9 @@ setTradingStreamTarget(
 null
 );
 setBybitPublicWsTarget(
+null
+);
+setBybitDepthWsTarget(
 null
 );
 startTradingStream();
@@ -1167,6 +1177,9 @@ mainWindow.webContents.getUserAgent()
 setBybitPublicWsTarget(
 mainWindow.webContents
 );
+setBybitDepthWsTarget(
+mainWindow.webContents
+);
 
 mainWindow.once(
 "ready-to-show",
@@ -1416,6 +1429,9 @@ mainWindow.webContents
 setBybitPublicWsTarget(
 mainWindow.webContents
 );
+setBybitDepthWsTarget(
+mainWindow.webContents
+);
 startTradingStream();
 setAlgoTradingStreamTarget(
 mainWindow.webContents
@@ -1437,6 +1453,9 @@ setTradingStreamTarget(
 null
 );
 setBybitPublicWsTarget(
+null
+);
+setBybitDepthWsTarget(
 null
 );
 setAlgoTradingStreamTarget(
@@ -1636,6 +1655,9 @@ platform.platform
 
 registerTradingIpc();
 registerBybitPublicWsIpc(
+ipcMain
+);
+registerBybitDepthWsIpc(
 ipcMain
 );
 registerChartSnapshotIpc({
@@ -2496,6 +2518,9 @@ setTradingStreamTarget(
 null
 );
 setBybitPublicWsTarget(
+null
+);
+setBybitDepthWsTarget(
 null
 );
 startTradingStream();

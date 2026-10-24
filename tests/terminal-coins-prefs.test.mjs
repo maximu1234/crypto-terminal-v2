@@ -53,6 +53,39 @@ next
 
 }
 
+test("symbol link without tf keeps the saved terminal timeframe", () => {
+
+const fn =
+source.slice(
+source.indexOf(
+"function keepSavedTfWhenUrlHasNoTf"
+),
+source.indexOf(
+"export function bootstrapCoinsPageState"
+)
+);
+
+assert.match(
+fn,
+/\.get\(\s*"tf"\s*\)/
+);
+assert.match(
+fn,
+/readLastViewForExchange/
+);
+assert.match(
+fn,
+/currentTF\s*=/
+);
+assert.match(
+exportedFn(
+"bootstrapCoinsPageState"
+),
+/keepSavedTfWhenUrlHasNoTf\(\)/
+);
+
+});
+
 test("writeCoinsPrefs and readCoinsPrefs share one whitelist mapper", () => {
 
 assert.match(
