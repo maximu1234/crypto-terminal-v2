@@ -1084,3 +1084,223 @@ next
 return next;
 
 }
+
+export const RSI_TOUCH_FLIP_AUTO_FIT_KEY =
+"algo_trading_rsi_touch_flip_auto_fit_v1";
+
+/** Период автоподбора. Пустая строка — выключено. */
+export const RSI_TOUCH_FLIP_AUTO_FIT_24H =
+"24h";
+
+export const RSI_TOUCH_FLIP_AUTO_FIT_3D =
+"3d";
+
+export const RSI_TOUCH_FLIP_AUTO_FIT_1W =
+"1w";
+
+const RSI_TOUCH_FLIP_AUTO_FIT_MS =
+{
+[
+RSI_TOUCH_FLIP_AUTO_FIT_24H
+]:
+24 *
+60 *
+60 *
+1000,
+[
+RSI_TOUCH_FLIP_AUTO_FIT_3D
+]:
+3 *
+24 *
+60 *
+60 *
+1000,
+[
+RSI_TOUCH_FLIP_AUTO_FIT_1W
+]:
+7 *
+24 *
+60 *
+60 *
+1000
+};
+
+/**
+ * @param {unknown} raw
+ * @returns {""|"24h"|"3d"|"1w"}
+ */
+export function normalizeRsiTouchFlipAutoFitPeriod(
+raw
+){
+
+const id =
+String(
+raw ??
+""
+).trim().toLowerCase();
+
+if(
+Object.prototype.hasOwnProperty.call(
+RSI_TOUCH_FLIP_AUTO_FIT_MS,
+id
+)
+){
+return id;
+}
+
+return "";
+
+}
+
+/**
+ * @param {unknown} raw
+ * @returns {number}
+ */
+export function rsiTouchFlipAutoFitPeriodMs(
+raw
+){
+
+const id =
+normalizeRsiTouchFlipAutoFitPeriod(
+raw
+);
+
+return id
+? RSI_TOUCH_FLIP_AUTO_FIT_MS[
+id
+]
+: 0;
+
+}
+
+/**
+ * @returns {""|"24h"|"3d"|"1w"}
+ */
+export function loadRsiTouchFlipAutoFitPeriod(){
+
+try{
+const raw =
+localStorage.getItem(
+RSI_TOUCH_FLIP_AUTO_FIT_KEY
+);
+
+if(
+raw ==
+null ||
+raw ===
+""
+){
+return "";
+}
+
+return normalizeRsiTouchFlipAutoFitPeriod(
+JSON.parse(
+raw
+)
+);
+}catch{
+return "";
+}
+
+}
+
+/**
+ * @param {unknown} raw
+ * @returns {""|"24h"|"3d"|"1w"}
+ */
+export function saveRsiTouchFlipAutoFitPeriod(
+raw
+){
+
+const next =
+normalizeRsiTouchFlipAutoFitPeriod(
+raw
+);
+
+try{
+localStorage.setItem(
+RSI_TOUCH_FLIP_AUTO_FIT_KEY,
+JSON.stringify(
+next
+)
+);
+}catch{
+/* ignore quota */
+}
+
+return next;
+
+}
+
+export const RSI_TOUCH_FLIP_AUTO_FIT_RETRY_KEY =
+"algo_trading_rsi_touch_flip_auto_fit_retry_v1";
+
+export const RSI_TOUCH_FLIP_AUTO_FIT_MAX_ATTEMPTS =
+3;
+
+/**
+ * @param {unknown} raw
+ * @returns {boolean}
+ */
+export function normalizeRsiTouchFlipAutoFitRetry(
+raw
+){
+
+return raw ===
+true ||
+raw ===
+1 ||
+raw ===
+"1" ||
+raw ===
+"true";
+
+}
+
+/**
+ * @returns {boolean}
+ */
+export function loadRsiTouchFlipAutoFitRetry(){
+
+try{
+return normalizeRsiTouchFlipAutoFitRetry(
+JSON.parse(
+localStorage.getItem(
+RSI_TOUCH_FLIP_AUTO_FIT_RETRY_KEY
+) ||
+"false"
+)
+);
+}catch{
+return false;
+}
+
+}
+
+/**
+ * @param {unknown} raw
+ * @returns {boolean}
+ */
+export function saveRsiTouchFlipAutoFitRetry(
+raw
+){
+
+const next =
+normalizeRsiTouchFlipAutoFitRetry(
+raw
+);
+
+try{
+localStorage.setItem(
+RSI_TOUCH_FLIP_AUTO_FIT_RETRY_KEY,
+JSON.stringify(
+next
+)
+);
+}catch{
+/* ignore quota */
+}
+
+return next;
+
+}

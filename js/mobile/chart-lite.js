@@ -10,10 +10,10 @@ import {
 } from "../chart-import.js?v=613e412b";
 import {
   loadMarketHistory
-} from "../market-api.js?v=00f19708";
+} from "../market-api.js?v=145e2e28";
 import {
   subscribeKline
-} from "../market-ws.js?v=717ade46";
+} from "../market-ws.js?v=d0679bf8";
 import {
   ensureOhlcRollover,
   ingestLiveOhlcKline,

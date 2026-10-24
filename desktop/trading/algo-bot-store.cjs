@@ -2418,6 +2418,54 @@ return [
 
 }
 
+function normalizeStoredRsiTouchFlipAutoFitPeriod(
+raw
+){
+
+const id =
+String(
+raw ??
+""
+).trim().toLowerCase();
+
+if(
+id ===
+"24h" ||
+id ===
+"3d" ||
+id ===
+"1w"
+){
+return id;
+}
+
+return "";
+
+}
+
+function normalizeStoredRsiTouchFlipAutoFitLastAt(
+raw
+){
+
+const n =
+Number(
+raw
+);
+
+if(
+!Number.isFinite(
+n
+) ||
+n <
+0
+){
+return 0;
+}
+
+return n;
+
+}
+
 function readRsiTouchFlipBook(){
 
 const parsed =
@@ -2449,7 +2497,18 @@ rows
 leverage:
 normalizeStoredRsiTouchFlipLeverage(
 parsed?.leverage
-)
+),
+autoFitPeriod:
+normalizeStoredRsiTouchFlipAutoFitPeriod(
+parsed?.autoFitPeriod
+),
+autoFitLastAt:
+normalizeStoredRsiTouchFlipAutoFitLastAt(
+parsed?.autoFitLastAt
+),
+autoFitRetry:
+parsed?.autoFitRetry ===
+true
 };
 
 }
@@ -2594,6 +2653,33 @@ extra.leverage !==
 extra.leverage
 )
 : prev.leverage;
+const autoFitPeriod =
+extra.autoFitPeriod !==
+undefined &&
+extra.autoFitPeriod !==
+null
+? normalizeStoredRsiTouchFlipAutoFitPeriod(
+extra.autoFitPeriod
+)
+: prev.autoFitPeriod;
+const autoFitLastAt =
+extra.autoFitLastAt !==
+undefined &&
+extra.autoFitLastAt !==
+null
+? normalizeStoredRsiTouchFlipAutoFitLastAt(
+extra.autoFitLastAt
+)
+: prev.autoFitLastAt;
+const autoFitRetry =
+extra.autoFitRetry !==
+undefined &&
+extra.autoFitRetry !==
+null
+? extra.autoFitRetry ===
+true
+: prev.autoFitRetry ===
+true;
 const same =
 JSON.stringify(
 prev.rows
@@ -2606,7 +2692,13 @@ balancePct &&
 prev.marginMode ===
 marginMode &&
 prev.leverage ===
-leverage;
+leverage &&
+prev.autoFitPeriod ===
+autoFitPeriod &&
+prev.autoFitLastAt ===
+autoFitLastAt &&
+prev.autoFitRetry ===
+autoFitRetry;
 
 if(
 same
@@ -2621,6 +2713,9 @@ next,
 balancePct,
 marginMode,
 leverage,
+autoFitPeriod,
+autoFitLastAt,
+autoFitRetry,
 tickerCount:
 next.length
 };
@@ -2635,6 +2730,9 @@ next,
 balancePct,
 marginMode,
 leverage,
+autoFitPeriod,
+autoFitLastAt,
+autoFitRetry,
 updatedAt:
 Date.now()
 }
@@ -2657,6 +2755,9 @@ next,
 balancePct,
 marginMode,
 leverage,
+autoFitPeriod,
+autoFitLastAt,
+autoFitRetry,
 tickerCount:
 next.length
 };

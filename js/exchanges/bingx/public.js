@@ -19,9 +19,12 @@ tfToBingxInterval
 } from "./intervals.js?v=ce5c9eb7";
 
 import {
+klineGapFillEnds,
 klineHistoryPageEnds,
+KLINE_PAGE_CONCURRENCY,
+mapWithConcurrency,
 shouldFetchKlinePagesInParallel
-} from "../../kline-history-pages.js?v=cc7b66ca";
+} from "../../kline-history-pages.js?v=f9dac656";
 
 import {
 clampHistoryPageLimit,
@@ -493,8 +496,9 @@ pageEnds.length >
 ){
 
 const batches =
-await Promise.all(
-pageEnds.map(
+await mapWithConcurrency(
+pageEnds,
+KLINE_PAGE_CONCURRENCY,
 async pageEnd=>{
 
 try{
@@ -509,7 +513,6 @@ return null;
 }
 
 }
-)
 );
 
 for(
@@ -592,6 +595,99 @@ oldest -
 }
 
 }
+
+let candles =
+bingxCandlesFromRows(
+all
+);
+
+if(
+pageEnds.length >
+1
+){
+
+for(
+let attempt =
+0;
+attempt <
+2;
+attempt++
+){
+
+const fills =
+klineGapFillEnds(
+candles,
+tf,
+pageLimit
+).slice(
+0,
+24
+);
+
+if(
+!fills.length
+){
+break;
+}
+
+const extra =
+await mapWithConcurrency(
+fills,
+KLINE_PAGE_CONCURRENCY,
+async pageEnd=>{
+
+try{
+return await fetchBingxKlineBatchWithRetry(
+symbol,
+tf,
+pageEnd,
+pageLimit
+);
+}catch{
+return null;
+}
+
+}
+);
+
+for(
+const batch of extra
+){
+if(
+batch?.length
+){
+all.push(
+...batch
+);
+}
+}
+
+const next =
+bingxCandlesFromRows(
+all
+);
+
+if(
+next.length ===
+candles.length
+){
+break;
+}
+
+candles =
+next;
+
+}
+
+}
+
+return candles;
+
+}
+
+function bingxCandlesFromRows(
+all
+){
 
 const unique =
 new Map();

@@ -261,21 +261,25 @@ test("LAN ticker-book payload parser splits RSI Flip from Pattern 1-2", () => {
   const rsi = parseRsiTouchFlipBookPayload({
     strategyId: "rsi-touch-flip",
     rows: [{ symbol: "ETHUSDT", tf: "5", prefs: { budget: 100 } }],
-    balancePct: 50
+    balancePct: 50,
+    autoFitPeriod: "3d"
   });
   assert.equal(rsi.isRsiTouchFlip, true);
   assert.equal(rsi.rows.length, 1);
   assert.equal(rsi.balancePct, 50);
+  assert.equal(rsi.autoFitPeriod, "3d");
   const nested = parseRsiTouchFlipBookPayload({
     book: {
       strategyId: "rsi-touch-flip",
       rows: [{ symbol: "SOLUSDT", tf: "1" }],
-      balancePct: 25
+      balancePct: 25,
+      autoFitPeriod: "1w"
     }
   });
   assert.equal(nested.isRsiTouchFlip, true);
   assert.equal(nested.rows[0].symbol, "SOLUSDT");
   assert.equal(nested.balancePct, 25);
+  assert.equal(nested.autoFitPeriod, "1w");
   const pattern = parseRsiTouchFlipBookPayload({
     strategyId: "st1",
     book: { strategyId: "st1", tickers: { ETHUSDT: {} } }

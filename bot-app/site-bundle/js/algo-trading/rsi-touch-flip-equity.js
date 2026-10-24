@@ -4,7 +4,7 @@
  */
 import {
   rsiTouchFlipSplitIndex
-} from "./rsi-touch-flip-walkforward.js?v=76212104";
+} from "./rsi-touch-flip-walkforward.js?v=2df2b8ca";
 
 export const RSI_TOUCH_FLIP_EQUITY_TRAIN_COLOR =
 "#2dd4bf";

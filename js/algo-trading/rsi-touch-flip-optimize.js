@@ -5,15 +5,15 @@
  */
 import {
   runRsiTouchFlip
-} from "./rsi-touch-flip-engine.js?v=92d67502";
+} from "./rsi-touch-flip-engine.js?v=525cb7f2";
 import {
   normalizeRsiTouchFlipPrefs
-} from "./rsi-touch-flip-prefs.js?v=8d462a58";
+} from "./rsi-touch-flip-prefs.js?v=f6c3ff87";
 import {
   rsiTouchFlipMinTestTrades,
   rsiTouchFlipTestVerdict,
   rsiTouchFlipTrainTestSplit
-} from "./rsi-touch-flip-walkforward.js?v=76212104";
+} from "./rsi-touch-flip-walkforward.js?v=2df2b8ca";
 
 export function rsiTouchFlipIntRange(from, to) {
   const start = Math.round(Number(from));
@@ -259,22 +259,26 @@ export async function optimizeRsiTouchFlipParams(opts = {}) {
   let bestTrain = null;
   let bestTradable = null;
   let tried = 0;
+  let skippedRsi = 0;
 
   for (const combo of combos) {
     if (signal?.cancelled) {
       return {
         cancelled: true,
-        best: bestLaunch,
-        bestTrain,
-        bestTradable,
+        incomplete: true,
+        best: null,
+        bestTrain: null,
+        bestTradable: null,
         tried,
         total: combos.length,
-        split
+        split,
+        error: "Подбор прерван до конца сетки"
       };
     }
 
     const rsiFull = rsiByLen.get(combo.rsiLen);
     if (!Array.isArray(rsiFull) || rsiFull.length !== candles.length) {
+      skippedRsi += 1;
       tried += 1;
       continue;
     }
@@ -333,13 +337,29 @@ export async function optimizeRsiTouchFlipParams(opts = {}) {
     }
   }
 
+  if (skippedRsi > 0 || tried !== combos.length) {
+    return {
+      cancelled: false,
+      incomplete: true,
+      best: null,
+      bestTrain: null,
+      bestTradable: null,
+      tried,
+      total: combos.length,
+      split,
+      error: `Сетка посчитана не целиком (${tried} из ${combos.length})`
+    };
+  }
+
   return {
     cancelled: false,
+    incomplete: false,
     best: bestLaunch,
     bestTrain,
     bestTradable,
     tried,
     total: combos.length,
-    split
+    split,
+    error: ""
   };
 }

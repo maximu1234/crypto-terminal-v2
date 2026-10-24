@@ -2,7 +2,7 @@
 
 import {
 klineTfToMs
-} from "../kline-history-pages.js?v=cc7b66ca";
+} from "../kline-history-pages.js?v=f9dac656";
 
 import {
 priceFormatForValue

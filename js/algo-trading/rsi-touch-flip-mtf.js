@@ -5,10 +5,13 @@
  */
 import {
 computeWilderRsiValues
-} from "./rsi-touch-flip-engine.js?v=92d67502";
+} from "./rsi-touch-flip-engine.js?v=525cb7f2";
 import {
 normalizeRsiTouchFlipPrefs
-} from "./rsi-touch-flip-prefs.js?v=8d462a58";
+} from "./rsi-touch-flip-prefs.js?v=f6c3ff87";
+import {
+klineGapFillEnds
+} from "../kline-history-pages.js?v=f9dac656";
 
 const KLINE_PAGE =
 1000;
@@ -374,12 +377,467 @@ return out;
 
 }
 
+function mergeSourceRows(
+left,
+right
+){
+
+const byTime =
+new Map();
+
+for(
+const row of [
+...(
+Array.isArray(
+left
+)
+? left
+: []
+),
+...(
+Array.isArray(
+right
+)
+? right
+: []
+)
+]
+){
+
+const time =
+rsiTouchFlipUnixSec(
+row?.time
+);
+
+if(
+Number.isFinite(
+time
+)
+){
+byTime.set(
+time,
+{
+...row,
+time
+}
+);
+}
+
+}
+
+return Array.from(
+byTime.values()
+).sort(
+(
+a,
+b
+)=>
+a.time -
+b.time
+);
+
+}
+
+/**
+ * Источник покрывает первую и последнюю свечу графика и не рвётся посередине.
+ * @param {Array<{time:number}>} rows
+ * @param {Array<{time:number}>} chart
+ * @param {string} chartTf
+ * @param {string} sourceTf
+ */
+export function rsiTouchFlipSourceCoversChart(
+rows,
+chart,
+chartTf,
+sourceTf
+){
+
+const source =
+Array.isArray(
+rows
+)
+? rows
+: [];
+const bars =
+Array.isArray(
+chart
+)
+? chart
+: [];
+const srcSec =
+rsiTouchFlipTfPeriodSec(
+sourceTf
+);
+const chartSec =
+rsiTouchFlipTfPeriodSec(
+chartTf
+);
+
+if(
+!source.length ||
+!bars.length ||
+!(
+srcSec >
+0
+) ||
+!(
+chartSec >
+0
+) ||
+klineGapFillEnds(
+source,
+sourceTf
+).length
+){
+return false;
+}
+
+const srcStart =
+rsiTouchFlipUnixSec(
+source[0].time
+);
+const srcEnd =
+rsiTouchFlipUnixSec(
+source[source.length - 1].time
+);
+const first =
+rsiTouchFlipUnixSec(
+bars[0].time
+);
+const last =
+rsiTouchFlipUnixSec(
+bars[bars.length - 1].time
+);
+const firstCutoff =
+first +
+chartSec -
+srcSec;
+
+/*
+ * Закрытие последней свечи графика может быть ещё впереди
+ * (5m бар только открылся — минутного бара на его close нет).
+ * Хватает источника на open этой свечи.
+ */
+return srcStart <=
+firstCutoff +
+srcSec &&
+srcEnd +
+srcSec >=
+last;
+
+}
+
+async function repairSourceGaps(
+rows,
+symbol,
+sourceTf,
+loadHistory
+){
+
+let merged =
+mergeSourceRows(
+rows
+);
+
+for(
+let attempt =
+0;
+attempt <
+2;
+attempt++
+){
+
+const fills =
+klineGapFillEnds(
+merged,
+sourceTf
+).slice(
+0,
+24
+);
+
+if(
+!fills.length
+){
+break;
+}
+
+const extra =
+[];
+
+for(
+const endMs of fills
+){
+
+const page =
+await loadHistory(
+symbol,
+sourceTf,
+1,
+{
+parallel:
+false,
+batchGapMs:
+80,
+endMs
+}
+);
+
+if(
+Array.isArray(
+page
+) &&
+page.length
+){
+extra.push(
+...page
+);
+}
+
+}
+
+const next =
+mergeSourceRows(
+merged,
+extra
+);
+
+if(
+next.length ===
+merged.length
+){
+break;
+}
+
+merged =
+next;
+
+}
+
+return merged;
+
+}
+
+async function extendSourceBackward(
+rows,
+needStartSec,
+symbol,
+sourceTf,
+loadHistory
+){
+
+let merged =
+mergeSourceRows(
+rows
+);
+
+for(
+let guard =
+0;
+guard <
+15 &&
+merged.length &&
+rsiTouchFlipUnixSec(
+merged[0].time
+) >
+needStartSec;
+guard++
+){
+
+const older =
+await loadHistory(
+symbol,
+sourceTf,
+4,
+{
+parallel:
+false,
+batchGapMs:
+80,
+endMs:
+Math.floor(
+rsiTouchFlipUnixSec(
+merged[0].time
+) *
+1000
+) -
+1
+}
+);
+const next =
+mergeSourceRows(
+older,
+merged
+);
+
+if(
+!next.length ||
+next[0].time >=
+merged[0].time
+){
+break;
+}
+
+merged =
+next;
+
+}
+
+return merged;
+
+}
+
+async function loadOneSourcePage(
+symbol,
+sourceTf,
+endMs,
+loadHistory
+){
+
+for(
+let attempt =
+0;
+attempt <
+3;
+attempt++
+){
+
+const page =
+await loadHistory(
+symbol,
+sourceTf,
+1,
+{
+parallel:
+false,
+batchGapMs:
+40,
+endMs,
+pageLimit:
+1000
+}
+);
+
+if(
+Array.isArray(
+page
+) &&
+page.length
+){
+return page;
+}
+
+}
+
+return [];
+
+}
+
+async function walkSourceSeries(
+symbol,
+sourceTf,
+endMs,
+loadHistory,
+chart,
+chartTf,
+maxPages
+){
+
+let rows =
+[];
+let cursor =
+endMs;
+const limit =
+Math.max(
+1,
+Math.floor(
+Number(
+maxPages
+) ||
+1
+)
+);
+
+for(
+let i =
+0;
+i <
+limit;
+i++
+){
+
+const page =
+await loadOneSourcePage(
+symbol,
+sourceTf,
+cursor,
+loadHistory
+);
+
+if(
+!page.length
+){
+break;
+}
+
+const merged =
+mergeSourceRows(
+page,
+rows
+);
+
+if(
+rows.length &&
+merged.length ===
+rows.length
+){
+break;
+}
+
+rows =
+merged;
+
+if(
+rsiTouchFlipSourceCoversChart(
+rows,
+chart,
+chartTf,
+sourceTf
+)
+){
+break;
+}
+
+if(
+page.length <
+1000
+){
+break;
+}
+
+cursor =
+Math.floor(
+rsiTouchFlipUnixSec(
+rows[0].time
+) *
+1000
+) -
+1;
+
+}
+
+return rows;
+
+}
+
 async function loadSourceCandles(
 symbol,
 sourceTf,
 pages,
 endMs,
-loadHistory
+loadHistory,
+chart,
+chartTf
 ){
 
 const key =
@@ -400,7 +858,13 @@ key
 );
 
 if(
-hit
+hit &&
+rsiTouchFlipSourceCoversChart(
+hit,
+chart,
+chartTf,
+sourceTf
+)
 ){
 return hit;
 }
@@ -418,7 +882,7 @@ batchGapMs:
 endMs
 }
 );
-const rows =
+let rows =
 Array.isArray(
 loaded
 )
@@ -430,6 +894,99 @@ if(
 ){
 throw new Error(
 "нет свечей RSI ТФ"
+);
+}
+
+rows =
+await repairSourceGaps(
+rows,
+symbol,
+sourceTf,
+loadHistory
+);
+
+const chartBars =
+Array.isArray(
+chart
+)
+? chart
+: [];
+const srcSec =
+rsiTouchFlipTfPeriodSec(
+sourceTf
+);
+const chartSec =
+rsiTouchFlipTfPeriodSec(
+chartTf
+);
+const first =
+rsiTouchFlipUnixSec(
+chartBars[0]?.time
+);
+
+if(
+Number.isFinite(
+first
+) &&
+srcSec >
+0 &&
+chartSec >
+0
+){
+rows =
+await extendSourceBackward(
+rows,
+first +
+chartSec -
+srcSec,
+symbol,
+sourceTf,
+loadHistory
+);
+}
+
+if(
+!rsiTouchFlipSourceCoversChart(
+rows,
+chart,
+chartTf,
+sourceTf
+)
+){
+rows =
+await walkSourceSeries(
+symbol,
+sourceTf,
+endMs,
+loadHistory,
+chart,
+chartTf,
+pages
+);
+}
+
+if(
+!rows.length
+){
+throw new Error(
+"нет свечей RSI ТФ"
+);
+}
+
+if(
+klineGapFillEnds(
+rows,
+sourceTf
+).length ||
+!rsiTouchFlipSourceCoversChart(
+rows,
+chart,
+chartTf,
+sourceTf
+)
+){
+throw new Error(
+`свечи RSI ${sourceTf} загружены не целиком`
 );
 }
 
@@ -498,6 +1055,18 @@ if(
 rsiTf ===
 chartTf
 ){
+
+if(
+klineGapFillEnds(
+chart,
+chartTf
+).length
+){
+throw new Error(
+"свечи графика загружены с дырами"
+);
+}
+
 return computeWilderRsiValues(
 chart,
 settings.rsiLen
@@ -551,7 +1120,9 @@ host.symbol,
 rsiTf,
 pages,
 endMs,
-host.loadHistory
+host.loadHistory,
+chart,
+chartTf
 );
 const sourceRsi =
 computeWilderRsiValues(

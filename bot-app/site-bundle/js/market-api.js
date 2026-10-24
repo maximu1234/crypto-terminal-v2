@@ -14,11 +14,11 @@ formatExchangeDisplayLabel
 
 import {
 bybitPublicAdapter
-} from "./exchanges/bybit/public.js?v=e70ac497";
+} from "./exchanges/bybit/public.js?v=febf8202";
 
 import {
 bingxPublicAdapter
-} from "./exchanges/bingx/public.js?v=753d2147";
+} from "./exchanges/bingx/public.js?v=415e262f";
 
 import {
 moexPublicAdapter
@@ -26,7 +26,7 @@ moexPublicAdapter
 
 import {
 peekBybitSymbolsCache
-} from "./api.js?v=071ede04";
+} from "./api.js?v=cdf95f33";
 
 const ADAPTERS =
 {

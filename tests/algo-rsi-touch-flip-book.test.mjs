@@ -4,6 +4,10 @@ import fs from "node:fs";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
 import {
+  normalizeRsiTouchFlipAutoFitPeriod,
+  rsiTouchFlipAutoFitPeriodMs
+} from "../js/algo-trading/rsi-touch-flip-prefs.js";
+import {
   normalizeRsiTouchFlipBook,
   normalizeRsiTouchFlipBookRow,
   sumRsiTouchFlipBookBudgets,
@@ -257,7 +261,7 @@ test("RSI leverage change is stored even while the bot is stopped", () => {
   );
   const id = '"algo-bot-rsi-flip-leverage"';
   const changeIdx = ui.indexOf(id, ui.indexOf(id) + 1);
-  const nextId = ui.indexOf('"algo-bot-macd-flip-balance-pct"', changeIdx);
+  const nextId = ui.indexOf('"algo-bot-rsi-flip-auto-fit"', changeIdx);
   const chunk = ui.slice(changeIdx, nextId);
   assert.ok(changeIdx > 0 && nextId > changeIdx);
   assert.match(chunk, /saveRsiTouchFlipLeverage/);
@@ -284,4 +288,111 @@ test("changing live % gates share and reverts a rejected book apply", () => {
   assert.match(chunk, /rsiTouchFlipRunning/);
   assert.match(chunk, /rsiBookLiveSyncChain/);
   assert.match(chunk, /saveRsiTouchFlipBalancePct\(\s*previous/);
+});
+
+test("RSI auto-fit period is 24h, 3d or 1w", () => {
+  assert.equal(normalizeRsiTouchFlipAutoFitPeriod("24h"), "24h");
+  assert.equal(normalizeRsiTouchFlipAutoFitPeriod("3D"), "3d");
+  assert.equal(normalizeRsiTouchFlipAutoFitPeriod("1w"), "1w");
+  assert.equal(normalizeRsiTouchFlipAutoFitPeriod("off"), "");
+  assert.equal(normalizeRsiTouchFlipAutoFitPeriod(""), "");
+  assert.equal(rsiTouchFlipAutoFitPeriodMs("24h"), 24 * 60 * 60 * 1000);
+  assert.equal(rsiTouchFlipAutoFitPeriodMs("3d"), 3 * 24 * 60 * 60 * 1000);
+  assert.equal(rsiTouchFlipAutoFitPeriodMs("1w"), 7 * 24 * 60 * 60 * 1000);
+  assert.equal(rsiTouchFlipAutoFitPeriodMs(""), 0);
+  const ui = fs.readFileSync(
+    path.join(root, "js/algo-trading/bot-strategy-ui.js"),
+    "utf8"
+  );
+  const html = fs.readFileSync(path.join(root, "algo-trading.html"), "utf8");
+  const viewer = fs.readFileSync(
+    path.join(root, "js/algo-trading/bot-session-logs-viewer.js"),
+    "utf8"
+  );
+  assert.match(html, /id="algo-bot-rsi-flip-auto-fit"/);
+  assert.match(html, /Подбирать автоматически 1 раз в/);
+  assert.match(ui, /saveRsiTouchFlipAutoFitPeriod/);
+  assert.match(viewer, /loadRsiTouchFlipAutoFitPeriod/);
+  assert.match(html, /id="algo-bot-rsi-flip-auto-fit-retry"/);
+  assert.match(ui, /saveRsiTouchFlipAutoFitRetry/);
+});
+
+test("fit history is full, young, or a hard failure", async () => {
+  const { register } = await import("node:module");
+  const { pathToFileURL } = await import("node:url");
+  register(
+    pathToFileURL(path.join(root, "desktop/trading/algo-asset-query-loader.mjs")).href,
+    pathToFileURL(path.join(root, "desktop/trading/algo-bot-rsi-touch-flip-auto-fit.cjs")).href
+  );
+  const { loadRsiTouchFlipFitCandles } = await import(
+    pathToFileURL(path.join(root, "js/algo-trading/rsi-touch-flip-history.js")).href
+  );
+  const { optimizeRsiTouchFlipParams } = await import(
+    pathToFileURL(path.join(root, "js/algo-trading/rsi-touch-flip-optimize.js")).href
+  );
+  const bar = (sec) => ({ time: sec, open: 1, high: 1, low: 1, close: 1 });
+  const full = await loadRsiTouchFlipFitCandles({
+    symbol: "ETHUSDT",
+    tf: "1",
+    pages: 2,
+    pageBars: 2,
+    fetchPage: async ({ endMs }) => ({
+      ok: true,
+      rows: endMs >= 120000 ? [bar(180), bar(120)] : [bar(60), bar(0)]
+    })
+  });
+  assert.equal(full.ok, true);
+  assert.equal(full.young, false);
+  assert.equal(full.bars, 4);
+  const young = await loadRsiTouchFlipFitCandles({
+    symbol: "NEWUSDT",
+    tf: "1",
+    pages: 2,
+    pageBars: 2,
+    fetchPage: async ({ endMs }) => ({
+      ok: true,
+      rows: endMs >= 60000 ? [bar(120), bar(60)] : [bar(0)]
+    })
+  });
+  assert.equal(young.ok, true);
+  assert.equal(young.young, true);
+  assert.equal(young.bars, 3);
+  const broken = await loadRsiTouchFlipFitCandles({
+    symbol: "ETHUSDT",
+    tf: "1",
+    pages: 2,
+    pageBars: 2,
+    fetchPage: async ({ endMs }) => (
+      endMs >= 60000
+        ? { ok: true, rows: [bar(120), bar(60)] }
+        : { ok: false, rows: [], message: "timeout" }
+    )
+  });
+  assert.equal(broken.ok, false);
+  assert.equal(broken.candles.length, 0);
+  const gapped = await loadRsiTouchFlipFitCandles({
+    symbol: "ETHUSDT",
+    tf: "1",
+    pages: 1,
+    pageBars: 3,
+    fetchPage: async () => ({ ok: true, rows: [bar(180), bar(60)] })
+  });
+  assert.equal(gapped.ok, false);
+  const candles = Array.from({ length: 200 }, (_, i) => ({
+    time: i * 60,
+    open: 1,
+    high: 1,
+    low: 1,
+    close: 1
+  }));
+  const partial = await optimizeRsiTouchFlipParams({
+    candles,
+    chartTf: "1",
+    basePrefs: { budget: 100 },
+    combos: [{ rsiLen: 5, osLevel: 20, obLevel: 80, maxStack: 1 }],
+    rsiByLen: new Map([[5, []]])
+  });
+  assert.equal(partial.incomplete, true);
+  assert.equal(partial.best, null);
+  assert.equal(partial.bestTradable, null);
 });

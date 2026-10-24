@@ -625,6 +625,14 @@ ipcRenderer.invoke(
 payload ||
 {}
 ),
+fetchKlinePage:(
+payload
+)=>
+ipcRenderer.invoke(
+"desktop:algoTradingFetchKlinePage",
+payload ||
+{}
+),
 startBot:(
 payload
 )=>

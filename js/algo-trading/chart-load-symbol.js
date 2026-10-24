@@ -6,6 +6,9 @@ beginAlgoChartPaneSettle,
 finishAlgoChartPaneSettle,
 noteAlgoChartViewportReady
 } from "./chart-pane-settle.js?v=3ecfb41d";
+import {
+klineGapFillEnds
+} from "../kline-history-pages.js?v=f9dac656";
 
 function algoRsiPaneWaiting(host){
 
@@ -200,6 +203,10 @@ let rows;
 
 if(
 cached &&
+!klineGapFillEnds(
+cached.candles,
+host.tf
+).length &&
 (
 cached.candles.length >=
 host.TERMINAL_VISIBLE_BARS ||

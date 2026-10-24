@@ -7,14 +7,14 @@ fetchLanBotStatus,
 sendLanBotCommand,
 normalizeLanBotStrategyId,
 pushAuthSessionToRemoteBot
-} from "./bot-remote-client.js?v=2c212bc1";
+} from "./bot-remote-client.js?v=8f97f05c";
 import {
 formatBotStrategySettingsRows,
 loadBotStrategiesPrefs
 } from "./bot-strategy-prefs.js?v=e463f141";
 import {
 syncAllTickerFlagsRootToMain
-} from "./bot-bridge.js?v=17baeaa9";
+} from "./bot-bridge.js?v=ad065c93";
 import {
 ALGO_TICKER_FLAGS_KEY
 } from "./ticker-flags.js?v=72da874e";
@@ -27,11 +27,13 @@ loadEarlyT3BotPrefs
 } from "./early-t3-bot-prefs.js?v=920e9956";
 import {
 loadRsiTouchFlipBook
-} from "./rsi-touch-flip-book.js?v=c5c9afac";
+} from "./rsi-touch-flip-book.js?v=c8f7d685";
 import {
 loadRsiTouchFlipBalancePct,
-loadRsiTouchFlipLeverage
-} from "./rsi-touch-flip-prefs.js?v=8d462a58";
+loadRsiTouchFlipLeverage,
+loadRsiTouchFlipAutoFitPeriod,
+loadRsiTouchFlipAutoFitRetry
+} from "./rsi-touch-flip-prefs.js?v=f6c3ff87";
 import {
 loadMacdFlipTouchBook
 } from "./macd-flip-touch-book.js?v=d4d39562";
@@ -1575,7 +1577,11 @@ rsiBook,
 balancePct:
 loadRsiTouchFlipBalancePct(),
 leverage:
-loadRsiTouchFlipLeverage()
+loadRsiTouchFlipLeverage(),
+autoFitPeriod:
+loadRsiTouchFlipAutoFitPeriod(),
+autoFitRetry:
+loadRsiTouchFlipAutoFitRetry()
 }
 : {}
 ),
@@ -1825,6 +1831,10 @@ balancePct:
 loadRsiTouchFlipBalancePct(),
 leverage:
 loadRsiTouchFlipLeverage(),
+autoFitPeriod:
+loadRsiTouchFlipAutoFitPeriod(),
+autoFitRetry:
+loadRsiTouchFlipAutoFitRetry(),
 book:{
 strategyId:
 "rsi-touch-flip",
@@ -1833,7 +1843,11 @@ rsiBook,
 balancePct:
 loadRsiTouchFlipBalancePct(),
 leverage:
-loadRsiTouchFlipLeverage()
+loadRsiTouchFlipLeverage(),
+autoFitPeriod:
+loadRsiTouchFlipAutoFitPeriod(),
+autoFitRetry:
+loadRsiTouchFlipAutoFitRetry()
 }
 }
 );

@@ -1,6 +1,6 @@
 import {
 fetchBybit
-} from "../../bybit-fetch.js?v=e4bd7f1f";
+} from "../../bybit-fetch.js?v=c64b36ad";
 
 export async function pingBybitPublicFromAdapter(){
 

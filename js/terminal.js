@@ -16,7 +16,7 @@ getActiveExchangeMarkets,
 getActiveExchangeId,
 getActiveExchangeDefinition,
 EXCHANGE_CHANGED_EVENT
-} from "./market-api.js?v=00f19708";
+} from "./market-api.js?v=145e2e28";
 
 import {
 peekHistoryCache,
@@ -32,7 +32,7 @@ slowHistoryPageLimit
 
 import {
 clearBybitNetworkIssue
-} from "./bybit-network-ui.js?v=2d117b93";
+} from "./bybit-network-ui.js?v=d4b5e883";
 
 import {
 openChromeSurface
@@ -40,7 +40,7 @@ openChromeSurface
 
 import {
 resolveUrlExchangeDeepLink
-} from "./alert-deep-link-exchange.js?v=fd1425ba";
+} from "./alert-deep-link-exchange.js?v=04ad0960";
 
 import {
 defaultRsiPaneSettings,
@@ -66,18 +66,18 @@ seedWatchlistTfOnBlueFlag
 
 import {
 ensureCloudReady
-} from "./auth-ui.js?v=d7e2d679";
+} from "./auth-ui.js?v=bb64b118";
 
 import {
 getActiveAlerts,
 isMacdAlert,
 isRsiAlert
-} from "./alerts.js?v=4ccbbdc0";
+} from "./alerts.js?v=6b4ba128";
 
 import {
 persistFavoritesToCloud,
 onFavoritesRemoteUpdate
-} from "./cloud-sync.js?v=d1835fac";
+} from "./cloud-sync.js?v=d2544836";
 
 import {
 createCandlestickChart,
@@ -126,13 +126,13 @@ mountCoinsTabletController
 
 import {
 disconnectKlineStream
-} from "./market-ws.js?v=717ade46";
+} from "./market-ws.js?v=d0679bf8";
 
 import {
 syncBackgroundAlertStreams,
 onMacdSeriesUpdate,
 onRsiSeriesUpdate
-} from "./alert-monitor.js?v=f284cd39";
+} from "./alert-monitor.js?v=5d843742";
 
 import {
 createSharedDrawUndoStack
@@ -156,7 +156,7 @@ mountChartSnapshot
 
 import {
 mountChartSymbolFullName
-} from "./symbol-display-name.js?v=fe72327b";
+} from "./symbol-display-name.js?v=90158e89";
 
 import {
 perfMark,
@@ -204,18 +204,18 @@ mountCoinsScaleInvertMenu
 
 import {
 mountTerminalDrawChrome
-} from "./terminal/terminal-draw-chrome.js?v=b2cc066d";
+} from "./terminal/terminal-draw-chrome.js?v=96e5f60f";
 
 
 
 import {
 stopTickerStream
-} from "./tickers.js?v=d4995cf9";
+} from "./tickers.js?v=9c75f859";
 
 import {
 mountCoinsListRefreshControls,
 applyCoinsListRefreshInterval
-} from "./terminal-list-refresh.js?v=7641e729";
+} from "./terminal-list-refresh.js?v=bf0057d9";
 
 import {
 readCoinsPrefs,
@@ -229,11 +229,11 @@ applyCoinsPrefs,
 applySortForCurrentMarket,
 readUrlParams,
 readLastViewForExchange
-} from "./terminal/terminal-prefs.js?v=a0cbcead";
+} from "./terminal/terminal-prefs.js?v=033673be";
 
 import {
 mountDesktopOpenChartHandler
-} from "./desktop-open-chart.js?v=d41f8543";
+} from "./desktop-open-chart.js?v=c2734824";
 
 import {
 getCurrentSymbols,
@@ -251,7 +251,7 @@ setCoinsTableHooks,
 syncCoinListFreezeFromFlagMenus,
 getExtraCoinMarkets,
 isExtraCoinMarket
-} from "./terminal/terminal-table.js?v=2863860d";
+} from "./terminal/terminal-table.js?v=e01c7385";
 
 import {
 createCoinsChartSwitchVeil
@@ -282,7 +282,7 @@ import {
 initTerminalMultiChart,
 syncPrimaryTfToLayout,
 isTerminalMultiChartLayout
-} from "./terminal-multi-chart.js?v=7f72711b";
+} from "./terminal-multi-chart.js?v=8b333dfb";
 
 import {
 mountTerminalLayoutPicker
@@ -330,7 +330,7 @@ loadVisibleTerminalHistory as loadVisibleTerminalHistoryMoved,
 applyMergedTerminalCandles as applyMergedTerminalCandlesMoved,
 settleTerminalHistoryAfterPaint as settleTerminalHistoryAfterPaintMoved,
 bindTerminalHistoryLazyLoad as bindTerminalHistoryLazyLoadMoved
-} from "./terminal/terminal-history.js?v=4f8059c0";
+} from "./terminal/terminal-history.js?v=d4b8b9a4";
 import {
 allCoinsDrawTools as allCoinsDrawToolsMoved,
 scheduleCoinsDrawRedraw as scheduleCoinsDrawRedrawMoved,
@@ -425,7 +425,7 @@ syncCoinsMarketFilterOptions as syncCoinsMarketFilterOptionsMoved,
 handleExchangeChanged as handleExchangeChangedMoved,
 refreshCoinsMarketUi as refreshCoinsMarketUiMoved,
 syncTerminalAlgoEarlyT3List as syncTerminalAlgoEarlyT3ListMoved
-} from "./terminal/terminal-coins-page.js?v=4911df06";
+} from "./terminal/terminal-coins-page.js?v=c79e2b96";
 let terminalAlgoEarlyT3ListMod =
 null;
 
@@ -3020,7 +3020,7 @@ window.cryptoTerminalDesktop?.isDesktop ||
 window.cryptoTerminalDesktop?.webTrading
 ){
 void import(
-"./script-terminal-status.js?v=a1fd753e"
+"./script-terminal-status.js?v=1cfc8300"
 ).then(
 m=>
 m.mountScriptTerminalStatus?.()
@@ -3038,7 +3038,7 @@ if(
 shouldRunScriptBackgroundJobs()
 ){
 void import(
-"./script-scan-background.js?v=89681682"
+"./script-scan-background.js?v=709a9c60"
 ).then(
 m=>
 m.resumeScriptScanBackgroundJob?.()

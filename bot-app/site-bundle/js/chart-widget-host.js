@@ -11,11 +11,11 @@ mountChartPriceHud
 
 import {
 initDrawings
-} from "./drawings.js?v=3cdeb4cd";
+} from "./drawings.js?v=9ab5edef";
 
 import {
 mountPriceAlertUi
-} from "./price-alert-ui.js?v=24ade630";
+} from "./price-alert-ui.js?v=d34f2a04";
 
 function widgetPlotWidth(
 wrapEl,

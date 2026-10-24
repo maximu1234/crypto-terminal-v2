@@ -3,7 +3,7 @@
  */
 import {
 findPattern12HitsInLookback
-} from "./pattern-12-scanner.js?v=ee05f486";
+} from "./pattern-12-scanner.js?v=cabc53b8";
 
 import {
 unpackCandles

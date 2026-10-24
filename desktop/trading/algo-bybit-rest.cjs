@@ -7829,10 +7829,114 @@ symbols
 
 }
 
+async function fetchKlinePage(
+opts =
+{}
+){
+
+const sym =
+stripSymbolSuffix(
+opts.symbol
+);
+const tfNorm =
+String(
+opts.tf ||
+"5"
+).trim();
+const aliases =
+{
+"1m": "1",
+"5m": "5",
+"15m": "15",
+"1h": "60",
+"4h": "240",
+"1d": "D",
+"1w": "W"
+};
+const interval =
+aliases[tfNorm.toLowerCase()] ||
+tfNorm;
+const limit =
+Math.min(
+1000,
+Math.max(
+1,
+Math.round(
+Number(
+opts.limit
+) ||
+1000
+)
+)
+);
+const end =
+Math.floor(
+Number(
+opts.endMs
+) ||
+Date.now()
+);
+
+const result =
+await publicMarketGet(
+"/v5/market/kline",
+{
+category: "linear",
+symbol: sym,
+interval,
+limit: String(limit),
+end: String(end)
+}
+);
+
+if(
+!result?.ok
+){
+return {
+ok: false,
+rows: [],
+message:
+result?.message ||
+"сбой загрузки свечей"
+};
+}
+
+const list =
+result.data?.result?.list;
+const retCode =
+Number(
+result.data?.retCode
+);
+
+if(
+retCode !==
+0 ||
+!Array.isArray(
+list
+)
+){
+return {
+ok: false,
+rows: [],
+message:
+result.data?.retMsg ||
+"биржа не отдала свечи"
+};
+}
+
+return {
+ok: true,
+rows: list,
+message: ""
+};
+
+}
+
 module.exports =
 {
 fetchKlineHistory,
 fetchKlineHistoryDeep,
+fetchKlinePage,
 listLinearUsdtSymbols,
 getWalletBalance,
 fetchPositionListRaw,

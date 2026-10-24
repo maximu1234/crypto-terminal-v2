@@ -38,7 +38,7 @@ logicalIndexShift
 
 import {
 ALGO_TICKER_SCAN_HISTORY_REQUESTS
-} from "./algo-trading/ticker-scanner.js?v=ee2eb575";
+} from "./algo-trading/ticker-scanner.js?v=05523b26";
 
 import {
 defaultRsiPaneSettings,
@@ -52,21 +52,21 @@ buildChartRsiPoints
 import {
 loadMarketHistory,
 getActiveExchangeId
-} from "./market-api.js?v=00f19708";
+} from "./market-api.js?v=145e2e28";
 
 import {
 subscribeKline,
 bindLiveCandleCatchup
-} from "./market-ws.js?v=717ade46";
+} from "./market-ws.js?v=d0679bf8";
 
 import {
 mountAlgoTradingCoinList,
 refreshAlgoMarketListFromFlags
-} from "./algo-trading-list.js?v=f6b97eaa";
+} from "./algo-trading-list.js?v=59096fe8";
 
 import {
 mountAlgoTickerScanUi
-} from "./algo-trading/ticker-scan-ui.js?v=c264483b";
+} from "./algo-trading/ticker-scan-ui.js?v=e2268367";
 
 import {
 getTickerStrategyOverlay,
@@ -81,11 +81,11 @@ mountAlgoStrategyParamOptimizeUi
 
 import {
 mountAlgoRuntimeUi
-} from "./algo-trading/runtime-ui.js?v=88effc76";
+} from "./algo-trading/runtime-ui.js?v=ffc1dd16";
 
 import {
 mountAlgoBotStrategyUi
-} from "./algo-trading/bot-strategy-ui.js?v=692feb7d";
+} from "./algo-trading/bot-strategy-ui.js?v=6c6c933e";
 
 import {
 ALGO_ANALYSIS_BOT_CHANGE_EVENT,
@@ -101,23 +101,23 @@ setActiveAnalysisBotId
 
 import {
 mountSessionLogServerSettings
-} from "./algo-trading/bot-session-log-server-ui.js?v=28ca80ba";
+} from "./algo-trading/bot-session-log-server-ui.js?v=ebed730e";
 
 import {
 syncBotStrategiesToMain
-} from "./algo-trading/bot-bridge.js?v=17baeaa9";
+} from "./algo-trading/bot-bridge.js?v=ad065c93";
 
 import {
 mountAlgoTradeUi
-} from "./algo-trading/trade/boot.js?v=9f98456b";
+} from "./algo-trading/trade/boot.js?v=3a956ce5";
 
 import {
 mountAlgoTradingDrawings
-} from "./algo-trading/drawings.js?v=134c0196";
+} from "./algo-trading/drawings.js?v=5b2809c4";
 
 import {
 mountAlgoTradingIndicators
-} from "./algo-trading/indicators.js?v=d6dd22c4";
+} from "./algo-trading/indicators.js?v=fa70db90";
 
 import {
 mountAlgoPatternEntryOverlay
@@ -125,16 +125,16 @@ mountAlgoPatternEntryOverlay
 
 import {
 mountRsiTouchFlipHost
-} from "./algo-trading/rsi-touch-flip-panel.js?v=d5f18885";
+} from "./algo-trading/rsi-touch-flip-panel.js?v=be09d093";
 
 import {
 mountMacdFlipTouchHost
-} from "./algo-trading/macd-flip-touch-panel.js?v=b5e0c7a7";
+} from "./algo-trading/macd-flip-touch-panel.js?v=06464759";
 
 import {
 loadRsiTouchFlipPrefs,
 saveRsiTouchFlipPrefs
-} from "./algo-trading/rsi-touch-flip-prefs.js?v=8d462a58";
+} from "./algo-trading/rsi-touch-flip-prefs.js?v=f6c3ff87";
 import {
 loadMacdFlipTouchPrefs
 } from "./algo-trading/macd-flip-touch-prefs.js?v=e8cc13ba";
@@ -272,7 +272,7 @@ mountAlgoBotLiteLayout
 
 import {
 loadAlgoBotLiteHistory
-} from "./algo-trading/lite-history.js?v=ba42667e";
+} from "./algo-trading/lite-history.js?v=7106a962";
 
 /** Глубина ботов / сканов / «Подобрать»: ~10 000. График сначала ~5000, затем догрузка. */
 const HISTORY_REQUESTS =
@@ -312,7 +312,7 @@ bindAlgoChartPaneSettle
 } from "./algo-trading/chart-pane-settle.js?v=3ecfb41d";
 import {
 loadSymbol as loadSymbolMoved
-} from "./algo-trading/chart-load-symbol.js?v=5f6d6126";
+} from "./algo-trading/chart-load-symbol.js?v=a7a72170";
 import {
 applyRsiData as applyRsiDataMoved,
 deepenAlgoHistoryIfNeeded as deepenAlgoHistoryIfNeededMoved,
@@ -323,7 +323,7 @@ resizeAlgoCharts as resizeAlgoChartsMoved,
 fitViewport as fitViewportMoved,
 mergeOlderAlgoCandles as mergeOlderAlgoCandlesMoved,
 applyLiveCandleTick as applyLiveCandleTickMoved
-} from "./algo-trading/chart-data.js?v=2d942c6c";
+} from "./algo-trading/chart-data.js?v=203062a1";
 import {
 rsiPaneSettingsFromFlipPrefs as rsiPaneSettingsFromFlipPrefsMoved,
 readFlipPanePatchFromDom as readFlipPanePatchFromDomMoved,

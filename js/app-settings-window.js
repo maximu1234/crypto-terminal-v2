@@ -3,11 +3,11 @@
  */
 import {
 cssUrl
-} from "./asset-manifest.js?v=c3d3f6ca";
+} from "./asset-manifest.js?v=07630746";
 
 import {
 isSystemAdminUser
-} from "./system-admin-access.js?v=0b6996d8";
+} from "./system-admin-access.js?v=1adff1c5";
 
 import {
 beginChromeOverlay,
@@ -23,11 +23,11 @@ closeChromeSurface
 
 import {
 mountTelegramSettingsPanel
-} from "./telegram-settings-panel.js?v=9fe98780";
+} from "./telegram-settings-panel.js?v=d1bca1e0";
 
 import {
 mountFavoritesCloudSettingsPanel
-} from "./favorites-settings-panel.js?v=61a77a91";
+} from "./favorites-settings-panel.js?v=dbb5193e";
 
 const SECTIONS =
 [
@@ -445,7 +445,7 @@ const {
 closeCloudSettingsDropdown
 } =
 await import(
-"./auth-ui.js?v=d7e2d679"
+"./auth-ui.js?v=bb64b118"
 );
 closeCloudSettingsDropdown();
 await openAppSettingsWindow();
@@ -709,7 +709,7 @@ const {
 mountCloudAuthPanelInSettings
 } =
 await import(
-"./auth-ui.js?v=d7e2d679"
+"./auth-ui.js?v=bb64b118"
 );
 
 mountCloudAuthPanelInSettings(
@@ -776,7 +776,7 @@ mountExchangeConnectionsPanel,
 updateTradeExchangeConnectionChrome
 } =
 await import(
-"./trade-exchange-settings.js?v=6c6da46f"
+"./trade-exchange-settings.js?v=20dec6a5"
 );
 
 const host =
@@ -871,7 +871,7 @@ const {
 mountTradingSettingsPanel
 } =
 await import(
-"./trade-trading-settings-panel.js?v=40a3f480"
+"./trade-trading-settings-panel.js?v=9668cff4"
 );
 
 const host =
@@ -921,7 +921,7 @@ const {
 mountSecretSettingsPanel
 } =
 await import(
-"./app-settings-secret.js?v=d41110b6"
+"./app-settings-secret.js?v=052aeacf"
 );
 
 await mountSecretSettingsPanel(

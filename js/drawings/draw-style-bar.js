@@ -59,13 +59,13 @@ calcPositionVolumeUsd
 
 import {
 applyPositionVolumeFromDrawing
-} from "../trade-volume-presets.js?v=3f8f44bc";
+} from "../trade-volume-presets.js?v=6aad4532";
 
 import {
 stashDrawingStopsFromDrawing,
 clearDrawingStopsPending,
 hasDrawingStopsPending
-} from "../trade-auto-stops.js?v=5e6a63a7";
+} from "../trade-auto-stops.js?v=0eefb8cd";
 
 import {
 touchShapeRevision
@@ -81,14 +81,14 @@ listTemplatesForType,
 mergeStyleSnapshot,
 saveNamedTemplate,
 deleteTemplateAtIndex
-} from "./draw-templates.js?v=de73f6f3";
+} from "./draw-templates.js?v=6d130170";
 
 import {
 isFvpType,
 copyFvpStyleToShape,
 createFvpToolDefaults,
 FVP_TOOL_DEFAULTS_VERSION
-} from "./fixed-volume-profile.js?v=bb03b4a7";
+} from "./fixed-volume-profile.js?v=51ef58c3";
 
 import {
 fvpSettingsHtml,
@@ -96,7 +96,7 @@ fillFvpSettingsPanel,
 readFvpSettingsPanel,
 bindFvpSettingsPanel,
 closeFvpColorMenu
-} from "./fixed-volume-profile-settings.js?v=22d0f288";
+} from "./fixed-volume-profile-settings.js?v=54546c69";
 
 import {
 rectSettingsHtml,

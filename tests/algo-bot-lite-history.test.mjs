@@ -19,6 +19,8 @@ test("Algo Bot lite loads candle history for RSI overview / fit", () => {
   assert.match(loader, /\[algo-trading\] lite history/);
   const helper = read("js/algo-trading/lite-history.js");
   assert.match(helper, /fetchKlineHistoryDeep/);
+  assert.match(helper, /fetchKlinePage/);
+  assert.match(helper, /endMs/);
   assert.match(helper, /loadMarketHistory/);
   const botPage = read("bot-app/site-bundle/js/algo-trading.js");
   assert.match(botPage, /loadAlgoBotLiteHistory/);
@@ -46,10 +48,14 @@ test("Algo Bot kline history IPC is exposed like linear symbols", () => {
     const src = read(rel);
     assert.match(src, /desktop:algoTradingFetchKlineHistory/);
     assert.match(src, /fetchKlineHistoryDeep/);
+    assert.match(src, /desktop:algoTradingFetchKlinePage/);
+    assert.match(src, /fetchKlinePage/);
   }
   for (const rel of ["desktop/preload.js", "bot-app/preload.js"]) {
     const src = read(rel);
     assert.match(src, /fetchKlineHistoryDeep:\s*\(/);
     assert.match(src, /desktop:algoTradingFetchKlineHistory/);
+    assert.match(src, /fetchKlinePage:\s*\(/);
+    assert.match(src, /desktop:algoTradingFetchKlinePage/);
   }
 });

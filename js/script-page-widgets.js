@@ -19,7 +19,7 @@ import {
 loadMarketHistory,
 getActiveExchangeId,
 getExchangeDefinition
-} from "./market-api.js?v=00f19708";
+} from "./market-api.js?v=145e2e28";
 
 import {
 calculateRSI,
@@ -29,7 +29,7 @@ alignRsiWithCandleTimes
 import {
 subscribeKline,
 bindLiveCandleCatchup
-} from "./market-ws.js?v=717ade46";
+} from "./market-ws.js?v=d0679bf8";
 
 import {
 ensureOhlcRollover,
@@ -42,7 +42,7 @@ paintLiveOhlcSeries
 
 import {
 fetchTickersInto
-} from "./tickers.js?v=d4995cf9";
+} from "./tickers.js?v=9c75f859";
 
 import {
 isScreenerWidgetCurrent as isWidgetCurrentGuard
@@ -57,7 +57,7 @@ getWidgetFlagHtml,
 wireWidgetFlagUi,
 updateWidgetFlagUi,
 bindWidgetFlagGlobalListeners
-} from "./widget-favorite-flag.js?v=79d92b88";
+} from "./widget-favorite-flag.js?v=c3e32864";
 
 const SCRIPT_MAX_CONCURRENT_CHART_LOADS =
 4;
@@ -83,7 +83,7 @@ if(
 ){
 scriptZoomModulePromise =
 import(
-"./screener-widget-zoom.js?v=6ccf5c15"
+"./screener-widget-zoom.js?v=e5b6df44"
 ).then(
 mod=>{
 refreshZoomFavoriteUi =
@@ -104,7 +104,7 @@ return scriptZoomModulePromise;
 import {
 PATTERN_SCAN_TF_LABELS,
 PATTERN_SCAN_SIDE_LABELS
-} from "./pattern-12-scanner.js?v=ee05f486";
+} from "./pattern-12-scanner.js?v=cabc53b8";
 
 let patternOverlayApi =
 null;

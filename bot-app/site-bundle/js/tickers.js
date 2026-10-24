@@ -2,11 +2,11 @@ import {
 getActiveExchangeId,
 EXCHANGE_CHANGED_EVENT,
 loadMarketTickers
-} from "./market-api.js?v=00f19708";
+} from "./market-api.js?v=145e2e28";
 
 import {
 fetchBybit
-} from "./bybit-fetch.js?v=e4bd7f1f";
+} from "./bybit-fetch.js?v=c64b36ad";
 
 import {
 toCanonicalSymbol

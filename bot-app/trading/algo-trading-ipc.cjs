@@ -274,6 +274,56 @@ err
 
 handleTrustedDesktopUi(
 ipcMain,
+"desktop:algoTradingFetchKlinePage",
+async(
+_event,
+payload
+)=>{
+
+try{
+const rest =
+require(
+"./algo-bybit-rest.cjs"
+);
+
+return await rest.fetchKlinePage(
+{
+symbol:
+payload?.symbol,
+tf:
+payload?.tf,
+endMs:
+payload?.endMs,
+limit:
+payload?.limit
+}
+);
+}catch(
+err
+){
+log.warn(
+"algoTradingFetchKlinePage:",
+err?.message ||
+err
+);
+return {
+ok:
+false,
+rows:
+[],
+message:
+err?.message ||
+String(
+err
+)
+};
+}
+
+}
+);
+
+handleTrustedDesktopUi(
+ipcMain,
 "desktop:algoTradingSetEnabled",
 (
 _event,

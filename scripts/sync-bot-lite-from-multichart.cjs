@@ -66,7 +66,9 @@ function syncEngines() {
     (name) => name.startsWith("algo-") && name.endsWith(".cjs")
   );
   let n = 0;
+  names.push("algo-asset-query-loader.mjs");
   for (const name of names) {
+    if (!fs.existsSync(path.join(DESKTOP_TRADING, name))) continue;
     if (copyFileIfChanged(
       path.join(DESKTOP_TRADING, name),
       path.join(BOT_TRADING, name)

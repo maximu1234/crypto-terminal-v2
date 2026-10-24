@@ -9,7 +9,7 @@ isActiveAnalysisBot
 } from "./active-analysis-bot.js?v=c1b8293b";
 import {
 loadMarketHistory
-} from "../market-api.js?v=00f19708";
+} from "../market-api.js?v=145e2e28";
 import {
 RSI_TOUCH_FLIP_SIZE_AVERAGE,
 loadRsiTouchFlipPrefs,
@@ -20,7 +20,7 @@ loadRsiTouchFlipTickerPrefs,
 normalizeRsiTouchFlipPrefs,
 shouldReloadRsiTouchFlipColumn,
 loadRsiTouchFlipBalancePct
-} from "./rsi-touch-flip-prefs.js?v=8d462a58";
+} from "./rsi-touch-flip-prefs.js?v=f6c3ff87";
 import {
 RSI_TOUCH_FLIP_BOOK_CHANGE_EVENT,
 RSI_TOUCH_FLIP_BOOK_OPEN_EVENT,
@@ -29,31 +29,31 @@ loadRsiTouchFlipBook,
 rsiTouchFlipShareBudgetFits,
 upsertRsiTouchFlipBookRow,
 removeRsiTouchFlipBookRow
-} from "./rsi-touch-flip-book.js?v=c5c9afac";
+} from "./rsi-touch-flip-book.js?v=c8f7d685";
 import {
 getAlgoTradingWalletBalance
 } from "./runtime-bridge.js?v=8fabea4a";
 import {
 runRsiTouchFlip
-} from "./rsi-touch-flip-engine.js?v=92d67502";
+} from "./rsi-touch-flip-engine.js?v=525cb7f2";
 import {
 resolveRsiTouchFlipChartRsi,
 rsiTouchFlipChartDays
-} from "./rsi-touch-flip-mtf.js?v=11c6ea8a";
+} from "./rsi-touch-flip-mtf.js?v=450e7571";
 import {
 mountRsiTouchFlipOverlay
 } from "./rsi-touch-flip-overlay.js?v=d9cd98da";
 import {
 mountRsiTouchFlipFit,
 loadRsiTouchFlipFitRowForSymbol
-} from "./rsi-touch-flip-fit-panel.js?v=1e6f8858";
+} from "./rsi-touch-flip-fit-panel.js?v=cb980665";
 import {
 RSI_TOUCH_FLIP_DEFAULT_TRAIN_PCT,
 rsiTouchFlipFitPrefsForHydrate
-} from "./rsi-touch-flip-walkforward.js?v=76212104";
+} from "./rsi-touch-flip-walkforward.js?v=2df2b8ca";
 import {
 buildRsiTouchFlipEquityModel
-} from "./rsi-touch-flip-equity.js?v=e44d4938";
+} from "./rsi-touch-flip-equity.js?v=40586292";
 
 function el(
 id
@@ -468,7 +468,7 @@ if(
 ){
 equityChartMod =
 await import(
-"./rsi-touch-flip-equity-chart.js?v=236b554e"
+"./rsi-touch-flip-equity-chart.js?v=dd91534b"
 );
 }
 
@@ -1361,6 +1361,17 @@ clearOverview();
 setOverviewError(
 err?.message ||
 "нет свечей RSI ТФ"
+);
+fitApi?.sync?.(
+{
+candles,
+prefs,
+chartTf:
+String(
+host.getChartTf?.() ||
+""
+).trim()
+}
 );
 return;
 }

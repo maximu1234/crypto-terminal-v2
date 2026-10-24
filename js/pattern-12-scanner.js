@@ -8,7 +8,7 @@ import {
 loadMarketHistory,
 loadMarketSymbols,
 buildMarketLists
-} from "./market-api.js?v=00f19708";
+} from "./market-api.js?v=145e2e28";
 
 import {
 packCandles
@@ -780,7 +780,7 @@ try{
 scanWorker =
 new Worker(
 new URL(
-"./pattern-12-scan-worker.js?v=49a0acd5",
+"./pattern-12-scan-worker.js?v=04121392",
 import.meta.url
 ),
 {

@@ -628,7 +628,11 @@ source:
 balancePct:
 parsed.balancePct,
 leverage:
-parsed.leverage
+parsed.leverage,
+autoFitPeriod:
+parsed.autoFitPeriod,
+autoFitRetry:
+parsed.autoFitRetry
 }
 );
 
@@ -1657,6 +1661,33 @@ body.leverage !==
 ? {
 leverage:
 body.leverage
+}
+: {}
+),
+...(
+action ===
+"start" &&
+body.autoFitPeriod !==
+undefined &&
+body.autoFitPeriod !==
+null
+? {
+autoFitPeriod:
+body.autoFitPeriod
+}
+: {}
+),
+...(
+action ===
+"start" &&
+body.autoFitRetry !==
+undefined &&
+body.autoFitRetry !==
+null
+? {
+autoFitRetry:
+body.autoFitRetry ===
+true
 }
 : {}
 )

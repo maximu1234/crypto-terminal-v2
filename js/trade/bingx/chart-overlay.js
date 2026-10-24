@@ -17,7 +17,7 @@ clearDismissedStops
 
 import {
 isExchangeTradingEnabled
-} from "../../market-api.js?v=00f19708";
+} from "../../market-api.js?v=145e2e28";
 
 import {
 getTradeConfig

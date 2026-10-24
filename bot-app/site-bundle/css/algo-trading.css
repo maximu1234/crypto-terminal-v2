@@ -920,6 +920,16 @@ border-color:#7f1d1d;
 background:#2a0f0f;
 }
 
+body.algo-trading-page .algo-rsi-flip-launch[data-state="error"]{
+border-color:#ef4444;
+background:#450a0a;
+}
+
+body.algo-trading-page .algo-rsi-flip-launch[data-state="error"] .algo-rsi-flip-launch-title,
+body.algo-trading-page .algo-rsi-flip-launch[data-state="error"] .algo-rsi-flip-launch-detail{
+color:#fecaca;
+}
+
 body.algo-trading-page .algo-rsi-flip-launch-title{
 font:600 13px/1.3 system-ui,-apple-system,sans-serif;
 color:#e5e7eb;
@@ -1606,6 +1616,14 @@ margin:0;
 body.algo-trading-page .algo-bot-input--sm{
 width:64px;
 max-width:64px;
+}
+
+body.algo-trading-page select.algo-bot-select{
+width:auto;
+max-width:160px;
+min-width:96px;
+-moz-appearance:auto;
+appearance:auto;
 }
 
 body.algo-trading-page .algo-bot-input--turnover{

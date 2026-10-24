@@ -11,7 +11,7 @@ import {
 } from "../chart/chart-local-time.js?v=027bb0cc";
 import {
   RSI_TOUCH_FLIP_EQUITY_POS_COLOR
-} from "./rsi-touch-flip-equity.js?v=e44d4938";
+} from "./rsi-touch-flip-equity.js?v=40586292";
 
 const BG =
 "#0f1419";

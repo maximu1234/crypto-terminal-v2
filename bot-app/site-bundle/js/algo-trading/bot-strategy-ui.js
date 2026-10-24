@@ -26,7 +26,7 @@ rsiTouchFlipEqualShareBudget,
 loadRsiTouchFlipBook,
 replaceRsiTouchFlipBook,
 RSI_TOUCH_FLIP_BOOK_CHANGE_EVENT
-} from "./rsi-touch-flip-book.js?v=c5c9afac";
+} from "./rsi-touch-flip-book.js?v=c8f7d685";
 import {
 snapshotMacdFlipTouchBook,
 macdFlipTouchShareBudgetFits,
@@ -44,8 +44,12 @@ loadRsiTouchFlipMarginMode,
 saveRsiTouchFlipMarginMode,
 loadRsiTouchFlipLeverage,
 saveRsiTouchFlipLeverage,
-normalizeRsiTouchFlipLeverage
-} from "./rsi-touch-flip-prefs.js?v=8d462a58";
+normalizeRsiTouchFlipLeverage,
+loadRsiTouchFlipAutoFitPeriod,
+saveRsiTouchFlipAutoFitPeriod,
+loadRsiTouchFlipAutoFitRetry,
+saveRsiTouchFlipAutoFitRetry
+} from "./rsi-touch-flip-prefs.js?v=f6c3ff87";
 import {
 loadMacdFlipTouchBalancePct,
 saveMacdFlipTouchBalancePct,
@@ -90,7 +94,7 @@ isAlgoBotDesktop,
 fetchAlgoBotCloudLock,
 clearAlgoBotCloudLock,
 ensureAlgoBotCloudLock
-} from "./bot-bridge.js?v=17baeaa9";
+} from "./bot-bridge.js?v=ad065c93";
 import {
 stageBotTickerBookFromPublished,
 hydrateBotTickerBookFromMain,
@@ -100,12 +104,12 @@ persistBotTickerBookToMain
 } from "./bot-ticker-book.js?v=24739acf";
 import {
 isMultichartRemoteControlHost
-} from "./bot-remote-client.js?v=2c212bc1";
+} from "./bot-remote-client.js?v=8f97f05c";
 import {
 mountRemoteSessionLogsEntry,
 mountRemoteWatchlistsPushEntry,
 mountLocalSessionLogsEntry
-} from "./bot-session-logs-viewer.js?v=e9e514f9";
+} from "./bot-session-logs-viewer.js?v=924e3727";
 import {
 rebalanceTpShares
 } from "./pattern-trade-stats-partial.js?v=a92ca5c3";
@@ -1054,7 +1058,7 @@ applyRunBtn();
 );
 
 void import(
-"./optimize-universe-background.js?v=f928635f"
+"./optimize-universe-background.js?v=ffe6b45a"
 ).then(
 m=>
 m.stopAlgoOptimizeUniverseJob?.()
@@ -1155,6 +1159,10 @@ const levInput =
 document.getElementById(
 "algo-bot-rsi-flip-leverage"
 );
+const autoFitInput =
+document.getElementById(
+"algo-bot-rsi-flip-auto-fit"
+);
 const pct =
 pctInput &&
 document.activeElement ===
@@ -1201,6 +1209,29 @@ levInput.value =
 String(
 leverage
 );
+}
+
+if(
+autoFitInput instanceof HTMLSelectElement &&
+document.activeElement !==
+autoFitInput
+){
+autoFitInput.value =
+loadRsiTouchFlipAutoFitPeriod();
+}
+
+const autoFitRetryInput =
+document.getElementById(
+"algo-bot-rsi-flip-auto-fit-retry"
+);
+
+if(
+autoFitRetryInput instanceof HTMLInputElement &&
+document.activeElement !==
+autoFitRetryInput
+){
+autoFitRetryInput.checked =
+loadRsiTouchFlipAutoFitRetry();
 }
 
 if(
@@ -1378,6 +1409,30 @@ res.leverage !==
 ){
 saveRsiTouchFlipLeverage(
 res.leverage
+);
+}
+
+if(
+Object.prototype.hasOwnProperty.call(
+res ||
+{},
+"autoFitPeriod"
+)
+){
+saveRsiTouchFlipAutoFitPeriod(
+res.autoFitPeriod
+);
+}
+
+if(
+Object.prototype.hasOwnProperty.call(
+res ||
+{},
+"autoFitRetry"
+)
+){
+saveRsiTouchFlipAutoFitRetry(
+res.autoFitRetry
 );
 }
 
@@ -4641,6 +4696,122 @@ void fillRsiTouchFlipSettingsModal();
 }
 );
 document.getElementById(
+"algo-bot-rsi-flip-auto-fit"
+)?.addEventListener(
+"change",
+event=>{
+const input =
+event.target instanceof HTMLSelectElement
+? event.target
+: null;
+const next =
+saveRsiTouchFlipAutoFitPeriod(
+input?.value ??
+loadRsiTouchFlipAutoFitPeriod()
+);
+
+if(
+input
+){
+input.value =
+next;
+}
+
+rsiBookLiveSyncChain =
+rsiBookLiveSyncChain.then(
+async()=>{
+const book =
+snapshotRsiTouchFlipBook();
+const result =
+await syncRsiTouchFlipBookToLive(
+book
+);
+
+if(
+result?.ok ===
+false &&
+result.message
+){
+applyStatusPanel(
+{
+ok:
+false,
+running:
+rsiTouchFlipRunning,
+strategyId:
+"rsi-touch-flip",
+message:
+result.message
+}
+);
+}
+
+return result;
+}
+).catch(
+err=>{
+console.warn(
+"[algo-trading] rsi flip auto fit live sync",
+err
+);
+}
+);
+void fillRsiTouchFlipSettingsModal();
+}
+);
+document.getElementById(
+"algo-bot-rsi-flip-auto-fit-retry"
+)?.addEventListener(
+"change",
+event=>{
+const input =
+event.target instanceof HTMLInputElement
+? event.target
+: null;
+saveRsiTouchFlipAutoFitRetry(
+input?.checked ===
+true
+);
+rsiBookLiveSyncChain =
+rsiBookLiveSyncChain.then(
+async()=>{
+const result =
+await syncRsiTouchFlipBookToLive(
+snapshotRsiTouchFlipBook()
+);
+
+if(
+result?.ok ===
+false &&
+result.message
+){
+applyStatusPanel(
+{
+ok:
+false,
+running:
+rsiTouchFlipRunning,
+strategyId:
+"rsi-touch-flip",
+message:
+result.message
+}
+);
+}
+
+return result;
+}
+).catch(
+err=>{
+console.warn(
+"[algo-trading] rsi flip auto fit retry sync",
+err
+);
+}
+);
+}
+);
+document.getElementById(
 "algo-bot-macd-flip-balance-pct"
 )?.addEventListener(
 "input",
@@ -4916,7 +5087,7 @@ ALGO_ANALYSIS_BOT_PATTERN_12
 )
 ){
 void import(
-"./optimize-universe-background.js?v=f928635f"
+"./optimize-universe-background.js?v=ffe6b45a"
 ).then(
 m=>
 m.stopAlgoOptimizeUniverseJob?.()

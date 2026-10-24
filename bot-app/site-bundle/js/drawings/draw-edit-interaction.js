@@ -30,7 +30,7 @@ import {
 getFvpHandleScreens,
 moveFvpHandle,
 isFvpType
-} from "./fixed-volume-profile.js?v=bb03b4a7";
+} from "./fixed-volume-profile.js?v=51ef58c3";
 
 import {
 isPositionType,
@@ -49,7 +49,7 @@ touchShapeRevision
 
 import {
 stripAlertFromShape
-} from "./drawings-persist.js?v=ccf2d710";
+} from "./drawings-persist.js?v=0ba84cb0";
 
 import {
 moveBrushHandle,

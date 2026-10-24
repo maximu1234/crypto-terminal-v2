@@ -33,7 +33,7 @@ writePublishedBotTickerBook
 } from "./bot-ticker-book.js?v=24739acf";
 import {
 replaceRsiTouchFlipBook
-} from "./rsi-touch-flip-book.js?v=c5c9afac";
+} from "./rsi-touch-flip-book.js?v=c8f7d685";
 import {
 replaceMacdFlipTouchBook
 } from "./macd-flip-touch-book.js?v=d4d39562";
@@ -43,8 +43,12 @@ loadRsiTouchFlipBalancePct,
 saveRsiTouchFlipMarginMode,
 loadRsiTouchFlipMarginMode,
 saveRsiTouchFlipLeverage,
-loadRsiTouchFlipLeverage
-} from "./rsi-touch-flip-prefs.js?v=8d462a58";
+loadRsiTouchFlipLeverage,
+loadRsiTouchFlipAutoFitPeriod,
+saveRsiTouchFlipAutoFitPeriod,
+loadRsiTouchFlipAutoFitRetry,
+saveRsiTouchFlipAutoFitRetry
+} from "./rsi-touch-flip-prefs.js?v=f6c3ff87";
 import {
 saveMacdFlipTouchBalancePct,
 loadMacdFlipTouchBalancePct,
@@ -337,7 +341,22 @@ null &&
 extra.leverage !==
 ""
 ? extra.leverage
-: loadRsiTouchFlipLeverage()
+: loadRsiTouchFlipLeverage(),
+autoFitPeriod:
+extra?.autoFitPeriod !==
+undefined &&
+extra?.autoFitPeriod !==
+null
+? extra.autoFitPeriod
+: loadRsiTouchFlipAutoFitPeriod(),
+autoFitRetry:
+extra?.autoFitRetry !==
+undefined &&
+extra?.autoFitRetry !==
+null
+? extra.autoFitRetry ===
+true
+: loadRsiTouchFlipAutoFitRetry()
 }
 );
 
@@ -743,6 +762,28 @@ status.publishedRsiTouchFlipLeverage
 );
 }
 
+if(
+Object.prototype.hasOwnProperty.call(
+status,
+"publishedRsiTouchFlipAutoFitPeriod"
+)
+){
+saveRsiTouchFlipAutoFitPeriod(
+status.publishedRsiTouchFlipAutoFitPeriod
+);
+}
+
+if(
+Object.prototype.hasOwnProperty.call(
+status,
+"publishedRsiTouchFlipAutoFitRetry"
+)
+){
+saveRsiTouchFlipAutoFitRetry(
+status.publishedRsiTouchFlipAutoFitRetry
+);
+}
+
 return true;
 
 }
@@ -822,7 +863,11 @@ loadRsiTouchFlipBalancePct(),
 marginMode:
 loadRsiTouchFlipMarginMode(),
 leverage:
-loadRsiTouchFlipLeverage()
+loadRsiTouchFlipLeverage(),
+autoFitPeriod:
+loadRsiTouchFlipAutoFitPeriod(),
+autoFitRetry:
+loadRsiTouchFlipAutoFitRetry()
 }
 );
 

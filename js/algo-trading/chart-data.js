@@ -4,6 +4,11 @@
 import {
 noteAlgoRsiPlaced
 } from "./chart-pane-settle.js?v=3ecfb41d";
+import {
+klineGapFillEnds,
+KLINE_PAGE_CONCURRENCY,
+mapWithConcurrency
+} from "../kline-history-pages.js?v=f9dac656";
 
 export function applyRsiData(host, 
 {
@@ -268,19 +273,38 @@ return;
 
 const beforeLen =
 host.candles.length;
+const prevFirst =
+host.candles[0]?.time;
 const range =
 host.chart?.timeScale?.().getVisibleLogicalRange?.();
 host.candles =
 mergeOlderAlgoCandles(host, 
 older
 );
-const added =
-host.candles.length -
-beforeLen;
+await fillAlgoCandleGaps(
+host
+);
 
 if(
-added <=
-0
+host.disposed ||
+seq !==
+host.loadSeq
+){
+return;
+}
+
+const added =
+host.candles.filter(
+row=>
+prevFirst ==
+null ||
+row.time <
+prevFirst
+).length;
+
+if(
+host.candles.length <=
+beforeLen
 ){
 return;
 }
@@ -870,6 +894,89 @@ wrapW,
 host.candles.length,
 host.TERMINAL_VISIBLE_BARS
 );
+
+}
+
+async function fillAlgoCandleGaps(
+host
+){
+
+for(
+let attempt =
+0;
+attempt <
+2;
+attempt++
+){
+
+const fills =
+klineGapFillEnds(
+host.candles,
+host.tf
+).slice(
+0,
+24
+);
+
+if(
+!fills.length
+){
+return;
+}
+
+const batches =
+await mapWithConcurrency(
+fills,
+KLINE_PAGE_CONCURRENCY,
+endMs=>
+host.loadMarketHistory(
+host.symbol,
+host.tf,
+1,
+{
+parallel:
+false,
+batchGapMs:
+80,
+endMs
+}
+)
+);
+const before =
+host.candles.length;
+
+for(
+const batch of batches
+){
+
+if(
+!Array.isArray(
+batch
+) ||
+!batch.length
+){
+continue;
+}
+
+host.candles =
+mergeOlderAlgoCandles(
+{
+candles:
+host.candles
+},
+batch
+);
+
+}
+
+if(
+host.candles.length ===
+before
+){
+return;
+}
+
+}
 
 }
 

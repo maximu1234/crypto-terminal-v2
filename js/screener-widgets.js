@@ -1,7 +1,7 @@
 import {
 loadMarketHistory,
 getActiveExchangeId
-} from "./market-api.js?v=00f19708";
+} from "./market-api.js?v=145e2e28";
 
 import {
 peekHistoryCache,
@@ -31,7 +31,7 @@ isIpadWebViewport
 import {
 subscribeKline,
 bindLiveCandleCatchup
-} from "./market-ws.js?v=717ade46";
+} from "./market-ws.js?v=d0679bf8";
 
 import {
 ensureOhlcRollover,

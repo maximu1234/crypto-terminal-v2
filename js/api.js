@@ -1,6 +1,6 @@
 import {
 fetchBybit
-} from "./bybit-fetch.js?v=e4bd7f1f";
+} from "./bybit-fetch.js?v=c64b36ad";
 
 import {
 fetchTwelveTimeSeries
@@ -8,8 +8,11 @@ fetchTwelveTimeSeries
 
 import {
 klineHistoryPageEnds,
+klineGapFillEnds,
+KLINE_PAGE_CONCURRENCY,
+mapWithConcurrency,
 shouldFetchKlinePagesInParallel
-} from "./kline-history-pages.js?v=cc7b66ca";
+} from "./kline-history-pages.js?v=f9dac656";
 
 import {
 clampHistoryPageLimit,
@@ -159,6 +162,83 @@ return null;
 
 }
 
+/**
+ * Одна страница kline. Пустой list при retCode 0 — биржа правда ничего не
+ * нашла (молодой тикер). Ошибка сети и retCode ≠ 0 — это сбой, не «история кончилась».
+ * @returns {Promise<{ ok: boolean, rows: Array, message: string }>}
+ */
+export async function fetchBybitKlinePage(
+symbol,
+tf,
+end,
+limit =
+1000
+){
+
+const pageLimit =
+clampHistoryPageLimit(
+limit
+);
+const path =
+`/v5/market/kline?category=linear&symbol=${encodeURIComponent(symbol)}&interval=${encodeURIComponent(tf)}&limit=${pageLimit}&end=${Math.floor(Number(end) || Date.now())}`;
+
+try{
+const { json } =
+await fetchBybit(
+path,
+{
+retries: 3,
+timeoutMs: 10000
+}
+);
+
+if(
+json?.retCode !==
+0
+){
+return {
+ok: false,
+rows: [],
+message:
+json?.retMsg ||
+"Bybit не отдал свечи"
+};
+}
+
+const list =
+json?.result?.list;
+
+if(
+!Array.isArray(
+list
+)
+){
+return {
+ok: false,
+rows: [],
+message: "Bybit вернул пустой ответ по свечам"
+};
+}
+
+return {
+ok: true,
+rows: list,
+message: ""
+};
+}catch(
+err
+){
+return {
+ok: false,
+rows: [],
+message:
+err?.message ||
+"сбой загрузки свечей"
+};
+}
+
+}
+
 async function loadBybitHistoryImpl(
 symbol,
 tf,
@@ -197,26 +277,113 @@ batchGapMs
 
 if(pageEnds.length > 1){
 
-const batches =
-await Promise.all(
-pageEnds.map(
-pageEnd=>
-fetchBybitKlineBatch(
+const fetched =
+await mapWithConcurrency(
+pageEnds,
+KLINE_PAGE_CONCURRENCY,
+async pageEnd=>{
+
+let page =
+await fetchBybitKlinePage(
 symbol,
 tf,
 pageEnd,
-3,
-{
-sequential: false,
 limit
+);
+
+if(!page.ok){
+page =
+await fetchBybitKlinePage(
+symbol,
+tf,
+pageEnd,
+limit
+);
 }
+
+return page;
+
+}
+);
+
+let olderHasBars =
+false;
+
+const retryAt =
+[];
+
+for(
+let i =
+fetched.length -
+1;
+i >=
+0;
+i--
+){
+
+const page =
+fetched[i];
+const count =
+page?.ok
+? page.rows.length
+: 0;
+
+if(
+!page?.ok ||
+(
+count ===
+0 &&
+olderHasBars
 )
+){
+retryAt.push(
+i
+);
+}
+
+if(count > 0){
+olderHasBars =
+true;
+}
+
+}
+
+if(retryAt.length){
+
+const again =
+await mapWithConcurrency(
+retryAt,
+KLINE_PAGE_CONCURRENCY,
+index=>
+fetchBybitKlinePage(
+symbol,
+tf,
+pageEnds[index],
+limit
 )
 );
 
-for(const batch of batches){
-if(batch?.length){
-all.push(...batch);
+retryAt.forEach(
+(
+index,
+slot
+)=>{
+
+if(again[slot]?.ok){
+fetched[index] =
+again[slot];
+}
+
+}
+);
+
+}
+
+for(const page of fetched){
+if(page?.ok && page.rows?.length){
+all.push(
+...page.rows
+);
 }
 }
 
@@ -282,6 +449,88 @@ batchGapMs
 }
 
 }
+
+let candles =
+candlesFromBybitRows(
+all
+);
+
+if(pageEnds.length > 1){
+
+for(
+let attempt =
+0;
+attempt <
+2;
+attempt++
+){
+
+const fills =
+klineGapFillEnds(
+candles,
+tf,
+limit
+).slice(
+0,
+24
+);
+
+if(!fills.length){
+break;
+}
+
+const extra =
+await mapWithConcurrency(
+fills,
+KLINE_PAGE_CONCURRENCY,
+async pageEnd=>{
+
+const page =
+await fetchBybitKlinePage(
+symbol,
+tf,
+pageEnd,
+limit
+);
+
+return page.ok
+? page.rows
+: [];
+
+}
+);
+
+for(const rows of extra){
+if(rows?.length){
+all.push(
+...rows
+);
+}
+}
+
+const next =
+candlesFromBybitRows(
+all
+);
+
+if(next.length === candles.length){
+break;
+}
+
+candles =
+next;
+
+}
+
+}
+
+return candles;
+
+}
+
+function candlesFromBybitRows(
+all
+){
 
 const unique =
 new Map();

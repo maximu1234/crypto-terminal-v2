@@ -7,7 +7,7 @@ buildMarketLists,
 getActiveExchangeId,
 EXCHANGE_CHANGED_EVENT,
 isActiveRealtimeMarketDataset
-} from "./market-api.js?v=00f19708";
+} from "./market-api.js?v=145e2e28";
 
 import {
 coinsState,
@@ -28,7 +28,7 @@ syncCoinListFreezeFromFlagMenus,
 getCurrentSymbols,
 getVisibleSymbolList,
 setCoinOpenPositionChecker
-} from "./algo-trading/coin-list-host.js?v=11c87a19";
+} from "./algo-trading/coin-list-host.js?v=13b6bbfe";
 
 import {
 hasOpenPosition,
@@ -37,7 +37,7 @@ initAlgoOpenPositions
 
 import {
 mountCoinsListRefreshControls
-} from "./terminal-list-refresh.js?v=7641e729";
+} from "./terminal-list-refresh.js?v=bf0057d9";
 
 import {
 ALGO_MARKET_LONG_5M,
@@ -70,7 +70,7 @@ RSI_TOUCH_FLIP_BOOK_OPEN_EVENT,
 listRsiTouchFlipBookSymbols,
 getRsiTouchFlipBookRow,
 removeRsiTouchFlipBookRow
-} from "./algo-trading/rsi-touch-flip-book.js?v=c5c9afac";
+} from "./algo-trading/rsi-touch-flip-book.js?v=c8f7d685";
 
 import {
 MACD_FLIP_TOUCH_LIST_MARKET,

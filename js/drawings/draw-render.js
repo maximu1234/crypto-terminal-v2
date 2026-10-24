@@ -26,12 +26,12 @@ drawRectangleShape
 
 import {
 drawFvpShape
-} from "./fixed-volume-profile-draw.js?v=f0cfee18";
+} from "./fixed-volume-profile-draw.js?v=b52eb0f3";
 
 import {
 isFvpType,
 copyFvpStyleToShape
-} from "./fixed-volume-profile.js?v=bb03b4a7";
+} from "./fixed-volume-profile.js?v=51ef58c3";
 
 import {
 drawBrushPath

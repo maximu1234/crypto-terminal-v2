@@ -8,15 +8,15 @@
 
 import {
 peekBybitSymbolsCache
-} from "./api.js?v=071ede04";
+} from "./api.js?v=cdf95f33";
 
 import {
 fetchBybit
-} from "./bybit-fetch.js?v=e4bd7f1f";
+} from "./bybit-fetch.js?v=c64b36ad";
 
 import {
 peekMarketSymbolsCache
-} from "./market-api.js?v=00f19708";
+} from "./market-api.js?v=145e2e28";
 
 import {
 EXCHANGE_CHANGED_EVENT

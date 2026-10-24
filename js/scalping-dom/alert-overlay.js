@@ -5,7 +5,7 @@
 import {
 alertPriceForDisplay,
 getActiveAlerts
-} from "../alerts.js?v=4ccbbdc0";
+} from "../alerts.js?v=6b4ba128";
 
 function normalizeSymbol(
 raw

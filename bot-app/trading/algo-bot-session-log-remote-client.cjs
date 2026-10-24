@@ -941,6 +941,12 @@ parsed.balancePct,
 leverage:
 payload.leverage ??
 parsed.leverage,
+autoFitPeriod:
+payload.autoFitPeriod ??
+parsed.autoFitPeriod,
+autoFitRetry:
+payload.autoFitRetry ??
+parsed.autoFitRetry,
 book:{
 strategyId:
 "rsi-touch-flip",
@@ -951,7 +957,13 @@ payload.balancePct ??
 parsed.balancePct,
 leverage:
 payload.leverage ??
-parsed.leverage
+parsed.leverage,
+autoFitPeriod:
+payload.autoFitPeriod ??
+parsed.autoFitPeriod,
+autoFitRetry:
+payload.autoFitRetry ??
+parsed.autoFitRetry
 }
 },
 120000,
@@ -1277,6 +1289,29 @@ payload.leverage !==
 ? {
 leverage:
 payload.leverage
+}
+: {}
+),
+...(
+payload.autoFitPeriod !==
+undefined &&
+payload.autoFitPeriod !==
+null
+? {
+autoFitPeriod:
+payload.autoFitPeriod
+}
+: {}
+),
+...(
+payload.autoFitRetry !==
+undefined &&
+payload.autoFitRetry !==
+null
+? {
+autoFitRetry:
+payload.autoFitRetry ===
+true
 }
 : {}
 )

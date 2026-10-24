@@ -23,7 +23,7 @@ recordDrawingTombstone
 import {
 EXCHANGE_CHANGED_EVENT,
 loadMarketHistory
-} from "../market-api.js?v=00f19708";
+} from "../market-api.js?v=145e2e28";
 
 import {
 registerDrawingsStoragePoller,
@@ -71,7 +71,7 @@ bindFvpDataSource,
 clearFvpLtfCache,
 isFvpType,
 fvpBodyDist
-} from "./fixed-volume-profile.js?v=bb03b4a7";
+} from "./fixed-volume-profile.js?v=51ef58c3";
 
 import {
 distToSegment
@@ -118,7 +118,7 @@ getPositionHandleScreens as resolvePositionHandleScreens
 
 import {
 createDrawPrefs
-} from "./draw-prefs.js?v=f4d23141";
+} from "./draw-prefs.js?v=1ac33cfe";
 
 import {
 createPositionDraw
@@ -130,11 +130,11 @@ pickUi
 
 import {
 createDrawHitTester
-} from "./draw-hit.js?v=f9862978";
+} from "./draw-hit.js?v=8141a397";
 
 import {
 createDrawRenderer
-} from "./draw-render.js?v=e287d58f";
+} from "./draw-render.js?v=9c9b9c9f";
 
 import {
 snapPlotToCandleWick
@@ -165,19 +165,19 @@ createDrawDesktopSelection
 
 import {
 createDrawingsPersist
-} from "./drawings-persist.js?v=ccf2d710";
+} from "./drawings-persist.js?v=0ba84cb0";
 
 import {
 createDrawStyleBar
-} from "./draw-style-bar.js?v=086ac117";
+} from "./draw-style-bar.js?v=5efe2da8";
 
 import {
 createDrawAlertsChart
-} from "./draw-alerts-chart.js?v=f7b31108";
+} from "./draw-alerts-chart.js?v=47736641";
 
 import {
 createDrawPlacement
-} from "./draw-placement.js?v=670ea97d";
+} from "./draw-placement.js?v=ea64096e";
 
 import {
 createDrawTextEditor,
@@ -206,7 +206,7 @@ createBrushPlacement
 
 import {
 createDrawEditInteraction
-} from "./draw-edit-interaction.js?v=82cc8d06";
+} from "./draw-edit-interaction.js?v=c880ef1a";
 
 import {
 createDrawChartInput
@@ -218,7 +218,7 @@ createDrawPriceScale
 
 import {
 createDrawRedrawLoop
-} from "./draw-redraw-loop.js?v=d07c9e6a";
+} from "./draw-redraw-loop.js?v=79a94d49";
 
 import {
 isAlgoReducedCloudClient
@@ -3380,7 +3380,7 @@ lastChartAlertsPullMs =
 Date.now();
 
 void import(
-"../alerts-cloud-sync.js?v=06ca4f74"
+"../alerts-cloud-sync.js?v=78ee6137"
 ).then(
 ({ pullRegistryFromCloudNow })=>
 pullRegistryFromCloudNow({

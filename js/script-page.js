@@ -3,7 +3,7 @@
  */
 import {
 createScriptWidgetGrid
-} from "./script-page-widgets.js?v=b6bcb84e";
+} from "./script-page-widgets.js?v=eb2ce145";
 
 import {
 getSharedPatternScanner,
@@ -16,7 +16,7 @@ stopActivePatternScan,
 startFullPatternScan,
 isScriptScanBackgroundRunning,
 SCRIPT_SCAN_BG_EVENT
-} from "./script-scan-background.js?v=89681682";
+} from "./script-scan-background.js?v=709a9c60";
 
 import {
 PATTERN_SCAN_TF_LABELS,
@@ -25,18 +25,18 @@ normalizePatternScanSideFilter,
 matchesPatternScanSideFilter,
 isPatternScanHitFresh,
 normalizeScriptScanIndicatorId
-} from "./pattern-12-scanner.js?v=ee05f486";
+} from "./pattern-12-scanner.js?v=cabc53b8";
 
 import {
 loadScriptPageState,
 saveScriptPageState,
 SCRIPT_AUTO_PERIODS,
 periodMsById
-} from "./script-page-storage.js?v=53606dd5";
+} from "./script-page-storage.js?v=5b71b1ee";
 
 import {
 fetchTickersInto
-} from "./tickers.js?v=d4995cf9";
+} from "./tickers.js?v=9c75f859";
 
 import {
 parseTradingViewSymbolList,
@@ -47,7 +47,7 @@ import {
 EXCHANGE_CHANGED_EVENT,
 getActiveExchangeId,
 getExchangeDefinition
-} from "./market-api.js?v=00f19708";
+} from "./market-api.js?v=145e2e28";
 
 const SCRIPT_LAYOUT_HOTKEYS =
 Object.freeze({

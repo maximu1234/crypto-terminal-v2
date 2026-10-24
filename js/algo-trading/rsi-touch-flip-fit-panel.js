@@ -2,13 +2,19 @@
  * Колонка подбора Train/Test в панели «Данные». Live не трогает.
  */
 import {
+  fetchBybitKlinePage
+} from "../api.js?v=cdf95f33";
+import {
   RSI_TOUCH_FLIP_LEN_GRID,
   listRsiTouchFlipOptimizeCombos,
   optimizeRsiTouchFlipParams
-} from "./rsi-touch-flip-optimize.js?v=293a02bd";
+} from "./rsi-touch-flip-optimize.js?v=7f944289";
+import {
+  loadRsiTouchFlipFitCandles
+} from "./rsi-touch-flip-history.js?v=00000000";
 import {
   runRsiTouchFlip
-} from "./rsi-touch-flip-engine.js?v=92d67502";
+} from "./rsi-touch-flip-engine.js?v=525cb7f2";
 import {
   clampRsiTouchFlipTrainPct,
   formatRsiTouchFlipParamsBrief,
@@ -21,7 +27,7 @@ import {
   rsiTouchFlipJsonReplacer,
   rsiTouchFlipJsonReviver,
   RSI_TOUCH_FLIP_DEFAULT_TRAIN_PCT
-} from "./rsi-touch-flip-walkforward.js?v=76212104";
+} from "./rsi-touch-flip-walkforward.js?v=2df2b8ca";
 
 const FIT_KEY = "algo_trading_rsi_touch_flip_fit_v1";
 
@@ -274,6 +280,28 @@ export function mountRsiTouchFlipFit(host) {
   let running = false;
   let signal = { cancelled: false };
   let pinnedChart = { symbol: "", tf: "" };
+  let fitErrorHold = false;
+
+  function showFitError(message) {
+    fitErrorHold = true;
+    setLaunchState("error");
+    const title = el("algo-rsi-flip-launch-title");
+    const params = el("algo-rsi-flip-launch-params");
+    const detail = el("algo-rsi-flip-launch-detail");
+    const applyBtn = el("algo-rsi-flip-apply-fit");
+    if (title) {
+      title.textContent = "Подбор сорвался";
+    }
+    if (params) {
+      params.textContent = "";
+    }
+    if (detail) {
+      detail.textContent =
+        message ||
+        "Сетка не досчитана. Частичный результат не показываем.";
+    }
+    applyBtn?.setAttribute("disabled", "");
+  }
 
   function stillOnPinnedChart() {
     return (
@@ -544,6 +572,9 @@ export function mountRsiTouchFlipFit(host) {
       renderCurrentTest(currentEval);
     }
 
+    if (fitErrorHold) {
+      return;
+    }
     const stored = loadFitStore();
     const sameChart =
       stored &&
@@ -556,6 +587,10 @@ export function mountRsiTouchFlipFit(host) {
       saveFitStore(candidate);
     }
     if (candidate && prefs && !sameOverlayPrefs(candidate.prefs, prefs)) {
+      if (Number(stored?.candleCount) > candles.length + 1000) {
+        renderCandidate(candidate, currentEval);
+        return;
+      }
       void recomputeStoredOverlay(candles, chartTf, prefs, currentEval);
       return;
     }
@@ -566,25 +601,10 @@ export function mountRsiTouchFlipFit(host) {
     if (running || host.isDisposed?.() || !host.isActive?.()) {
       return;
     }
-    const candles = host.getCandles?.() || [];
     const basePrefs = host.getPrefs?.();
     const chartTf = host.getChartTf?.() || "";
     const trainPct = readTrainPct();
-    if (!host.isHistoryReady?.()) {
-      renderSplitLabel(null);
-      return;
-    }
-    const split = rsiTouchFlipTrainTestSplit(
-      candles,
-      undefined,
-      chartTf,
-      trainPct
-    );
-    if (!split) {
-      renderSplitLabel(null);
-      return;
-    }
-
+    fitErrorHold = false;
     signal = { cancelled: false };
     pinnedChart = {
       symbol: host.getSymbol?.(),
@@ -594,7 +614,37 @@ export function mountRsiTouchFlipFit(host) {
     renderProgress(0, listRsiTouchFlipOptimizeCombos().length);
 
     const rsiByLen = new Map();
+    let historyYoungNote = "";
     try {
+      const history = await loadRsiTouchFlipFitCandles({
+        symbol: host.getSymbol?.(),
+        tf: chartTf,
+        fetchPage: ({ symbol, tf, endMs, limit }) =>
+          fetchBybitKlinePage(symbol, tf, endMs, limit)
+      });
+      if (signal.cancelled || host.isDisposed?.() || !stillOnPinnedChart()) {
+        return;
+      }
+      if (!history.ok) {
+        showFitError(history.message);
+        return;
+      }
+      const candles = history.candles;
+      historyYoungNote = history.young ? history.message : "";
+      const split = rsiTouchFlipTrainTestSplit(
+        candles,
+        undefined,
+        chartTf,
+        trainPct
+      );
+      if (!split) {
+        showFitError(
+          `Для подбора мало свечей: ${candles.length}. Нужен непрерывный ряд, у молодого тикера — вся история с листинга.`
+        );
+        return;
+      }
+      renderSplitLabel(split);
+
       for (const rsiLen of RSI_TOUCH_FLIP_LEN_GRID) {
         if (signal.cancelled || host.isDisposed?.() || !stillOnPinnedChart()) {
           signal.cancelled = true;
@@ -604,6 +654,12 @@ export function mountRsiTouchFlipFit(host) {
           ...basePrefs,
           rsiLen
         });
+        if (!Array.isArray(rsi) || rsi.length !== candles.length) {
+          showFitError(
+            `RSI ${rsiLen} посчитан на ${Array.isArray(rsi) ? rsi.length : 0} свечах из ${candles.length}`
+          );
+          return;
+        }
         if (signal.cancelled || host.isDisposed?.() || !stillOnPinnedChart()) {
           signal.cancelled = true;
           break;
@@ -629,6 +685,10 @@ export function mountRsiTouchFlipFit(host) {
         return;
       }
       if (result.cancelled) {
+        return;
+      }
+      if (result.incomplete) {
+        showFitError(result.error);
         return;
       }
       if (!result.best && !result.bestTradable) {
@@ -717,8 +777,17 @@ export function mountRsiTouchFlipFit(host) {
       saveFitStore(row);
       applyFitRowToColumn(row, currentEval);
       renderCandidate(row, currentEval);
+      if (historyYoungNote) {
+        const detail = el("algo-rsi-flip-launch-detail");
+        if (detail) {
+          detail.textContent = `${detail.textContent} ${historyYoungNote}`;
+        }
+      }
     } catch (err) {
       console.warn("[algo-rsi-touch-flip] fit", err?.message || err);
+      if (!signal.cancelled && stillOnPinnedChart()) {
+        showFitError(err?.message || "Подбор сорвался");
+      }
     } finally {
       if (!host.isDisposed?.()) {
         setRunningUi(false);

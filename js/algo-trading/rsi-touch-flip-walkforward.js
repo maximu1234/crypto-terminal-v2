@@ -5,10 +5,10 @@
  */
 import {
   rsiTouchFlipChartDays
-} from "./rsi-touch-flip-mtf.js?v=11c6ea8a";
+} from "./rsi-touch-flip-mtf.js?v=450e7571";
 import {
   RSI_TOUCH_FLIP_TF_OPTIONS
-} from "./rsi-touch-flip-prefs.js?v=8d462a58";
+} from "./rsi-touch-flip-prefs.js?v=f6c3ff87";
 
 export const RSI_TOUCH_FLIP_DEFAULT_TRAIN_PCT = 70;
 

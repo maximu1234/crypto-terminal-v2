@@ -55,6 +55,10 @@ const earlyT3Engine =
 require(
 "./algo-bot-early-t3-engine.cjs"
 );
+const rsiTouchFlipAutoFit =
+require(
+"./algo-bot-rsi-touch-flip-auto-fit.cjs"
+);
 const rsiTouchFlipEngine =
 require(
 "./algo-bot-rsi-touch-flip-engine.cjs"
@@ -1499,6 +1503,7 @@ strategies
 stopPoll();
 stopWatchlistRefresh();
 await earlyT3Engine.stopEarlyT3Engine();
+rsiTouchFlipAutoFit.requestStop();
 await rsiTouchFlipEngine.stopRsiTouchFlipEngine();
 await macdFlipTouchEngine.stopMacdFlipTouchEngine();
 await patternEngine.stopPatternEngine();
@@ -2537,7 +2542,11 @@ payload?.balancePct,
 marginMode:
 payload?.marginMode,
 leverage:
-payload?.leverage
+payload?.leverage,
+autoFitPeriod:
+payload?.autoFitPeriod,
+autoFitRetry:
+payload?.autoFitRetry
 }
 );
 }catch(
@@ -2724,6 +2733,7 @@ err?.message ||
 err
 );
 try{
+rsiTouchFlipAutoFit.requestStop();
 await rsiTouchFlipEngine.stopRsiTouchFlipEngine();
 }catch{
 /* ignore */
@@ -3876,6 +3886,7 @@ runningStrategyId =
 null;
 entriesPaused =
 false;
+rsiTouchFlipAutoFit.requestStop();
 await rsiTouchFlipEngine.stopRsiTouchFlipEngine();
 await patternEngine.stopPatternEngine();
 
@@ -4108,7 +4119,13 @@ read?.marginMode
 leverage:
 rsiTouchFlipMath.normalizeLeverage(
 read?.leverage
-)
+),
+autoFitPeriod:
+read?.autoFitPeriod ||
+"",
+autoFitRetry:
+read?.autoFitRetry ===
+true
 };
 
 }
@@ -4301,6 +4318,20 @@ publishedRsiTouchFlipMarginMode:
 marginMode,
 publishedRsiTouchFlipLeverage:
 leverage,
+publishedRsiTouchFlipAutoFitPeriod:
+extra.autoFitPeriod !=
+null
+? extra.autoFitPeriod
+: readRsiTouchFlipBook().autoFitPeriod,
+publishedRsiTouchFlipAutoFitRetry:
+extra.autoFitRetry !==
+undefined &&
+extra.autoFitRetry !==
+null
+? extra.autoFitRetry ===
+true
+: readRsiTouchFlipBook().autoFitRetry ===
+true,
 ...(
 typeof extra.message ===
 "string"
@@ -4510,7 +4541,13 @@ payload?.balancePct,
 marginMode:
 payload?.marginMode,
 leverage:
-payload?.leverage
+payload?.leverage,
+autoFitPeriod:
+payload?.autoFitPeriod,
+autoFitLastAt:
+payload?.autoFitLastAt,
+autoFitRetry:
+payload?.autoFitRetry
 }
 );
 }catch(
@@ -4576,6 +4613,11 @@ marginMode:
 written.marginMode,
 leverage:
 written.leverage,
+autoFitPeriod:
+written.autoFitPeriod,
+autoFitRetry:
+written.autoFitRetry ===
+true,
 message
 }
 );
@@ -4631,6 +4673,12 @@ rows:
 written.rows,
 message
 };
+
+try{
+rsiTouchFlipAutoFit.poke();
+}catch{
+/* ignore */
+}
 
 }
 
@@ -5245,6 +5293,20 @@ err
 return result;
 
 }
+
+rsiTouchFlipAutoFit.attach(
+{
+isRunning(){
+return runningStrategyId ===
+"rsi-touch-flip" &&
+rsiTouchFlipEngine.isRsiTouchFlipEngineRunning();
+},
+readBook:
+readRsiTouchFlipBook,
+applyBook:
+syncRsiTouchFlipBook
+}
+);
 
 module.exports =
 {
