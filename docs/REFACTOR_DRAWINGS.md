@@ -1,6 +1,6 @@
 # Refactor drawings — план (после metka-9)
 
-**Текущий эталон:** [MARKER_219.md](./MARKER_219.md) (`metka-219`). Исторически split рисования закрыт на `metka-29` (документ снят).
+**Текущий эталон:** [MARKER_220.md](./MARKER_220.md) (`metka-220`). Исторически split рисования закрыт на `metka-29` (документ снят).
 
 **Принцип:** одна фаза = одна метка = [DRAWINGS_REGRESSION.md](./DRAWINGS_REGRESSION.md) пройден.
 

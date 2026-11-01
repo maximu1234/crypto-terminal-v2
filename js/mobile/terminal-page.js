@@ -3,7 +3,7 @@
  */
 import {
   mountMobileReadOnlyChart
-} from "./chart-lite.js?v=b7388113";
+} from "./chart-lite.js?v=7e5f3f4d";
 import {
   mountMobileTerminalCoins
 } from "./terminal-coins.js?v=693e4e59";
@@ -15,14 +15,14 @@ import {
   cancelOpenOrder,
   openMarket,
   closeMarket
-} from "./trade-lite.js?v=d151f871";
+} from "./trade-lite.js?v=a88221b9";
 import {
   initMobileAlertsLite,
   listMobileAlerts,
   createMobilePriceAlert,
   removeMobileAlert,
   formatMobileAlertLine
-} from "./alerts-lite.js?v=408204e6";
+} from "./alerts-lite.js?v=2094e669";
 
 const STORAGE_SYMBOL = "mc-mobile-terminal-symbol-v1";
 const STORAGE_TF = "mc-mobile-terminal-tf-v1";
@@ -557,9 +557,12 @@ export async function mountMobileTerminalPage(root) {
   }
 
   setTab("chart");
-  window.addEventListener("trade-positions-updated", () => {
+  const refreshPosUi = () => {
     if (activeTab === "positions") {
       renderPositions();
     }
-  });
+  };
+  /* Cache / stream emit these; trade-positions-updated was never dispatched. */
+  window.addEventListener("trade-stream-positions", refreshPosUi);
+  window.addEventListener("trade-open-positions-changed", refreshPosUi);
 }

@@ -49,7 +49,7 @@ touchShapeRevision
 
 import {
 stripAlertFromShape
-} from "./drawings-persist.js?v=0ba84cb0";
+} from "./drawings-persist.js?v=f6efdebb";
 
 import {
 moveBrushHandle,
@@ -68,7 +68,11 @@ isElliottType,
 getElliottPoints,
 setElliottPoints,
 elliottHandleIndex
-} from "./elliott-spec.js?v=3fb92981";
+} from "./elliott-spec.js?v=44735be0";
+
+import {
+channelP3ScreenFromRailMid
+} from "./channel-spec.js?v=9031b2bf";
 
 /**
  * Handle hit circles are larger than the vertex. Drag already uses grab
@@ -258,16 +262,91 @@ handle.point
 if(
 xy
 ){
-out.push({
+const row = {
 id: handle.id,
 x: xy.x,
 y: xy.y
-});
+};
+if(
+handle.square
+){
+row.square = true;
+}
+out.push(row);
 }
 
+}
+
+if(
+shape.type ===
+"channel"
+){
+appendChannelRailMidHandle(
+out
+);
 }
 
 return out;
+
+}
+
+function appendChannelRailMidHandle(
+out
+){
+
+const p1 =
+out.find(
+h=>
+h.id ===
+"p1"
+);
+const p2 =
+out.find(
+h=>
+h.id ===
+"p2"
+);
+const p3 =
+out.find(
+h=>
+h.id ===
+"p3"
+);
+
+if(
+!p1 ||
+!p2 ||
+!p3
+){
+return;
+}
+
+const x =
+p3.x +
+(p2.x - p1.x) /
+2;
+const y =
+p3.y +
+(p2.y - p1.y) /
+2;
+
+if(
+!Number.isFinite(
+x
+) ||
+!Number.isFinite(
+y
+)
+){
+return;
+}
+
+out.push({
+id: "midB",
+square: true,
+x,
+y
+});
 
 }
 
@@ -880,6 +959,15 @@ shape
 );
 }
 
+if(
+handleId ===
+"midB"
+){
+return channelRailMidPoint(
+shape
+);
+}
+
 }
 
 if(
@@ -954,6 +1042,42 @@ price: shape.slPrice
 }
 
 return null;
+
+}
+
+function channelRailMidPoint(
+shape
+){
+
+const a =
+toXY(
+shape?.p1
+);
+const b =
+toXY(
+shape?.p2
+);
+const c =
+toXY(
+shape?.p3
+);
+
+if(
+!a ||
+!b ||
+!c
+){
+return null;
+}
+
+return pointFromXY(
+c.x +
+(b.x - a.x) /
+2,
+c.y +
+(b.y - a.y) /
+2
+);
 
 }
 
@@ -1323,6 +1447,43 @@ pointFromXY(
 p4xy.x - (b.x - a.x),
 p4xy.y - (b.y - a.y)
 );
+
+if(np3){
+shape.p3 = np3;
+}
+
+}
+
+if(handleId === "midB"){
+
+const a =
+toXY(shape.p1);
+const b =
+toXY(shape.p2);
+const mid =
+toXY(point);
+
+if(
+!a ||
+!b ||
+!mid
+){
+return;
+}
+
+const np3xy =
+channelP3ScreenFromRailMid(
+a,
+b,
+mid
+);
+const np3 =
+np3xy
+? pointFromXY(
+np3xy.x,
+np3xy.y
+)
+: null;
 
 if(np3){
 shape.p3 = np3;

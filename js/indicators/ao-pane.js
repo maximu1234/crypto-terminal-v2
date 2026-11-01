@@ -323,6 +323,17 @@ null
 }
 );
 
+try{
+chart.priceScale(
+"right"
+).applyOptions({
+invertScale:
+!!getHost?.()?.isCoinsAoInverted
+});
+}catch{
+/* ignore */
+}
+
 return true;
 
 }

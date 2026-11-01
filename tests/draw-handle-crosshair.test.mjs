@@ -155,8 +155,14 @@ test("listHandleScreenPoints uses trendline / fib / channel vertices", () => {
           { id: "p4", point: { time: 4, price: 8 } }
         ]
       }
-    ).map((h) => h.id),
-    ["p1", "p2", "p3", "p4"]
+    ),
+    [
+      { id: "p1", x: 0, y: 1 },
+      { id: "p2", x: 4, y: 1 },
+      { id: "p3", x: 0, y: 8 },
+      { id: "p4", x: 4, y: 8 },
+      { id: "midB", x: 2, y: 8, square: true }
+    ]
   );
 });
 

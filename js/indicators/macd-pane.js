@@ -443,6 +443,17 @@ false
 }
 );
 
+try{
+chart.priceScale(
+"right"
+).applyOptions({
+invertScale:
+!!getHost?.()?.isCoinsMacdInverted
+});
+}catch{
+/* ignore */
+}
+
 return true;
 
 }

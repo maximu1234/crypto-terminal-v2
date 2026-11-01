@@ -3,15 +3,15 @@
  */
 import {
 createTradeChartOverlay
-} from "./trade-chart-overlay.js?v=92da35a2";
+} from "./trade-chart-overlay.js?v=9a10e2d3";
 
 import {
 createTradeChartOrders
-} from "./trade-chart-orders.js?v=8929ed5f";
+} from "./trade-chart-orders.js?v=d8b2baae";
 
 import {
 createTradePlusMenuHandler
-} from "./trade-order-plus-ui.js?v=10329e3d";
+} from "./trade-order-plus-ui.js?v=06c6c373";
 
 import {
 TRADE_VOLUME_SLOT_COUNT,
@@ -20,7 +20,7 @@ focusActiveVolumePresetInput,
 getVolumeStateForSymbol,
 saveVolumeStateForSymbol,
 getActiveTradeVolumeUsdt
-} from "./trade-volume-presets.js?v=a9a7f6a3";
+} from "./trade-volume-presets.js?v=a8873e36";
 
 import {
 marketMap
@@ -28,11 +28,11 @@ marketMap
 
 import {
 getLoadedTradeExchangeModules
-} from "./trade/module-router.js?v=b2618ee7";
+} from "./trade/module-router.js?v=75806a00";
 
 import {
 mountTradeLeverageControl
-} from "./trade-leverage-settings.js?v=6f532a92";
+} from "./trade-leverage-settings.js?v=68d08825";
 
 function normalizeSymbol(
 symbol

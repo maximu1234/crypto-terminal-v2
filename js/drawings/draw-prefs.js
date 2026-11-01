@@ -39,7 +39,7 @@ import {
 
 import {
   migrateChannelToolDefaults
-} from "./channel-spec.js?v=a8bcf3c9";
+} from "./channel-spec.js?v=9031b2bf";
 
 import {
   ELLIOTT_TOOL_TYPES,
@@ -47,7 +47,7 @@ import {
 isPattern12Draw,
 migrateElliottToolDefaults,
 normalizePattern12TpFlags
-} from "./elliott-spec.js?v=3fb92981";
+} from "./elliott-spec.js?v=44735be0";
 
 /**
  * @returns {{

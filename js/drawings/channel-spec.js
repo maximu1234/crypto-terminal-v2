@@ -310,3 +310,56 @@ t *
 };
 
 }
+
+/**
+ * Screen point of p3 so the parallel rail midpoint sits on `mid`.
+ * p4 = p3 + (p2 − p1), so the midpoint is p3 + (p2 − p1) / 2.
+ * Base rail p1–p2 stays put; only the channel height/offset changes.
+ */
+export function channelP3ScreenFromRailMid(
+p1,
+p2,
+mid
+){
+
+if(
+!p1 ||
+!p2 ||
+!mid
+){
+return null;
+}
+
+const xs =
+[
+p1.x,
+p1.y,
+p2.x,
+p2.y,
+mid.x,
+mid.y
+];
+
+if(
+xs.some(
+v=>
+!Number.isFinite(
+v
+)
+)
+){
+return null;
+}
+
+return {
+x:
+mid.x -
+(p2.x - p1.x) /
+2,
+y:
+mid.y -
+(p2.y - p1.y) /
+2
+};
+
+}

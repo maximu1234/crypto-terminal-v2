@@ -445,9 +445,9 @@ width:min(280px,calc(100vw - 24px));
 width:min(320px,calc(100vw - 24px));
 }
 
-/* EMA Shift Ribbon: Цвет / Длина / Сдвиг / TF. */
+/* EMA Shift Ribbon: ширина = сетка колонок + padding body, без «хвоста» справа. */
 .chart-indicator-settings-dialog--ribbon{
-width:min(400px,calc(100vw - 24px));
+width:min(322px,calc(100vw - 24px));
 }
 
 .chart-indicator-settings-header{
@@ -597,16 +597,20 @@ margin:0;
 }
 
 .ind-ribbon-settings{
+--ind-ribbon-cols:18px 44px 52px 44px 52px 58px;
+--ind-ribbon-gap:6px;
 display:flex;
 flex-direction:column;
 gap:4px;
+width:calc(18px + 44px + 52px + 44px + 52px + 58px + 5 * 6px);
+max-width:100%;
 }
 
 .ind-ribbon-settings-head,
 .ind-ribbon-settings-row{
 display:grid;
-grid-template-columns:18px 44px 52px 44px 52px 58px;
-gap:6px;
+grid-template-columns:var(--ind-ribbon-cols);
+gap:var(--ind-ribbon-gap);
 align-items:center;
 }
 
@@ -723,14 +727,17 @@ border-top:1px solid rgba(255,255,255,0.06);
 .ind-ribbon-settings-auto-tools{
 display:flex;
 align-items:center;
-justify-content:space-between;
+justify-content:flex-end;
 gap:10px;
 margin:2px 0 4px;
-padding:0 0 0 68px;
+padding:0;
+width:100%;
+box-sizing:border-box;
 }
 
 .ind-ribbon-settings-auto-spacer{
 flex:1 1 auto;
+min-width:0;
 }
 
 .ind-ribbon-settings-auto-lookback{
@@ -738,6 +745,7 @@ display:flex;
 align-items:center;
 gap:8px;
 margin:0;
+margin-right:auto;
 font:500 11px/1.2 system-ui,-apple-system,sans-serif;
 color:#9ca3af;
 }
@@ -752,13 +760,14 @@ border-radius:5px;
 
 .ind-ribbon-settings-fit-btn{
 margin:0;
-padding:4px 10px;
+padding:4px 8px;
 border:1px solid rgba(129,140,248,0.45);
 border-radius:6px;
 background:rgba(129,140,248,0.12);
 color:#c7d2fe;
 font:500 11px/1.2 system-ui,-apple-system,sans-serif;
 cursor:pointer;
+flex:0 0 auto;
 }
 
 .ind-ribbon-settings-fit-btn:hover:not(:disabled){
@@ -778,6 +787,8 @@ gap:10px;
 margin:8px 0 0;
 padding:8px 0 0;
 border-top:1px solid rgba(255,255,255,0.06);
+width:100%;
+box-sizing:border-box;
 }
 
 .ind-ribbon-settings-width-label{
@@ -786,7 +797,12 @@ color:#9ca3af;
 }
 
 .ind-ribbon-settings-width .ind-ribbon-settings-num{
-width:44px;
+width:58px;
+}
+
+.chart-indicator-settings-dialog--ribbon .chart-indicator-settings-footer{
+padding-left:12px;
+padding-right:12px;
 }
 
 .ind-ma-settings{

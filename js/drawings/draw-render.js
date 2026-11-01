@@ -45,7 +45,7 @@ horizPriceLineX1
 import {
 channelLevelSegment,
 ensureChannelLevelsVisible
-} from "./channel-spec.js?v=a8bcf3c9";
+} from "./channel-spec.js?v=9031b2bf";
 
 import {
 isTextTool,
@@ -71,7 +71,7 @@ PATTERN_12_DEFAULT_CHANNEL_COLOR,
 pattern12ChannelGeometry,
 pattern12DashScreen,
 pattern12TpTickLayout
-} from "./elliott-spec.js?v=3fb92981";
+} from "./elliott-spec.js?v=44735be0";
 
 /**
  * @param {object} deps

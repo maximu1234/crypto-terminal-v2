@@ -15,6 +15,10 @@ TERMINAL_VISIBLE_BARS
 } from "../terminal-chart-history-prefs.js?v=948df10f";
 
 import {
+quoteCandlesToBtc
+} from "../chart/btc-quote.js?v=ddd63eed";
+
+import {
 isChartLayoutReady,
 isChromeOverlayActive
 } from "../chart-layout-gate.js?v=4a8798af";
@@ -184,7 +188,9 @@ return [];
 }
 
 return appendFutureWhitespaceBars(
-candles,
+quoteCandlesToBtc(
+candles
+),
 computeChartFutureMarginBars(
 terminalVisibleBars(
 candles.length

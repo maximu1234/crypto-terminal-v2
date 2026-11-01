@@ -10,7 +10,7 @@ normalizeFibLevelColor
 
 import {
 CHANNEL_DEFAULT_COLOR
-} from "./channel-spec.js?v=a8bcf3c9";
+} from "./channel-spec.js?v=9031b2bf";
 
 export const ELLIOTT_DEFAULT_COLOR =
 "#38bdf8";

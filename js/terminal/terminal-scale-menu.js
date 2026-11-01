@@ -7,6 +7,13 @@ import {
 isTerminalPage
 } from "./terminal-state.js?v=4747a92f";
 
+const PANE_TARGETS =
+[
+"rsi",
+"ao",
+"macd"
+];
+
 export function mountCoinsScaleInvertMenu(
 deps
 ){
@@ -14,7 +21,9 @@ deps
 const {
 setCoinsChartPriceScaleMode,
 toggleCoinsChartInversion,
-toggleCoinsRsiInversion
+toggleCoinsRsiInversion,
+toggleCoinsAoInversion,
+toggleCoinsMacdInversion
 } = deps;
 
 
@@ -26,29 +35,46 @@ if(
 return ()=>{};
 }
 
-const rsiWrapEl =
-document.getElementById(
-"rsi-wrap"
-);
-
-const rsiChartEl =
-document.getElementById(
-"rsi-chart"
-);
-
-const scaleStripEl =
-document.getElementById(
-"price-scale-touch-strip"
-);
-
-const rsiScaleStripEl =
-document.getElementById(
-"rsi-scale-touch-strip"
-);
-
-/** Длиннее окна double-tap по шкале (~320–500 ms), короче случайного long-press при pan */
-const HOLD_MS =
-520;
+const paneSpecs =
+{
+rsi: {
+wrapId: "rsi-wrap",
+chartId: "rsi-chart",
+stripId: "rsi-scale-touch-strip",
+getInverted: ()=>
+deps.isCoinsRsiInverted,
+toggle: ()=>
+toggleCoinsRsiInversion?.(),
+getChart: ()=>
+deps.rsiChart
+},
+ao: {
+wrapId: "ao-wrap",
+chartId: "ao-chart",
+stripId: "ao-scale-touch-strip",
+getInverted: ()=>
+deps.isCoinsAoInverted,
+toggle: ()=>
+toggleCoinsAoInversion?.(),
+getChart: ()=>
+deps.getPaneChart?.(
+"ao"
+)
+},
+macd: {
+wrapId: "macd-wrap",
+chartId: "macd-chart",
+stripId: "macd-scale-touch-strip",
+getInverted: ()=>
+deps.isCoinsMacdInverted,
+toggle: ()=>
+toggleCoinsMacdInversion?.(),
+getChart: ()=>
+deps.getPaneChart?.(
+"macd"
+)
+}
+};
 
 const menu =
 document.createElement("div");
@@ -130,10 +156,13 @@ let menuTarget =
 
 function syncMenuState(){
 
+const pane =
+paneSpecs[
+menuTarget
+];
 const inverted =
-menuTarget ===
-"rsi"
-? deps.isCoinsRsiInverted
+pane
+? !!pane.getInverted()
 : deps.isCoinsChartInverted;
 
 item.textContent =
@@ -143,11 +172,11 @@ inverted
 
 item.title =
 menuTarget ===
-"rsi"
-? ""
-: inverted
+"price"
+? inverted
 ? "Вернуть обычную шкалу (Alt+I)"
-: "Перевернуть график (Alt+I)";
+: "Перевернуть график (Alt+I)"
+: "";
 
 item.setAttribute(
 "aria-pressed",
@@ -181,12 +210,9 @@ isRegular
 : "true"
 );
 
-const showModes =
-menuTarget ===
-"price";
-
 priceModeBox.hidden =
-!showModes;
+menuTarget !==
+"price";
 
 }
 
@@ -210,8 +236,11 @@ menuTarget
 
 menuTarget =
 target ===
-"rsi"
-? "rsi"
+"price" ||
+PANE_TARGETS.includes(
+target
+)
+? target
 : "price";
 
 syncMenuState();
@@ -223,14 +252,29 @@ menu.style.top = "0px";
 
 const menuRect =
 menu.getBoundingClientRect();
+const pane =
+paneSpecs[
+menuTarget
+];
 const anchorEl =
-menuTarget ===
-"rsi"
-? rsiChartEl
+pane
+? document.getElementById(
+pane.chartId
+)
 : deps.chartEl;
 
 if(
-!anchorEl
+!anchorEl ||
+(
+pane &&
+getComputedStyle(
+document.getElementById(
+pane.wrapId
+) ||
+anchorEl
+).display ===
+"none"
+)
 ){
 hideMenu();
 return;
@@ -239,9 +283,8 @@ return;
 const chartRect =
 anchorEl.getBoundingClientRect();
 const scaleChart =
-menuTarget ===
-"rsi"
-? deps.rsiChart
+pane
+? pane.getChart()
 : deps.chart;
 
 const scaleW =
@@ -303,21 +346,50 @@ menu.style.top =
 
 }
 
-function isInPriceScale(
+function isInChartScale(
+chartDomEl,
+lwChart,
 clientX,
 clientY
 ){
 
+if(
+!chartDomEl
+){
+return false;
+}
+
+const wrap =
+chartDomEl.closest?.(
+"#ao-wrap, #macd-wrap, #rsi-wrap"
+);
+
+if(
+wrap &&
+(
+wrap.classList.contains(
+"indicator-pane-hidden"
+) ||
+getComputedStyle(
+wrap
+).display ===
+"none"
+)
+){
+return false;
+}
+
 const rect =
-deps.chartEl.getBoundingClientRect();
+chartDomEl.getBoundingClientRect();
 const localX =
 clientX - rect.left;
 const localY =
 clientY - rect.top;
 const scaleW =
-deps.chart.priceScale(
+lwChart?.priceScale?.(
 "right"
-)?.width?.() || 56;
+)?.width?.() ||
+56;
 
 return (
 localY >= 0 &&
@@ -328,33 +400,44 @@ localX <= rect.width
 
 }
 
-function isInRsiScale(
+function isInPriceScale(
 clientX,
 clientY
 ){
 
+return isInChartScale(
+deps.chartEl,
+deps.chart,
+clientX,
+clientY
+);
+
+}
+
+function isInPaneScale(
+paneId,
+clientX,
+clientY
+){
+
+const pane =
+paneSpecs[
+paneId
+];
+
 if(
-!rsiChartEl
+!pane
 ){
 return false;
 }
 
-const rect =
-rsiChartEl.getBoundingClientRect();
-const localX =
-clientX - rect.left;
-const localY =
-clientY - rect.top;
-const scaleW =
-deps.rsiChart?.priceScale?.(
-"right"
-)?.width?.() || 56;
-
-return (
-localY >= 0 &&
-localY <= rect.height &&
-localX >= rect.width - scaleW &&
-localX <= rect.width
+return isInChartScale(
+document.getElementById(
+pane.chartId
+),
+pane.getChart(),
+clientX,
+clientY
 );
 
 }
@@ -378,19 +461,16 @@ return wrapEl;
 
 }
 
+const scaleStripEl =
+document.getElementById(
+"price-scale-touch-strip"
+);
+
 const touchTargetEl =
 resolveTouchTarget(
 scaleStripEl,
 deps.chartWrapEl
 );
-
-const rsiTouchTargetEl =
-rsiWrapEl
-? resolveTouchTarget(
-rsiScaleStripEl,
-rsiWrapEl
-)
-: null;
 
 const onDesktopContextMenu =
 e=>{
@@ -411,29 +491,6 @@ showMenuAt(
 e.clientX,
 e.clientY,
 "price"
-);
-
-};
-
-const onRsiDesktopContextMenu =
-e=>{
-
-if(
-!isInRsiScale(
-e.clientX,
-e.clientY
-)
-){
-hideMenu();
-return;
-}
-
-e.preventDefault();
-e.stopPropagation();
-showMenuAt(
-e.clientX,
-e.clientY,
-"rsi"
 );
 
 };
@@ -501,17 +558,6 @@ return;
 const t = e.touches[0];
 
 if(
-targetEl === deps.chartWrapEl &&
-!hitScale(
-t.clientX,
-t.clientY
-)
-){
-return;
-}
-
-if(
-targetEl === rsiWrapEl &&
 !hitScale(
 t.clientX,
 t.clientY
@@ -536,7 +582,7 @@ touchStartY,
 scaleTarget
 );
 },
-HOLD_MS
+520
 );
 
 };
@@ -609,11 +655,15 @@ e=>{
 e.preventDefault();
 e.stopPropagation();
 
+const pane =
+paneSpecs[
+menuTarget
+];
+
 if(
-menuTarget ===
-"rsi"
+pane
 ){
-toggleCoinsRsiInversion();
+pane.toggle();
 }else{
 toggleCoinsChartInversion();
 }
@@ -659,29 +709,95 @@ onDesktopContextMenu,
 true
 );
 
-if(
-rsiWrapEl
-){
-rsiWrapEl.addEventListener(
-"contextmenu",
-onRsiDesktopContextMenu,
-true
-);
-}
-
-const unbindPriceTouch =
+const unbindFns =
+[
 bindTouchHold(
 touchTargetEl,
 isInPriceScale,
 "price"
+)
+];
+
+for(
+const paneId of PANE_TARGETS
+){
+
+const pane =
+paneSpecs[
+paneId
+];
+const wrapEl =
+document.getElementById(
+pane.wrapId
+);
+const stripEl =
+document.getElementById(
+pane.stripId
 );
 
-const unbindRsiTouch =
-bindTouchHold(
-rsiTouchTargetEl,
-isInRsiScale,
-"rsi"
+if(
+!wrapEl
+){
+continue;
+}
+
+const onPaneContextMenu =
+e=>{
+
+if(
+!isInPaneScale(
+paneId,
+e.clientX,
+e.clientY
+)
+){
+hideMenu();
+return;
+}
+
+e.preventDefault();
+e.stopPropagation();
+showMenuAt(
+e.clientX,
+e.clientY,
+paneId
 );
+
+};
+
+wrapEl.addEventListener(
+"contextmenu",
+onPaneContextMenu,
+true
+);
+
+unbindFns.push(
+()=>{
+wrapEl.removeEventListener(
+"contextmenu",
+onPaneContextMenu,
+true
+);
+}
+);
+
+unbindFns.push(
+bindTouchHold(
+resolveTouchTarget(
+stripEl,
+wrapEl
+),
+(x, y)=>
+isInPaneScale(
+paneId,
+x,
+y
+),
+paneId
+)
+);
+
+}
 
 document.addEventListener(
 "pointerdown",
@@ -753,17 +869,11 @@ deps.chartWrapEl.removeEventListener(
 onDesktopContextMenu,
 true
 );
-if(
-rsiWrapEl
+for(
+const unbind of unbindFns
 ){
-rsiWrapEl.removeEventListener(
-"contextmenu",
-onRsiDesktopContextMenu,
-true
-);
+unbind?.();
 }
-unbindPriceTouch();
-unbindRsiTouch();
 document.removeEventListener(
 "pointerdown",
 onDocPointerDown,

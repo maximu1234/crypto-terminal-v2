@@ -3,6 +3,16 @@ replayVisibleCandles,
 isTerminalReplayActive
 } from "./terminal-replay.js?v=1b9e6de6";
 
+import {
+btcQuoteButtonLabel,
+ensureBtcQuoteCandles,
+isBtcQuoteActive,
+lastOhlcClose,
+quoteCandlesToBtc,
+setBtcQuoteActive,
+syncBtcQuoteLive
+} from "../chart/btc-quote.js?v=ddd63eed";
+
 /**
  * Closure slice. `host` is the surrounding function's bindings.
  */
@@ -167,6 +177,134 @@ applyCoinsRsiInversion(host,
 !host.isCoinsRsiInverted
 );
 persistCoinsRsiInversion(host);
+
+}
+
+function paneChartFromHost(
+host,
+paneId
+){
+
+return host.chartIndicators?.getIndicator?.(
+paneId
+)?.getChart?.() ||
+null;
+
+}
+
+function applyPaneInversion(
+host,
+paneId,
+inverted
+){
+
+try{
+paneChartFromHost(
+host,
+paneId
+)?.priceScale?.(
+"right"
+)?.applyOptions?.({
+invertScale:
+!!inverted
+});
+}catch{
+/* pane not mounted */
+}
+
+}
+
+export function applyCoinsAoInversion(host, 
+inverted
+){
+
+host.isCoinsAoInverted =
+!!inverted;
+applyPaneInversion(
+host,
+"ao",
+host.isCoinsAoInverted
+);
+
+}
+
+export function persistCoinsAoInversion(host){
+
+if(
+!host.isTerminalPage
+){
+return;
+}
+
+const prefs =
+host.readCoinsPrefs();
+
+prefs.invertAoChart =
+host.isCoinsAoInverted;
+
+host.writeCoinsPrefs(prefs);
+
+}
+
+export function toggleCoinsAoInversion(host){
+
+if(
+!host.isTerminalPage
+){
+return;
+}
+
+applyCoinsAoInversion(host, 
+!host.isCoinsAoInverted
+);
+persistCoinsAoInversion(host);
+
+}
+
+export function applyCoinsMacdInversion(host, 
+inverted
+){
+
+host.isCoinsMacdInverted =
+!!inverted;
+applyPaneInversion(
+host,
+"macd",
+host.isCoinsMacdInverted
+);
+
+}
+
+export function persistCoinsMacdInversion(host){
+
+if(
+!host.isTerminalPage
+){
+return;
+}
+
+const prefs =
+host.readCoinsPrefs();
+
+prefs.invertMacdChart =
+host.isCoinsMacdInverted;
+
+host.writeCoinsPrefs(prefs);
+
+}
+
+export function toggleCoinsMacdInversion(host){
+
+if(
+!host.isTerminalPage
+){
+return;
+}
+
+applyCoinsMacdInversion(host, 
+!host.isCoinsMacdInverted
+);
+persistCoinsMacdInversion(host);
 
 }
 
@@ -801,8 +939,10 @@ return;
 const seq =
 ++host.rsiRebuildSeq;
 const chartCandles =
+quoteCandlesToBtc(
 replayVisibleCandles(
 host.candles
+)
 );
 const points =
 await host.buildChartRsiPoints(
@@ -2759,6 +2899,9 @@ next
 );
 
 const refPrice =
+lastOhlcClose(
+host.buildChartDisplayCandles?.()
+) ??
 host.candles[host.candles.length - 1]?.close ?? 1;
 
 host.applyChartPriceFormat(
@@ -3589,6 +3732,175 @@ sym
 
 }
 
+function paintBtcQuoteButtons(host){
+
+const usdtBtn =
+document.getElementById(
+"current-symbol"
+);
+const btcBtn =
+document.getElementById(
+"btc-quote-btn"
+);
+const label =
+btcQuoteButtonLabel(
+host.currentSymbol
+);
+const on =
+isBtcQuoteActive() &&
+!!label;
+
+if(btcBtn){
+btcBtn.hidden = !label;
+btcBtn.textContent = label || "";
+btcBtn.classList.toggle(
+"is-active",
+on
+);
+btcBtn.setAttribute(
+"aria-pressed",
+on ? "true" : "false"
+);
+}
+
+usdtBtn?.classList.toggle(
+"is-active",
+!on
+);
+usdtBtn?.setAttribute(
+"aria-pressed",
+on ? "false" : "true"
+);
+
+}
+
+function syncBtcQuoteChrome(host){
+
+const usdtBtn =
+document.getElementById(
+"current-symbol"
+);
+const btcBtn =
+document.getElementById(
+"btc-quote-btn"
+);
+
+if(
+usdtBtn &&
+!usdtBtn.dataset.quoteBound
+){
+usdtBtn.dataset.quoteBound = "1";
+usdtBtn.addEventListener(
+"click",
+()=>{
+void setCoinsBtcQuote(
+host,
+false
+);
+}
+);
+}
+
+if(
+btcBtn &&
+!btcBtn.dataset.quoteBound
+){
+btcBtn.dataset.quoteBound = "1";
+btcBtn.addEventListener(
+"click",
+()=>{
+void setCoinsBtcQuote(
+host,
+true
+);
+}
+);
+}
+
+paintBtcQuoteButtons(host);
+
+}
+
+async function repaintCoinsQuote(host){
+
+const display =
+host.buildChartDisplayCandles?.() ||
+[];
+const ref =
+lastOhlcClose(
+display
+) ??
+host.candles?.[
+host.candles.length - 1
+]?.close ??
+1;
+
+host.applyChartPriceFormat?.(
+host.candleSeries,
+ref
+);
+
+try{
+host.candleSeries?.setData(
+display
+);
+}catch{
+/* chart not ready */
+}
+
+try{
+await host.rebuildRsiFromCandles?.({});
+}catch{
+/* ignore */
+}
+
+host.chartIndicators?.notifyCandlesUpdate?.();
+host.drawingTools?.scheduleRedraw?.();
+
+}
+
+export async function setCoinsBtcQuote(host, on){
+
+const want =
+!!on &&
+!!btcQuoteButtonLabel(
+host.currentSymbol
+);
+
+if(
+want ===
+isBtcQuoteActive()
+){
+paintBtcQuoteButtons(host);
+return;
+}
+
+if(want){
+const ok =
+await ensureBtcQuoteCandles(
+host
+);
+if(!ok){
+paintBtcQuoteButtons(host);
+return;
+}
+setBtcQuoteActive(
+true
+);
+syncBtcQuoteLive(
+host.currentTF
+);
+}else{
+setBtcQuoteActive(
+false
+);
+}
+
+paintBtcQuoteButtons(host);
+await repaintCoinsQuote(host);
+
+}
+
 export function syncCoinsPageTitle(host){
 
 if(
@@ -3635,6 +3947,21 @@ return;
 
 el.textContent =
 formatCoinsSymbolLabel(host, sym);
+
+syncBtcQuoteChrome(host);
+
+if(
+isBtcQuoteActive() &&
+!btcQuoteButtonLabel(
+host.currentSymbol ||
+sym
+)
+){
+void setCoinsBtcQuote(
+host,
+false
+);
+}
 
 window.dispatchEvent(
 new CustomEvent(
@@ -3968,7 +4295,7 @@ if(
 ){
 host.terminalAlgoEarlyT3ListMod =
 await import(
-"../algo-trading/terminal-early-t3-list.js?v=efd65c71"
+"../algo-trading/terminal-early-t3-list.js?v=e8c42cbf"
 );
 }
 host.terminalAlgoEarlyT3ListMod.mountTerminalAlgoEarlyT3List();

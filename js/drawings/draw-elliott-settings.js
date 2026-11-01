@@ -20,7 +20,7 @@ normalizePatternDashOpacity,
 normalizePatternLineStyle,
 parsePattern12TpLevel,
 PATTERN_12_DEFAULT_CHANNEL_COLOR
-} from "./elliott-spec.js?v=3fb92981";
+} from "./elliott-spec.js?v=44735be0";
 
 import {
 setFibLevelWidthButton,

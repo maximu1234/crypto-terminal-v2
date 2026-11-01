@@ -18,9 +18,9 @@
 <link rel="stylesheet" href="/css/common.css?v=b1fbdc2b">
 <link rel="stylesheet" href="/css/terminal.css?v=07383fe4">
 <link rel="stylesheet" href="/css/chrome-motion.css?v=ce79f4e8">
-<link rel="stylesheet" href="/css/terminal-layout.css?v=9513bf13">
+<link rel="stylesheet" href="/css/terminal-layout.css?v=faf736a8">
 <link rel="stylesheet" href="/css/dx-ball.css?v=6ef49e6c">
-<link rel="stylesheet" href="/css/chart-indicators.css?v=835f7ddb">
+<link rel="stylesheet" href="/css/chart-indicators.css?v=6bc133d7">
 <link rel="stylesheet" href="/css/chart-snapshot.css?v=13c62ee8">
 <link rel="stylesheet" href="/css/draw-menus.css?v=ec157f82">
 <script>
@@ -83,7 +83,8 @@ document.documentElement.classList.add("trade-desktop");
 </div>
 </div>
 
-<div id="current-symbol"></div>
+<button type="button" id="current-symbol" class="symbol-quote-btn is-active" aria-pressed="true"></button>
+<button type="button" id="btc-quote-btn" class="symbol-quote-btn" hidden aria-pressed="false"></button>
 
 </div>
 
@@ -301,6 +302,7 @@ paint(last.symbol);
 <span class="ao-hud-title">AO</span><span id="ao-hud-value">—</span>
 </div>
 <div id="ao-chart"></div>
+<div id="ao-scale-touch-strip" class="rsi-scale-touch-strip" aria-hidden="true"></div>
 </div>
 
 <div id="macd-wrap" class="indicator-pane-hidden">
@@ -311,6 +313,7 @@ paint(last.symbol);
 <span class="macd-hud-hist" id="macd-hud-hist">—</span>
 </div>
 <div id="macd-chart"></div>
+<div id="macd-scale-touch-strip" class="rsi-scale-touch-strip" aria-hidden="true"></div>
 </div>
 
 <div id="volume-wrap" class="indicator-pane-hidden">
@@ -437,7 +440,7 @@ Vol
 
 <div id="coins-chart-status" class="coins-chart-status hidden" aria-live="polite"></div>
 
-<script src="/js/terminal-page-boot.js?v=54b2153c" type="module"></script>
+<script src="/js/terminal-page-boot.js?v=93bae26c" type="module"></script>
 
 </body>
 </html>

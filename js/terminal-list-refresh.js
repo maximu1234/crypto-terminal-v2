@@ -5,7 +5,7 @@ import {
 readCoinsPrefs,
 writeCoinsPrefs,
 normalizeListRefreshMs
-} from "./terminal/terminal-prefs.js?v=2fbe25b4";
+} from "./terminal/terminal-prefs.js?v=a4c00768";
 
 import {
 setTickerPollInterval

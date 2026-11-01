@@ -5,7 +5,7 @@ readPersistedAuthSession
 
 import {
 ensureCloudLoginResolved
-} from "../cloud-sync.js?v=cfbdaa32";
+} from "../cloud-sync.js?v=dfd0fed0";
 
 import {
 withTimeout
@@ -13,7 +13,7 @@ withTimeout
 
 import {
 purgeAlertRowByCloudId
-} from "./worker-client.js?v=339d291b";
+} from "./worker-client.js?v=ab6ca946";
 
 function alertKeepKey(
 symbol,

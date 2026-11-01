@@ -121,6 +121,8 @@ const keys =
 "lastViewByExchange",
 "invertChart",
 "invertRsiChart",
+"invertAoChart",
+"invertMacdChart",
 "priceScaleMode",
 "listRefreshMs",
 "minVolume"

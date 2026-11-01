@@ -234,17 +234,29 @@ export async function mountMobileReadOnlyChart(hostEl, symbol, tf = "60") {
     return null;
   }
   candles = Array.isArray(history) ? history.slice(-SCREENER_MAX_BARS) : [];
-  if (candles.length) {
-    applyChartPriceFormat(series, candles);
-    series.setData(candles);
-    await waitFrames(2);
-    fitChart();
-    /* Late layout pass — iOS often settles height after fonts/safe-area. */
-    setTimeout(() => {
+  /*
+   * Keep the canvas hidden until barSpacing is set. A bare setData paints
+   * LW Charts' default spacing (~6) — a few huge candles — then zoom jumps
+   * to the dense screener view. Desktop applyScreenerZoom already sets
+   * spacing before setData; do not setData here first.
+   */
+  hostEl.classList.add("mobile-chart-settling");
+  try {
+    if (candles.length) {
+      applyChartPriceFormat(series, candles);
+      fitChart();
+      await waitFrames(2);
       if (!destroyed) {
         fitChart();
       }
-    }, 120);
+    }
+  } finally {
+    if (!destroyed) {
+      hostEl.classList.remove("mobile-chart-settling");
+    }
+  }
+  if (candles.length) {
+    /* Late layout pass — iOS often settles height after fonts/safe-area. */
     setTimeout(() => {
       if (!destroyed) {
         fitChart();

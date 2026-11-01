@@ -20,7 +20,7 @@ import {
 getCurrentSymbols,
 getFirstVisibleSymbol,
 getExtraCoinMarkets
-} from "./terminal-table.js?v=5e1987f5";
+} from "./terminal-table.js?v=4a6cb9f0";
 
 import {
 parseAlertDeepLinkExchange
@@ -172,6 +172,8 @@ lastViewByExchange:
 defaultLastViewByExchange(),
 invertChart:false,
 invertRsiChart:false,
+invertAoChart:false,
+invertMacdChart:false,
 priceScaleMode:
 CHART_PRICE_SCALE_MODE_LOGARITHMIC,
 listRefreshMs:
@@ -462,6 +464,12 @@ out.invertChart =
 out.invertRsiChart =
 !!prefs?.invertRsiChart;
 
+out.invertAoChart =
+!!prefs?.invertAoChart;
+
+out.invertMacdChart =
+!!prefs?.invertMacdChart;
+
 out.priceScaleMode =
 normalizeChartPriceScaleMode(
 prefs?.priceScaleMode
@@ -617,6 +625,12 @@ coinsState().isCoinsChartInverted;
 
 prefs.invertRsiChart =
 coinsState().isCoinsRsiInverted;
+
+prefs.invertAoChart =
+coinsState().isCoinsAoInverted;
+
+prefs.invertMacdChart =
+coinsState().isCoinsMacdInverted;
 
 prefs.priceScaleMode =
 normalizeChartPriceScaleMode(

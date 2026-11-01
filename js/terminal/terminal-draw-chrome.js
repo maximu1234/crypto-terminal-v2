@@ -15,6 +15,10 @@ terminalHistoryInitialRequests
 } from "../terminal-chart-history-prefs.js?v=948df10f";
 
 import {
+quoteCandlesToBtc
+} from "../chart/btc-quote.js?v=ddd63eed";
+
+import {
 mountChartSymbolFullName
 } from "../symbol-display-name.js?v=90158e89";
 
@@ -31,7 +35,7 @@ import {
 buildChartDisplayCandles,
 settleCoinsChartViewport,
 scheduleResizeCharts
-} from "./terminal-chart-layout.js?v=b0f7b8ad";
+} from "./terminal-chart-layout.js?v=1498c680";
 
 import {
 suppressTerminalHistoryLazyLoad
@@ -56,13 +60,13 @@ const {
 initWidgetDrawings
 } =
 await import(
-"../chart-widget-host.js?v=27fc5356"
+"../chart-widget-host.js?v=5ef7ad81"
 );
 const {
 initChartIndicators
 } =
 await import(
-"../chart-indicators.js?v=b93589e2"
+"../chart-indicators.js?v=609a1ef9"
 );
 const {
 createPattern12EarlyT3Indicator
@@ -215,7 +219,7 @@ deps.drawingTools?.getTool?.() ??
 );
 
 void import(
-"../price-alert-ui.js?v=fe790f61"
+"../price-alert-ui.js?v=50dea481"
 ).then(
 ({
 mountPriceAlertUi
@@ -467,7 +471,7 @@ clearAllPeers:
 deps.drawClearAllPeers,
 getSymbol: ()=> deps.currentSymbol,
 getTf: ()=> deps.currentTF,
-getCandles: ()=> replayVisibleCandles(deps.candles),
+getCandles: ()=> quoteCandlesToBtc(replayVisibleCandles(deps.candles)),
 isActive: ()=>
 deps.activeDrawPane ===
 "chart",
@@ -744,8 +748,10 @@ deps.drawingTools,
 getSymbol:()=>
 deps.currentSymbol,
 getCandles:()=>
+quoteCandlesToBtc(
 replayVisibleCandles(
 deps.candles
+)
 ),
 getDisplayCandles:()=>
 buildChartDisplayCandles(),
@@ -1058,7 +1064,7 @@ const {
 createTradePlusMenuHandler
 } =
 await import(
-"../trade-order-plus-ui.js?v=10329e3d"
+"../trade-order-plus-ui.js?v=06c6c373"
 );
 
 tradePlusHandler =
@@ -1089,7 +1095,7 @@ const {
 mountPriceAlertUi
 } =
 await import(
-"../price-alert-ui.js?v=fe790f61"
+"../price-alert-ui.js?v=50dea481"
 );
 
 let disposeAlertUi =
@@ -1149,7 +1155,7 @@ const {
 mountPriceAlertUi: mountRsiPriceAlertUi
 } =
 await import(
-"../price-alert-ui.js?v=fe790f61"
+"../price-alert-ui.js?v=50dea481"
 );
 
 mountRsiPriceAlertUi(

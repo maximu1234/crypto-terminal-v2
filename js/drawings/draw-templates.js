@@ -46,7 +46,7 @@ CHANNEL_TOOL_DEFAULTS_VERSION,
 cloneDefaultChannelRows,
 createChannelToolDefaults,
 ensureChannelLevelsVisible
-} from "./channel-spec.js?v=a8bcf3c9";
+} from "./channel-spec.js?v=9031b2bf";
 
 import {
 ELLIOTT_DEFAULT_COLOR,
@@ -61,7 +61,7 @@ normalizePattern12TpFlags,
 normalizePatternChannelColor,
 normalizePatternChannelWidth,
 normalizePatternLineStyle
-} from "./elliott-spec.js?v=3fb92981";
+} from "./elliott-spec.js?v=44735be0";
 
 export const DRAW_TEMPLATES_STORAGE_KEY =
 "draw_templates_v1";

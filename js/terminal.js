@@ -5,6 +5,10 @@
  * Watchlist widgets (/watchlist.html) are watchlist.js — not this module.
  */
 import {
+quoteLiveBar
+} from "./chart/btc-quote.js?v=ddd63eed";
+
+import {
 loadMarketHistory,
 loadMarketSymbols,
 buildMarketLists,
@@ -40,7 +44,7 @@ openChromeSurface
 
 import {
 resolveUrlExchangeDeepLink
-} from "./alert-deep-link-exchange.js?v=aed26dcb";
+} from "./alert-deep-link-exchange.js?v=b90975db";
 
 import {
 defaultRsiPaneSettings,
@@ -66,18 +70,18 @@ seedWatchlistTfOnBlueFlag
 
 import {
 ensureCloudReady
-} from "./auth-ui.js?v=2c412c7f";
+} from "./auth-ui.js?v=e73897ef";
 
 import {
 getActiveAlerts,
 isMacdAlert,
 isRsiAlert
-} from "./alerts.js?v=d43c060f";
+} from "./alerts.js?v=3b221cfc";
 
 import {
 persistFavoritesToCloud,
 onFavoritesRemoteUpdate
-} from "./cloud-sync.js?v=cfbdaa32";
+} from "./cloud-sync.js?v=dfd0fed0";
 
 import {
 createCandlestickChart,
@@ -132,7 +136,7 @@ import {
 syncBackgroundAlertStreams,
 onMacdSeriesUpdate,
 onRsiSeriesUpdate
-} from "./alert-monitor.js?v=dfefd3a3";
+} from "./alert-monitor.js?v=19b5fc0d";
 
 import {
 createSharedDrawUndoStack
@@ -141,7 +145,7 @@ createSharedDrawUndoStack
 import {
 mountDrawToolbar,
 mountDrawToolIcons
-} from "./draw-ui-shared.js?v=a01caf04";
+} from "./draw-ui-shared.js?v=3cb66e92";
 import {
 mountTerminalChecklist
 } from "./terminal/terminal-checklist.js?v=fdec0be2";
@@ -200,11 +204,11 @@ isTradePage
 
 import {
 mountCoinsScaleInvertMenu
-} from "./terminal/terminal-scale-menu.js?v=d785cecd";
+} from "./terminal/terminal-scale-menu.js?v=df017dc0";
 
 import {
 mountTerminalDrawChrome
-} from "./terminal/terminal-draw-chrome.js?v=fe894530";
+} from "./terminal/terminal-draw-chrome.js?v=ff027254";
 
 
 
@@ -215,7 +219,7 @@ stopTickerStream
 import {
 mountCoinsListRefreshControls,
 applyCoinsListRefreshInterval
-} from "./terminal-list-refresh.js?v=72e2d68a";
+} from "./terminal-list-refresh.js?v=ed897fdf";
 
 import {
 readCoinsPrefs,
@@ -229,7 +233,7 @@ applyCoinsPrefs,
 applySortForCurrentMarket,
 readUrlParams,
 readLastViewForExchange
-} from "./terminal/terminal-prefs.js?v=2fbe25b4";
+} from "./terminal/terminal-prefs.js?v=a4c00768";
 
 import {
 mountDesktopOpenChartHandler
@@ -251,7 +255,7 @@ setCoinsTableHooks,
 syncCoinListFreezeFromFlagMenus,
 getExtraCoinMarkets,
 isExtraCoinMarket
-} from "./terminal/terminal-table.js?v=5e1987f5";
+} from "./terminal/terminal-table.js?v=4a6cb9f0";
 
 import {
 createCoinsChartSwitchVeil
@@ -266,7 +270,7 @@ syncCoinsChartLinkedViewports,
 resizeCharts,
 scheduleResizeCharts,
 applyDefaultZoom
-} from "./terminal/terminal-chart-layout.js?v=b0f7b8ad";
+} from "./terminal/terminal-chart-layout.js?v=1498c680";
 
 import {
 isTerminalReplayActive,
@@ -282,7 +286,7 @@ import {
 initTerminalMultiChart,
 syncPrimaryTfToLayout,
 isTerminalMultiChartLayout
-} from "./terminal-multi-chart.js?v=8649654a";
+} from "./terminal-multi-chart.js?v=9cc539cb";
 
 import {
 mountTerminalLayoutPicker
@@ -330,7 +334,7 @@ loadVisibleTerminalHistory as loadVisibleTerminalHistoryMoved,
 applyMergedTerminalCandles as applyMergedTerminalCandlesMoved,
 settleTerminalHistoryAfterPaint as settleTerminalHistoryAfterPaintMoved,
 bindTerminalHistoryLazyLoad as bindTerminalHistoryLazyLoadMoved
-} from "./terminal/terminal-history.js?v=cfe626b3";
+} from "./terminal/terminal-history.js?v=9c5605f8";
 import {
 allCoinsDrawTools as allCoinsDrawToolsMoved,
 scheduleCoinsDrawRedraw as scheduleCoinsDrawRedrawMoved,
@@ -343,6 +347,12 @@ toggleCoinsChartInversion as toggleCoinsChartInversionMoved,
 applyCoinsRsiInversion as applyCoinsRsiInversionMoved,
 persistCoinsRsiInversion as persistCoinsRsiInversionMoved,
 toggleCoinsRsiInversion as toggleCoinsRsiInversionMoved,
+applyCoinsAoInversion as applyCoinsAoInversionMoved,
+persistCoinsAoInversion as persistCoinsAoInversionMoved,
+toggleCoinsAoInversion as toggleCoinsAoInversionMoved,
+applyCoinsMacdInversion as applyCoinsMacdInversionMoved,
+persistCoinsMacdInversion as persistCoinsMacdInversionMoved,
+toggleCoinsMacdInversion as toggleCoinsMacdInversionMoved,
 applyCoinsChartPriceScaleMode as applyCoinsChartPriceScaleModeMoved,
 persistCoinsChartPriceScaleMode as persistCoinsChartPriceScaleModeMoved,
 setCoinsChartPriceScaleMode as setCoinsChartPriceScaleModeMoved,
@@ -425,7 +435,7 @@ syncCoinsMarketFilterOptions as syncCoinsMarketFilterOptionsMoved,
 handleExchangeChanged as handleExchangeChangedMoved,
 refreshCoinsMarketUi as refreshCoinsMarketUiMoved,
 syncTerminalAlgoEarlyT3List as syncTerminalAlgoEarlyT3ListMoved
-} from "./terminal/terminal-coins-page.js?v=002274cb";
+} from "./terminal/terminal-coins-page.js?v=5f121fb2";
 let terminalAlgoEarlyT3ListMod =
 null;
 
@@ -435,6 +445,10 @@ let currentSymbol = "BTCUSDT";
 let isCoinsChartInverted =
 false;
 let isCoinsRsiInverted =
+false;
+let isCoinsAoInverted =
+false;
+let isCoinsMacdInverted =
 false;
 let coinsPriceScaleMode =
 normalizeChartPriceScaleMode(
@@ -466,6 +480,7 @@ get allBybitSymbols(){ return allBybitSymbols; },
 get allListings(){ return allListings; },
 get appendFutureWhitespaceBars(){ return appendFutureWhitespaceBars; },
 get applyChartPriceFormat(){ return applyChartPriceFormat; },
+get buildChartDisplayCandles(){ return buildChartDisplayCandles; },
 get applyChartPriceScaleMode(){ return applyChartPriceScaleMode; },
 get applyCoinsListRefreshInterval(){ return applyCoinsListRefreshInterval; },
 get applyMergedTerminalCandles(){ return applyMergedTerminalCandles; },
@@ -525,6 +540,10 @@ get isCoinsChartInverted(){ return isCoinsChartInverted; },
 set isCoinsChartInverted(value){ isCoinsChartInverted = value; },
 get isCoinsRsiInverted(){ return isCoinsRsiInverted; },
 set isCoinsRsiInverted(value){ isCoinsRsiInverted = value; },
+get isCoinsAoInverted(){ return isCoinsAoInverted; },
+set isCoinsAoInverted(value){ isCoinsAoInverted = value; },
+get isCoinsMacdInverted(){ return isCoinsMacdInverted; },
+set isCoinsMacdInverted(value){ isCoinsMacdInverted = value; },
 get isExtraCoinMarket(){ return isExtraCoinMarket; },
 get isMacdAlert(){ return isMacdAlert; },
 get isRsiAlert(){ return isRsiAlert; },
@@ -564,6 +583,7 @@ get primeTickerSnapshots(){ return primeTickerSnapshots; },
 get pulsePriceScaleAutoscale(){ return pulsePriceScaleAutoscale; },
 get putHistoryCache(){ return putHistoryCache; },
 get readCoinsPrefs(){ return readCoinsPrefs; },
+get rebuildRsiFromCandles(){ return rebuildRsiFromCandles; },
 get renderList(){ return renderList; },
 get resizeCharts(){ return resizeCharts; },
 get resolveInitialSymbolAndTf(){ return resolveInitialSymbolAndTf; },
@@ -737,6 +757,20 @@ return isCoinsRsiInverted;
 },
 set isCoinsRsiInverted(v){
 isCoinsRsiInverted = v;
+},
+
+get isCoinsAoInverted(){
+return isCoinsAoInverted;
+},
+set isCoinsAoInverted(v){
+isCoinsAoInverted = v;
+},
+
+get isCoinsMacdInverted(){
+return isCoinsMacdInverted;
+},
+set isCoinsMacdInverted(v){
+isCoinsMacdInverted = v;
 },
 
 get coinsPriceScaleMode(){
@@ -1178,6 +1212,48 @@ terminalPageHost(),
 );
 }
 
+function applyCoinsAoInversion(inverted){
+return applyCoinsAoInversionMoved(
+terminalPageHost(),
+...arguments
+);
+}
+
+function persistCoinsAoInversion(){
+return persistCoinsAoInversionMoved(
+terminalPageHost(),
+...arguments
+);
+}
+
+function toggleCoinsAoInversion(){
+return toggleCoinsAoInversionMoved(
+terminalPageHost(),
+...arguments
+);
+}
+
+function applyCoinsMacdInversion(inverted){
+return applyCoinsMacdInversionMoved(
+terminalPageHost(),
+...arguments
+);
+}
+
+function persistCoinsMacdInversion(){
+return persistCoinsMacdInversionMoved(
+terminalPageHost(),
+...arguments
+);
+}
+
+function toggleCoinsMacdInversion(){
+return toggleCoinsMacdInversionMoved(
+terminalPageHost(),
+...arguments
+);
+}
+
 function applyCoinsChartPriceScaleMode(mode,
 opts =
 {}){
@@ -1213,6 +1289,12 @@ isTerminalPage
 applyCoinsChartInversion(
 readCoinsPrefs().invertChart === true
 );
+applyCoinsAoInversion(
+readCoinsPrefs().invertAoChart === true
+);
+applyCoinsMacdInversion(
+readCoinsPrefs().invertMacdChart === true
+);
 applyCoinsChartPriceScaleMode(
 readCoinsPrefs().priceScaleMode,
 {
@@ -1229,10 +1311,20 @@ get rsiChart(){ return rsiChart; },
 get coinsPriceScaleMode(){ return coinsPriceScaleMode; },
 get isCoinsChartInverted(){ return isCoinsChartInverted; },
 get isCoinsRsiInverted(){ return isCoinsRsiInverted; },
+get isCoinsAoInverted(){ return isCoinsAoInverted; },
+get isCoinsMacdInverted(){ return isCoinsMacdInverted; },
+getPaneChart(id){
+return chartIndicators?.getIndicator?.(
+id
+)?.getChart?.() ||
+null;
+},
 get shouldIgnoreListKeyNav(){ return shouldIgnoreListKeyNav; },
 setCoinsChartPriceScaleMode,
 toggleCoinsChartInversion,
-toggleCoinsRsiInversion
+toggleCoinsRsiInversion,
+toggleCoinsAoInversion,
+toggleCoinsMacdInversion
 })
 }
 
@@ -3341,9 +3433,13 @@ bar
 if(isTerminalReplayActive()){
 return;
 }
+const painted =
+quoteLiveBar(
+bar
+);
 try{
 candleSeries.update(
-bar
+painted
 );
 }catch{
 runWithPreservedVisibleLogicalRange(
@@ -3367,13 +3463,13 @@ candles
 }
 );
 }
+/*
+ * Format from the painted close. Raw USDT close (e.g. 1200) sets
+ * minMove=0.01 and empties the ZEC/BTC scale a tick later.
+ */
 applyChartPriceFormat(
 candleSeries,
-bar?.close ??
-candles[
-candles.length -
-1
-]?.close ??
+painted?.close ??
 1
 );
 chartIndicators?.notifyMainChartOverlaysSync?.();

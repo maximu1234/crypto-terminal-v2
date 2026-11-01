@@ -35,7 +35,7 @@ isFibExtType
 import {
 isElliottType,
 elliottSelectionHandlePoints
-} from "./elliott-spec.js?v=3fb92981";
+} from "./elliott-spec.js?v=44735be0";
 
 import {
 shapeMissesViewport,

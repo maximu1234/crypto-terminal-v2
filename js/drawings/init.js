@@ -5,11 +5,11 @@ formatDrawColor
 
 import {
 TRASH_ICON_SVG
-} from "../draw-ui-shared.js?v=a01caf04";
+} from "../draw-ui-shared.js?v=3cb66e92";
 
 import {
 closeAllWidgetDrawToolsMenus
-} from "../watchlist-draw-ui.js?v=7adb537b";
+} from "../watchlist-draw-ui.js?v=5736c004";
 
 import {
 ensureDrawToolsVisible
@@ -118,7 +118,7 @@ getPositionHandleScreens as resolvePositionHandleScreens
 
 import {
 createDrawPrefs
-} from "./draw-prefs.js?v=1ac33cfe";
+} from "./draw-prefs.js?v=f7406abc";
 
 import {
 createPositionDraw
@@ -130,11 +130,11 @@ pickUi
 
 import {
 createDrawHitTester
-} from "./draw-hit.js?v=8141a397";
+} from "./draw-hit.js?v=c2348932";
 
 import {
 createDrawRenderer
-} from "./draw-render.js?v=9c9b9c9f";
+} from "./draw-render.js?v=e7f541a5";
 
 import {
 snapPlotToCandleWick
@@ -152,7 +152,7 @@ updateChartRulerLabelEl
 
 import {
 mountTabletDrawInput
-} from "../drawings-tablet-input.js?v=ab454579";
+} from "../drawings-tablet-input.js?v=dcf12c01";
 
 import {
 cloneDrawingsForUndo,
@@ -165,19 +165,19 @@ createDrawDesktopSelection
 
 import {
 createDrawingsPersist
-} from "./drawings-persist.js?v=0ba84cb0";
+} from "./drawings-persist.js?v=f6efdebb";
 
 import {
 createDrawStyleBar
-} from "./draw-style-bar.js?v=a2c83f93";
+} from "./draw-style-bar.js?v=2e28817a";
 
 import {
 createDrawAlertsChart
-} from "./draw-alerts-chart.js?v=84c51532";
+} from "./draw-alerts-chart.js?v=7ed4d56f";
 
 import {
 createDrawPlacement
-} from "./draw-placement.js?v=ea64096e";
+} from "./draw-placement.js?v=9aff4e82";
 
 import {
 createDrawTextEditor,
@@ -188,17 +188,17 @@ hitTestTextBody
 import {
 isElliottType,
 listElliottHandles
-} from "./elliott-spec.js?v=3fb92981";
+} from "./elliott-spec.js?v=44735be0";
 
 import {
 closeElliottFlyout,
 syncElliottGroupActive
-} from "./elliott-toolbar.js?v=cd94d014";
+} from "./elliott-toolbar.js?v=c77a5a04";
 
 import {
 closeFibFlyout,
 syncFibGroupActive
-} from "./fib-toolbar.js?v=dd31e8c1";
+} from "./fib-toolbar.js?v=56046908";
 
 import {
 createBrushPlacement
@@ -206,7 +206,7 @@ createBrushPlacement
 
 import {
 createDrawEditInteraction
-} from "./draw-edit-interaction.js?v=c880ef1a";
+} from "./draw-edit-interaction.js?v=3050fb11";
 
 import {
 createDrawChartInput
@@ -218,7 +218,7 @@ createDrawPriceScale
 
 import {
 createDrawRedrawLoop
-} from "./draw-redraw-loop.js?v=79a94d49";
+} from "./draw-redraw-loop.js?v=3864c35f";
 
 import {
 isAlgoReducedCloudClient
@@ -3380,7 +3380,7 @@ lastChartAlertsPullMs =
 Date.now();
 
 void import(
-"../alerts-cloud-sync.js?v=caa3d5b1"
+"../alerts-cloud-sync.js?v=0d54a990"
 ).then(
 ({ pullRegistryFromCloudNow })=>
 pullRegistryFromCloudNow({

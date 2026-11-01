@@ -5,6 +5,7 @@ import {
 CHANNEL_DEFAULT_COLOR,
 DEFAULT_CHANNEL_LEVEL_SPEC,
 channelLevelSegment,
+channelP3ScreenFromRailMid,
 cloneDefaultChannelRows,
 createChannelToolDefaults,
 ensureChannelLevelsVisible,
@@ -142,6 +143,30 @@ row.v
 0.5,
 1
 ]
+);
+
+});
+
+test("channel rail midpoint drag moves only the parallel line", ()=>{
+
+const p1 = { x: 0, y: 100 };
+const p2 = { x: 100, y: 100 };
+const mid = { x: 50, y: 40 };
+
+assert.deepEqual(
+channelP3ScreenFromRailMid(p1, p2, mid),
+{ x: 0, y: 40 }
+);
+
+const slid = { x: 80, y: 40 };
+assert.deepEqual(
+channelP3ScreenFromRailMid(p1, p2, slid),
+{ x: 30, y: 40 }
+);
+
+assert.equal(
+channelP3ScreenFromRailMid(p1, p2, null),
+null
 );
 
 });

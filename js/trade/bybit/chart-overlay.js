@@ -20,6 +20,11 @@ isExchangeTradingEnabled
 } from "../../market-api.js?v=145e2e28";
 
 import {
+seriesPriceToUsdt,
+usdtPriceToSeries
+} from "../../chart/btc-quote.js?v=ddd63eed";
+
+import {
 getTradeConfig
 } from "./config.js?v=6ddbe7e2";
 
@@ -506,8 +511,10 @@ data.length -
 1
 ];
 const close =
+seriesPriceToUsdt(
 Number(
 last?.close
+)
 );
 
 if(
@@ -655,7 +662,7 @@ price <=
 return null;
 }
 
-return price;
+return seriesPriceToUsdt(price);
 
 }
 
@@ -1547,6 +1554,8 @@ null;
 function priceToY(
 price
 ){
+
+price = usdtPriceToSeries(price);
 
 const dt =
 host?.getDrawingTools?.();

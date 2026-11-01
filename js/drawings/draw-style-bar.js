@@ -59,13 +59,13 @@ calcPositionVolumeUsd
 
 import {
 applyPositionVolumeFromDrawing
-} from "../trade-volume-presets.js?v=a9a7f6a3";
+} from "../trade-volume-presets.js?v=a8873e36";
 
 import {
 stashDrawingStopsFromDrawing,
 clearDrawingStopsPending,
 hasDrawingStopsPending
-} from "../trade-auto-stops.js?v=c5bb9db1";
+} from "../trade-auto-stops.js?v=98b4ab78";
 
 import {
 touchShapeRevision
@@ -81,7 +81,7 @@ listTemplatesForType,
 mergeStyleSnapshot,
 saveNamedTemplate,
 deleteTemplateAtIndex
-} from "./draw-templates.js?v=6d130170";
+} from "./draw-templates.js?v=59b2b7d3";
 
 import {
 isFvpType,
@@ -119,7 +119,7 @@ import {
 CHANNEL_DEFAULT_COLOR,
 CHANNEL_TOOL_DEFAULTS_VERSION,
 ensureChannelLevelsVisible
-} from "./channel-spec.js?v=a8bcf3c9";
+} from "./channel-spec.js?v=9031b2bf";
 
 import {
 channelSettingsHtml,
@@ -127,7 +127,7 @@ mountChannelLevelRows,
 fillChannelSettingsPanel as fillChannelSettingsPanelDom,
 readChannelSettingsPanel,
 bindChannelSettingsPanel
-} from "./draw-channel-settings.js?v=c760d270";
+} from "./draw-channel-settings.js?v=44c96583";
 
 import {
 ELLIOTT_TOOL_DEFAULTS_VERSION,
@@ -137,7 +137,7 @@ isPattern12Draw,
 migrateElliottToolDefaults,
 normalizePattern12TpFlags,
 normalizePattern12TpLevels
-} from "./elliott-spec.js?v=3fb92981";
+} from "./elliott-spec.js?v=44735be0";
 
 import {
 elliottSettingsHtml,
@@ -145,7 +145,7 @@ fillElliottSettingsPanel as fillElliottSettingsPanelDom,
 readElliottSettingsPanel,
 bindElliottSettingsPanel,
 syncElliottSettingsColor
-} from "./draw-elliott-settings.js?v=f22b6fc7";
+} from "./draw-elliott-settings.js?v=4fc046c8";
 
 import {
 hasCoordSettings

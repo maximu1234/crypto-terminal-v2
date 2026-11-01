@@ -1,4 +1,12 @@
 import {
+ensureBtcQuoteCandles,
+isBtcQuoteActive,
+lastOhlcClose,
+setBtcQuoteActive,
+syncBtcQuoteLive
+} from "../chart/btc-quote.js?v=ddd63eed";
+
+import {
 stopTerminalReplay,
 isTerminalReplayActive
 } from "./terminal-replay.js?v=1b9e6de6";
@@ -137,7 +145,7 @@ if(
 host.isTradePage
 ){
 void import(
-"../trade-volume-presets.js?v=a9a7f6a3"
+"../trade-volume-presets.js?v=a8873e36"
 ).then(
 ({
 switchTradeVolumeSymbol
@@ -205,6 +213,31 @@ return;
 }
 
 host.candles = nextCandles;
+
+if(
+host.candles.length &&
+isBtcQuoteActive()
+){
+const btcOk =
+await ensureBtcQuoteCandles(
+host
+);
+if(
+loadSeq !==
+host.symbolLoadSeq
+){
+return;
+}
+if(!btcOk){
+setBtcQuoteActive(
+false
+);
+}
+syncBtcQuoteLive(
+host.currentTF
+);
+}
+
 host.coinsState().chartCandlesSymbol =
 host.candles.length
 ? symbol
@@ -262,6 +295,9 @@ const displayCandles =
 host.buildChartDisplayCandles();
 
 const refPrice =
+lastOhlcClose(
+displayCandles
+) ??
 host.candles[host.candles.length - 1]?.close ?? 1;
 
 host.applyChartPriceFormat(
