@@ -272,6 +272,16 @@ candleInner,
 CANDLE_SERIES_PAINT.priceLineVisible
 );
 
+/*
+ * Скрытие свечей гасит общую линию цены.
+ * В линейном режиме её снова включает ряд линии.
+ */
+if(lineOn && candleInner){
+candleInner.applyOptions({
+priceLineVisible: true
+});
+}
+
 setSeriesShown(
 lineInner,
 lineOn,

@@ -6,7 +6,7 @@
  */
 import {
 initChartIndicators
-} from "../chart-indicators.js?v=ba67e51d";
+} from "../chart-indicators.js?v=cf404930";
 
 import {
 createPattern12Indicator

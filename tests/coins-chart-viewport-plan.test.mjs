@@ -99,7 +99,7 @@ return out;
 }
 
 test(
-"viewport plan keeps last index on future whitespace, not last real bar",
+"viewport plan ends on the last real bar; the right gap is not extra indices",
 ()=>{
 
 const realCount =
@@ -130,11 +130,6 @@ futureCount
 );
 assert.equal(
 plan.range.to,
-candles.length -
-1
-);
-assert.ok(
-plan.range.to >
 realCount -
 1
 );

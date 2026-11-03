@@ -4,4 +4,4 @@
  */
 export {
 initDrawings
-} from "./drawings/init.js?v=8f5ec94e";
+} from "./drawings/init.js?v=d5e962ce";

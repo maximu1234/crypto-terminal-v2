@@ -13,7 +13,7 @@ FAVORITES_BY_EXCHANGE_KEY
 import {
 persistFavoritesToCloud,
 onFavoritesRemoteUpdate
-} from "./cloud-sync.js?v=ebebe0db";
+} from "./cloud-sync.js?v=588379f0";
 
 import {
 EXCHANGE_CHANGED_EVENT

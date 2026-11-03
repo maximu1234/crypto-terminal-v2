@@ -19,10 +19,11 @@ restoreScreenerViewport,
 linkPairedChartTimeScales,
 syncLinkedChartTimescales,
 equalizeLinkedPanePriceScales,
+mountChartPriceHud,
 SCREENER_PAGE_VISIBLE_BARS,
 SCREENER_PAGE_MAX_BARS,
 SCREENER_PAGE_HISTORY_REQUESTS
-} from "./chart-import.js?v=ff696e9d";
+} from "./chart-import.js?v=9eaf9612";
 
 import {
 isIpadWebViewport
@@ -48,7 +49,7 @@ SCREENER_WIDGET_OSCILLATOR_MACD,
 createScreenerAoChart,
 createScreenerMacdChart,
 isScreenerHistogramOscillator
-} from "./screener-widget-oscillator.js?v=8f9331b4";
+} from "./screener-widget-oscillator.js?v=32114a2e";
 
 let deps = null;
 
@@ -150,6 +151,9 @@ w
 );
 
 w.unsubKline?.();
+
+w.priceHudCtrl?.stop?.();
+w.priceHudCtrl = null;
 
 try{
 w.unlinkTimeScales?.();
@@ -456,6 +460,9 @@ return;
 widget.unsubKline?.();
 widget.unsubKline =
 null;
+
+widget.priceHudCtrl?.stop?.();
+widget.priceHudCtrl = null;
 
 try{
 widget.unlinkTimeScales?.();
@@ -1416,6 +1423,27 @@ chart;
 widget.series =
 series;
 
+try{
+series.applyOptions({
+lastValueVisible: false
+});
+}catch{
+/* ignore */
+}
+
+widget.priceHudCtrl?.stop?.();
+widget.priceHudCtrl =
+mountChartPriceHud({
+chart,
+series,
+wrapEl: chartEl,
+getTf: ()=> deps.currentTF,
+getLastCandle: ()=>
+widget.candles[
+widget.candles.length - 1
+]
+});
+
 if(
 showOscillator
 ){
@@ -1594,6 +1622,19 @@ return 0;
 }
 
 try{
+
+/*
+ * createScreenerChart раньше писал width:120px, пока ячейка
+ * ещё была 0. Явный width не даёт flex растянуть график,
+ * clientWidth навсегда остаётся 120.
+ */
+chartEl.style.width = "";
+chartEl.style.height = "";
+
+if(widget.rsiChartEl){
+widget.rsiChartEl.style.width = "";
+widget.rsiChartEl.style.height = "";
+}
 
 const w =
 chartEl.clientWidth;

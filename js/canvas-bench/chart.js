@@ -7,6 +7,7 @@
 import {
 candleIndexAt,
 candleX,
+rightGapPx,
 clampPan,
 liveUpdateKind,
 panForAnchor,
@@ -18,6 +19,7 @@ import {
 PRICE_SCALE_LOG,
 PRICE_SCALE_REGULAR,
 expandPriceScale,
+nicePriceTicks,
 priceToY,
 yToPrice,
 zoomPriceScale
@@ -35,6 +37,11 @@ const DOWN =
 "#ef5350";
 const FONT =
 "11px -apple-system, BlinkMacSystemFont, 'Trebuchet MS', Roboto, Ubuntu, sans-serif";
+/* Как у плашки текущей цены (.chart-price-hud): 12px и padding-left 10px. */
+const AXIS_LABEL_FONT =
+"12px -apple-system, BlinkMacSystemFont, 'Trebuchet MS', Roboto, Ubuntu, sans-serif";
+const AXIS_LABEL_PAD =
+10;
 
 function priceDigits(price){
 
@@ -80,48 +87,11 @@ maximumFractionDigits: digits
 
 }
 
-function nicePriceTicks(min, max){
+function drawCandleBody(ctx, x, candle, yOf, barSpacing, colors){
 
-const span =
-max - min;
-
-if(!(span > 0)){
-return [];
+if(!Number.isFinite(candle?.close)){
+return;
 }
-
-const raw =
-span / 6;
-const mag =
-10 ** Math.floor(Math.log10(raw));
-const err =
-raw / mag;
-const step =
-err >= 7.5
-? 10 * mag
-: err >= 3.5
-? 5 * mag
-: err >= 1.5
-? 2 * mag
-: mag;
-const ticks =
-[];
-const start =
-Math.ceil(min / step) * step;
-
-for(
-let price = start;
-price <= max + step * 0.001 &&
-ticks.length < 16;
-price += step
-){
-ticks.push(price);
-}
-
-return ticks;
-
-}
-
-function drawCandleBody(ctx, x, candle, yOf, barSpacing){
 
 const yOpen =
 yOf(candle.open);
@@ -134,7 +104,7 @@ yOf(candle.low);
 const up =
 candle.close >= candle.open;
 const color =
-up ? UP : DOWN;
+up ? colors.up : colors.down;
 const bodyW =
 Math.max(
 1,
@@ -167,7 +137,7 @@ height
 
 export class CandleBenchChart {
 
-constructor(stage){
+constructor(stage, options = {}){
 
 this.stage = stage;
 this.history = document.createElement("canvas");
@@ -178,10 +148,26 @@ this.stage.append(
 this.history,
 this.live
 );
+
+for(const canvas of [this.history, this.live]){
+canvas.style.position = "absolute";
+canvas.style.inset = "0";
+canvas.style.width = "100%";
+canvas.style.height = "100%";
+canvas.style.pointerEvents = "none";
+}
+this.opaque = options.opaque !== false;
+this.candlesVisible = true;
+this.priceLineVisible = true;
+this.lastValueVisible = true;
+this.candleColors = {
+up: UP,
+down: DOWN
+};
 this.hctx =
 this.history.getContext(
 "2d",
-{ alpha: false }
+{ alpha: !this.opaque }
 );
 this.lctx =
 this.live.getContext(
@@ -192,10 +178,16 @@ this.candles = [];
 this.tf = "1";
 this.barSpacing = 8;
 this.panPx = 0;
-this.axisW = 64;
+this.axisW = options.axisWidth || 64;
+this.axisMin = this.axisW;
 this.timeH = 0;
 this.rightOffsetBars = 12;
 this.priceScaleMode = PRICE_SCALE_LOG;
+this.invertScale = false;
+this.marginTop = 0;
+this.marginBottom = 0;
+this.showGrid = options.showGrid === true;
+this.formatTime = null;
 this.manualScale = null;
 this.scale = null;
 this.layout = null;
@@ -212,8 +204,12 @@ rebuild: 0
 this.onActivity = null;
 this.onView = null;
 this.onLive = null;
+this.scaleMenu = null;
 this._bindInput(stage, true);
+
+if(options.scaleMenu !== false){
 this._mountScaleMenu();
+}
 this._ro =
 new ResizeObserver(()=>{
 this.scheduleRebuild();
@@ -230,7 +226,12 @@ return this.candles.length;
 
 get rightGap(){
 
-return this.rightOffsetBars * this.barSpacing;
+return rightGapPx(
+this.barSpacing,
+this.rightOffsetBars,
+this.layout?.plotW || 0,
+this.rightMarginRatio
+);
 
 }
 
@@ -249,14 +250,32 @@ setSeries(candles, tf){
 
 this.tf = tf || "1";
 this.candles =
-(candles || []).map(candle=>({
+(candles || []).flatMap(candle=>{
+
+const close =
+Number(candle.close);
+
+if(!Number.isFinite(close)){
+return [];
+}
+
+const open =
+Number(candle.open);
+const high =
+Number(candle.high);
+const low =
+Number(candle.low);
+
+return [{
 time: Number(candle.time),
-open: Number(candle.open),
-high: Number(candle.high),
-low: Number(candle.low),
-close: Number(candle.close),
+open: Number.isFinite(open) ? open : close,
+high: Number.isFinite(high) ? high : close,
+low: Number.isFinite(low) ? low : close,
+close,
 volume: Number(candle.volume) || 0
-}));
+}];
+
+});
 this.panPx = 0;
 this.manualScale = null;
 this.dirty = null;
@@ -290,24 +309,44 @@ this.note();
 return kind;
 }
 
+const finite =
+(value, fallback)=>{
+
+const n =
+Number(value);
+
+return Number.isFinite(n) ? n : fallback;
+
+};
+
+const close =
+finite(next.close, prev?.close);
+
+if(!Number.isFinite(close)){
+this.note();
+return kind;
+}
+
 if(
 !prev ||
 next.time > prev.time
 ){
 this.candles.push({
 time: Number(next.time),
-open: Number(next.open),
-high: Number(next.high),
-low: Number(next.low),
-close: Number(next.close),
+open: finite(next.open, close),
+high: finite(next.high, close),
+low: finite(next.low, close),
+close,
 volume: Number(next.volume) || 0
 });
 }else{
-prev.open = Number(next.open);
-prev.high = Number(next.high);
-prev.low = Number(next.low);
-prev.close = Number(next.close);
-prev.volume = Number(next.volume) || 0;
+prev.open = finite(next.open, prev.open);
+prev.high = finite(next.high, prev.high);
+prev.low = finite(next.low, prev.low);
+prev.close = close;
+if(Number.isFinite(Number(next.volume))){
+prev.volume = Number(next.volume);
+}
 }
 
 if(
@@ -386,7 +425,14 @@ this.layout.plotH < 2
 return;
 }
 
-const span =
+let span =
+null;
+
+for(let pass = 0; pass < 2; pass++){
+
+this.beforeDraw?.();
+
+span =
 visibleIndexSpan(
 this.candles.length,
 this.layout.plotLeft,
@@ -416,6 +462,18 @@ data.max,
 this.priceScaleMode
 )
 : null;
+
+}
+
+if(
+pass === 0 &&
+this.fitPriceAxis()
+){
+this.syncCanvasSize();
+continue;
+}
+
+break;
 
 }
 
@@ -518,10 +576,161 @@ this.panPx
 
 }
 
+fitPriceAxis(){
+
+if(!this.scale || !this.layout){
+return false;
+}
+
+const ctx =
+this.hctx;
+const fmt =
+this.formatAxisPrice || formatPrice;
+const ticks =
+nicePriceTicks(
+this.scale.min,
+this.scale.max,
+this.layout.plotH,
+this.priceScaleMode
+);
+
+ctx.font = AXIS_LABEL_FONT;
+
+let labelW =
+0;
+
+for(const price of ticks){
+labelW = Math.max(
+labelW,
+ctx.measureText(fmt(price)).width
+);
+}
+
+const last =
+this.candles[this.candles.length - 1];
+
+if(
+last &&
+Number.isFinite(last.close)
+){
+ctx.font =
+"12px -apple-system, BlinkMacSystemFont, 'Trebuchet MS', Roboto, Ubuntu, sans-serif";
+labelW = Math.max(
+labelW,
+ctx.measureText(fmt(last.close)).width
+);
+ctx.font = FONT;
+}
+
+const need =
+Math.min(
+140,
+Math.max(
+this.axisMin || 48,
+Math.ceil(labelW) + 18
+)
+);
+
+if(Math.abs(need - this.axisW) <= 2){
+return false;
+}
+
+this.axisW = need;
+return true;
+
+}
+
 yOf(price){
 
-return priceToY(
+let y =
+priceToY(
 price,
+this.scale,
+this.layout.plotTop,
+this.layout.plotH,
+this.priceScaleMode
+);
+
+if(this.invertScale && this.layout){
+y =
+this.layout.plotTop +
+this.layout.plotH -
+(y - this.layout.plotTop);
+}
+
+return this.applyScaleMargins(y);
+
+}
+
+applyScaleMargins(y){
+
+const top =
+this.marginTop || 0;
+const bottom =
+this.marginBottom || 0;
+
+if((!top && !bottom) || !this.layout || !Number.isFinite(y)){
+return y;
+}
+
+const rel =
+(y - this.layout.plotTop) / this.layout.plotH;
+
+return (
+this.layout.plotTop +
+this.layout.plotH * top +
+rel * this.layout.plotH * (1 - top - bottom)
+);
+
+}
+
+undoScaleMargins(y){
+
+const top =
+this.marginTop || 0;
+const bottom =
+this.marginBottom || 0;
+
+if((!top && !bottom) || !this.layout || !Number.isFinite(y)){
+return y;
+}
+
+const span =
+1 - top - bottom;
+
+if(span <= 0){
+return y;
+}
+
+const rel =
+(
+y -
+this.layout.plotTop -
+this.layout.plotH * top
+) / (this.layout.plotH * span);
+
+return this.layout.plotTop + rel * this.layout.plotH;
+
+}
+
+priceAtY(y){
+
+if(!this.scale || !this.layout || !Number.isFinite(y)){
+return null;
+}
+
+let py =
+this.undoScaleMargins(y);
+
+if(this.invertScale){
+py =
+this.layout.plotTop +
+this.layout.plotH -
+(py - this.layout.plotTop);
+}
+
+return yToPrice(
+py,
 this.scale,
 this.layout.plotTop,
 this.layout.plotH,
@@ -546,8 +755,12 @@ plotH
 } =
 this.layout;
 
+if(this.opaque){
 ctx.fillStyle = BG;
 ctx.fillRect(0, 0, cssW, cssH);
+}else{
+ctx.clearRect(0, 0, cssW, cssH);
+}
 ctx.font = FONT;
 ctx.lineWidth = 1;
 ctx.textBaseline = "middle";
@@ -559,13 +772,14 @@ return;
 const ticks =
 nicePriceTicks(
 this.scale.min,
-this.scale.max
+this.scale.max,
+this.layout.plotH,
+this.priceScaleMode
 );
-
-ctx.strokeStyle = GRID;
-ctx.fillStyle = AXIS;
-ctx.textAlign = "left";
-ctx.beginPath();
+const fmt =
+this.formatAxisPrice || formatPrice;
+const labels =
+[];
 
 for(const price of ticks){
 
@@ -579,17 +793,49 @@ y > plotBottom
 continue;
 }
 
-ctx.moveTo(plotLeft, y);
-ctx.lineTo(plotRight, y);
-ctx.fillText(
-formatPrice(price),
-plotRight + 8,
-y
-);
+labels.push({
+y,
+text: fmt(price)
+});
 
 }
 
+ctx.strokeStyle =
+this.showGrid || this.opaque
+? GRID
+: "rgba(0,0,0,0)";
+ctx.font = AXIS_LABEL_FONT;
+ctx.fillStyle = AXIS;
+ctx.textAlign = this.alignAxisLabelsLeft ? "left" : "right";
+ctx.beginPath();
+
+for(const label of labels){
+ctx.moveTo(plotLeft, label.y);
+ctx.lineTo(plotRight, label.y);
+}
+
 ctx.stroke();
+ctx.save();
+ctx.beginPath();
+ctx.rect(
+plotRight,
+0,
+Math.max(0, cssW - plotRight),
+cssH
+);
+ctx.clip();
+
+for(const label of labels){
+ctx.fillText(
+label.text,
+this.alignAxisLabelsLeft
+? plotRight + AXIS_LABEL_PAD
+: cssW - 6,
+label.y
+);
+}
+
+ctx.restore();
 
 const last =
 this.candles.length - 1;
@@ -598,6 +844,7 @@ ctx.fillStyle = "rgba(255,255,255,0.12)";
 ctx.fillRect(plotRight, 0, 1, cssH);
 
 if(last < 1){
+this.afterDraw?.();
 return;
 }
 
@@ -623,7 +870,7 @@ i++
 const candle =
 this.candles[i];
 
-if(!candle){
+if(!candle || !this.candlesVisible){
 continue;
 }
 
@@ -632,7 +879,70 @@ ctx,
 this.xOf(i),
 candle,
 price=>this.yOf(price),
-this.barSpacing
+this.barSpacing,
+this.candleColors
+);
+
+}
+
+ctx.restore();
+this.drawTimeAxis();
+this.afterDraw?.();
+
+}
+
+drawTimeAxis(){
+
+if(
+!(this.timeH > 0) ||
+typeof this.formatTime !== "function" ||
+this.candles.length < 2
+){
+return;
+}
+
+const ctx =
+this.hctx;
+const {
+cssH,
+plotLeft,
+plotRight
+} =
+this.layout;
+
+ctx.save();
+ctx.beginPath();
+ctx.rect(
+plotLeft,
+cssH - this.timeH,
+Math.max(0, plotRight - plotLeft),
+this.timeH
+);
+ctx.clip();
+ctx.font = FONT;
+ctx.fillStyle = AXIS;
+ctx.textAlign = "center";
+ctx.textBaseline = "top";
+
+const y =
+cssH - this.timeH + 4;
+let lastX =
+-Infinity;
+
+for(let i = 0; i < this.candles.length; i++){
+
+const x =
+this.xOf(i);
+
+if(x < plotLeft || x > plotRight || x - lastX < 72){
+continue;
+}
+
+lastX = x;
+ctx.fillText(
+this.formatTime(this.candles[i].time),
+x,
+y
 );
 
 }
@@ -679,11 +989,7 @@ this.dirty = null;
 const candle =
 this.candles[this.candles.length - 1];
 
-if(
-!candle ||
-!this.scale ||
-!this.liveCandleVisible()
-){
+if(!candle || !this.scale || !Number.isFinite(candle.close)){
 return;
 }
 
@@ -693,8 +999,16 @@ const y =
 this.yOf(candle.close);
 const color =
 candle.close >= candle.open
-? UP
-: DOWN;
+? this.candleColors.up
+: this.candleColors.down;
+const showLine =
+this.priceLineVisible &&
+Number.isFinite(y) &&
+y >= layout.plotTop &&
+y <= layout.plotBottom;
+const showBody =
+this.candlesVisible &&
+this.liveCandleVisible();
 const rects =
 [];
 const col = {
@@ -721,54 +1035,72 @@ layout.plotH
 ctx.clip();
 ctx.lineWidth = 1;
 ctx.strokeStyle = color;
-ctx.setLineDash([3, 3]);
+ctx.setLineDash([4, 4]);
+
+if(showLine){
 ctx.beginPath();
 ctx.moveTo(layout.plotLeft, Math.round(y) + 0.5);
 ctx.lineTo(layout.plotRight, Math.round(y) + 0.5);
 ctx.stroke();
+}
+
 ctx.setLineDash([]);
+
+if(showBody){
 drawCandleBody(
 ctx,
 x,
 candle,
 price=>this.yOf(price),
-this.barSpacing
+this.barSpacing,
+this.candleColors
 );
+}
 ctx.restore();
 
+const tagColor =
+candle.close >= candle.open
+? "#16a34a"
+: "#dc2626";
 const text =
-formatPrice(candle.close);
-ctx.font = FONT;
+(this.formatAxisPrice || formatPrice)(candle.close);
+ctx.font = AXIS_LABEL_FONT;
 ctx.textBaseline = "middle";
 ctx.textAlign = "left";
-const padX = 6;
-const tagW =
-Math.min(
-this.axisW - 8,
-ctx.measureText(text).width + padX * 2
-);
 const tagH = 16;
 const tagX =
-layout.plotRight + 4;
+layout.plotRight;
+const tagW =
+Math.max(0, layout.cssW - layout.plotRight);
 const tagY =
 Math.round(y - tagH / 2);
 const tag = {
 x: tagX - 2,
 y: tagY - 2,
-w: layout.cssW - tagX + 4,
+w: tagW + 4,
 h: tagH + 4
 };
 
-ctx.fillStyle = color;
+if(showLine){
+rects.push(line);
+}
+
+if(showBody){
+rects.push(col);
+}
+
+if(this.lastValueVisible){
+ctx.fillStyle = tagColor;
 ctx.fillRect(tagX, tagY, tagW, tagH);
 ctx.fillStyle = "#ffffff";
 ctx.fillText(
 text,
-tagX + padX,
+tagX + AXIS_LABEL_PAD,
 tagY + tagH / 2
 );
+rects.push(tag);
+}
 
-rects.push(col, line, tag);
 this.dirty = rects;
 
 }
@@ -839,11 +1171,17 @@ stage.addEventListener(
 "pointerdown",
 event=>{
 
-if(event.button !== 0){
+if(event.button !== 0 || event.defaultPrevented){
 return;
 }
 
+if(stage.closest(".chart-draw-interaction")){
+return;
+}
+
+if(this.scaleMenu){
 this.scaleMenu.hidden = true;
+}
 
 if(
 priceAxis &&
@@ -946,6 +1284,7 @@ return;
 }
 
 this.panPx = next;
+this.userMovedView = true;
 this.scheduleRebuild();
 
 }
@@ -954,27 +1293,38 @@ this.scheduleRebuild();
 const endDrag =
 event=>{
 
-if(
+const scale =
 this.scaleDrag &&
-event.pointerId === this.scaleDrag.id
-){
-this.scaleDrag = null;
-}
+event.pointerId === this.scaleDrag.id;
+const pan =
+this.drag &&
+event.pointerId === this.drag.id;
 
-if(
-!this.drag ||
-event.pointerId !== this.drag.id
-){
+if(!scale && !pan){
 return;
 }
 
+if(scale){
+this.scaleDrag = null;
+}
+
+if(pan){
 this.drag = null;
 stage.classList.remove("dragging");
+}
+
+try{
+stage.releasePointerCapture(event.pointerId);
+}catch{
+/* ignore */
+}
 
 };
 
 stage.addEventListener("pointerup", endDrag);
 stage.addEventListener("pointercancel", endDrag);
+window.addEventListener("pointerup", endDrag, true);
+window.addEventListener("pointercancel", endDrag, true);
 
 stage.addEventListener(
 "wheel",
@@ -1020,6 +1370,7 @@ layout.plotRight,
 this.rightGap,
 this.barSpacing
 );
+this.userMovedView = true;
 this.scheduleRebuild();
 return;
 
@@ -1035,7 +1386,7 @@ const nextSpacing =
 Math.min(
 32,
 Math.max(
-2,
+0.25,
 this.barSpacing * factor
 )
 );
@@ -1077,6 +1428,7 @@ layout.plotRight,
 this.rightGap,
 nextSpacing
 );
+this.userMovedView = true;
 this.scheduleRebuild();
 
 },
@@ -1092,6 +1444,7 @@ priceAxis &&
 this._onPriceAxis(stage, event)
 ){
 this.manualScale = null;
+this.onAutoScale?.();
 this.scheduleRebuild();
 return;
 }
@@ -1099,6 +1452,7 @@ return;
 this.barSpacing = 8;
 this.panPx = 0;
 this.manualScale = null;
+this.onAutoScale?.();
 this.scheduleRebuild();
 
 }
@@ -1112,7 +1466,7 @@ stage.addEventListener(
 "contextmenu",
 event=>{
 
-if(!this._onPriceAxis(stage, event)){
+if(!this.scaleMenu || !this._onPriceAxis(stage, event)){
 return;
 }
 

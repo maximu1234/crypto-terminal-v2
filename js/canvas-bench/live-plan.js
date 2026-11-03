@@ -114,6 +114,25 @@ rightGap -
 
 }
 
+/** Пустое место справа: не меньше доли ширины и не меньше отступа в барах. */
+export function rightGapPx(barSpacing, rightOffsetBars, plotW, ratio){
+
+const bars =
+Math.max(0, Number(rightOffsetBars) || 0) *
+Math.max(0, Number(barSpacing) || 0);
+const width =
+Number(plotW) || 0;
+const share =
+Number(ratio) || 0;
+
+if(!(share > 0) || !(width > 0)){
+return bars;
+}
+
+return Math.max(bars, width * share);
+
+}
+
 export function candleIndexAt(
 x,
 lastIndex,

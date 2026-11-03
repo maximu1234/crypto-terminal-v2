@@ -4,11 +4,8 @@
  * Lazy: модуль импортируют только при открытии вкладки.
  */
 import {
-  loadLightweightCharts
-} from "../charts-lib-boot.js?v=04885614";
-import {
-  withChartLocalTime
-} from "../chart/chart-local-time.js?v=027bb0cc";
+  createCanvasLwChart
+} from "../chart/canvas-lw-host.js?v=5c795e35";
 import {
   RSI_TOUCH_FLIP_EQUITY_POS_COLOR
 } from "./rsi-touch-flip-equity.js?v=40586292";
@@ -171,69 +168,26 @@ export function mountRsiTouchFlipEquityChart(host) {
     if (chart || !host) {
       return;
     }
-    await loadLightweightCharts();
-    const LC = globalThis.LightweightCharts;
-    if (!LC?.createChart) {
-      return;
-    }
     const { w, h } = sizeOf(host);
-    chart = LC.createChart(
-      host,
-      withChartLocalTime({
-        width: Math.max(w, 16),
-        height: Math.max(h, 16),
-        layout: {
-          background: {
-            color: BG
-          },
-          textColor: TEXT,
-          fontSize: 11
-        },
-        grid: {
-          vertLines: {
-            color: GRID,
-            style: 2
-          },
-          horzLines: {
-            visible: false
-          }
-        },
-        rightPriceScale: {
-          borderColor: AXIS,
-          scaleMargins: {
-            top: 0.06,
-            bottom: 0.18
-          }
-        },
-        timeScale: {
-          borderColor: AXIS,
-          timeVisible: true,
-          secondsVisible: false,
-          rightOffset: 2,
-          minBarSpacing: 0.001,
-          shiftVisibleRangeOnNewBar: false
-        },
-        crosshair: {
-          horzLine: {
-            color: "#6b7280",
-            labelBackgroundColor: "#111827"
-          },
-          vertLine: {
-            color: "#6b7280",
-            labelBackgroundColor: "#111827"
-          }
-        },
-        handleScroll: {
-          mouseWheel: true,
-          pressedMouseMove: true
-        },
-        handleScale: {
-          mouseWheel: true,
-          pinch: true,
-          axisPressedMouseMove: true
-        }
-      })
-    );
+    chart = createCanvasLwChart(host, {
+      pane: true,
+      priceScaleMode: "regular",
+      timeScaleVisible: true,
+      showGrid: true,
+      rightOffsetBars: 2,
+      background: BG,
+      axisWidth: 56
+    }).chart;
+    chart.applyOptions({
+      width: Math.max(w, 16),
+      height: Math.max(h, 16)
+    });
+    chart.priceScale("right").applyOptions({
+      scaleMargins: {
+        top: 0.06,
+        bottom: 0.18
+      }
+    });
     histSeries = chart.addHistogramSeries({
       priceScaleId: "trades",
       lastValueVisible: false,

@@ -17,12 +17,6 @@ const path =
 require(
 "path"
 );
-const {
-pathToFileURL
-} =
-require(
-"url"
-);
 
 const APP_SCHEME =
 "multichart";
@@ -395,18 +389,12 @@ status:
 
 }
 
-const fileUrl =
-pathToFileURL(
+const bytes =
+await fs.promises.readFile(
 filePath
-).href;
-const upstream =
-await net.fetch(
-fileUrl
 );
 const headers =
-new Headers(
-upstream.headers
-);
+new Headers();
 headers.set(
 "Content-Type",
 getMime(
@@ -421,12 +409,16 @@ headers.set(
 "Cross-Origin-Resource-Policy",
 "cross-origin"
 );
+headers.set(
+"Cache-Control",
+"no-store"
+);
 
 return new Response(
-upstream.body,
+bytes,
 {
 status:
-upstream.status,
+200,
 headers
 }
 );

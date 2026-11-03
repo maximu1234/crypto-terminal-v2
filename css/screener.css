@@ -1021,6 +1021,7 @@ user-select:none;
 -webkit-tap-highlight-color:transparent;
 }
 
+.screener-widget .screener-chart .chart-price-hud,
 .screener-widget-zoom-body .screener-chart .chart-price-hud{
 position:absolute;
 right:0;
@@ -1039,18 +1040,22 @@ pointer-events:none;
 color:#d1d5db;
 }
 
+.screener-widget .screener-chart .chart-price-hud.hidden,
 .screener-widget-zoom-body .screener-chart .chart-price-hud.hidden{
 display:none;
 }
 
+.screener-widget .screener-chart .chart-price-hud--up,
 .screener-widget-zoom-body .screener-chart .chart-price-hud--up{
 background:#16a34a;
 }
 
+.screener-widget .screener-chart .chart-price-hud--down,
 .screener-widget-zoom-body .screener-chart .chart-price-hud--down{
 background:#dc2626;
 }
 
+.screener-widget .screener-chart .chart-price-hud-cd,
 .screener-widget-zoom-body .screener-chart .chart-price-hud-cd{
 display:block;
 font-size:12px;

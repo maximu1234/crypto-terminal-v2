@@ -9,12 +9,12 @@ import {
 } from "../market-api.js?v=509a465f";
 import {
   loadTradeExchangeModules
-} from "../trade/module-router.js?v=e8cd239b";
+} from "../trade/module-router.js?v=a955e70e";
 import {
   getAllCachedPositions,
   syncTradePositionsCache,
   initTradePositionsCache
-} from "../trade-positions-cache.js?v=cc0e859d";
+} from "../trade-positions-cache.js?v=8a6a35e5";
 
 function tradingApi() {
   return window.cryptoTerminalDesktop?.trading || null;
@@ -34,7 +34,7 @@ export async function initMobileTradeLite() {
   document.body.classList.add("trade-page");
   try {
     const { initExchangeTradingGate } = await import(
-      "../exchange-trading-gate.js?v=dc5897c0"
+      "../exchange-trading-gate.js?v=4cd83597"
     );
     await initExchangeTradingGate();
   } catch (err) {
@@ -42,7 +42,7 @@ export async function initMobileTradeLite() {
   }
   try {
     const { initTradePositionsLive } = await import(
-      "../trade-positions-live.js?v=5c4c256a"
+      "../trade-positions-live.js?v=2d22b60e"
     );
     initTradePositionsLive();
   } catch {
@@ -99,7 +99,7 @@ export async function cancelOpenOrder(order) {
 
 export async function openMarket(symbol, side, volumeUsdt, stops = {}) {
   const { openWidgetMarketPosition } = await import(
-    "../trade-market-entry.js?v=b41ba917"
+    "../trade-market-entry.js?v=23ce2435"
   );
   const slUsd = Number(stops.slUsd);
   const tpUsd = Number(stops.tpUsd);

@@ -20,6 +20,10 @@ registerCandleSeries
 } from "../../chart/candle-color-prefs.js?v=a9347502";
 
 import {
+createCanvasLwChart
+} from "../../chart/canvas-lw-host.js?v=5c795e35";
+
+import {
 candleAlignSec,
 markerForExecutionSide
 } from "../../trade-markers-sandbox/marker-math.js?v=a5c98186";
@@ -614,91 +618,18 @@ candles[
 1;
 
 const chart =
-LightweightCharts.createChart(
+createCanvasLwChart(
 mount,
-withChartLocalTime(
 {
-layout:{
-background:{
-color:"#0f141a"
-},
-textColor:
-CHART_SCALE_TEXT_COLOR,
-fontSize:
-effectiveChartScaleFontSize(),
-fontFamily:
-CHART_SCALE_FONT_FAMILY
-},
-grid:{
-vertLines:{
-color:"#161b26"
-},
-horzLines:{
-color:"#161b26"
+bare: true,
+priceScaleMode: "regular",
+axisWidth: effectiveChartPriceScaleWidth(),
+timeScaleVisible: true,
+showGrid: true,
+rightOffsetBars: 8,
+background: "#0f141a"
 }
-},
-rightPriceScale:{
-visible:
-true,
-borderColor:"#1f2937",
-mode:
-priceScaleMode,
-autoScale:
-true,
-minimumWidth:
-effectiveChartPriceScaleWidth(),
-ticksVisible:
-true,
-scaleMargins:{
-top:
-0.12,
-bottom:
-0.12
-}
-},
-timeScale:{
-borderColor:"#1f2937",
-timeVisible:
-true,
-ticksVisible:
-true,
-secondsVisible:
-false,
-rightOffset:
-8,
-fixRightEdge:
-false
-},
-crosshair:{
-mode:
-LightweightCharts.CrosshairMode?.Normal ??
-0
-},
-handleScroll:{
-mouseWheel:
-true,
-pressedMouseMove:
-true,
-horzTouchDrag:
-true,
-vertTouchDrag:
-false
-},
-handleScale:{
-axisPressedMouseMove:{
-time:
-true,
-price:
-true
-},
-mouseWheel:
-true,
-pinch:
-true
-}
-}
-)
-);
+).chart;
 
 const series =
 chart.addCandlestickSeries({

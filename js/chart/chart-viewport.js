@@ -434,13 +434,17 @@ effectiveChartPriceScaleWidth(),
 )
 );
 
+const anchor =
+realTotal > 0
+? lastRealIndex
+: lastIndex;
+
 const logicalSpan =
 Math.max(
-lastIndex -
+anchor -
 from +
 1,
-visibleBars +
-futureMargin,
+visibleBars,
 1
 );
 
@@ -455,7 +459,7 @@ return {
 range:{
 from,
 to:
-lastIndex
+anchor
 },
 timeOpts:{
 barSpacing,
@@ -546,8 +550,9 @@ secondsVisible:
 false
 });
 
-linkedChart.timeScale().setVisibleLogicalRange(
-plan.range
+copyVisibleTimeRange(
+mainChart,
+linkedChart
 );
 
 }
@@ -612,8 +617,9 @@ barSpacing
 });
 }
 
-linkedChart.timeScale().setVisibleLogicalRange(
-range
+copyVisibleTimeRange(
+mainChart,
+linkedChart
 );
 
 }
@@ -626,6 +632,56 @@ range
  * price scale (esp. after AO/RSI price-scale width sync).
  * @returns {boolean} false if plot width is not ready
  */
+/** Одинаковое окно времени на панелях, даже если число баров различается. */
+export function copyVisibleTimeRange(
+sourceChart,
+targetChart
+){
+
+const source =
+sourceChart?.timeScale?.();
+const target =
+targetChart?.timeScale?.();
+
+if(
+!source ||
+!target
+){
+return false;
+}
+
+const range =
+source.getVisibleRange?.();
+
+if(
+range &&
+Number.isFinite(range.from) &&
+Number.isFinite(range.to) &&
+range.to >
+range.from &&
+typeof target.setVisibleRange ===
+"function"
+){
+target.setVisibleRange(range);
+return true;
+}
+
+const logical =
+source.getVisibleLogicalRange?.();
+
+if(
+logical &&
+typeof target.setVisibleLogicalRange ===
+"function"
+){
+target.setVisibleLogicalRange(logical);
+return true;
+}
+
+return false;
+
+}
+
 function fitMainChartBarSpacingToRange(
 mainChart,
 range
@@ -733,7 +789,7 @@ chart.timeScale().setVisibleLogicalRange({
 
 from,
 
-to:lastIndex + rightMargin
+to:lastIndex
 
 });
 

@@ -198,3 +198,197 @@ max: hi
 };
 
 }
+
+function cleanTick(price){
+
+return Number(price.toPrecision(12));
+
+}
+
+function tickPixel(price, min, max, height, mode){
+
+if(
+mode === PRICE_SCALE_LOG &&
+min > 0 &&
+max > 0 &&
+price > 0
+){
+
+const lo = Math.log(min);
+const hi = Math.log(max);
+
+return (hi - Math.log(price)) / (hi - lo || 1) * height;
+
+}
+
+return (max - price) / (max - min || 1) * height;
+
+}
+
+/*
+ * Метки как в Lightweight Charts 4.1.3 (metka-221):
+ * PriceTickSpanCalculator + PriceTickMarkBuilder.rebuildTickMarks.
+ * Шаг из ряда 1-2-5, три порядка делителей, берётся меньший.
+ * Обычная шкала: один шаг на весь диапазон.
+ * Логарифм: после каждой принятой цены шаг считается заново
+ * от неё до низа. Слишком близкая к предыдущей метка пропускается.
+ */
+const TICK_EPS = 1e-14;
+const TICK_DENSITY = 2.5;
+const AXIS_FONT_PX = 11;
+const TICK_DIVIDERS = [
+[2, 2.5, 2],
+[2, 2, 2.5],
+[2.5, 2, 2]
+];
+const FRACTIONAL_DIVIDERS = [2, 2.5, 2];
+
+function atLeast(value, limit){
+
+return value > limit - TICK_EPS;
+
+}
+
+function tickSpanWith(high, low, maxTickSpan, dividers){
+
+const minMovement = 1e-12;
+const span = high - low;
+
+if(!(span > 0) || !Number.isFinite(span)){
+return span;
+}
+
+let result =
+10 ** Math.max(
+0,
+Math.ceil(Math.log10(span))
+);
+let index = 0;
+let divider = dividers[0];
+
+while(
+atLeast(result, minMovement) &&
+result > minMovement + TICK_EPS &&
+atLeast(result, maxTickSpan * divider) &&
+atLeast(result, 1)
+){
+result /= divider;
+divider = dividers[++index % dividers.length];
+}
+
+if(result <= minMovement + TICK_EPS){
+result = minMovement;
+}
+
+result = Math.max(1, result);
+
+if(Math.abs(result - 1) < TICK_EPS){
+index = 0;
+divider = FRACTIONAL_DIVIDERS[0];
+
+while(
+atLeast(result, maxTickSpan * divider) &&
+result > minMovement + TICK_EPS
+){
+result /= divider;
+divider =
+FRACTIONAL_DIVIDERS[++index % FRACTIONAL_DIVIDERS.length];
+}
+
+}
+
+return result;
+
+}
+
+function priceTickSpan(high, low, height){
+
+const markHeight =
+Math.ceil(AXIS_FONT_PX * TICK_DENSITY);
+const maxTickSpan =
+(high - low) * markHeight / Math.max(1, height);
+let best =
+Infinity;
+
+for(const dividers of TICK_DIVIDERS){
+
+best = Math.min(
+best,
+tickSpanWith(high, low, maxTickSpan, dividers)
+);
+
+}
+
+return best;
+
+}
+
+export function nicePriceTicks(min, max, plotH, mode){
+
+if(!(max > min) || !Number.isFinite(min) || !Number.isFinite(max)){
+return [];
+}
+
+const height =
+Math.max(1, plotH || 1);
+const log =
+mode === PRICE_SCALE_LOG &&
+min > 0 &&
+max > 0;
+const markHeight =
+Math.ceil(AXIS_FONT_PX * TICK_DENSITY);
+let span =
+priceTickSpan(max, min, height);
+
+if(!(span > 0) || !Number.isFinite(span)){
+return [];
+}
+
+let mod =
+max % span;
+
+if(mod < 0){
+mod += span;
+}
+
+const ticks =
+[];
+let prevY =
+null;
+let price =
+max - mod;
+
+for(let guard = 0; price > min && guard < 80; guard++){
+
+const y =
+tickPixel(price, min, max, height, mode);
+const crowded =
+prevY != null &&
+Math.abs(y - prevY) < markHeight;
+
+if(
+!crowded &&
+price > min &&
+price < max
+){
+ticks.push(cleanTick(price));
+prevY = y;
+
+if(log){
+span = priceTickSpan(price, min, height);
+
+if(!(span > 0) || !Number.isFinite(span)){
+break;
+}
+
+}
+
+}
+
+price -= span;
+
+}
+
+return ticks;
+
+}

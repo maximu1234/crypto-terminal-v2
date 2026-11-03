@@ -37,6 +37,10 @@ attachChartWheelDeadband
 } from "./chart-wheel-deadband.js?v=0988dd58";
 
 import {
+createCanvasLwChart
+} from "./canvas-lw-host.js?v=5c795e35";
+
+import {
 ensureDomChartCrosshair,
 resolveCrosshairPlotTime,
 updateCrosshairAxisLabels,
@@ -238,211 +242,80 @@ chartOpts
 ){
 
 /*
- * Прозрачный фон: слой .drawings-layer лежит под #chart (z-index),
- * цвет даёт #chart-wrap / .widget-chart-wrap (--app-chart-bg).
- * Иначе непрозрачный canvas LW полностью закрывает рисунки.
+ * Холст вместо Lightweight Charts. Фон прозрачный: рисунки лежат под #chart.
+ * Цвета свечей берутся из candleSeriesPaint, не из пробной страницы.
  */
-const chart =
-LightweightCharts.createChart(
+const made =
+createCanvasLwChart(
 container,
-withChartLocalTime(
 {
-
-layout:{
-background:{ color:"transparent" },
-textColor:CHART_SCALE_TEXT_COLOR,
-fontSize:effectiveChartScaleFontSize(),
-fontFamily:CHART_SCALE_FONT_FAMILY
-},
-
-/* Без сетки: рисунки под свечами, линии сетки LW шли бы поверх заливок. */
-grid:{
-vertLines:{
-visible:
-false
-},
-horzLines:{
-visible:
-false
-}
-},
-
-rightPriceScale:{
-
-borderColor:"#1f2937",
-
-/* LW: Normal=0 Log=1. Дефолт log; Terminal может переключить на Regular. */
-
-mode:
-lwPriceScaleModeId(
-chartOpts?.priceScaleMode
-),
-
-autoScale:true,
-minimumWidth:effectiveChartPriceScaleWidth(),
-scaleMargins:{
-top:0.12,
-bottom:0.12
-}
-
-},
-
-timeScale:{
-borderColor:"#1f2937",
-visible:false,
-rightOffset:12,
-fixRightEdge:false
-},
-
-crosshair:mainChartCrosshairOptions(),
-
-handleScroll:{
-mouseWheel:true,
-pressedMouseMove:true,
-horzTouchDrag:true,
-vertTouchDrag:false
-},
-
-handleScale:{
-axisPressedMouseMove:{
-time:true,
-price:true
-},
-axisDoubleClickReset:{
-time:true,
-price:true
-},
-mouseWheel:true,
-pinch:true
-}
-
-}
-)
-);
-
-chart.applyOptions({
-crosshair:mainChartCrosshairOptions()
-});
-
-const series =
-chart.addCandlestickSeries({
-
+priceScaleMode:
+chartOpts?.priceScaleMode,
+axisWidth:
+effectiveChartPriceScaleWidth(),
+rightMarginRatio: 0.15,
+paint:{
 ...candleSeriesPaint(),
-
 priceLineVisible:true,
 lastValueVisible:false
-
-});
+}
+}
+);
 
 registerCandleSeries(
-series
+made.series
 );
 
 attachChartWheelDeadband(
 container
 );
 
-return {
-
-chart,
-series
-
-};
+return made;
 
 }
 
 export function createScreenerChart(container){
 
-const chartBg =
-getChartLayoutBgColor();
-
-const width =
-Math.max(container.clientWidth, 120);
-
-const height =
-Math.max(container.clientHeight, 80);
-
-const chart =
-LightweightCharts.createChart(
+const made =
+createCanvasLwChart(
 container,
-withChartLocalTime(
 {
-
-width,
-height,
-
-layout:{
-background:{ color:chartBg },
-textColor:"#9ca3af"
-},
-
-grid:{
-vertLines:{ color:"#161b26" },
-horzLines:{ color:"#161b26" }
-},
-
-rightPriceScale:{
-borderColor:"#1f2937",
-mode:1,
-autoScale:true,
-scaleMargins:{
-top:0.1,
-bottom:0.1
+priceScaleMode: "logarithmic",
+axisWidth: effectiveChartPriceScaleWidth(),
+timeScaleVisible: true,
+rightOffsetBars: 4,
+rightMarginRatio: 0.15,
+background: getChartLayoutBgColor(),
+paint:{
+...candleSeriesPaint(),
+priceLineVisible: true,
+lastValueVisible: true
 }
-},
-
-timeScale:{
-borderColor:"#1f2937",
-timeVisible:true,
-secondsVisible:false,
-rightOffset:4,
-fixRightEdge:false,
-minBarSpacing:0.01,
-lockVisibleTimeRangeOnResize:false
-},
-
-crosshair:{
-mode:LightweightCharts.CrosshairMode?.Hidden ?? 2
-},
-
-handleScroll:{
-mouseWheel:true,
-pressedMouseMove:true,
-horzTouchDrag:true,
-vertTouchDrag:false
-},
-
-handleScale:{
-axisPressedMouseMove:true,
-mouseWheel:true,
-pinch:true
 }
-
-}
-)
 );
 
-const series =
-chart.addCandlestickSeries({
-
-...candleSeriesPaint(),
-priceLineVisible:true,
-lastValueVisible:true
-
+if(
+container.clientWidth >= 2 &&
+container.clientHeight >= 2
+){
+made.chart.applyOptions({
+width: container.clientWidth,
+height: container.clientHeight
+});
+}
+made.chart.timeScale().applyOptions({
+rightOffset: 4
 });
 
 registerCandleSeries(
-series
+made.series
 );
 
 attachChartWheelDeadband(
 container
 );
 
-return {
-chart,
-series
-};
+return made;
 
 }
 
@@ -465,11 +338,12 @@ restoreScreenerViewport,
 applyScreenerZoom,
 tfPeriodSec,
 rsiPlotTimeOffsetSec
-} from "./chart-viewport.js?v=adfe31a4";
+} from "./chart-viewport.js?v=f0f8f4cf";
 
 import {
+copyVisibleTimeRange,
 tfPeriodSec
-} from "./chart-viewport.js?v=adfe31a4";
+} from "./chart-viewport.js?v=f0f8f4cf";
 
 
 
@@ -598,92 +472,25 @@ false
 
 export function createRSIChart(container){
 
-const normalMode =
-LightweightCharts.PriceScaleMode !== undefined
-? LightweightCharts.PriceScaleMode.Normal
-: 0;
-
 const chart =
-LightweightCharts.createChart(
+createCanvasLwChart(
 container,
-withChartLocalTime(
 {
-
-layout:{
-/* Прозрачный: зона 30–70 рисуется DOM (#rsi-band) под канвой */
-background:{ color:"transparent" },
-textColor:CHART_SCALE_TEXT_COLOR,
-fontSize:effectiveChartScaleFontSize(),
-fontFamily:CHART_SCALE_FONT_FAMILY
-},
-
-grid:{
-vertLines:{
-color:"transparent",
-visible:false
-},
-horzLines:{
-visible:false
+pane: true,
+priceScaleMode: "regular",
+axisWidth: effectiveChartPriceScaleWidth(),
+timeScaleVisible: true,
+rightOffsetBars: 24
 }
-},
+).chart;
 
-rightPriceScale:{
-borderColor:"#2a2e39",
-mode:
-normalMode,
-autoScale:true,
-minimumWidth:effectiveChartPriceScaleWidth(),
-ticksVisible:true,
-scaleMargins:{
-top:0,
-bottom:0
-}
-},
-
-timeScale:{
-visible:true,
-timeVisible:true,
-ticksVisible:true,
-borderColor:"#1f2937",
-secondsVisible:false,
-rightOffset:24,
-fixRightEdge:false
-},
-
-crosshair:hiddenCrosshairOptions(),
-
-handleScroll:{
-mouseWheel:true,
-pressedMouseMove:true,
-horzTouchDrag:true,
-vertTouchDrag:false
-},
-
-handleScale:{
-mouseWheel:true,
-pinch:true,
-axisPressedMouseMove:{
-time:true,
-price:false
-},
-axisDoubleClickReset:{
-time:true,
-price:false
-}
-}
-
-}
-)
-);
-
-chart.applyOptions({
-crosshair:hiddenCrosshairOptions()
+chart.timeScale().applyOptions({
+visible: true,
+rightOffset: 24
 });
 
 const series =
-typeof chart.addBaselineSeries ===
-"function"
-? chart.addBaselineSeries({
+chart.addBaselineSeries({
 
 baseValue:{
 type:
@@ -709,44 +516,6 @@ bottomFillColor1:
 
 bottomFillColor2:
 "rgba(0,0,0,0)",
-
-lineWidth:1,
-
-lastValueVisible:true,
-
-priceLineVisible:false,
-
-crosshairMarkerVisible:false,
-
-autoscaleInfoProvider:()=>(
-{
-
-priceRange:{
-
-minValue:0,
-
-maxValue:100
-
-}
-
-}
-),
-
-priceFormat:{
-
-type:"price",
-
-precision:2,
-
-minMove:0.01
-
-}
-
-})
-: chart.addLineSeries({
-
-color:
-RSI_LINE_COLOR_NEUTRAL,
 
 lineWidth:1,
 
@@ -815,76 +584,19 @@ container
 ){
 
 const chart =
-LightweightCharts.createChart(
+createCanvasLwChart(
 container,
-withChartLocalTime(
 {
-
-layout:{
-background:{ color:"transparent" },
-textColor:CHART_SCALE_TEXT_COLOR,
-fontSize:effectiveChartScaleFontSize(),
-fontFamily:CHART_SCALE_FONT_FAMILY
-},
-
-grid:{
-vertLines:{
-color:"transparent",
-visible:false
-},
-horzLines:{
-visible:false
+pane: true,
+priceScaleMode: "regular",
+axisWidth: effectiveChartPriceScaleWidth(),
+rightOffsetBars: 24
 }
-},
+).chart;
 
-rightPriceScale:{
-borderColor:"#2a2e39",
-autoScale:true,
-minimumWidth:effectiveChartPriceScaleWidth(),
-scaleMargins:{
-top:0.08,
-bottom:0
-}
-},
-
-timeScale:{
-visible:false,
-timeVisible:false,
-ticksVisible:false,
-borderColor:"#1f2937",
-secondsVisible:false,
-rightOffset:24,
-fixRightEdge:false
-},
-
-crosshair:hiddenCrosshairOptions(),
-
-handleScroll:{
-mouseWheel:true,
-pressedMouseMove:true,
-horzTouchDrag:true,
-vertTouchDrag:false
-},
-
-handleScale:{
-mouseWheel:true,
-pinch:true,
-axisPressedMouseMove:{
-time:true,
-price:false
-},
-axisDoubleClickReset:{
-time:true,
-price:false
-}
-}
-
-}
-)
-);
-
-chart.applyOptions({
-crosshair:hiddenCrosshairOptions()
+chart.timeScale().applyOptions({
+visible: false,
+rightOffset: 24
 });
 
 const series =
@@ -1188,8 +900,13 @@ mainChart.timeScale()
 )
 );
 
-linkedChart.timeScale().setVisibleLogicalRange(
-range
+linkedChart.bindTimeGuide?.(
+mainChart
+);
+
+copyVisibleTimeRange(
+mainChart,
+linkedChart
 );
 
 applyChartScaleWidthCss(
@@ -1216,10 +933,10 @@ const isLocked =
 options.isLocked ??
 (()=>false);
 
-/** false — setData на панели не двигает main; жест (pan/wheel) всё равно синхронизирует. */
+/** Жест по панели синхронизирует main. setData панели — нет, иначе график прыгает. */
 const linkedDrivesMain =
-options.linkedDrivesMain !==
-false;
+options.linkedDrivesMain ===
+true;
 
 const gestureRoot =
 options.linkedEl ||
@@ -1305,6 +1022,7 @@ return;
 }
 
 const range =
+linkedChart.timeScale().getVisibleRange?.() ||
 linkedChart.timeScale().getVisibleLogicalRange();
 
 if(
@@ -1321,8 +1039,9 @@ linkedChart.timeScale()
 )
 );
 
-mainChart.timeScale().setVisibleLogicalRange(
-range
+copyVisibleTimeRange(
+linkedChart,
+mainChart
 );
 
 afterSync?.();
@@ -2021,7 +1740,7 @@ lineEl.classList.remove(
 
 export {
 linkChartsCrosshair
-} from "./chart-crosshair-link.js?v=df36ecf9";
+} from "./chart-crosshair-link.js?v=ab5114f4";
 
 
 
@@ -2281,7 +2000,7 @@ try{
 chart.priceScale(
 "right"
 ).subscribeVisibleLogicalRangeChange?.(
-scheduleUpdate
+update
 );
 }catch{
 /* ignore */
