@@ -11,7 +11,7 @@ lastOhlcClose,
 quoteCandlesToBtc,
 setBtcQuoteActive,
 syncBtcQuoteLive
-} from "../chart/btc-quote.js?v=ddd63eed";
+} from "../chart/btc-quote.js?v=724c8d74";
 
 /**
  * Closure slice. `host` is the surrounding function's bindings.
@@ -936,6 +936,25 @@ host.chartIndicators?.notifyCandlesUpdate?.();
 return;
 }
 
+if(
+liveLastOnly &&
+Date.now() -
+(
+host.liveRsiPaintAt ||
+0
+) <
+500
+){
+return;
+}
+
+if(
+liveLastOnly
+){
+host.liveRsiPaintAt =
+Date.now();
+}
+
 const seq =
 ++host.rsiRebuildSeq;
 const chartCandles =
@@ -966,6 +985,81 @@ seq !==
 host.rsiRebuildSeq
 ){
 return;
+}
+
+if(
+liveLastOnly
+){
+
+host.rsiPointsCache =
+points;
+
+let last =
+null;
+
+for(
+let i =
+points.length -
+1;
+i >=
+0;
+i--
+){
+
+if(
+Number.isFinite(
+points[i]?.value
+)
+){
+last =
+points[i];
+break;
+}
+
+}
+
+if(
+host.rsiPaneActive
+){
+
+if(
+last &&
+host.rsiSeries
+){
+
+try{
+host.rsiSeries.update(
+last
+);
+}catch{
+host.rsiSeries.setData(
+buildRsiDisplayPoints(
+host
+)
+);
+}
+
+}
+
+setRsiHudValue(
+host,
+last?.value ??
+null
+);
+
+}
+
+if(
+!isTerminalReplayActive()
+){
+publishRsiAlertValue(
+host,
+points
+);
+}
+
+return;
+
 }
 
 if(
@@ -4295,7 +4389,7 @@ if(
 ){
 host.terminalAlgoEarlyT3ListMod =
 await import(
-"../algo-trading/terminal-early-t3-list.js?v=e8c42cbf"
+"../algo-trading/terminal-early-t3-list.js?v=1b751383"
 );
 }
 host.terminalAlgoEarlyT3ListMod.mountTerminalAlgoEarlyT3List();

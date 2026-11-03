@@ -7,7 +7,7 @@ EXCHANGE_DEFINITIONS,
 getActiveExchangeId,
 setActiveExchangeId,
 pingActiveExchangePublic
-} from "./market-api.js?v=145e2e28";
+} from "./market-api.js?v=509a465f";
 
 import {
 readExchangeCredentials,
@@ -18,7 +18,7 @@ getExchangeSecretForSave
 
 import {
 getLoadedTradeExchangeModules
-} from "./trade/module-router.js?v=75806a00";
+} from "./trade/module-router.js?v=e8cd239b";
 
 import {
 maskTradeDisplay

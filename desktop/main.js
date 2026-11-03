@@ -353,10 +353,41 @@ return REMOTE_APP_URL.replace(
 
 function getStartUrl(){
 
+const startPath =
+process.env.DESKTOP_START_PATH;
+
+if(
+typeof startPath ===
+"string" &&
+startPath.startsWith(
+"/"
+)
+){
+return `${getAppOrigin()}${startPath}`;
+}
+
 return (
 process.env.DESKTOP_START_URL ||
 `${getAppOrigin()}/terminal.html`
 );
+
+}
+
+function isCanvasBenchUrl(
+url
+){
+
+try{
+return new URL(
+String(
+url ||
+""
+)
+).pathname ===
+"/canvas-bench.html";
+}catch{
+return false;
+}
 
 }
 
@@ -1212,6 +1243,9 @@ USE_BUNDLE &&
 !bundleLoadFallback &&
 isBundledUiUrl(
 failedUrl
+) &&
+!isCanvasBenchUrl(
+failedUrl
 )
 ){
 fallbackToRemoteUi(
@@ -1388,6 +1422,8 @@ mainWindow &&
 ){
 
 try{
+const loadedUrl =
+mainWindow.webContents.getURL();
 const ok =
 await mainWindow.webContents.executeJavaScript(
 `(() => {
@@ -1398,7 +1434,10 @@ true
 );
 
 if(
-!ok
+!ok &&
+!isCanvasBenchUrl(
+loadedUrl
+)
 ){
 fallbackToRemoteUi(
 "empty DOM after load"
@@ -1412,9 +1451,17 @@ log.warn(
 "bundled UI DOM check failed:",
 err
 );
+
+if(
+!isCanvasBenchUrl(
+mainWindow?.webContents?.getURL()
+)
+){
 fallbackToRemoteUi(
 "DOM check error"
 );
+}
+
 }
 
 }

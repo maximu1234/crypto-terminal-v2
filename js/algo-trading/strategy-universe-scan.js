@@ -4,7 +4,7 @@
  */
 import {
 loadMarketHistory
-} from "../market-api.js?v=145e2e28";
+} from "../market-api.js?v=509a465f";
 
 import {
 analyzeAlgoPatterns
@@ -24,17 +24,17 @@ pickStrategyStats,
 ALGO_TICKER_SCAN_HISTORY_REQUESTS,
 ALGO_TICKER_SCAN_CONCURRENCY,
 ALGO_TICKER_SCAN_DELAY_MS
-} from "./ticker-scanner.js?v=05523b26";
+} from "./ticker-scanner.js?v=624cb6e8";
 
 import {
 createEmptyAlgoGlobalAgg,
 addAlgoTradeStatsToAgg
-} from "./ticker-scan-all-stats.js?v=e8d7e093";
+} from "./ticker-scan-all-stats.js?v=c9c9afad";
 
 import {
 resolveAlgoScanUniverseItems,
 normalizeAlgoScanUniverse
-} from "./scan-universe.js?v=492e17e1";
+} from "./scan-universe.js?v=ad263cab";
 
 /**
  * @typedef {"st1"|"st2"|"st3"} AlgoScanStrategyId

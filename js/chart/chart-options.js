@@ -163,7 +163,29 @@ minMove
 
 }
 
+const appliedPriceDecimals =
+new WeakMap();
+
 export function applyChartPriceFormat(series, referencePrice){
+
+const decimals =
+priceDecimalPlaces(
+referencePrice
+);
+
+if(
+appliedPriceDecimals.get(
+series
+) ===
+decimals
+){
+return;
+}
+
+appliedPriceDecimals.set(
+series,
+decimals
+);
 
 series.applyOptions({
 

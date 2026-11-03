@@ -8,7 +8,7 @@ CHART_SCALE_FONT_FAMILY,
 CHART_SCALE_TEXT_COLOR,
 effectiveChartPriceScaleWidth,
 effectiveChartScaleFontSize
-} from "./chart/chart-options.js?v=f4be0094";
+} from "./chart/chart-options.js?v=ccf11c66";
 
 import {
 withChartLocalTime

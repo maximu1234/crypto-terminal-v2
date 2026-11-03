@@ -14,7 +14,7 @@ positionEntryPrice
 
 import {
 priceDecimalPlaces
-} from "../format-price.js?v=5eb5dc8b";
+} from "../format-price.js?v=10c2a6c4";
 
 const TWO_POINT_TYPES = Object.freeze([
 "trendline",

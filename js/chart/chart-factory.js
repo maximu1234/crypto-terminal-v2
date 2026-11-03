@@ -13,7 +13,7 @@ isTabletChartViewport,
 bindFinePointerMedia,
 syncTabletFinePointerClass,
 getChartLayoutBgColor
-} from "./chart-options.js?v=f4be0094";
+} from "./chart-options.js?v=ccf11c66";
 
 import {
 lwPriceScaleModeId
@@ -26,7 +26,7 @@ registerCandleSeries
 
 import {
 liveBarPeriodSec
-} from "./live-bar-roll.js?v=6ff2b718";
+} from "./live-bar-roll.js?v=a1406271";
 
 import {
 withChartLocalTime
@@ -48,7 +48,7 @@ hideDomChartCrosshairVert,
 positionDomChartCrosshairHorz,
 positionTabletProbeHorizInStack,
 hideTabletProbeHorizInStack
-} from "./chart-dom-crosshair.js?v=0730674e";
+} from "./chart-dom-crosshair.js?v=f94b139b";
 
 const chartHostElements =
 new WeakMap();
@@ -465,11 +465,11 @@ restoreScreenerViewport,
 applyScreenerZoom,
 tfPeriodSec,
 rsiPlotTimeOffsetSec
-} from "./chart-viewport.js?v=c071f3e4";
+} from "./chart-viewport.js?v=adfe31a4";
 
 import {
 tfPeriodSec
-} from "./chart-viewport.js?v=c071f3e4";
+} from "./chart-viewport.js?v=adfe31a4";
 
 
 
@@ -2021,7 +2021,7 @@ lineEl.classList.remove(
 
 export {
 linkChartsCrosshair
-} from "./chart-crosshair-link.js?v=1f3b9b6b";
+} from "./chart-crosshair-link.js?v=df36ecf9";
 
 
 

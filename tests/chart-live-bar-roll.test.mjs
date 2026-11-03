@@ -308,6 +308,22 @@ test("mergeCatchupOhlcBars keeps older history and drops a disconnected suffix",
   assert.equal(candles.length, 3);
 });
 
+test("applyLiveOhlcBar ignores an identical OHLC tick but keeps volume", () => {
+  const candles = [
+    { time: 1000, open: 10, high: 12, low: 9, close: 11, volume: 4 }
+  ];
+  const kind = applyLiveOhlcBar(
+    candles,
+    { time: 1000, open: 10, high: 12, low: 9, close: 11, volume: 9 },
+    0,
+    60
+  );
+  assert.equal(kind, null);
+  assert.equal(candles.length, 1);
+  assert.equal(candles[0].close, 11);
+  assert.equal(candles[0].volume, 9);
+});
+
 test("mergeLast updates close without wiping the bar open", () => {
   const candles = [
     { time: 1000, open: 10, high: 12, low: 9, close: 11, volume: 4 }

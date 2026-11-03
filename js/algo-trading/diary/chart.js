@@ -8,7 +8,7 @@ CHART_SCALE_FONT_FAMILY,
 CHART_SCALE_TEXT_COLOR,
 effectiveChartPriceScaleWidth,
 effectiveChartScaleFontSize
-} from "../../chart/chart-options.js?v=f4be0094";
+} from "../../chart/chart-options.js?v=ccf11c66";
 
 import {
 withChartLocalTime
@@ -26,7 +26,7 @@ markerForExecutionSide
 
 import {
 diaryFetchKlineBatch
-} from "./chart-klines.js?v=dc4b641f";
+} from "./chart-klines.js?v=d5e0a9a6";
 
 export const DIARY_CHART_TFS =
 Object.freeze([

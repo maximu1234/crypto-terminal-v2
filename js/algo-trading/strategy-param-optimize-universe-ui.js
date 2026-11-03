@@ -14,12 +14,12 @@ isAlgoOptimizeUniverseJobRunning,
 getAlgoOptimizeUniverseJobStrategy,
 readAlgoOptimizeUniverseJob,
 resumeAlgoOptimizeUniverseJob
-} from "./optimize-universe-background.js?v=ffe6b45a";
+} from "./optimize-universe-background.js?v=536a6d7e";
 
 import {
 normalizeAlgoScanTf,
 ALGO_TICKER_SCAN_TF
-} from "./ticker-scanner.js?v=05523b26";
+} from "./ticker-scanner.js?v=624cb6e8";
 
 import {
 normalizeAlgoStatsMode

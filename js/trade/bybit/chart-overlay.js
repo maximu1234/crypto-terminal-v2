@@ -17,12 +17,12 @@ clearDismissedStops
 
 import {
 isExchangeTradingEnabled
-} from "../../market-api.js?v=145e2e28";
+} from "../../market-api.js?v=509a465f";
 
 import {
 seriesPriceToUsdt,
 usdtPriceToSeries
-} from "../../chart/btc-quote.js?v=ddd63eed";
+} from "../../chart/btc-quote.js?v=724c8d74";
 
 import {
 getTradeConfig
@@ -3123,8 +3123,14 @@ immediate =
 false
 ){
 
+/*
+ * The time/price scale listeners pass a range object. Only a real
+ * `true` is the urgent path. A range object used to take that path
+ * and redraw the whole overlay on every live tick.
+ */
 if(
-immediate
+immediate ===
+true
 ){
 
 if(
@@ -3154,10 +3160,89 @@ requestAnimationFrame(
 
 rafId =
 0;
+const key =
+overlayScaleDrawKey();
+
+if(
+key &&
+key ===
+lastOverlayScaleDrawKey
+){
+return;
+}
+
+lastOverlayScaleDrawKey =
+key;
 draw();
 
 }
 );
+
+}
+
+let lastOverlayScaleDrawKey =
+"";
+
+function overlayScaleDrawKey(){
+
+const part =
+range=>{
+
+const from =
+Number(
+range?.from
+);
+const to =
+Number(
+range?.to
+);
+
+if(
+!Number.isFinite(
+from
+) ||
+!Number.isFinite(
+to
+)
+){
+return "";
+}
+
+const span =
+Math.max(
+Math.abs(
+to -
+from
+),
+1e-12
+);
+
+return `${Math.round(from / span * 400)}:${Math.round(to / span * 400)}`;
+
+};
+
+let time =
+null;
+let price =
+null;
+
+try{
+time =
+host?.chart?.timeScale?.().getVisibleLogicalRange?.();
+}catch{
+/* ignore */
+}
+
+try{
+price =
+host?.chart?.priceScale?.(
+"right"
+)?.getVisibleRange?.();
+}catch{
+/* ignore */
+}
+
+return `${part(time)}|${part(price)}`;
 
 }
 

@@ -1,6 +1,6 @@
 import {
 isTabletChartViewport
-} from "./chart-options.js?v=f4be0094";
+} from "./chart-options.js?v=ccf11c66";
 
 import {
 ensureDomChartCrosshair,
@@ -13,12 +13,12 @@ hideDomChartCrosshairVert,
 positionDomChartCrosshairHorz,
 positionTabletProbeHorizInStack,
 hideTabletProbeHorizInStack
-} from "./chart-dom-crosshair.js?v=0730674e";
+} from "./chart-dom-crosshair.js?v=f94b139b";
 
 import {
 chartPlotMetrics,
 isClientOnChartPriceScale
-} from "./chart-factory.js?v=c0ecce8b";
+} from "./chart-factory.js?v=b3339b5a";
 
 export function linkChartsCrosshair({
 mainChart,

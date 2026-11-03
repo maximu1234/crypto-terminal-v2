@@ -1,13 +1,13 @@
 import {
 loadMarketHistory,
 getActiveExchangeId
-} from "../market-api.js?v=145e2e28";
+} from "../market-api.js?v=509a465f";
 
 import {
 positionTabletProbeCrosshair,
 hideTabletProbeCrosshair,
 isTabletChartViewport
-} from "../chart-import.js?v=613e412b";
+} from "../chart-import.js?v=ff696e9d";
 
 import {
 TERMINAL_VISIBLE_BARS,
@@ -16,11 +16,11 @@ terminalHistoryInitialRequests
 
 import {
 quoteCandlesToBtc
-} from "../chart/btc-quote.js?v=ddd63eed";
+} from "../chart/btc-quote.js?v=724c8d74";
 
 import {
 mountChartSymbolFullName
-} from "../symbol-display-name.js?v=90158e89";
+} from "../symbol-display-name.js?v=7b2a3b0b";
 
 import {
 perfMark,
@@ -35,7 +35,7 @@ import {
 buildChartDisplayCandles,
 settleCoinsChartViewport,
 scheduleResizeCharts
-} from "./terminal-chart-layout.js?v=1498c680";
+} from "./terminal-chart-layout.js?v=bc21f953";
 
 import {
 suppressTerminalHistoryLazyLoad
@@ -60,13 +60,13 @@ const {
 initWidgetDrawings
 } =
 await import(
-"../chart-widget-host.js?v=5ef7ad81"
+"../chart-widget-host.js?v=0b1ba8b5"
 );
 const {
 initChartIndicators
 } =
 await import(
-"../chart-indicators.js?v=609a1ef9"
+"../chart-indicators.js?v=ba67e51d"
 );
 const {
 createPattern12EarlyT3Indicator
@@ -219,7 +219,7 @@ deps.drawingTools?.getTool?.() ??
 );
 
 void import(
-"../price-alert-ui.js?v=50dea481"
+"../price-alert-ui.js?v=b0f0302f"
 ).then(
 ({
 mountPriceAlertUi
@@ -1064,7 +1064,7 @@ const {
 createTradePlusMenuHandler
 } =
 await import(
-"../trade-order-plus-ui.js?v=06c6c373"
+"../trade-order-plus-ui.js?v=49f3ad2a"
 );
 
 tradePlusHandler =
@@ -1095,7 +1095,7 @@ const {
 mountPriceAlertUi
 } =
 await import(
-"../price-alert-ui.js?v=50dea481"
+"../price-alert-ui.js?v=b0f0302f"
 );
 
 let disposeAlertUi =
@@ -1155,7 +1155,7 @@ const {
 mountPriceAlertUi: mountRsiPriceAlertUi
 } =
 await import(
-"../price-alert-ui.js?v=50dea481"
+"../price-alert-ui.js?v=b0f0302f"
 );
 
 mountRsiPriceAlertUi(

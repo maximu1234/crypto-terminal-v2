@@ -4,7 +4,7 @@
 import {
 getActiveExchangeDefinition,
 getActiveExchangeId
-} from "./market-api.js?v=145e2e28";
+} from "./market-api.js?v=509a465f";
 
 let bannerEl = null;
 let messageEl = null;
@@ -43,7 +43,7 @@ retryBtn.addEventListener(
 ()=>{
 
 void import(
-"./bybit-fetch.js?v=c64b36ad"
+"./bybit-fetch.js?v=329c7b6c"
 ).then(
 m=>{
 m.resetBybitEndpoints?.();
@@ -56,7 +56,7 @@ getActiveExchangeId() ===
 ){
 
 void import(
-"./exchanges/bingx/ws.js?v=b567a68e"
+"./exchanges/bingx/ws.js?v=5ec08b95"
 ).then(
 m=>{
 m.resetBingxWs?.();

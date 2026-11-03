@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Холст свечей — проба CPU</title>
+<style>
+  html, body {
+    margin: 0;
+    height: 100%;
+    background: #0e1116;
+    color: #d1d4dc;
+    font: 13px/1.4 ui-sans-serif, system-ui, sans-serif;
+  }
+  body {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  #bar {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    flex-wrap: wrap;
+    padding: 8px 12px;
+    border-bottom: 1px solid #2a2e39;
+  }
+  #hint {
+    margin: 0;
+    padding: 4px 12px 8px;
+    color: #8b93a7;
+    font-size: 12px;
+  }
+  #status { color: #b2b5be; }
+  #stack {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+  }
+  #stage {
+    position: relative;
+    flex: 1;
+    min-height: 0;
+    touch-action: none;
+    cursor: grab;
+    user-select: none;
+  }
+  #rsi, #ao, #macd, #volume {
+    position: relative;
+    border-top: 1px solid #2a2e39;
+    touch-action: none;
+    cursor: grab;
+    user-select: none;
+  }
+  #ao { flex: 0 0 72px; }
+  #macd { flex: 0 0 88px; }
+  #volume { flex: 0 0 64px; }
+  #rsi { flex: 0 0 clamp(90px, 16dvh, 141px); }
+  #stage.dragging, #rsi.dragging, #ao.dragging, #macd.dragging, #volume.dragging { cursor: grabbing; }
+  #stage.drawing { cursor: crosshair; }
+  #draw-tools { display: flex; gap: 4px; }
+  #draw-tools button.active { border-color: #3b82f6; color: #fff; }
+  #scale-menu {
+    position: fixed;
+    z-index: 5;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 6px;
+    background: #1e222d;
+    border: 1px solid #363a45;
+    border-radius: 6px;
+  }
+  #scale-menu[hidden] { display: none; }
+  .bench-canvas {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+  }
+  label { display: flex; gap: 6px; align-items: center; }
+  button, select, input {
+    background: #1e222d;
+    color: inherit;
+    border: 1px solid #363a45;
+    border-radius: 4px;
+    padding: 4px 8px;
+    font: inherit;
+  }
+  button { cursor: pointer; }
+</style>
+</head>
+<body id="app" data-canvas-bench="1">
+  <div id="bar">
+    <strong>Холст свечей</strong>
+    <label>Тикер <input id="symbol" value="BTCUSDT" size="12" spellcheck="false" autocomplete="off"></label>
+    <label>ТФ
+      <select id="tf">
+        <option value="1" selected>1м</option>
+        <option value="5">5м</option>
+        <option value="15">15м</option>
+        <option value="60">1ч</option>
+        <option value="240">4ч</option>
+        <option value="D">1д</option>
+      </select>
+    </label>
+    <span id="draw-tools">
+      <button type="button" data-tool="cursor" class="active">Курсор</button>
+      <button type="button" data-tool="hline">Линия</button>
+      <button type="button" data-tool="hray">Луч</button>
+      <button type="button" data-tool="trendline">Тренд</button>
+      <button type="button" data-tool="rectangle">Прямоуг.</button>
+      <button type="button" data-tool="fib">Фибо</button>
+      <button type="button" data-tool="channel">Канал</button>
+      <button type="button" data-tool="arrow">Стрелка</button>
+      <button type="button" data-tool="long">Лонг</button>
+    </span>
+    <button type="button" id="reload">Обновить</button>
+    <span id="status">загрузка…</span>
+  </div>
+  <p id="hint">Проба, не график Терминала. На экране сразу AO, MACD, объём, RSI, фибо, канал, стрелка, позиция и заявки. Тик двигает только числа после черты у свечей и индикаторов и счётчик pnl. «Рисунки» и «заявки» стоят, пока не двигаешь график или линию.</p>
+  <div id="stack">
+    <div id="stage"></div>
+    <div id="ao"></div>
+    <div id="macd"></div>
+    <div id="volume"></div>
+    <div id="rsi"></div>
+  </div>
+  <script type="module" src="/js/canvas-bench/boot.js"></script>
+</body>
+</html>

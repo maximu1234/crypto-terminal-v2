@@ -24,7 +24,7 @@ isFibLineWidthMenuOpenForAnchor
 import {
 createFvpToolDefaults,
 migrateFvpToolDefaults
-} from "./fixed-volume-profile.js?v=51ef58c3";
+} from "./fixed-volume-profile.js?v=77a3231c";
 
 function swatchVar(
 color

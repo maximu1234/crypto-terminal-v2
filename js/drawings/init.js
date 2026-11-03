@@ -23,7 +23,7 @@ recordDrawingTombstone
 import {
 EXCHANGE_CHANGED_EVENT,
 loadMarketHistory
-} from "../market-api.js?v=145e2e28";
+} from "../market-api.js?v=509a465f";
 
 import {
 registerDrawingsStoragePoller,
@@ -50,7 +50,7 @@ ensureDomChartCrosshair,
 hideDomChartCrosshair,
 positionTabletProbeHorizInStack,
 fullCrosshairOptions
-} from "../chart-import.js?v=613e412b";
+} from "../chart-import.js?v=ff696e9d";
 
 import {
 STROKE,
@@ -71,7 +71,7 @@ bindFvpDataSource,
 clearFvpLtfCache,
 isFvpType,
 fvpBodyDist
-} from "./fixed-volume-profile.js?v=51ef58c3";
+} from "./fixed-volume-profile.js?v=77a3231c";
 
 import {
 distToSegment
@@ -118,7 +118,7 @@ getPositionHandleScreens as resolvePositionHandleScreens
 
 import {
 createDrawPrefs
-} from "./draw-prefs.js?v=f7406abc";
+} from "./draw-prefs.js?v=2831b980";
 
 import {
 createPositionDraw
@@ -130,11 +130,11 @@ pickUi
 
 import {
 createDrawHitTester
-} from "./draw-hit.js?v=c2348932";
+} from "./draw-hit.js?v=9736bacb";
 
 import {
 createDrawRenderer
-} from "./draw-render.js?v=e7f541a5";
+} from "./draw-render.js?v=099dee04";
 
 import {
 snapPlotToCandleWick
@@ -152,7 +152,7 @@ updateChartRulerLabelEl
 
 import {
 mountTabletDrawInput
-} from "../drawings-tablet-input.js?v=dcf12c01";
+} from "../drawings-tablet-input.js?v=eaa4651b";
 
 import {
 cloneDrawingsForUndo,
@@ -161,23 +161,23 @@ createDrawUndoStack
 
 import {
 createDrawDesktopSelection
-} from "./draw-edit-desktop.js?v=4fb812a3";
+} from "./draw-edit-desktop.js?v=d2c4926a";
 
 import {
 createDrawingsPersist
-} from "./drawings-persist.js?v=f6efdebb";
+} from "./drawings-persist.js?v=e743d5d5";
 
 import {
 createDrawStyleBar
-} from "./draw-style-bar.js?v=2e28817a";
+} from "./draw-style-bar.js?v=cfe928cd";
 
 import {
 createDrawAlertsChart
-} from "./draw-alerts-chart.js?v=7ed4d56f";
+} from "./draw-alerts-chart.js?v=42c10b8f";
 
 import {
 createDrawPlacement
-} from "./draw-placement.js?v=9aff4e82";
+} from "./draw-placement.js?v=4381c0ca";
 
 import {
 createDrawTextEditor,
@@ -206,19 +206,19 @@ createBrushPlacement
 
 import {
 createDrawEditInteraction
-} from "./draw-edit-interaction.js?v=3050fb11";
+} from "./draw-edit-interaction.js?v=ecbcf55f";
 
 import {
 createDrawChartInput
-} from "./draw-chart-input.js?v=0e7b5b92";
+} from "./draw-chart-input.js?v=78973a1a";
 
 import {
 createDrawPriceScale
-} from "./draw-price-scale.js?v=55e6cdcf";
+} from "./draw-price-scale.js?v=5510cf47";
 
 import {
 createDrawRedrawLoop
-} from "./draw-redraw-loop.js?v=3864c35f";
+} from "./draw-redraw-loop.js?v=29f13942";
 
 import {
 isAlgoReducedCloudClient
@@ -2309,6 +2309,65 @@ redraw();
 
 };
 
+let lastViewportRedrawKey =
+"";
+
+function chartViewportRedrawKey(){
+
+let time =
+null;
+let price =
+null;
+
+try{
+time =
+chart.timeScale().getVisibleLogicalRange();
+}catch{
+/* ignore */
+}
+
+try{
+price =
+chart.priceScale(
+"right"
+).getVisibleRange?.();
+}catch{
+/* ignore */
+}
+
+const part =
+value=>
+Number.isFinite(
+Number(
+value
+)
+)
+? Number(
+value
+).toFixed(
+4
+)
+: "";
+
+return [
+part(
+time?.from
+),
+part(
+time?.to
+),
+part(
+price?.from
+),
+part(
+price?.to
+)
+].join(
+"|"
+);
+
+}
+
 rangeHandler =
 ()=>{
 invalidateLastCandleRightXCache();
@@ -2327,7 +2386,20 @@ scheduleDragRedraw?.();
 return;
 }
 
-bumpChartPanRedraw();
+const key =
+chartViewportRedrawKey();
+
+if(
+key &&
+key ===
+lastViewportRedrawKey
+){
+return;
+}
+
+lastViewportRedrawKey =
+key;
+redraw();
 
 };
 
@@ -2394,7 +2466,7 @@ scheduleDragRedraw?.();
 return;
 }
 
-bumpChartPanRedraw();
+redraw();
 
 };
 
@@ -3380,7 +3452,7 @@ lastChartAlertsPullMs =
 Date.now();
 
 void import(
-"../alerts-cloud-sync.js?v=0d54a990"
+"../alerts-cloud-sync.js?v=0244deac"
 ).then(
 ({ pullRegistryFromCloudNow })=>
 pullRegistryFromCloudNow({

@@ -6,7 +6,7 @@
  */
 import {
 quoteLiveBar
-} from "./chart/btc-quote.js?v=ddd63eed";
+} from "./chart/btc-quote.js?v=724c8d74";
 
 import {
 loadMarketHistory,
@@ -20,7 +20,7 @@ getActiveExchangeMarkets,
 getActiveExchangeId,
 getActiveExchangeDefinition,
 EXCHANGE_CHANGED_EVENT
-} from "./market-api.js?v=145e2e28";
+} from "./market-api.js?v=509a465f";
 
 import {
 peekHistoryCache,
@@ -36,7 +36,7 @@ slowHistoryPageLimit
 
 import {
 clearBybitNetworkIssue
-} from "./bybit-network-ui.js?v=d4b5e883";
+} from "./bybit-network-ui.js?v=53205698";
 
 import {
 openChromeSurface
@@ -44,12 +44,12 @@ openChromeSurface
 
 import {
 resolveUrlExchangeDeepLink
-} from "./alert-deep-link-exchange.js?v=b90975db";
+} from "./alert-deep-link-exchange.js?v=92cacba0";
 
 import {
 defaultRsiPaneSettings,
 normalizeRsiPaneSettings
-} from "./indicators/rsi-pane.js?v=482968f4";
+} from "./indicators/rsi-pane.js?v=078c1796";
 
 import {
 buildChartRsiPoints
@@ -70,18 +70,18 @@ seedWatchlistTfOnBlueFlag
 
 import {
 ensureCloudReady
-} from "./auth-ui.js?v=e73897ef";
+} from "./auth-ui.js?v=33da7b05";
 
 import {
 getActiveAlerts,
 isMacdAlert,
 isRsiAlert
-} from "./alerts.js?v=3b221cfc";
+} from "./alerts.js?v=d3b956fd";
 
 import {
 persistFavoritesToCloud,
 onFavoritesRemoteUpdate
-} from "./cloud-sync.js?v=dfd0fed0";
+} from "./cloud-sync.js?v=ebebe0db";
 
 import {
 createCandlestickChart,
@@ -112,7 +112,7 @@ appendFutureWhitespaceBars,
 applyCoinsChartViewport,
 refreshCoinsChartBarSpacing,
 tfPeriodSec
-} from "./chart-import.js?v=613e412b";
+} from "./chart-import.js?v=ff696e9d";
 
 import {
 terminalVisibleBars,
@@ -126,17 +126,17 @@ TERMINAL_HISTORY_LAZY_BATCH_BARS
 
 import {
 mountCoinsTabletController
-} from "./terminal-tablet-controller.js?v=4d24960f";
+} from "./terminal-tablet-controller.js?v=2f6003c7";
 
 import {
 disconnectKlineStream
-} from "./market-ws.js?v=d0679bf8";
+} from "./market-ws.js?v=fe5ab981";
 
 import {
 syncBackgroundAlertStreams,
 onMacdSeriesUpdate,
 onRsiSeriesUpdate
-} from "./alert-monitor.js?v=19b5fc0d";
+} from "./alert-monitor.js?v=a3b5dfe6";
 
 import {
 createSharedDrawUndoStack
@@ -160,7 +160,7 @@ mountChartSnapshot
 
 import {
 mountChartSymbolFullName
-} from "./symbol-display-name.js?v=90158e89";
+} from "./symbol-display-name.js?v=7b2a3b0b";
 
 import {
 perfMark,
@@ -208,18 +208,18 @@ mountCoinsScaleInvertMenu
 
 import {
 mountTerminalDrawChrome
-} from "./terminal/terminal-draw-chrome.js?v=ff027254";
+} from "./terminal/terminal-draw-chrome.js?v=1a074175";
 
 
 
 import {
 stopTickerStream
-} from "./tickers.js?v=9c75f859";
+} from "./tickers.js?v=c8d3e2ba";
 
 import {
 mountCoinsListRefreshControls,
 applyCoinsListRefreshInterval
-} from "./terminal-list-refresh.js?v=ed897fdf";
+} from "./terminal-list-refresh.js?v=4fb0f874";
 
 import {
 readCoinsPrefs,
@@ -233,11 +233,11 @@ applyCoinsPrefs,
 applySortForCurrentMarket,
 readUrlParams,
 readLastViewForExchange
-} from "./terminal/terminal-prefs.js?v=a4c00768";
+} from "./terminal/terminal-prefs.js?v=198a6d7f";
 
 import {
 mountDesktopOpenChartHandler
-} from "./desktop-open-chart.js?v=c2734824";
+} from "./desktop-open-chart.js?v=94444294";
 
 import {
 getCurrentSymbols,
@@ -255,7 +255,7 @@ setCoinsTableHooks,
 syncCoinListFreezeFromFlagMenus,
 getExtraCoinMarkets,
 isExtraCoinMarket
-} from "./terminal/terminal-table.js?v=4a6cb9f0";
+} from "./terminal/terminal-table.js?v=27069ea7";
 
 import {
 createCoinsChartSwitchVeil
@@ -270,7 +270,7 @@ syncCoinsChartLinkedViewports,
 resizeCharts,
 scheduleResizeCharts,
 applyDefaultZoom
-} from "./terminal/terminal-chart-layout.js?v=1498c680";
+} from "./terminal/terminal-chart-layout.js?v=bc21f953";
 
 import {
 isTerminalReplayActive,
@@ -286,7 +286,7 @@ import {
 initTerminalMultiChart,
 syncPrimaryTfToLayout,
 isTerminalMultiChartLayout
-} from "./terminal-multi-chart.js?v=9cc539cb";
+} from "./terminal-multi-chart.js?v=baef95dc";
 
 import {
 mountTerminalLayoutPicker
@@ -303,7 +303,7 @@ saveChartDisplayStyle
 
 import {
 createPriceSeriesHost
-} from "./chart/price-series-host.js?v=951816a3";
+} from "./chart/price-series-host.js?v=6631b735";
 
 import {
 CHART_PRICE_SCALE_MODE_LOGARITHMIC,
@@ -334,7 +334,7 @@ loadVisibleTerminalHistory as loadVisibleTerminalHistoryMoved,
 applyMergedTerminalCandles as applyMergedTerminalCandlesMoved,
 settleTerminalHistoryAfterPaint as settleTerminalHistoryAfterPaintMoved,
 bindTerminalHistoryLazyLoad as bindTerminalHistoryLazyLoadMoved
-} from "./terminal/terminal-history.js?v=9c5605f8";
+} from "./terminal/terminal-history.js?v=53d9344b";
 import {
 allCoinsDrawTools as allCoinsDrawToolsMoved,
 scheduleCoinsDrawRedraw as scheduleCoinsDrawRedrawMoved,
@@ -435,7 +435,7 @@ syncCoinsMarketFilterOptions as syncCoinsMarketFilterOptionsMoved,
 handleExchangeChanged as handleExchangeChangedMoved,
 refreshCoinsMarketUi as refreshCoinsMarketUiMoved,
 syncTerminalAlgoEarlyT3List as syncTerminalAlgoEarlyT3ListMoved
-} from "./terminal/terminal-coins-page.js?v=5f121fb2";
+} from "./terminal/terminal-coins-page.js?v=5030e03b";
 let terminalAlgoEarlyT3ListMod =
 null;
 
@@ -3112,7 +3112,7 @@ window.cryptoTerminalDesktop?.isDesktop ||
 window.cryptoTerminalDesktop?.webTrading
 ){
 void import(
-"./script-terminal-status.js?v=1cfc8300"
+"./script-terminal-status.js?v=dfdee5f9"
 ).then(
 m=>
 m.mountScriptTerminalStatus?.()
@@ -3130,7 +3130,7 @@ if(
 shouldRunScriptBackgroundJobs()
 ){
 void import(
-"./script-scan-background.js?v=709a9c60"
+"./script-scan-background.js?v=68f03788"
 ).then(
 m=>
 m.resumeScriptScanBackgroundJob?.()
@@ -3405,6 +3405,49 @@ rsiLastBarX
 
 };
 
+let liveOverlaySyncAt =
+0;
+let liveOverlayBarTime =
+null;
+
+function syncLiveChartOverlays(
+bar
+){
+
+const time =
+Number(
+bar?.time
+);
+const now =
+Date.now();
+const newBar =
+Number.isFinite(
+time
+) &&
+time !==
+liveOverlayBarTime;
+
+if(
+!newBar &&
+now -
+liveOverlaySyncAt <
+1000
+){
+return;
+}
+
+liveOverlayBarTime =
+Number.isFinite(
+time
+)
+? time
+: liveOverlayBarTime;
+liveOverlaySyncAt =
+now;
+chartIndicators?.notifyMainChartOverlaysSync?.();
+
+}
+
 setCoinsTableHooks({
 setCoinsChartSymbol,
 loadSymbol,
@@ -3472,7 +3515,9 @@ candleSeries,
 painted?.close ??
 1
 );
-chartIndicators?.notifyMainChartOverlaysSync?.();
+syncLiveChartOverlays(
+painted
+);
 }
 });
 

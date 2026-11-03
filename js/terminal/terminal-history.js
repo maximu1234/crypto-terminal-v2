@@ -4,7 +4,7 @@ isBtcQuoteActive,
 lastOhlcClose,
 setBtcQuoteActive,
 syncBtcQuoteLive
-} from "../chart/btc-quote.js?v=ddd63eed";
+} from "../chart/btc-quote.js?v=724c8d74";
 
 import {
 stopTerminalReplay,
@@ -145,7 +145,7 @@ if(
 host.isTradePage
 ){
 void import(
-"../trade-volume-presets.js?v=a8873e36"
+"../trade-volume-presets.js?v=d2a5d541"
 ).then(
 ({
 switchTradeVolumeSymbol
@@ -263,7 +263,7 @@ host.currentDataset
 )
 ){
 
-void import("../bybit-network-ui.js?v=d4b5e883").then(m=>{
+void import("../bybit-network-ui.js?v=53205698").then(m=>{
 m.showBybitNetworkIssue(
 new Error(
 `История свечей ${host.getActiveExchangeDefinition().name} пуста`

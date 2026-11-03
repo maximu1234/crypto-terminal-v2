@@ -9,13 +9,13 @@ import {
 } from "../charts-lib-boot.js?v=04885614";
 import {
   redirectNonPhoneFromMobile
-} from "./viewport.js?v=662114e7";
+} from "./viewport.js?v=09b0598a";
 import {
   mountMobileNav
 } from "./nav.js?v=4b83ad99";
 import {
   mountMobileTerminalPage
-} from "./terminal-page.js?v=a6be3e98";
+} from "./terminal-page.js?v=2f0cb378";
 
 async function boot() {
   if (redirectNonPhoneFromMobile("/terminal.html")) {

@@ -9,7 +9,7 @@ isActiveAnalysisBot
 } from "./active-analysis-bot.js?v=c1b8293b";
 import {
 loadMarketHistory
-} from "../market-api.js?v=145e2e28";
+} from "../market-api.js?v=509a465f";
 import {
 RSI_TOUCH_FLIP_SIZE_AVERAGE,
 loadRsiTouchFlipPrefs,
@@ -46,7 +46,7 @@ mountRsiTouchFlipOverlay
 import {
 mountRsiTouchFlipFit,
 loadRsiTouchFlipFitRowForSymbol
-} from "./rsi-touch-flip-fit-panel.js?v=cb980665";
+} from "./rsi-touch-flip-fit-panel.js?v=bdded44e";
 import {
 RSI_TOUCH_FLIP_DEFAULT_TRAIN_PCT,
 rsiTouchFlipFitPrefsForHydrate

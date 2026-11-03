@@ -191,7 +191,7 @@ try{
 const {
 redirectPhoneTo
 } =
-await import("/js/mobile/viewport.js?v=662114e7");
+await import("/js/mobile/viewport.js?v=09b0598a");
 if(
 redirectPhoneTo(
 "/m-screener.html"
@@ -220,8 +220,8 @@ const { loadLightweightCharts } =
 await import("/js/charts-lib-boot.js?v=04885614");
 
 await loadLightweightCharts();
-await import("/js/screener.js?v=f1f392ed");
-import("/js/site-boot.js?v=6ce2ac72").catch(err=>{
+await import("/js/screener.js?v=c568efed");
+import("/js/site-boot.js?v=ac23be5c").catch(err=>{
 console.warn("site-boot:", err);
 });
 

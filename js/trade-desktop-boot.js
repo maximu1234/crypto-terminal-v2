@@ -3,7 +3,7 @@
  */
 import {
 cssUrl
-} from "./asset-manifest.js?v=61391d84";
+} from "./asset-manifest.js?v=2b3cf430";
 
 import {
 isWatchlistPage
@@ -11,31 +11,31 @@ isWatchlistPage
 
 import {
 initTradeExchangeSettings
-} from "./trade-exchange-settings.js?v=1e63eb27";
+} from "./trade-exchange-settings.js?v=7c09ccdb";
 
 import {
 initTradeVolumePresets
-} from "./trade-volume-presets.js?v=a8873e36";
+} from "./trade-volume-presets.js?v=d2a5d541";
 
 import {
 initTradeLeverageSettings
-} from "./trade-leverage-settings.js?v=68d08825";
+} from "./trade-leverage-settings.js?v=0b2e6bfc";
 
 import {
 initTradeMarketEntry
-} from "./trade-market-entry.js?v=c54f870f";
+} from "./trade-market-entry.js?v=b41ba917";
 
 import {
 initTradeBookPanel
-} from "./trade-book-panel.js?v=af8a8e2f";
+} from "./trade-book-panel.js?v=c3277f62";
 
 import {
 loadTradeExchangeModules
-} from "./trade/module-router.js?v=75806a00";
+} from "./trade/module-router.js?v=e8cd239b";
 
 import {
 getActiveExchangeId
-} from "./market-api.js?v=145e2e28";
+} from "./market-api.js?v=509a465f";
 
 const TRADE_CSS =
 [
@@ -177,7 +177,7 @@ const {
 initExchangeTradingGate
 } =
 await import(
-"./exchange-trading-gate.js?v=79e7d642"
+"./exchange-trading-gate.js?v=dc5897c0"
 );
 
 await initExchangeTradingGate();
@@ -197,7 +197,7 @@ const {
 initExchangeTradingGate
 } =
 await import(
-"./exchange-trading-gate.js?v=79e7d642"
+"./exchange-trading-gate.js?v=dc5897c0"
 );
 
 await initExchangeTradingGate();
@@ -215,7 +215,7 @@ const {
 initTradePositionsLive
 } =
 await import(
-"./trade-positions-live.js?v=a1485075"
+"./trade-positions-live.js?v=5c4c256a"
 );
 
 initTradePositionsLive();
@@ -244,7 +244,7 @@ const {
 initTradeOpenPositions
 } =
 await import(
-"./trade-open-positions.js?v=0fd9a2df"
+"./trade-open-positions.js?v=1737a0a9"
 );
 
 initTradeOpenPositions();
@@ -274,7 +274,7 @@ const {
 initTradePositionsCache
 } =
 await import(
-"./trade-positions-cache.js?v=6c21df45"
+"./trade-positions-cache.js?v=cc0e859d"
 );
 
 initTradePositionsCache();
@@ -328,7 +328,7 @@ const {
 initTradeChartOverlay
 } =
 await import(
-"./trade-chart-overlay.js?v=9a10e2d3"
+"./trade-chart-overlay.js?v=13e3c4d5"
 );
 
 initTradeChartOverlay();
@@ -337,7 +337,7 @@ const {
 initTradeChartOrders
 } =
 await import(
-"./trade-chart-orders.js?v=d8b2baae"
+"./trade-chart-orders.js?v=606a05a1"
 );
 
 initTradeChartOrders();
@@ -346,7 +346,7 @@ const {
 initTradeChartExecutionMarkers
 } =
 await import(
-"./trade-chart-execution-markers.js?v=cdcc7afd"
+"./trade-chart-execution-markers.js?v=183ce189"
 );
 
 initTradeChartExecutionMarkers();

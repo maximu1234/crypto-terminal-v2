@@ -19,7 +19,7 @@ applyTabletRsiChartOptions,
 SCREENER_PAGE_VISIBLE_BARS,
 SCREENER_PAGE_MAX_BARS,
 SCREENER_PAGE_HISTORY_REQUESTS
-} from "./chart-import.js?v=613e412b";
+} from "./chart-import.js?v=ff696e9d";
 
 import {
 isIpadWebViewport
@@ -27,7 +27,7 @@ isIpadWebViewport
 
 import {
 loadMarketHistory
-} from "./market-api.js?v=145e2e28";
+} from "./market-api.js?v=509a465f";
 
 import {
 calculateRSI,
@@ -37,7 +37,7 @@ alignRsiWithCandleTimes
 import {
 subscribeKline,
 bindLiveCandleCatchup
-} from "./market-ws.js?v=d0679bf8";
+} from "./market-ws.js?v=fe5ab981";
 
 import {
 ensureOhlcRollover,
@@ -46,7 +46,7 @@ lastOhlcBar,
 liveBarPeriodSec,
 paintCatchupLiveSeries,
 paintLiveOhlcSeries
-} from "./chart/live-bar-roll.js?v=6ff2b718";
+} from "./chart/live-bar-roll.js?v=a1406271";
 
 import {
 SCREENER_WIDGET_OSCILLATOR_AO,
@@ -57,7 +57,7 @@ createScreenerMacdChart,
 isScreenerHistogramOscillator,
 setScreenerAoData,
 setScreenerMacdData
-} from "./screener-widget-oscillator.js?v=6510734e";
+} from "./screener-widget-oscillator.js?v=8f9331b4";
 
 import {
 shouldIgnoreTypingHotkey
@@ -1161,7 +1161,7 @@ const {
 mountWidgetTabletChart
 } =
 await import(
-"./tablet-widget-chart.js?v=47eb4688"
+"./tablet-widget-chart.js?v=29287ae7"
 );
 
 if(

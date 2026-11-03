@@ -4,19 +4,19 @@
 import {
 wireTradeVolumeDefaultsSettings,
 TRADE_VOLUME_SLOT_COUNT
-} from "./trade-volume-presets.js?v=a8873e36";
+} from "./trade-volume-presets.js?v=d2a5d541";
 
 import {
 wireAutoStopSettings
-} from "./trade-auto-stops.js?v=98b4ab78";
+} from "./trade-auto-stops.js?v=f65f6b71";
 
 import {
 loadTradeExchangeModules
-} from "./trade/module-router.js?v=75806a00";
+} from "./trade/module-router.js?v=e8cd239b";
 
 import {
 getActiveExchangeId
-} from "./market-api.js?v=145e2e28";
+} from "./market-api.js?v=509a465f";
 
 const TRADE_VOLUME_DEFAULT_INPUT_COUNT =
 Math.max(

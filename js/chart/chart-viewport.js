@@ -1,10 +1,10 @@
 import {
 effectiveChartPriceScaleWidth
-} from "./chart-options.js?v=f4be0094";
+} from "./chart-options.js?v=ccf11c66";
 
 import {
 liveBarPeriodSec
-} from "./live-bar-roll.js?v=6ff2b718";
+} from "./live-bar-roll.js?v=a1406271";
 
 /** Свечей в видимой области (плотный обзор). */
 export const SCREENER_VISIBLE_BARS = 1500;

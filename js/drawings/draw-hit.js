@@ -20,7 +20,7 @@ import {
 fvpBodyDist,
 fvpScreenBox,
 isFvpType
-} from "./fixed-volume-profile.js?v=51ef58c3";
+} from "./fixed-volume-profile.js?v=77a3231c";
 
 import {
 isPositionType,
@@ -49,7 +49,7 @@ horizPriceLineX1
 
 import {
 isCoarseTouchViewport
-} from "../chart/chart-options.js?v=f4be0094";
+} from "../chart/chart-options.js?v=ccf11c66";
 
 import {
 hitTestTextBody,

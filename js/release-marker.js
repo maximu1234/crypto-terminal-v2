@@ -10,7 +10,7 @@
  * Формат desktop: «v0.N / vX.Y.Zf» или «v0.N / vX.Y.Zm».
  */
 export const METKA_NUMBER =
-220;
+221;
 
 export const DESKTOP_APP_VERSION =
 "1.2.6";

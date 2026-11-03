@@ -4,10 +4,10 @@
  */
 import {
   getActiveExchangeId
-} from "../market-api.js?v=145e2e28";
+} from "../market-api.js?v=509a465f";
 import {
   subscribeKline
-} from "../market-ws.js?v=d0679bf8";
+} from "../market-ws.js?v=fe5ab981";
 
 let active = false;
 let cacheKey = "";

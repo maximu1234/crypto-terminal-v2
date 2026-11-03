@@ -7,7 +7,7 @@ toMoexSymbol
 
 import {
 liveBarPeriodSec
-} from "./chart/live-bar-roll.js?v=6ff2b718";
+} from "./chart/live-bar-roll.js?v=a1406271";
 
 export const MOEX_POLL_MS =
 8000;

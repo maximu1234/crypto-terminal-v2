@@ -9,7 +9,7 @@ parseDrawColor
 
 import {
 isCoarseTouchViewport
-} from "../chart-import.js?v=613e412b";
+} from "../chart-import.js?v=ff696e9d";
 
 import {
 STROKE,
@@ -59,13 +59,13 @@ calcPositionVolumeUsd
 
 import {
 applyPositionVolumeFromDrawing
-} from "../trade-volume-presets.js?v=a8873e36";
+} from "../trade-volume-presets.js?v=d2a5d541";
 
 import {
 stashDrawingStopsFromDrawing,
 clearDrawingStopsPending,
 hasDrawingStopsPending
-} from "../trade-auto-stops.js?v=98b4ab78";
+} from "../trade-auto-stops.js?v=f65f6b71";
 
 import {
 touchShapeRevision
@@ -81,14 +81,14 @@ listTemplatesForType,
 mergeStyleSnapshot,
 saveNamedTemplate,
 deleteTemplateAtIndex
-} from "./draw-templates.js?v=59b2b7d3";
+} from "./draw-templates.js?v=607c5ba2";
 
 import {
 isFvpType,
 copyFvpStyleToShape,
 createFvpToolDefaults,
 FVP_TOOL_DEFAULTS_VERSION
-} from "./fixed-volume-profile.js?v=51ef58c3";
+} from "./fixed-volume-profile.js?v=77a3231c";
 
 import {
 fvpSettingsHtml,
@@ -96,7 +96,7 @@ fillFvpSettingsPanel,
 readFvpSettingsPanel,
 bindFvpSettingsPanel,
 closeFvpColorMenu
-} from "./fixed-volume-profile-settings.js?v=54546c69";
+} from "./fixed-volume-profile-settings.js?v=e3dad999";
 
 import {
 rectSettingsHtml,
@@ -149,7 +149,7 @@ syncElliottSettingsColor
 
 import {
 hasCoordSettings
-} from "./draw-coords.js?v=09587365";
+} from "./draw-coords.js?v=e488967c";
 
 import {
 bindCoordSettingsPanel,
@@ -158,7 +158,7 @@ coordSettingsHtml,
 drawSettingsTabsHtml,
 fillCoordSettingsPanel,
 isCoordInputFocused
-} from "./draw-coord-settings.js?v=d6ea92cb";
+} from "./draw-coord-settings.js?v=5b092af7";
 
 import {
 fillStyleUI as fillStyleUIMoved,

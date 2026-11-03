@@ -1,7 +1,7 @@
 import {
 loadMarketHistory,
 getActiveExchangeId
-} from "./market-api.js?v=145e2e28";
+} from "./market-api.js?v=509a465f";
 
 import {
 peekHistoryCache,
@@ -22,7 +22,7 @@ equalizeLinkedPanePriceScales,
 SCREENER_PAGE_VISIBLE_BARS,
 SCREENER_PAGE_MAX_BARS,
 SCREENER_PAGE_HISTORY_REQUESTS
-} from "./chart-import.js?v=613e412b";
+} from "./chart-import.js?v=ff696e9d";
 
 import {
 isIpadWebViewport
@@ -31,7 +31,7 @@ isIpadWebViewport
 import {
 subscribeKline,
 bindLiveCandleCatchup
-} from "./market-ws.js?v=d0679bf8";
+} from "./market-ws.js?v=fe5ab981";
 
 import {
 ensureOhlcRollover,
@@ -40,7 +40,7 @@ lastOhlcBar,
 liveBarPeriodSec,
 paintCatchupLiveSeries,
 paintLiveOhlcSeries
-} from "./chart/live-bar-roll.js?v=6ff2b718";
+} from "./chart/live-bar-roll.js?v=a1406271";
 
 import {
 SCREENER_WIDGET_OSCILLATOR_AO,
@@ -48,7 +48,7 @@ SCREENER_WIDGET_OSCILLATOR_MACD,
 createScreenerAoChart,
 createScreenerMacdChart,
 isScreenerHistogramOscillator
-} from "./screener-widget-oscillator.js?v=6510734e";
+} from "./screener-widget-oscillator.js?v=8f9331b4";
 
 let deps = null;
 
@@ -221,8 +221,13 @@ tick.volume24
 if(
 valueEl
 ){
+if(
+valueEl.textContent !==
+compact
+){
 valueEl.textContent =
 compact;
+}
 }else{
 volEl.innerHTML =
 `Объём 24ч <span class="screener-volume-value">${compact}</span>`;
@@ -233,12 +238,26 @@ if(chEl){
 
 const ch =
 tick.change24 ?? 0;
-
-chEl.textContent =
+const nextText =
 `${ch >= 0 ? "+" : ""}${ch.toFixed(2)}%`;
-
-chEl.className =
+const nextClass =
 `screener-change ${ch >= 0 ? "positive" : "negative"}`;
+
+if(
+chEl.textContent !==
+nextText
+){
+chEl.textContent =
+nextText;
+}
+
+if(
+chEl.className !==
+nextClass
+){
+chEl.className =
+nextClass;
+}
 
 }
 

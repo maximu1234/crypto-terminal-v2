@@ -14,7 +14,7 @@ CHART_BUILD_ID,
 CHART_PAGE_ENTRY,
 TERMINAL_ENTRY,
 jsUrl
-} from "./asset-manifest.js?v=61391d84";
+} from "./asset-manifest.js?v=2b3cf430";
 
 function isDesktopTradeMode(){
 
@@ -40,7 +40,7 @@ if(
 ){
 tradeDesktopBootPromise =
 import(
-"./trade-desktop-boot.js?v=c5669724"
+"./trade-desktop-boot.js?v=037498ab"
 );
 }
 
@@ -66,7 +66,7 @@ if(
 ){
 tradeWebBootPromise =
 import(
-"./trade-web/boot.js?v=e10d46e7"
+"./trade-web/boot.js?v=1742e31d"
 );
 }
 
@@ -324,7 +324,7 @@ const {
 redirectPhoneTo
 } =
 await import(
-"./mobile/viewport.js?v=662114e7"
+"./mobile/viewport.js?v=09b0598a"
 );
 if(
 redirectPhoneTo(

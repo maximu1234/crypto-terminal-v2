@@ -31,7 +31,7 @@ seriesBarClose
 
 import {
 mergeLiveBarIntoDisplay
-} from "./live-bar-roll.js?v=6ff2b718";
+} from "./live-bar-roll.js?v=a1406271";
 
 import {
 runWithPreservedVisibleLogicalRange

@@ -388,8 +388,13 @@ return "last";
 }
 
 if(time === last.time){
+const sameOhlc =
+last.open === next.open &&
+last.high === next.high &&
+last.low === next.low &&
+last.close === next.close;
 candles[candles.length - 1] = next;
-return "last";
+return sameOhlc ? null : "last";
 }
 
 if(time > last.time){

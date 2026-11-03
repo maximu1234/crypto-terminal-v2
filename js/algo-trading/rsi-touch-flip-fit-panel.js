@@ -3,7 +3,7 @@
  */
 import {
   fetchBybitKlinePage
-} from "../api.js?v=cdf95f33";
+} from "../api.js?v=f60e2536";
 import {
   RSI_TOUCH_FLIP_LEN_GRID,
   listRsiTouchFlipOptimizeCombos,

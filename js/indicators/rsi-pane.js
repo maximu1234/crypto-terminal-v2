@@ -14,7 +14,7 @@ normalizeHtfTf
 
 import {
 syncPaneViewportAfterData
-} from "./indicator-pane-viewport.js?v=a8633490";
+} from "./indicator-pane-viewport.js?v=6a08ed2a";
 
 export const RSI_PANE_ID =
 "rsi";

@@ -9,7 +9,7 @@ isActiveAnalysisBot
 } from "./active-analysis-bot.js?v=c1b8293b";
 import {
 loadMarketHistory
-} from "../market-api.js?v=145e2e28";
+} from "../market-api.js?v=509a465f";
 import {
 MACD_FLIP_TOUCH_SIZE_AVERAGE,
 loadMacdFlipTouchPrefs,
