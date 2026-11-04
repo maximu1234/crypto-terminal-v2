@@ -116,7 +116,7 @@ document.querySelector(
 )
 })
 ){
-import("/js/site-boot.js?v=ce8beb8e").catch(err=>{
+import("/js/site-boot.js?v=71e71e5b").catch(err=>{
 console.warn("site-boot:", err);
 });
 }else{
@@ -128,7 +128,7 @@ if(
 window.cryptoTerminalDesktop?.isDesktop
 ){
 tradeBoot =
-await import("/js/trade-desktop-boot.js?v=c595de4a");
+await import("/js/trade-desktop-boot.js?v=bd8c11d3");
 
 if(
 tradeBoot.isWatchlistTradeMode()
@@ -142,7 +142,7 @@ mode:
 }
 }else{
 tradeBoot =
-await import("/js/trade-web/boot.js?v=4b4c8984");
+await import("/js/trade-web/boot.js?v=d7ff342b");
 await tradeBoot.initTradeWebBeforeChart(
 {
 mode:
@@ -155,7 +155,7 @@ const { loadLightweightCharts } =
 await import("/js/charts-lib-boot.js?v=04885614");
 
 await loadLightweightCharts();
-await import("./js/watchlist.js?v=575c1d4a");
+await import("./js/watchlist.js?v=ee691a50");
 
 if(
 window.cryptoTerminalDesktop?.isDesktop
@@ -182,7 +182,7 @@ mode:
 }
 
 await import("./js/watchlist-page.js?v=f273626f");
-import("/js/site-boot.js?v=ce8beb8e").catch(err=>{
+import("/js/site-boot.js?v=71e71e5b").catch(err=>{
 console.warn("site-boot:", err);
 });
 

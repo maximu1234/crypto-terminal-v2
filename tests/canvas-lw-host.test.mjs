@@ -1,9 +1,11 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 
-import { candleX, rightGapPx } from "../js/canvas-bench/live-plan.js";
+import { timeAtFractionalIndex } from "../js/canvas-bench/drawings.js";
+import { candleIndexAt, candleX, rightGapPx } from "../js/canvas-bench/live-plan.js";
 import {
   applyLogicalRange,
+  histogramRowSpan,
   logicalRangeFitsSeries,
   logicalRangeFromView,
   mainScalePixelMargins,
@@ -107,6 +109,40 @@ test("last candle stays a share of the width off the price scale", () => {
   assert.ok(Math.abs(gap / engine.layout.plotW - 0.15) < 0.02);
   const again = logicalRangeFromView(engine);
   assert.ok(Math.abs(again.to - last) < 0.05);
+});
+
+test("histogram keeps bars that the pan moved into the right margin", () => {
+  const engine = engineAt(0, 8, 0.15);
+  engine.rightOffsetBars = 4;
+  const last = engine.candles.length - 1;
+  assert.equal(
+    applyLogicalRange(engine, { from: last - 30, to: last }),
+    true
+  );
+  engine.panPx += engine.rightGap * 0.85;
+  const logical = logicalRangeFromView(engine);
+  const rightIndex = candleIndexAt(
+    engine.layout.plotRight,
+    last,
+    engine.layout.plotRight,
+    engine.rightGap,
+    engine.barSpacing,
+    engine.panPx
+  );
+  assert.ok(rightIndex > logical.to + 1);
+  const rows = engine.candles.map((bar) => ({ time: bar.time, value: 1 }));
+  const clipped = histogramRowSpan(
+    rows,
+    rows[0].time,
+    timeAtFractionalIndex(engine.candles, logical.to)
+  );
+  const shown = histogramRowSpan(
+    rows,
+    rows[0].time,
+    timeAtFractionalIndex(engine.candles, rightIndex)
+  );
+  assert.ok(shown[1] > clipped[1]);
+  assert.equal(shown[1], rows.length);
 });
 
 test("visible logical range round-trips through pan and bar spacing", () => {

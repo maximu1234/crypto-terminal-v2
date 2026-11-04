@@ -42,7 +42,7 @@ createRSIChart,
 updateRsiBandLayout,
 updateRsiLevelLinesLayout,
 linkPairedChartTimeScales
-} from "./chart-import.js?v=eae303e4";
+} from "./chart-import.js?v=4d760669";
 
 import {
 formatPrice
@@ -63,16 +63,16 @@ getScreenerWidgetOscillator,
 isScreenerHistogramOscillator,
 setScreenerAoData,
 setScreenerMacdData
-} from "./screener-widget-oscillator.js?v=2fd3dbba";
+} from "./screener-widget-oscillator.js?v=ff5874cd";
 
 import {
 createDashboardChartWidget,
 mountDashboardChartInteractions
-} from "./chart-widget-host.js?v=a92dfd53";
+} from "./chart-widget-host.js?v=1cb1cd92";
 
 import {
 mountWidgetTabletChart
-} from "./tablet-widget-chart.js?v=c0e58d74";
+} from "./tablet-widget-chart.js?v=4402fcb6";
 
 import {
 subscribeKline,
@@ -121,7 +121,7 @@ getWidgetFlagHtml,
 wireWidgetFlagUi,
 updateWidgetFlagUi,
 bindWidgetFlagGlobalListeners
-} from "./widget-favorite-flag.js?v=57fdb070";
+} from "./widget-favorite-flag.js?v=af11ead1";
 
 function escapeHtml(
 value
@@ -194,7 +194,7 @@ return;
 
 const mod =
 await import(
-"./trade-widget-mount.js?v=1ea57276"
+"./trade-widget-mount.js?v=c947eebc"
 );
 
 mountTradeOnDashboardWidget =

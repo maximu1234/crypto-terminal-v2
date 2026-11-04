@@ -463,6 +463,11 @@ anchor
 },
 timeOpts:{
 barSpacing,
+maxZoomOutBars:
+Math.max(
+anchor - from,
+1
+),
 rightOffset:
 4,
 fixRightEdge:

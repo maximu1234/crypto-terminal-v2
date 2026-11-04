@@ -22,7 +22,8 @@ import {
   clampPan,
   liveUpdateKind,
   panForAnchor,
-  scaleFromCandles
+  scaleFromCandles,
+  zoomOutFloorSpacing
 } from "../js/canvas-bench/live-plan.js";
 
 const scale = { min: 90, max: 110 };
@@ -217,4 +218,10 @@ test("price padding keeps a one-tick move on the live path", () => {
   const next = { ...prev, close: 108.1, high: 110.2 };
   assert.equal(liveUpdateKind(prev, next, padded), "live");
   assert.ok(next.high < padded.max);
+});
+
+test("zoom-out floor keeps 2500 bars from becoming thinner", () => {
+  const floor = zoomOutFloorSpacing(1000, 2500, 4, 0.15);
+  assert.equal(floor, (1000 * 0.85) / 2500);
+  assert.ok(floor > 0.05);
 });

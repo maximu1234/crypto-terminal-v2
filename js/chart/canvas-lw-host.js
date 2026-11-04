@@ -6,12 +6,12 @@
 
 import {
 CandleBenchChart
-} from "../canvas-bench/chart.js?v=scale-pan3";
+} from "../canvas-bench/chart.js?v=scale-pan6";
 
 import {
 candleIndexAt,
 candleX
-} from "../canvas-bench/live-plan.js";
+} from "../canvas-bench/live-plan.js?v=scale-pan4";
 
 import {
 PRICE_SCALE_LOG,
@@ -147,6 +147,13 @@ return false;
 
 const width = Math.max(1, layout.plotW);
 const content = range.to - range.from;
+
+if(
+engine.maxZoomOutBars > 0 &&
+content > engine.maxZoomOutBars + 0.25
+){
+return false;
+}
 const offset = Math.max(0, Number(engine.rightOffsetBars) || 0);
 const ratio = Math.min(
 0.35,
@@ -427,6 +434,56 @@ Number.isFinite(originDelta)
 : 0;
 
 return x + shift;
+
+}
+
+export function histogramRowSpan(
+rows,
+fromTime,
+toTime
+){
+
+if(
+!rows?.length ||
+!Number.isFinite(fromTime) ||
+!Number.isFinite(toTime)
+){
+return [0, rows?.length || 0];
+}
+
+const from =
+Math.min(fromTime, toTime);
+const to =
+Math.max(fromTime, toTime);
+let start =
+0;
+let endSearch =
+rows.length;
+
+while(start < endSearch){
+
+const mid =
+(start + endSearch) >> 1;
+
+if(Number(rows[mid].time) < from){
+start = mid + 1;
+}else{
+endSearch = mid;
+}
+
+}
+
+let end =
+start;
+
+while(end < rows.length && Number(rows[end].time) <= to){
+end++;
+}
+
+return [
+Math.max(0, start - 1),
+Math.min(rows.length, end + 1)
+];
 
 }
 
@@ -1074,7 +1131,31 @@ ctx.fillText(String(tag.text), layout.plotRight + 10, tag.y);
 
 function visibleRowBounds(rows){
 
-if(!rows.length || !engine.layout || !engine.candles.length){
+if(!rows.length || !engine.layout){
+return [0, rows.length];
+}
+
+/*
+ * Панель смотрит на график цены. Её собственный логический to
+ * не включает свечи, которые сдвиг уже занёс в правый запас.
+ * Из-за этого гистограмма AO/MACD обрывалась, а линия — нет.
+ */
+if(timeGuide){
+
+const pad =
+Math.max(4, engine.barSpacing || 0);
+const t0 =
+Number(guideTime(engine.layout.plotLeft - pad));
+const t1 =
+Number(guideTime(engine.layout.plotRight + pad));
+
+if(Number.isFinite(t0) && Number.isFinite(t1)){
+return histogramRowSpan(rows, t0, t1);
+}
+
+}
+
+if(!engine.candles.length){
 return [0, rows.length];
 }
 
@@ -1113,39 +1194,7 @@ if(!Number.isFinite(t0) || !Number.isFinite(t1)){
 return [0, rows.length];
 }
 
-const from =
-Math.min(t0, t1);
-const to =
-Math.max(t0, t1);
-let start =
-0;
-let endSearch =
-rows.length;
-
-while(start < endSearch){
-
-const mid =
-(start + endSearch) >> 1;
-
-if(Number(rows[mid].time) < from){
-start = mid + 1;
-}else{
-endSearch = mid;
-}
-
-}
-
-let end =
-start;
-
-while(end < rows.length && Number(rows[end].time) <= to){
-end++;
-}
-
-return [
-Math.max(0, start - 1),
-Math.min(rows.length, end + 1)
-];
+return histogramRowSpan(rows, t0, t1);
 
 }
 
@@ -2121,6 +2170,13 @@ engine.rightOffsetBars = options.rightOffset;
 
 if(Number.isFinite(options?.barSpacing)){
 engine.barSpacing = options.barSpacing;
+}
+
+if(
+Number.isFinite(options?.maxZoomOutBars) &&
+options.maxZoomOutBars > 0
+){
+engine.maxZoomOutBars = options.maxZoomOutBars;
 }
 
 if(options?.visible === true){

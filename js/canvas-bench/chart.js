@@ -12,8 +12,9 @@ clampPan,
 liveUpdateKind,
 panForAnchor,
 scaleFromCandles,
-visibleIndexSpan
-} from "./live-plan.js";
+visibleIndexSpan,
+zoomOutFloorSpacing
+} from "./live-plan.js?v=scale-pan4";
 
 import {
 PRICE_SCALE_LOG,
@@ -24,7 +25,7 @@ priceToY,
 yToPrice,
 shiftPriceScale,
 zoomPriceScale
-} from "./price-scale.js?v=scale-pan3";
+} from "./price-scale.js?v=scale-pan4";
 
 const BG =
 "#0e1116";
@@ -196,6 +197,8 @@ this.axisW = options.axisWidth || 64;
 this.axisMin = this.axisW;
 this.timeH = 0;
 this.rightOffsetBars = 12;
+this.rightMarginRatio = 0;
+this.maxZoomOutBars = 0;
 this.priceScaleMode = PRICE_SCALE_LOG;
 this.invertScale = false;
 this.marginTop = 0;
@@ -246,6 +249,24 @@ return rightGapPx(
 this.barSpacing,
 this.rightOffsetBars,
 this.layout?.plotW || 0,
+this.rightMarginRatio
+);
+
+}
+
+zoomOutFloor(){
+
+if(
+!(this.maxZoomOutBars > 0) ||
+!(this.layout?.plotW > 0)
+){
+return 0.05;
+}
+
+return zoomOutFloorSpacing(
+this.layout.plotW,
+this.maxZoomOutBars,
+this.rightOffsetBars,
 this.rightMarginRatio
 );
 
@@ -415,10 +436,34 @@ return;
 }
 
 this.queued = true;
-requestAnimationFrame(()=>{
+const token =
+{};
+this.rebuildToken = token;
+
+const run =
+()=>{
+
+if(this.rebuildToken !== token){
+return;
+}
+
+this.rebuildToken = null;
 this.queued = false;
 this.rebuild();
-});
+
+};
+
+/*
+ * Пока окно не в фокусе, кадр анимации не вызывается.
+ * Потерянный колбэк оставлял queued навсегда, и тики
+ * переставали рисоваться до перезагрузки страницы.
+ * Таймер срабатывает и в фоне.
+ */
+if(typeof requestAnimationFrame === "function"){
+requestAnimationFrame(run);
+}
+
+setTimeout(run, 32);
 
 }
 
@@ -1042,18 +1087,23 @@ layout.plotW,
 layout.plotH
 );
 ctx.clip();
-ctx.lineWidth = 1;
+const dpr =
+layout.dpr || 1;
+const yLine =
+(Math.floor(y * dpr) + 0.5) / dpr;
+
+ctx.lineWidth = 1 / dpr;
 ctx.strokeStyle = color;
-ctx.setLineDash([4, 4]);
+ctx.setLineDash([]);
 
 if(showLine){
 ctx.beginPath();
-ctx.moveTo(layout.plotLeft, Math.round(y) + 0.5);
-ctx.lineTo(layout.plotRight, Math.round(y) + 0.5);
+ctx.moveTo(layout.plotLeft, yLine);
+ctx.lineTo(layout.plotRight, yLine);
 ctx.stroke();
 }
 
-ctx.setLineDash([]);
+ctx.lineWidth = 1;
 
 if(showBody){
 drawCandleBody(
@@ -1349,7 +1399,7 @@ const nextSpacing =
 Math.min(
 64,
 Math.max(
-0.05,
+this.zoomOutFloor(),
 this.timeDrag.spacing * factor
 )
 );
@@ -1569,7 +1619,7 @@ return;
 const factor =
 Math.exp(-dy * 0.0012);
 const MIN_SPACING =
-0.05;
+this.zoomOutFloor();
 const MAX_SPACING =
 64;
 let nextSpacing =

@@ -18,7 +18,7 @@ hideTabletProbeHorizInStack
 import {
 chartPlotMetrics,
 isClientOnChartPriceScale
-} from "./chart-factory.js?v=8906738e";
+} from "./chart-factory.js?v=88838346";
 
 export function linkChartsCrosshair({
 mainChart,

@@ -354,3 +354,56 @@ max: dataMax + pad
 };
 
 }
+
+/**
+ * Ширина свечи, при которой в окне помещается ровно bars баров.
+ * Та же формула, что у установки видимого диапазона: правый запас
+ * не даёт отдалить сильнее, чем вид при загрузке.
+ */
+export function zoomOutFloorSpacing(
+plotW,
+bars,
+rightOffsetBars,
+rightMarginRatio
+){
+
+const width =
+Math.max(
+1,
+Number(plotW) || 0
+);
+const content =
+Math.max(
+1,
+Number(bars) || 0
+);
+const offset =
+Math.max(
+0,
+Number(rightOffsetBars) || 0
+);
+const ratio =
+Math.min(
+0.35,
+Math.max(
+0,
+Number(rightMarginRatio) || 0
+)
+);
+let spacing =
+width / (content + offset);
+
+if(
+ratio > 0 &&
+offset * spacing < width * ratio
+){
+spacing =
+(width * (1 - ratio)) / content;
+}
+
+return Math.min(
+500,
+Math.max(0.01, spacing)
+);
+
+}
