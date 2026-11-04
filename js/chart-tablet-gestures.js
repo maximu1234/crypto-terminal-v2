@@ -487,6 +487,9 @@ let startClientY =
 let lastPanClientX =
 0;
 
+let lastPanClientY =
+0;
+
 let holdTimer =
 null;
 
@@ -531,6 +534,142 @@ null;
 
 let onWrapTouchMove =
 null;
+
+function shiftManualPrice(
+dy
+){
+
+if(
+!dy
+){
+return;
+}
+
+const ps =
+chart.priceScale?.(
+"right"
+);
+
+if(
+!ps?.getVisibleRange ||
+!ps.setVisibleRange
+){
+return;
+}
+
+let manual =
+false;
+let log =
+false;
+
+try{
+
+const opts =
+ps.options?.() ||
+{};
+
+manual =
+opts.autoScale ===
+false;
+log =
+opts.mode ===
+1;
+
+}catch{
+return;
+}
+
+if(
+!manual
+){
+return;
+}
+
+const range =
+ps.getVisibleRange();
+
+if(
+!range ||
+!Number.isFinite(
+range.from
+) ||
+!Number.isFinite(
+range.to
+) ||
+range.to ===
+range.from
+){
+return;
+}
+
+const rect =
+chartEl.getBoundingClientRect();
+const plotH =
+Math.max(
+1,
+rect.height
+);
+const ratio =
+dy / plotH;
+let from =
+range.from;
+let to =
+range.to;
+
+if(
+log &&
+range.from >
+0 &&
+range.to >
+0
+){
+
+const lo =
+Math.log(
+range.from
+);
+const hi =
+Math.log(
+range.to
+);
+const shift =
+ratio * (
+hi - lo
+);
+
+from =
+Math.exp(
+lo + shift
+);
+to =
+Math.exp(
+hi + shift
+);
+
+}else{
+
+const shift =
+ratio * (
+range.to - range.from
+);
+
+from =
+range.from + shift;
+to =
+range.to + shift;
+
+}
+
+try{
+ps.setVisibleRange({
+from,
+to
+});
+}catch{
+/* ignore */
+}
+
+}
 
 function scrollByDx(
 dx
@@ -1005,6 +1144,9 @@ mode =
 lastPanClientX =
 e.clientX;
 
+lastPanClientY =
+e.clientY;
+
 onPanStart();
 
 }
@@ -1030,8 +1172,14 @@ return;
 const dx =
 e.clientX - lastPanClientX;
 
+const dy =
+e.clientY - lastPanClientY;
+
 lastPanClientX =
 e.clientX;
+
+lastPanClientY =
+e.clientY;
 
 if(
 Math.abs(
@@ -1043,6 +1191,20 @@ dx
 e.preventDefault();
 scrollByDx(
 dx
+);
+
+}
+
+if(
+Math.abs(
+dy
+) >=
+1
+){
+
+e.preventDefault();
+shiftManualPrice(
+dy
 );
 
 }

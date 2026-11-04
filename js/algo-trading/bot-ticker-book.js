@@ -12,14 +12,14 @@ getActiveExchangeId
 
 import {
 normalizeAlgoOptimizeStrategyId
-} from "./strategy-param-optimize.js?v=4337e90e";
+} from "./strategy-param-optimize.js?v=156a9f8f";
 
 import {
 normalizeAlgoSupertrendFilterEnabled,
 normalizeAlgoSupertrendTf,
 clampAlgoSupertrendAtr,
 clampAlgoSupertrendFactor
-} from "./pattern-supertrend-filter.js?v=7676bfd0";
+} from "./pattern-supertrend-filter.js?v=a09d5e52";
 
 export const ALGO_BOT_TICKER_BOOK_KEY =
 "algo_trading_bot_ticker_book_v1";

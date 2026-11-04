@@ -22,8 +22,9 @@ expandPriceScale,
 nicePriceTicks,
 priceToY,
 yToPrice,
+shiftPriceScale,
 zoomPriceScale
-} from "./price-scale.js";
+} from "./price-scale.js?v=scale-pan3";
 
 const BG =
 "#0e1116";
@@ -31,6 +32,19 @@ const GRID =
 "rgba(255,255,255,0.06)";
 const AXIS =
 "#d1d5db";
+function positivePrice(value, fallback){
+
+const n =
+Number(value);
+
+if(Number.isFinite(n) && n > 0){
+return n;
+}
+
+return fallback;
+
+}
+
 const UP =
 "#26a69a";
 const DOWN =
@@ -196,6 +210,7 @@ this.liveFull = true;
 this.queued = false;
 this.drag = null;
 this.scaleDrag = null;
+this.timeDrag = null;
 this.counts = {
 live: 0,
 skip: 0,
@@ -205,6 +220,7 @@ this.onActivity = null;
 this.onView = null;
 this.onLive = null;
 this.scaleMenu = null;
+stage.style.touchAction = "none";
 this._bindInput(stage, true);
 
 if(options.scaleMenu !== false){
@@ -259,18 +275,11 @@ if(!Number.isFinite(close)){
 return [];
 }
 
-const open =
-Number(candle.open);
-const high =
-Number(candle.high);
-const low =
-Number(candle.low);
-
 return [{
 time: Number(candle.time),
-open: Number.isFinite(open) ? open : close,
-high: Number.isFinite(high) ? high : close,
-low: Number.isFinite(low) ? low : close,
+open: positivePrice(candle.open, close),
+high: positivePrice(candle.high, close),
+low: positivePrice(candle.low, close),
 close,
 volume: Number(candle.volume) || 0
 }];
@@ -333,16 +342,16 @@ next.time > prev.time
 ){
 this.candles.push({
 time: Number(next.time),
-open: finite(next.open, close),
-high: finite(next.high, close),
-low: finite(next.low, close),
+open: positivePrice(next.open, close),
+high: positivePrice(next.high, close),
+low: positivePrice(next.low, close),
 close,
 volume: Number(next.volume) || 0
 });
 }else{
-prev.open = finite(next.open, prev.open);
-prev.high = finite(next.high, prev.high);
-prev.low = finite(next.low, prev.low);
+prev.open = positivePrice(next.open, prev.open);
+prev.high = positivePrice(next.high, prev.high);
+prev.low = positivePrice(next.low, prev.low);
 prev.close = close;
 if(Number.isFinite(Number(next.volume))){
 prev.volume = Number(next.volume);
@@ -1130,6 +1139,36 @@ this.layout.plotRight
 
 }
 
+_localY(stage, event){
+
+return (
+event.clientY -
+stage.getBoundingClientRect().top
+);
+
+}
+
+_onTimeAxis(stage, event){
+
+if(
+!this.layout ||
+!(this.timeH > 0)
+){
+return false;
+}
+
+const y =
+this._localY(stage, event);
+const x =
+this._localX(stage, event);
+
+return (
+y >= this.layout.plotBottom &&
+x < this.layout.plotRight
+);
+
+}
+
 _mountScaleMenu(){
 
 const menu =
@@ -1188,6 +1227,7 @@ priceAxis &&
 this._onPriceAxis(stage, event) &&
 this.scale
 ){
+this.drag = null;
 this.scaleDrag = {
 id: event.pointerId,
 y: event.clientY,
@@ -1197,16 +1237,56 @@ max: this.scale.max
 }
 };
 stage.setPointerCapture(event.pointerId);
+event.preventDefault();
 return;
 }
 
+if(
+this._onTimeAxis(stage, event) &&
+this.candles.length
+){
+const x =
+this._localX(stage, event);
+const last =
+this.candles.length - 1;
+this.scaleDrag = null;
+this.drag = null;
+this.timeDrag = {
+id: event.pointerId,
+x: event.clientX,
+anchorX: x,
+anchorIndex: candleIndexAt(
+x,
+last,
+this.layout.plotRight,
+this.rightGap,
+this.barSpacing,
+this.panPx
+),
+spacing: this.barSpacing
+};
+stage.setPointerCapture(event.pointerId);
+event.preventDefault();
+return;
+}
+
+this.scaleDrag = null;
+this.timeDrag = null;
 this.drag = {
 id: event.pointerId,
 x: event.clientX,
-pan: this.panPx
+y: event.clientY,
+pan: this.panPx,
+scale: this.manualScale
+? {
+min: this.manualScale.min,
+max: this.manualScale.max
+}
+: null
 };
 stage.classList.add("dragging");
 stage.setPointerCapture(event.pointerId);
+event.preventDefault();
 
 }
 );
@@ -1256,6 +1336,50 @@ return;
 }
 
 if(
+this.timeDrag &&
+event.pointerId === this.timeDrag.id &&
+this.layout
+){
+
+const factor =
+Math.exp(
+-(event.clientX - this.timeDrag.x) * 0.005
+);
+const nextSpacing =
+Math.min(
+64,
+Math.max(
+0.05,
+this.timeDrag.spacing * factor
+)
+);
+const last =
+this.candles.length - 1;
+
+this.barSpacing = nextSpacing;
+this.panPx =
+clampPan(
+panForAnchor(
+this.timeDrag.anchorIndex,
+this.timeDrag.anchorX,
+last,
+this.layout.plotRight,
+this.rightGap,
+nextSpacing
+),
+this.candles.length,
+this.layout.plotLeft,
+this.layout.plotRight,
+this.rightGap,
+nextSpacing
+);
+this.userMovedView = true;
+this.scheduleRebuild();
+return;
+
+}
+
+if(
 !this.drag ||
 event.pointerId !== this.drag.id
 ){
@@ -1278,13 +1402,39 @@ layout.plotRight,
 this.rightGap,
 this.barSpacing
 );
+let shifted =
+null;
 
-if(next === this.panPx){
+if(this.drag.scale){
+shifted =
+shiftPriceScale(
+this.drag.scale,
+event.clientY - this.drag.y,
+layout.plotH,
+this.priceScaleMode
+);
+}
+
+const samePan =
+next === this.panPx;
+const sameScale =
+!shifted ||
+(
+shifted.min === this.manualScale?.min &&
+shifted.max === this.manualScale?.max
+);
+
+if(samePan && sameScale){
 return;
 }
 
 this.panPx = next;
 this.userMovedView = true;
+
+if(shifted){
+this.manualScale = shifted;
+}
+
 this.scheduleRebuild();
 
 }
@@ -1296,16 +1446,23 @@ event=>{
 const scale =
 this.scaleDrag &&
 event.pointerId === this.scaleDrag.id;
+const time =
+this.timeDrag &&
+event.pointerId === this.timeDrag.id;
 const pan =
 this.drag &&
 event.pointerId === this.drag.id;
 
-if(!scale && !pan){
+if(!scale && !time && !pan){
 return;
 }
 
 if(scale){
 this.scaleDrag = null;
+}
+
+if(time){
+this.timeDrag = null;
 }
 
 if(pan){
@@ -1321,10 +1478,25 @@ stage.releasePointerCapture(event.pointerId);
 
 };
 
+const releaseDrags =
+()=>{
+
+this.scaleDrag = null;
+this.timeDrag = null;
+
+if(this.drag){
+this.drag = null;
+stage.classList.remove("dragging");
+}
+
+};
+
 stage.addEventListener("pointerup", endDrag);
 stage.addEventListener("pointercancel", endDrag);
+stage.addEventListener("lostpointercapture", endDrag);
 window.addEventListener("pointerup", endDrag, true);
 window.addEventListener("pointercancel", endDrag, true);
+window.addEventListener("mouseup", releaseDrags, true);
 
 stage.addEventListener(
 "wheel",
@@ -1342,14 +1514,28 @@ if(
 return;
 }
 
+const wheelPx =
+value=>{
+
+let px =
+Number(value) || 0;
+
+if(event.deltaMode === 1){
+px *= 16;
+}else if(event.deltaMode === 2){
+px *= 120;
+}
+
+return Math.max(
+-160,
+Math.min(160, px)
+);
+
+};
 const dy =
-event.deltaMode === 1
-? event.deltaY * 16
-: event.deltaY;
+wheelPx(event.deltaY);
 const dx =
-event.deltaMode === 1
-? event.deltaX * 16
-: event.deltaX;
+wheelPx(event.deltaX);
 const pan =
 event.shiftKey ||
 Math.abs(dx) > Math.abs(dy);
@@ -1382,14 +1568,26 @@ return;
 
 const factor =
 Math.exp(-dy * 0.0012);
-const nextSpacing =
+const MIN_SPACING =
+0.05;
+const MAX_SPACING =
+64;
+let nextSpacing =
+this.barSpacing * factor;
+
+if(dy > 0){
+nextSpacing =
 Math.min(
-32,
-Math.max(
-0.25,
-this.barSpacing * factor
-)
+this.barSpacing,
+Math.max(MIN_SPACING, nextSpacing)
 );
+}else{
+nextSpacing =
+Math.max(
+this.barSpacing,
+Math.min(MAX_SPACING, nextSpacing)
+);
+}
 
 if(nextSpacing === this.barSpacing){
 return;
@@ -1412,6 +1610,10 @@ this.panPx
 );
 
 this.barSpacing = nextSpacing;
+this.wheelZoomAt =
+typeof performance !== "undefined"
+? performance.now()
+: Date.now();
 this.panPx =
 clampPan(
 panForAnchor(

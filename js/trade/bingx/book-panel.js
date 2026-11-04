@@ -43,7 +43,7 @@ getAlertsSorted,
 getAlertsHistorySorted,
 removeAlert,
 removeAlertHistoryEntry
-} from "../../alerts.js?v=c52f1269";
+} from "../../alerts.js?v=c651f812";
 
 const SHARE_ICON_V =
 2;

@@ -13,7 +13,7 @@ applyRsiSeriesColorMode,
 appendFutureWhitespaceBars,
 computeChartFutureMarginBars,
 syncLinkedChartTimescales
-} from "./chart-import.js?v=9eaf9612";
+} from "./chart-import.js?v=eae303e4";
 
 import {
 applyLiveSeriesUpdate,
@@ -38,16 +38,16 @@ logicalIndexShift
 
 import {
 ALGO_TICKER_SCAN_HISTORY_REQUESTS
-} from "./algo-trading/ticker-scanner.js?v=624cb6e8";
+} from "./algo-trading/ticker-scanner.js?v=651d60a9";
 
 import {
 defaultRsiPaneSettings,
 normalizeRsiPaneSettings
-} from "./indicators/rsi-pane.js?v=ffdcc4ab";
+} from "./indicators/rsi-pane.js?v=e0647c2b";
 
 import {
 buildChartRsiPoints
-} from "./indicators/htf-project.js?v=2d6ecf34";
+} from "./indicators/htf-project.js?v=df7207b3";
 
 import {
 loadMarketHistory,
@@ -62,11 +62,11 @@ bindLiveCandleCatchup
 import {
 mountAlgoTradingCoinList,
 refreshAlgoMarketListFromFlags
-} from "./algo-trading-list.js?v=08fe8de8";
+} from "./algo-trading-list.js?v=f80072d7";
 
 import {
 mountAlgoTickerScanUi
-} from "./algo-trading/ticker-scan-ui.js?v=d4b9b35a";
+} from "./algo-trading/ticker-scan-ui.js?v=bc46dc22";
 
 import {
 getTickerStrategyOverlay,
@@ -77,15 +77,15 @@ writeTickerStrategyOverlays
 
 import {
 mountAlgoStrategyParamOptimizeUi
-} from "./algo-trading/strategy-param-optimize-ui.js?v=e4b23135";
+} from "./algo-trading/strategy-param-optimize-ui.js?v=ff980a14";
 
 import {
 mountAlgoRuntimeUi
-} from "./algo-trading/runtime-ui.js?v=ffc1dd16";
+} from "./algo-trading/runtime-ui.js?v=9b632d5f";
 
 import {
 mountAlgoBotStrategyUi
-} from "./algo-trading/bot-strategy-ui.js?v=3daf93b7";
+} from "./algo-trading/bot-strategy-ui.js?v=8eedcd1e";
 
 import {
 ALGO_ANALYSIS_BOT_CHANGE_EVENT,
@@ -101,23 +101,23 @@ setActiveAnalysisBotId
 
 import {
 mountSessionLogServerSettings
-} from "./algo-trading/bot-session-log-server-ui.js?v=6a86e6c4";
+} from "./algo-trading/bot-session-log-server-ui.js?v=5aeda340";
 
 import {
 syncBotStrategiesToMain
-} from "./algo-trading/bot-bridge.js?v=ad065c93";
+} from "./algo-trading/bot-bridge.js?v=a8e895bb";
 
 import {
 mountAlgoTradeUi
-} from "./algo-trading/trade/boot.js?v=eefd2755";
+} from "./algo-trading/trade/boot.js?v=42528b63";
 
 import {
 mountAlgoTradingDrawings
-} from "./algo-trading/drawings.js?v=be3805aa";
+} from "./algo-trading/drawings.js?v=6a35385e";
 
 import {
 mountAlgoTradingIndicators
-} from "./algo-trading/indicators.js?v=7c047fee";
+} from "./algo-trading/indicators.js?v=77c231cc";
 
 import {
 mountAlgoPatternEntryOverlay
@@ -125,11 +125,11 @@ mountAlgoPatternEntryOverlay
 
 import {
 mountRsiTouchFlipHost
-} from "./algo-trading/rsi-touch-flip-panel.js?v=74867271";
+} from "./algo-trading/rsi-touch-flip-panel.js?v=36701081";
 
 import {
 mountMacdFlipTouchHost
-} from "./algo-trading/macd-flip-touch-panel.js?v=57c8e42c";
+} from "./algo-trading/macd-flip-touch-panel.js?v=b926bd58";
 
 import {
 loadRsiTouchFlipPrefs,
@@ -142,7 +142,7 @@ loadMacdFlipTouchPrefs
 import {
 clearAlgoPatternAnalysisUi,
 refreshAlgoPatternAnalysis
-} from "./algo-trading/pattern-analysis.js?v=1e002b9c";
+} from "./algo-trading/pattern-analysis.js?v=2c2a5ef1";
 
 import {
 invalidateAlgoPattern12SceneCache,
@@ -181,11 +181,11 @@ import {
 normalizeAlgoSupertrendTf,
 clampAlgoSupertrendAtr,
 clampAlgoSupertrendFactor
-} from "./algo-trading/pattern-supertrend-filter.js?v=7676bfd0";
+} from "./algo-trading/pattern-supertrend-filter.js?v=a09d5e52";
 
 import {
 createAlgoSupertrendFilterOverlay
-} from "./algo-trading/supertrend-filter-overlay.js?v=c9dd85fb";
+} from "./algo-trading/supertrend-filter-overlay.js?v=ff6758bd";
 
 import {
 normalizeAlgoStatsMode
@@ -221,7 +221,7 @@ writePrefs,
 clampScanMinWinRate,
 normalizeAlgoScanTfPref,
 resolveInitialSymbol
-} from "./algo-trading/page-prefs.js?v=0fea35db";
+} from "./algo-trading/page-prefs.js?v=92b9a005";
 
 import {
 mergeLiveCandle
@@ -251,7 +251,7 @@ applyStrategyPatchToMemory as applyStrategyPatchToMemoryFromMemory,
 syncStrategyDomFromMemory as syncStrategyDomFromMemoryFromMemory,
 restoreStrategyMemoryFromPrefs as restoreStrategyMemoryFromPrefsFromMemory,
 buildAlgoPrefsSnapshot
-} from "./algo-trading/page-strategy-state.js?v=ae7b6845";
+} from "./algo-trading/page-strategy-state.js?v=9111c69a";
 
 import {
 syncRsiHudPeriod as syncRsiHudPeriodEl,
@@ -259,7 +259,7 @@ syncRsiLevelDom as syncRsiLevelDomEl,
 setRsiHud as setRsiHudEl,
 lastRsiValue as lastRsiValueFromCandles,
 layoutRsiPane
-} from "./algo-trading/page-rsi.js?v=fb4378f4";
+} from "./algo-trading/page-rsi.js?v=f3cb5346";
 
 import {
 bindAlgoStatsPanelResize

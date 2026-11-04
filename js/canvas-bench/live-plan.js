@@ -279,14 +279,49 @@ if(!candle){
 continue;
 }
 
-if(candle.low < dataMin){
-dataMin = candle.low;
+/*
+ * Ноль и минус на логарифме недопустимы: одна такая свеча
+ * переключает всю шкалу в линейную (внизу появляются
+ * отрицательные цены) и сжимает нормальные свечи.
+ * Следующий сдвиг окна эту свечу выпускает — и картина прыгает.
+ */
+const low =
+candle.low;
+const high =
+candle.high;
+
+if(
+Number.isFinite(low) &&
+low > 0 &&
+low < dataMin
+){
+dataMin = low;
 }
 
-if(candle.high > dataMax){
-dataMax = candle.high;
+if(
+Number.isFinite(high) &&
+high > 0 &&
+high > dataMax
+){
+dataMax = high;
 }
 
+}
+
+if(
+!Number.isFinite(dataMin) &&
+Number.isFinite(dataMax) &&
+dataMax > 0
+){
+dataMin = dataMax;
+}
+
+if(
+!Number.isFinite(dataMax) &&
+Number.isFinite(dataMin) &&
+dataMin > 0
+){
+dataMax = dataMin;
 }
 
 if(

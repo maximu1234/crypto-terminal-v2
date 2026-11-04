@@ -9,7 +9,7 @@ getExchangeDefinition
 import {
 getLoadedTradeExchangeModules,
 loadTradeExchangeModules
-} from "./trade/module-router.js?v=a955e70e";
+} from "./trade/module-router.js?v=b9fa258c";
 
 export const DIARY_CHART_TFS =
 Object.freeze([

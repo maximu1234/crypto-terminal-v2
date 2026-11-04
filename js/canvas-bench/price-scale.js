@@ -199,6 +199,47 @@ max: hi
 
 }
 
+/** Сдвиг окна цены. dy > 0 (мышь вниз) уводит свечи вниз. */
+export function shiftPriceScale(
+scale,
+dy,
+plotH,
+mode
+){
+
+const ratio =
+dy / (plotH || 1);
+
+if(
+mode === PRICE_SCALE_LOG &&
+scale.min > 0 &&
+scale.max > 0
+){
+
+const lo =
+Math.log(scale.min);
+const hi =
+Math.log(scale.max);
+const shift =
+ratio * (hi - lo);
+
+return {
+min: Math.exp(lo + shift),
+max: Math.exp(hi + shift)
+};
+
+}
+
+const shift =
+ratio * (scale.max - scale.min);
+
+return {
+min: scale.min + shift,
+max: scale.max + shift
+};
+
+}
+
 function cleanTick(price){
 
 return Number(price.toPrecision(12));

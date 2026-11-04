@@ -189,6 +189,18 @@ test("live RSI matches the terminal formula and only the last point changes", ()
   assert.equal(state.points[39].value, again.points[39].value);
 });
 
+test("a non-positive wick does not pull the price scale through zero", () => {
+  const candles = [
+    { low: 120, high: 180 },
+    { low: 0, high: 1600 },
+    { low: 90, high: 140 },
+    { low: -5, high: 200 }
+  ];
+  const range = scaleFromCandles(candles, 0, 3, 0);
+  assert.equal(range.min, 90);
+  assert.equal(range.max, 1600);
+});
+
 test("price padding keeps a one-tick move on the live path", () => {
   const candles = [
     { low: 100, high: 110 },

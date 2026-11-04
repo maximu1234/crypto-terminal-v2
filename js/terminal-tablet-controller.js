@@ -15,7 +15,7 @@ normalCrosshairOptions,
 positionTabletProbeCrosshair,
 tabletProbeCrosshairOptions,
 TABLET_USE_CUSTOM_TOUCH_PAN
-} from "./chart-import.js?v=9eaf9612";
+} from "./chart-import.js?v=eae303e4";
 
 import {
 createTabletGesturePolicy
@@ -395,7 +395,7 @@ const {
 mountTabletChartGestures
 } =
 await import(
-"./chart-tablet-gestures.js?v=d94bb780"
+"./chart-tablet-gestures.js?v=5d2031e0"
 );
 
 const tabletGestureCtrl =

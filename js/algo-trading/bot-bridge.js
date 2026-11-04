@@ -30,7 +30,7 @@ hydrateBotTickerBookFromMain,
 loadBotTickerBook,
 loadStagedBotTickerBook,
 writePublishedBotTickerBook
-} from "./bot-ticker-book.js?v=24739acf";
+} from "./bot-ticker-book.js?v=41879a28";
 import {
 replaceRsiTouchFlipBook
 } from "./rsi-touch-flip-book.js?v=c8f7d685";

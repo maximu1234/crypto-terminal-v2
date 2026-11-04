@@ -6,7 +6,7 @@
  */
 import {
 aggregateCandlesToTf
-} from "../indicators/htf-loader.js?v=4c5b8439";
+} from "../indicators/htf-loader.js?v=2861d611";
 
 import {
 buildSupertrendChartLineData,

@@ -7,21 +7,21 @@ fetchLanBotStatus,
 sendLanBotCommand,
 normalizeLanBotStrategyId,
 pushAuthSessionToRemoteBot
-} from "./bot-remote-client.js?v=a82b92ce";
+} from "./bot-remote-client.js?v=7d7d286f";
 import {
 formatBotStrategySettingsRows,
 loadBotStrategiesPrefs
 } from "./bot-strategy-prefs.js?v=e463f141";
 import {
 syncAllTickerFlagsRootToMain
-} from "./bot-bridge.js?v=ad065c93";
+} from "./bot-bridge.js?v=a8e895bb";
 import {
 ALGO_TICKER_FLAGS_KEY
 } from "./ticker-flags.js?v=72da874e";
 import {
 loadStagedBotTickerBook,
 loadBotTickerBook
-} from "./bot-ticker-book.js?v=24739acf";
+} from "./bot-ticker-book.js?v=41879a28";
 import {
 loadEarlyT3BotPrefs
 } from "./early-t3-bot-prefs.js?v=920e9956";

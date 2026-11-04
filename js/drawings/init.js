@@ -50,7 +50,7 @@ ensureDomChartCrosshair,
 hideDomChartCrosshair,
 positionTabletProbeHorizInStack,
 fullCrosshairOptions
-} from "../chart-import.js?v=9eaf9612";
+} from "../chart-import.js?v=eae303e4";
 
 import {
 STROKE,
@@ -152,7 +152,7 @@ updateChartRulerLabelEl
 
 import {
 mountTabletDrawInput
-} from "../drawings-tablet-input.js?v=958b3aba";
+} from "../drawings-tablet-input.js?v=8afd92de";
 
 import {
 cloneDrawingsForUndo,
@@ -161,7 +161,7 @@ createDrawUndoStack
 
 import {
 createDrawDesktopSelection
-} from "./draw-edit-desktop.js?v=b8be8418";
+} from "./draw-edit-desktop.js?v=5be7cc60";
 
 import {
 createDrawingsPersist
@@ -169,15 +169,15 @@ createDrawingsPersist
 
 import {
 createDrawStyleBar
-} from "./draw-style-bar.js?v=869f015e";
+} from "./draw-style-bar.js?v=ff4519e5";
 
 import {
 createDrawAlertsChart
-} from "./draw-alerts-chart.js?v=72eec1bc";
+} from "./draw-alerts-chart.js?v=f8e5da9c";
 
 import {
 createDrawPlacement
-} from "./draw-placement.js?v=89f90a42";
+} from "./draw-placement.js?v=2c54a602";
 
 import {
 createDrawTextEditor,
@@ -206,15 +206,15 @@ createBrushPlacement
 
 import {
 createDrawEditInteraction
-} from "./draw-edit-interaction.js?v=d03cf906";
+} from "./draw-edit-interaction.js?v=8cb5a0d8";
 
 import {
 createDrawChartInput
-} from "./draw-chart-input.js?v=05c82163";
+} from "./draw-chart-input.js?v=523ae6c6";
 
 import {
 createDrawPriceScale
-} from "./draw-price-scale.js?v=bd32a790";
+} from "./draw-price-scale.js?v=0914c813";
 
 import {
 createDrawRedrawLoop
@@ -230,7 +230,7 @@ manualPriceToCoordinate as manualPriceToCoordinateMoved,
 plotCoordinateToPrice as plotCoordinateToPriceMoved,
 resolvePointFromPlotXY as resolvePointFromPlotXYMoved,
 hitTest as hitTestMoved
-} from "./draw-plot-hit.js?v=39e2ce10";
+} from "./draw-plot-hit.js?v=cbda3668";
 import {
 setupTabletNativeSelectionBlock as setupTabletNativeSelectionBlockMoved,
 drawBrushPlacementPreview as drawBrushPlacementPreviewMoved,
@@ -2546,7 +2546,9 @@ return;
 
 if(
 e.key ===
-"Meta"
+"Meta" ||
+e.key ===
+"Control"
 ){
 
 if(
@@ -2710,18 +2712,17 @@ return;
 
 if(
 e.key !==
-"Meta"
+"Meta" &&
+e.key !==
+"Control"
 ){
 return;
 }
 
-if(
-!drawMagnetKeyDown
-){
-return;
-}
-
-drawMagnetKeyDown = false;
+drawMagnetKeyDown = !!(
+e.metaKey ||
+e.ctrlKey
+);
 refreshPlacementPreviewFromPointer(
 e
 );
@@ -3452,7 +3453,7 @@ lastChartAlertsPullMs =
 Date.now();
 
 void import(
-"../alerts-cloud-sync.js?v=10393d32"
+"../alerts-cloud-sync.js?v=f86e0e24"
 ).then(
 ({ pullRegistryFromCloudNow })=>
 pullRegistryFromCloudNow({

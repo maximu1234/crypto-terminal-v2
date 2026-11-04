@@ -28,7 +28,7 @@ htfTfSelectHtml,
 normalizeHtfTf,
 projectHtfPointsOntoChart,
 resolveIndicatorSourceCandles
-} from "./htf-project.js?v=2d6ecf34";
+} from "./htf-project.js?v=df7207b3";
 
 export const MOVING_AVERAGE_ID =
 "ma";

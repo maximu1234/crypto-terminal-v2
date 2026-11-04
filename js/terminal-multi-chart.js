@@ -5,7 +5,7 @@
  */
 import {
 createTerminalScreenerChartPane
-} from "./terminal-screener-chart-pane.js?v=ae95593e";
+} from "./terminal-screener-chart-pane.js?v=24cc8ee9";
 
 const STORAGE_LAYOUT =
 "terminal_chart_layout_count_v1";

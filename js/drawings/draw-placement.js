@@ -5,7 +5,7 @@
 import {
 hideDomChartCrosshair,
 positionTabletProbeHorizInStack
-} from "../chart-import.js?v=9eaf9612";
+} from "../chart-import.js?v=eae303e4";
 
 import {
 ensureFibLevelsVisible,
@@ -159,6 +159,48 @@ new Set([
 "channel",
 "arrow"
 ]);
+
+function isMagnetModifierClick(
+e
+){
+
+return !!(
+(
+e?.button ===
+2 ||
+e?.button ===
+0
+) &&
+(
+e?.metaKey ||
+e?.ctrlKey
+)
+);
+
+}
+
+function isPlacementClick(
+e
+){
+
+if(
+!e?.isPrimary
+){
+return false;
+}
+
+if(
+e.button ===
+0
+){
+return true;
+}
+
+return isMagnetModifierClick(
+e
+);
+
+}
 
 function usesDesktopStrokePlacement(
 type
@@ -542,9 +584,9 @@ return;
 }
 
 if(
-!e.isPrimary ||
-e.button !==
-0
+!isPlacementClick(
+e
+)
 ){
 return;
 }
@@ -561,12 +603,59 @@ const placement =
 getPlacement();
 
 if(
-!placement ||
+!placement
+){
+return;
+}
+
+if(
 !usesDesktopStrokePlacement(
 placement.type
 )
 ){
+
+/*
+ * Горизонтали, паттерны, позиция и профиль ставятся по click.
+ * На Маке click с Cmd не приходит, остаётся только pointerdown.
+ */
+if(
+!e.metaKey &&
+!e.ctrlKey
+){
 return;
+}
+
+const { x, y } =
+pointerFromEvent(
+e
+);
+
+handleToolClick({
+point:{
+x,
+y
+},
+metaKey:
+!!(
+e.metaKey ||
+e.ctrlKey
+),
+ctrlKey:
+!!e.ctrlKey,
+shiftKey:
+!!e.shiftKey,
+useEventPlot:
+true,
+pointerType:
+e.pointerType
+});
+setBlockChartClick(
+true
+);
+e.preventDefault();
+e.stopPropagation();
+return;
+
 }
 
 const needed =
@@ -665,9 +754,9 @@ return;
 }
 
 if(
-!e.isPrimary ||
-e.button !==
-0
+!isPlacementClick(
+e
+)
 ){
 return;
 }
@@ -784,6 +873,18 @@ getTool() !==
 
 e.preventDefault();
 e.stopPropagation();
+
+/*
+ * На Маке клик с Cmd/Control — это contextmenu.
+ * Инструмент из-за него сбрасывался, и прилипшая точка не оставалась.
+ */
+if(
+e.metaKey ||
+e.ctrlKey
+){
+return;
+}
+
 setTool(
 "cursor"
 );
@@ -840,6 +941,8 @@ enableMagnet &&
 (
 getDrawMagnetKeyDown() ||
 optEvent?.metaKey ===
+true ||
+optEvent?.ctrlKey ===
 true
 )
 );
@@ -852,6 +955,8 @@ optEvent
 
 if(
 optEvent?.metaKey ===
+true ||
+optEvent?.ctrlKey ===
 true
 ){
 setDrawMagnetKeyDown(true);

@@ -7,7 +7,7 @@ loadMarketHistory
 
 import {
 analyzeAlgoPatterns
-} from "./pattern-analysis.js?v=1e002b9c";
+} from "./pattern-analysis.js?v=2c2a5ef1";
 
 import {
 normalizeAlgoStatsMode

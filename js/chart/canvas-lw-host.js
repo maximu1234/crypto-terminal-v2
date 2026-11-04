@@ -6,7 +6,7 @@
 
 import {
 CandleBenchChart
-} from "../canvas-bench/chart.js";
+} from "../canvas-bench/chart.js?v=scale-pan3";
 
 import {
 candleIndexAt,
@@ -267,6 +267,7 @@ host.afterSeriesData?.();
 },
 setData(rows){
 this.rows = Array.isArray(rows) ? rows.slice() : [];
+this.rev = (this.rev || 0) + 1;
 
 if(kind === "candle"){
 host.replaceCandles(this.rows);
@@ -303,6 +304,7 @@ if(!placeSeriesPoint(this.rows, bar)){
 return;
 }
 
+this.rev = (this.rev || 0) + 1;
 host.afterSeriesData?.();
 },
 data(){
@@ -865,6 +867,63 @@ return overlayScales.get(id);
 
 }
 
+function overlaySpan(series){
+
+const rev =
+series.rev ||
+0;
+
+if(
+series._spanRev ===
+rev &&
+series._span
+){
+return series._span;
+}
+
+let min =
+0;
+let max =
+0;
+const rows =
+series.rows;
+
+for(let i = 0; i < rows.length; i++){
+
+const v =
+seriesValue(rows[i]);
+
+if(v == null){
+continue;
+}
+
+if(v < min){
+min = v;
+}
+
+if(v > max){
+max = v;
+}
+
+}
+
+if(max === min){
+max = min + 1;
+}
+
+const span =
+{
+min,
+max
+};
+
+series._spanRev = rev;
+series._span = span;
+
+return span;
+
+}
+
 function yFor(layout, series, value){
 
 const slot =
@@ -874,28 +933,12 @@ if(!slot){
 return engine.yOf(value);
 }
 
-let min =
-0;
-let max =
-0;
-
-for(const row of series.rows){
-
-const v =
-seriesValue(row);
-
-if(v == null){
-continue;
-}
-
-min = Math.min(min, v);
-max = Math.max(max, v);
-
-}
-
-if(max === min){
-max = min + 1;
-}
+const span =
+overlaySpan(series);
+const min =
+span.min;
+const max =
+span.max;
 
 const top =
 layout.plotTop + layout.plotH * (slot.top || 0);
@@ -1029,14 +1072,102 @@ ctx.fillText(String(tag.text), layout.plotRight + 10, tag.y);
 
 }
 
+function visibleRowBounds(rows){
+
+if(!rows.length || !engine.layout || !engine.candles.length){
+return [0, rows.length];
+}
+
+const layout =
+engine.layout;
+const last =
+engine.candles.length - 1;
+const iLeft =
+candleIndexAt(
+layout.plotLeft,
+last,
+layout.plotRight,
+engine.rightGap,
+engine.barSpacing,
+engine.panPx
+);
+const iRight =
+candleIndexAt(
+layout.plotRight,
+last,
+layout.plotRight,
+engine.rightGap,
+engine.barSpacing,
+engine.panPx
+);
+const lo =
+Math.max(0, Math.floor(Math.min(iLeft, iRight)) - 1);
+const hi =
+Math.min(last, Math.ceil(Math.max(iLeft, iRight)) + 1);
+const t0 =
+Number(engine.candles[lo]?.time);
+const t1 =
+Number(engine.candles[hi]?.time);
+
+if(!Number.isFinite(t0) || !Number.isFinite(t1)){
+return [0, rows.length];
+}
+
+const from =
+Math.min(t0, t1);
+const to =
+Math.max(t0, t1);
+let start =
+0;
+let endSearch =
+rows.length;
+
+while(start < endSearch){
+
+const mid =
+(start + endSearch) >> 1;
+
+if(Number(rows[mid].time) < from){
+start = mid + 1;
+}else{
+endSearch = mid;
+}
+
+}
+
+let end =
+start;
+
+while(end < rows.length && Number(rows[end].time) <= to){
+end++;
+}
+
+return [
+Math.max(0, start - 1),
+Math.min(rows.length, end + 1)
+];
+
+}
+
 function paintHistogram(ctx, layout, series){
 
 const base =
 Number.isFinite(series.options.base) ? series.options.base : 0;
 const width =
 Math.max(1, Math.min(engine.barSpacing * 0.72, 18));
+const y0 =
+yFor(layout, series, base);
+const bounds =
+visibleRowBounds(series.rows);
 
-for(const row of series.rows){
+if(!Number.isFinite(y0)){
+return;
+}
+
+for(let i = bounds[0]; i < bounds[1]; i++){
+
+const row =
+series.rows[i];
 
 const value =
 seriesValue(row);
@@ -1054,8 +1185,6 @@ continue;
 
 const y =
 yFor(layout, series, value);
-const y0 =
-yFor(layout, series, base);
 
 ctx.fillStyle = row.color || series.options.color || "#26a69a";
 ctx.fillRect(
@@ -1481,6 +1610,19 @@ return;
 const mark =
 engine.candles.length + engine.layout.plotW / 1000;
 
+if(engine.userMovedView){
+engine.userMovedView = false;
+const seen = logicalRangeFromView(engine);
+if(seen){
+pinnedRange = {
+from: seen.from,
+to: seen.to
+};
+}
+paneAligned = mark;
+return;
+}
+
 if(paneAligned === mark){
 return;
 }
@@ -1689,22 +1831,95 @@ listener(param);
 
 });
 
-container.addEventListener("click", event=>{
+/*
+ * pointerdown на холсте вызывает preventDefault, и браузер
+ * уже не шлёт click. Реплей и рисунки ждут именно его,
+ * вместе со временем свечи под курсором.
+ */
+const CLICK_SLOP_PX = 5;
+let chartPress = null;
 
-if(!clickListeners.size){
+function emitChartClick(event){
+
+if(!clickListeners.size || !engine.layout || !engine.candles.length){
 return;
 }
 
 const rect = container.getBoundingClientRect();
-const param = {
-point: {
-x: event.clientX - rect.left,
-y: event.clientY - rect.top
+const x = event.clientX - rect.left;
+const y = event.clientY - rect.top;
+
+if(x < engine.layout.plotLeft || x >= engine.layout.plotRight){
+return;
 }
+
+const last = engine.candles.length - 1;
+const index = candleIndexAt(
+x,
+last,
+engine.layout.plotRight,
+engine.rightGap,
+engine.barSpacing,
+engine.panPx
+);
+const bar = Math.min(
+last,
+Math.max(0, Math.round(index))
+);
+const time = Number(engine.candles[bar]?.time);
+
+if(!Number.isFinite(time)){
+return;
+}
+
+const param = {
+point: { x, y },
+time,
+seriesData: new Map()
 };
 
 for(const listener of clickListeners){
 listener(param);
+}
+
+}
+
+container.addEventListener("pointerdown", event=>{
+
+if(event.button !== 0){
+return;
+}
+
+chartPress = {
+id: event.pointerId,
+x: event.clientX,
+y: event.clientY
+};
+
+});
+
+container.addEventListener("pointerup", event=>{
+
+if(!chartPress || event.pointerId !== chartPress.id){
+return;
+}
+
+const dx = event.clientX - chartPress.x;
+const dy = event.clientY - chartPress.y;
+chartPress = null;
+
+if(dx * dx + dy * dy > CLICK_SLOP_PX * CLICK_SLOP_PX){
+return;
+}
+
+emitChartClick(event);
+
+});
+
+container.addEventListener("pointercancel", event=>{
+
+if(chartPress && event.pointerId === chartPress.id){
+chartPress = null;
 }
 
 });
@@ -1717,6 +1932,29 @@ setVisibleLogicalRange(range){
 
 if(!Number.isFinite(range?.from) || !Number.isFinite(range?.to)){
 return;
+}
+
+/*
+ * Сразу после колёсика не принимать чужое узкое окно:
+ * оно раздувает свечи и выглядит как сброс зума.
+ */
+if(
+engine.layout &&
+engine.wheelZoomAt &&
+(typeof performance !== "undefined"
+? performance.now()
+: Date.now()) - engine.wheelZoomAt < 500
+){
+
+const content =
+Math.abs(range.to - range.from);
+const nextSpacing =
+engine.layout.plotW / Math.max(content, 1e-6);
+
+if(nextSpacing > engine.barSpacing * 2.2){
+return;
+}
+
 }
 
 pinnedRange = {

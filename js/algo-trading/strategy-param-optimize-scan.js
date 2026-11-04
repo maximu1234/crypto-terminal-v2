@@ -17,7 +17,7 @@ import {
 normalizeAlgoScanTf,
 ALGO_TICKER_SCAN_HISTORY_REQUESTS,
 ALGO_TICKER_SCAN_DELAY_MS
-} from "./ticker-scanner.js?v=624cb6e8";
+} from "./ticker-scanner.js?v=651d60a9";
 
 import {
 resolveAlgoScanUniverseItems
@@ -28,7 +28,7 @@ optimizeAlgoStrategyParams,
 normalizeAlgoOptimizeStrategyId,
 formatAlgoOptimizeParamsBrief,
 comboToApplyPatch
-} from "./strategy-param-optimize.js?v=4337e90e";
+} from "./strategy-param-optimize.js?v=156a9f8f";
 
 /** Тяжёлый CPU-перебор — держим низкую параллельность. */
 export const ALGO_OPTIMIZE_UNIVERSE_CONCURRENCY = 1;

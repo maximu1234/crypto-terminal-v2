@@ -4,14 +4,14 @@
  */
 import {
 createVolumeChart
-} from "./chart-import.js?v=9eaf9612";
+} from "./chart-import.js?v=eae303e4";
 
 import {
 calculateMacd,
 macdHistColor,
 MACD_LINE_COLOR,
 MACD_SIGNAL_COLOR
-} from "./indicators/macd-math.js?v=ca060ff4";
+} from "./indicators/macd-math.js?v=3d870147";
 
 import {
 aoBarColor,

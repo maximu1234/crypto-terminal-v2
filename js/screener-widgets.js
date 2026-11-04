@@ -23,7 +23,7 @@ mountChartPriceHud,
 SCREENER_PAGE_VISIBLE_BARS,
 SCREENER_PAGE_MAX_BARS,
 SCREENER_PAGE_HISTORY_REQUESTS
-} from "./chart-import.js?v=9eaf9612";
+} from "./chart-import.js?v=eae303e4";
 
 import {
 isIpadWebViewport
@@ -49,7 +49,7 @@ SCREENER_WIDGET_OSCILLATOR_MACD,
 createScreenerAoChart,
 createScreenerMacdChart,
 isScreenerHistogramOscillator
-} from "./screener-widget-oscillator.js?v=32114a2e";
+} from "./screener-widget-oscillator.js?v=2fd3dbba";
 
 let deps = null;
 

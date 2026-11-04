@@ -8,7 +8,7 @@ linkPairedChartTimeScales,
 appendFutureWhitespaceBars,
 computeChartFutureMarginBars,
 coinsTfVisibleBars
-} from "../chart-import.js?v=9eaf9612";
+} from "../chart-import.js?v=eae303e4";
 
 import {
 calculateMacd,
@@ -18,14 +18,14 @@ macdHistColor,
 MACD_LINE_COLOR,
 MACD_SIGNAL_COLOR,
 normalizeMacdSettings
-} from "./macd-math.js?v=ca060ff4";
+} from "./macd-math.js?v=3d870147";
 
 import {
 formatHtfTfLegend,
 htfTfSelectHtml,
 projectHtfRowsOntoChart,
 resolveIndicatorSourceCandles
-} from "./htf-project.js?v=2d6ecf34";
+} from "./htf-project.js?v=df7207b3";
 
 import {
 isChartLayoutReady
@@ -46,7 +46,7 @@ isBottomIndicatorPane
 
 import {
 syncPaneViewportAfterData
-} from "./indicator-pane-viewport.js?v=f16cf346";
+} from "./indicator-pane-viewport.js?v=d7a17561";
 
 export const MACD_PANE_ID =
 "macd";

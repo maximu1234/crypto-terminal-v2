@@ -49,7 +49,7 @@ isUserCrosshairEvent
 import {
 TABLET_LW_NATIVE_PRICE_SCALE,
 clearTabletProbeCrosshairForChart
-} from "./chart/chart-factory.js?v=978b1f94";
+} from "./chart/chart-factory.js?v=8906738e";
 
 import {
 shouldHandleTabletPriceScalePointer
@@ -98,7 +98,7 @@ coinsTfVisibleBars,
 applyCoinsChartViewport,
 computeCoinsChartViewportPlan,
 refreshCoinsChartBarSpacing
-} from "./chart/chart-factory.js?v=978b1f94";
+} from "./chart/chart-factory.js?v=8906738e";
 
 /* Tablet gestures: import ./chart-tablet-gestures.js only from tablet paths
    (tablet-widget-chart / terminal-tablet-controller) — never re-export here. */
@@ -1155,11 +1155,33 @@ true;
 function notifyChartPriceRangeChanged(){
 
 /*
- * Keep autoScale:true. iPad strip zoom locks the range via
- * series.autoscaleInfoProvider (priceZoomRange), not via
- * autoScale:false + setVisibleRange — that path freezes the
- * axis (provider is ignored when autoScale is off).
+ * Холст держит ручной масштаб в setVisibleRange.
+ * autoScale:true его сбрасывает, а autoscaleInfoProvider
+ * на основной серии не читается.
  */
+if(
+chart?.takeover === "canvas" &&
+priceZoomRange &&
+Number.isFinite(priceZoomRange.min) &&
+Number.isFinite(priceZoomRange.max) &&
+priceZoomRange.max !== priceZoomRange.min
+){
+
+try{
+chart.priceScale(
+"right"
+).setVisibleRange({
+from: priceZoomRange.min,
+to: priceZoomRange.max
+});
+}catch{
+/* ignore */
+}
+
+return;
+
+}
+
 try{
 chart.priceScale(
 "right"

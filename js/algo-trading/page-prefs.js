@@ -47,7 +47,7 @@ clampAlgoSupertrendAtr,
 clampAlgoSupertrendFactor,
 DEFAULT_ALGO_SUPERTREND_ATR,
 DEFAULT_ALGO_SUPERTREND_FACTOR
-} from "./pattern-supertrend-filter.js?v=7676bfd0";
+} from "./pattern-supertrend-filter.js?v=a09d5e52";
 
 import {
 normalizeAlgoStatsMode

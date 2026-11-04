@@ -34,7 +34,7 @@ import {
 normalizeAlgoSupertrendTf,
 clampAlgoSupertrendAtr,
 clampAlgoSupertrendFactor
-} from "./pattern-supertrend-filter.js?v=7676bfd0";
+} from "./pattern-supertrend-filter.js?v=a09d5e52";
 
 import {
 normalizeAlgoStatsMode
@@ -49,7 +49,7 @@ chartStrategyIdFromPositions,
 readPrefs,
 clampScanMinWinRate,
 normalizeAlgoScanTfPref
-} from "./page-prefs.js?v=0fea35db";
+} from "./page-prefs.js?v=92b9a005";
 
 export function createAlgoStrategyMemory(){
 

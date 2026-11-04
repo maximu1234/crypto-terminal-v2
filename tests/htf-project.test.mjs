@@ -154,7 +154,8 @@ test("mergeChartTailIntoHtf does not append 5m bars onto a 1m series", () => {
 
 test("1m on a 5m chart asks for enough kline pages to cover the visible span", () => {
   assert.equal(sourceHistoryRequests("1", "5", 2500, 0), 13);
-  assert.equal(sourceHistoryRequests("1", "5", 5000, 0), 13);
+  assert.equal(sourceHistoryRequests("1", "5", 5000, 0), 25);
+  assert.equal(sourceHistoryRequests("1", "5", 10000, 0), 50);
   assert.equal(sourceHistoryRequests("60", "5", 5000, 5), 5);
   assert.equal(sourceHistoryRequests("5", "5", 5000, 5), 5);
 });
