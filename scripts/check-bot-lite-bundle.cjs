@@ -174,7 +174,7 @@ function localExportRe() {
 }
 
 function stripQuery(spec) {
-  return spec.replace(/\?v=[0-9a-f]+$/i, "");
+  return String(spec || "").replace(/[?#].*$/, "");
 }
 
 function resolveSpec(fromFile, spec) {
