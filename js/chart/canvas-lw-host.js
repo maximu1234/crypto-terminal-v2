@@ -6,7 +6,7 @@
 
 import {
 CandleBenchChart
-} from "../canvas-bench/chart.js?v=scale-pan6";
+} from "../canvas-bench/chart.js?v=scale-pan7";
 
 import {
 candleIndexAt,
@@ -291,14 +291,13 @@ return;
 
 if(kind === "candle"){
 
-const last =
-this.rows[this.rows.length - 1];
-
-if(last && last.time === bar.time){
-Object.assign(last, bar);
-}else if(!last || bar.time > last.time){
-this.rows.push({ ...bar });
-}else{
+/*
+ * Справа уже лежат пустые будущие бары. Их время новее
+ * живой свечи, и старая проверка «последний ряд новее»
+ * выходила до onCandle: плашка читала новый close,
+ * а линия текущей цены оставалась на кадре загрузки.
+ */
+if(!placeSeriesPoint(this.rows, bar)){
 return;
 }
 

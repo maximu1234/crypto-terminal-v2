@@ -3,12 +3,12 @@
  */
 import {
 subscribeTicker
-} from "./ws.js?v=410efbcd";
+} from "./ws.js?v=a3fc2075";
 
 import {
 getAllCachedPositions,
 applyLiveMarkPrice
-} from "./trade-positions-cache.js?v=0fbe9c0f";
+} from "./trade-positions-cache.js?v=82272511";
 
 const unsubBySymbol =
 new Map();

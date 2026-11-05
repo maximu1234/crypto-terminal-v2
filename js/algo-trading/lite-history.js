@@ -8,7 +8,7 @@
 import {
   loadMarketHistory,
   getActiveExchangeId
-} from "../market-api.js?v=509a465f";
+} from "../market-api.js?v=a65f5c56";
 import {
   klineGapFillEnds
 } from "../kline-history-pages.js?v=f9dac656";

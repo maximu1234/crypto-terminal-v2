@@ -19,11 +19,11 @@ appendFutureWhitespaceBars,
 computeChartFutureMarginBars,
 coinsTfVisibleBars,
 linkChartsCrosshair
-} from "./chart-import.js?v=4d760669";
+} from "./chart-import.js?v=4b191e60";
 
 import {
 readCoinsPrefs
-} from "./terminal/terminal-prefs.js?v=4b100193";
+} from "./terminal/terminal-prefs.js?v=20320277";
 
 import {
 calculateRSI,
@@ -32,13 +32,13 @@ alignRsiWithCandleTimes
 
 import {
 loadMarketHistory
-} from "./market-api.js?v=509a465f";
+} from "./market-api.js?v=a65f5c56";
 
 import {
 subscribeKline,
 subscribeTicker,
 bindLiveCandleCatchup
-} from "./market-ws.js?v=fe5ab981";
+} from "./market-ws.js?v=22428043";
 
 import {
 applyLiveOhlcBar,
@@ -46,11 +46,15 @@ applyLiveSeriesUpdate,
 ensureOhlcRollover,
 liveBarPeriodSec,
 paintCatchupLiveSeries
-} from "./chart/live-bar-roll.js?v=a1406271";
+} from "./chart/live-bar-roll.js?v=b31f3797";
+
+import {
+alignCandlesToTradePrice
+} from "./chart/kline-trade-scale.js?v=3b0f786d";
 
 import {
 mountWidgetDomCrosshair
-} from "./chart-widget-host.js?v=1cb1cd92";
+} from "./chart-widget-host.js?v=68ec21a9";
 
 function buildBodyHtml(
 showRsi
@@ -1014,6 +1018,12 @@ px <=
 return;
 }
 
+const scaled =
+alignCandlesToTradePrice(
+candles,
+px
+);
+
 const rolled =
 ensureOhlcRollover(
 candles,
@@ -1066,18 +1076,37 @@ candles.length -
 ] =
 bar;
 
+if(
+scaled
+){
+try{
+series.setData(
+buildDisplayCandles()
+);
+}catch{
 applyLiveSeriesUpdate(
 series,
 bar,
 buildDisplayCandles
 );
+}
+}else{
+applyLiveSeriesUpdate(
+series,
+bar,
+buildDisplayCandles
+);
+}
 applyChartPriceFormat(
 series,
 px
 );
 
 if(
-rolled &&
+(
+scaled ||
+rolled
+) &&
 rsiSeries
 ){
 updateRsiData();

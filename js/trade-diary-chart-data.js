@@ -1,6 +1,6 @@
 import {
 getActiveExchangeId
-} from "./market-api.js?v=509a465f";
+} from "./market-api.js?v=a65f5c56";
 
 import {
 getExchangeDefinition
@@ -9,7 +9,7 @@ getExchangeDefinition
 import {
 getLoadedTradeExchangeModules,
 loadTradeExchangeModules
-} from "./trade/module-router.js?v=bfc448df";
+} from "./trade/module-router.js?v=72335742";
 
 export const DIARY_CHART_TFS =
 Object.freeze([

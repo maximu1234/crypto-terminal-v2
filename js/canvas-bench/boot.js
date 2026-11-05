@@ -6,11 +6,11 @@
 
 import {
 loadBybitHistory
-} from "../api.js?v=f60e2536";
+} from "../api.js?v=d2a5a6fe";
 
 import {
 subscribeKline
-} from "../ws.js?v=410efbcd";
+} from "../ws.js?v=a3fc2075";
 
 import {
 CandleBenchChart

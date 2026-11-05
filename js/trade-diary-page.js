@@ -9,7 +9,7 @@ import {
 import {
   getLoadedTradeExchangeModules,
   loadTradeExchangeModules
-} from "./trade/module-router.js?v=bfc448df";
+} from "./trade/module-router.js?v=72335742";
 
 import {
   installWebTradingShell
@@ -17,7 +17,7 @@ import {
 
 import {
   setActiveExchangeId
-} from "./market-api.js?v=509a465f";
+} from "./market-api.js?v=a65f5c56";
 
 import {
   mountMoexUnavailableStub

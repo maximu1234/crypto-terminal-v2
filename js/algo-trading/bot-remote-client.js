@@ -411,7 +411,7 @@ const {
 exportAuthSessionTransferString
 } =
 await import(
-"../cloud-sync.js?v=ff9a07ad"
+"../cloud-sync.js?v=bd55c825"
 );
 transfer =
 await exportAuthSessionTransferString();

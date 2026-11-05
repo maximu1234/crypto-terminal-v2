@@ -4,12 +4,12 @@
 import {
 scanAlgoStrategyUniverse,
 normalizeAlgoScanStrategyId
-} from "./strategy-universe-scan.js?v=99572338";
+} from "./strategy-universe-scan.js?v=ed215b35";
 
 import {
 normalizeAlgoScanTf,
 ALGO_TICKER_SCAN_TF
-} from "./ticker-scanner.js?v=651d60a9";
+} from "./ticker-scanner.js?v=4e72e31f";
 
 import {
 normalizeAlgoStatsMode

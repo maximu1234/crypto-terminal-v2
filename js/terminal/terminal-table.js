@@ -18,18 +18,18 @@ import {
 isActiveRealtimeMarketDataset,
 isExchangeTradingEnabled,
 peekMarketQuote
-} from "../market-api.js?v=509a465f";
+} from "../market-api.js?v=a65f5c56";
 
 import {
 connectKlineStream,
 subscribeTicker,
 bindLiveCandleCatchup
-} from "../market-ws.js?v=fe5ab981";
+} from "../market-ws.js?v=22428043";
 
 import {
 connectTickerStream,
 fetchTickersInto
-} from "../tickers.js?v=c8d3e2ba";
+} from "../tickers.js?v=094c36f5";
 
 import {
 createTickerUiBatcher
@@ -37,7 +37,7 @@ createTickerUiBatcher
 
 import {
 processAlertCandle
-} from "../alert-monitor.js?v=69465799";
+} from "../alert-monitor.js?v=b26b4301";
 
 import {
 getFavoriteGroup,
@@ -54,7 +54,11 @@ applyLiveOhlcBar,
 ensureOhlcRollover,
 liveBarPeriodSec,
 paintCatchupLiveSeries
-} from "../chart/live-bar-roll.js?v=a1406271";
+} from "../chart/live-bar-roll.js?v=b31f3797";
+
+import {
+alignCandlesToTradePrice
+} from "../chart/kline-trade-scale.js?v=3b0f786d";
 
 import {
 canonicalChartSymbol,
@@ -96,7 +100,7 @@ isTradePage
 ){
 const tradePositions =
 await import(
-"../trade-open-positions.js?v=b6acf8ce"
+"../trade-open-positions.js?v=1342b42c"
 );
 hasOpenPosition =
 tradePositions.hasOpenPosition;
@@ -685,6 +689,8 @@ let liveTickerUnsub =
 null;
 let livePriceFlushTimer =
 null;
+let liveLinePaintFrame =
+0;
 let liveBarRollTimer =
 null;
 const LIVE_CHART_PAINT_MS =
@@ -899,6 +905,19 @@ flushPendingLiveBar();
 return;
 }
 
+/*
+ * Линия и плашка — в следующем кадре, по последнему тику.
+ * Таймер ниже только дорисовывает RSI, линию он не держит.
+ */
+if(
+!liveLinePaintFrame
+){
+liveLinePaintFrame =
+requestAnimationFrame(
+flushLiveLineFrame
+);
+}
+
 if(
 !livePriceFlushTimer
 ){
@@ -908,6 +927,30 @@ flushPendingLiveBar,
 LIVE_CHART_PAINT_MS
 );
 }
+
+}
+
+function flushLiveLineFrame(){
+
+liveLinePaintFrame =
+0;
+const bar =
+pendingLiveBar;
+const barSymbol =
+pendingLiveBarSymbol;
+
+if(
+!bar ||
+!canPaintLiveChartBar(
+barSymbol
+)
+){
+return;
+}
+
+paintLiveChartBar(
+bar
+);
 
 }
 
@@ -939,6 +982,12 @@ px <=
 ){
 return;
 }
+
+const scaled =
+alignCandlesToTradePrice(
+coinsState().candles,
+px
+);
 
 rollLiveBarsIfNeeded();
 
@@ -1007,6 +1056,14 @@ coinsState().candles.length -
 1
 ] =
 bar;
+
+if(
+scaled
+){
+hooks.repaintScaledCandles?.();
+return;
+}
+
 scheduleLiveChartPaint(
 bar,
 sourceSymbol,
@@ -1045,6 +1102,16 @@ livePriceFlushTimer
 );
 livePriceFlushTimer =
 null;
+}
+
+if(
+liveLinePaintFrame
+){
+cancelAnimationFrame(
+liveLinePaintFrame
+);
+liveLinePaintFrame =
+0;
 }
 
 if(

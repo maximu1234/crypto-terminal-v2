@@ -12,7 +12,7 @@ loadMarketHistory,
 getActiveExchangeId,
 getActiveExchangeDefinition,
 EXCHANGE_CHANGED_EVENT
-} from "./market-api.js?v=509a465f";
+} from "./market-api.js?v=a65f5c56";
 
 import {
 peekHistoryCache,
@@ -23,7 +23,7 @@ logicalIndexShift
 
 import {
 clearBybitNetworkIssue
-} from "./bybit-network-ui.js?v=53205698";
+} from "./bybit-network-ui.js?v=422fbeb0";
 
 import {
 buildAlertChartUrl
@@ -31,7 +31,7 @@ buildAlertChartUrl
 
 import {
 isLocalDevHost
-} from "./bybit-fetch.js?v=329c7b6c";
+} from "./bybit-fetch.js?v=a72b26f0";
 
 import {
 applyChartPriceFormat,
@@ -42,7 +42,7 @@ createRSIChart,
 updateRsiBandLayout,
 updateRsiLevelLinesLayout,
 linkPairedChartTimeScales
-} from "./chart-import.js?v=4d760669";
+} from "./chart-import.js?v=4b191e60";
 
 import {
 formatPrice
@@ -63,22 +63,22 @@ getScreenerWidgetOscillator,
 isScreenerHistogramOscillator,
 setScreenerAoData,
 setScreenerMacdData
-} from "./screener-widget-oscillator.js?v=ff5874cd";
+} from "./screener-widget-oscillator.js?v=1148c6cc";
 
 import {
 createDashboardChartWidget,
 mountDashboardChartInteractions
-} from "./chart-widget-host.js?v=1cb1cd92";
+} from "./chart-widget-host.js?v=68ec21a9";
 
 import {
 mountWidgetTabletChart
-} from "./tablet-widget-chart.js?v=4402fcb6";
+} from "./tablet-widget-chart.js?v=362f978a";
 
 import {
 subscribeKline,
 subscribeTicker,
 bindLiveCandleCatchup
-} from "./market-ws.js?v=fe5ab981";
+} from "./market-ws.js?v=22428043";
 
 import {
 applyLiveLastPriceToCandles,
@@ -89,7 +89,7 @@ lastOhlcBar,
 liveBarPeriodSec,
 paintCatchupLiveSeries,
 paintLiveOhlcSeries
-} from "./chart/live-bar-roll.js?v=a1406271";
+} from "./chart/live-bar-roll.js?v=b31f3797";
 
 import {
 getWidgetToolbarHtml,
@@ -106,7 +106,7 @@ ensureDrawToolsVisible
 
 import {
 preloadTradingSymbols
-} from "./symbol-autocomplete.js?v=26c93622";
+} from "./symbol-autocomplete.js?v=29ddbb1a";
 
 import {
 loadLightweightCharts
@@ -121,7 +121,7 @@ getWidgetFlagHtml,
 wireWidgetFlagUi,
 updateWidgetFlagUi,
 bindWidgetFlagGlobalListeners
-} from "./widget-favorite-flag.js?v=af11ead1";
+} from "./widget-favorite-flag.js?v=6ae3d1d6";
 
 function escapeHtml(
 value
@@ -194,7 +194,7 @@ return;
 
 const mod =
 await import(
-"./trade-widget-mount.js?v=c947eebc"
+"./trade-widget-mount.js?v=a389aa77"
 );
 
 mountTradeOnDashboardWidget =
@@ -1297,7 +1297,7 @@ widget.classList.add(
 "widget-chart-empty"
 );
 
-void import("./bybit-network-ui.js?v=53205698").then(
+void import("./bybit-network-ui.js?v=422fbeb0").then(
 m=>{
 m.showBybitNetworkIssue(
 new Error(
@@ -1397,7 +1397,8 @@ return;
 
 const {
 rolled,
-bar
+bar,
+scaled
 } =
 applyLiveLastPriceToCandles(
 candles,
@@ -1411,6 +1412,23 @@ tf
 if(
 !bar
 ){
+return;
+}
+
+if(
+scaled
+){
+series.setData(
+candles
+);
+applyChartPriceFormat(
+series,
+bar.close
+);
+updateTerminalWidgetRsiData(
+entry
+);
+priceHudCtrl?.refresh?.();
 return;
 }
 

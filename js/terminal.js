@@ -6,7 +6,7 @@
  */
 import {
 quoteLiveBar
-} from "./chart/btc-quote.js?v=724c8d74";
+} from "./chart/btc-quote.js?v=7996cc43";
 
 import {
 loadMarketHistory,
@@ -20,7 +20,7 @@ getActiveExchangeMarkets,
 getActiveExchangeId,
 getActiveExchangeDefinition,
 EXCHANGE_CHANGED_EVENT
-} from "./market-api.js?v=509a465f";
+} from "./market-api.js?v=a65f5c56";
 
 import {
 peekHistoryCache,
@@ -36,7 +36,7 @@ slowHistoryPageLimit
 
 import {
 clearBybitNetworkIssue
-} from "./bybit-network-ui.js?v=53205698";
+} from "./bybit-network-ui.js?v=422fbeb0";
 
 import {
 openChromeSurface
@@ -44,12 +44,12 @@ openChromeSurface
 
 import {
 resolveUrlExchangeDeepLink
-} from "./alert-deep-link-exchange.js?v=ad3510f6";
+} from "./alert-deep-link-exchange.js?v=ea95757d";
 
 import {
 defaultRsiPaneSettings,
 normalizeRsiPaneSettings
-} from "./indicators/rsi-pane.js?v=be416893";
+} from "./indicators/rsi-pane.js?v=ce40b028";
 
 import {
 buildChartRsiPoints
@@ -70,18 +70,18 @@ seedWatchlistTfOnBlueFlag
 
 import {
 ensureCloudReady
-} from "./auth-ui.js?v=bcb960d3";
+} from "./auth-ui.js?v=9cef4da1";
 
 import {
 getActiveAlerts,
 isMacdAlert,
 isRsiAlert
-} from "./alerts.js?v=3a9b715d";
+} from "./alerts.js?v=2caff065";
 
 import {
 persistFavoritesToCloud,
 onFavoritesRemoteUpdate
-} from "./cloud-sync.js?v=ff9a07ad";
+} from "./cloud-sync.js?v=bd55c825";
 
 import {
 createCandlestickChart,
@@ -112,7 +112,7 @@ appendFutureWhitespaceBars,
 applyCoinsChartViewport,
 refreshCoinsChartBarSpacing,
 tfPeriodSec
-} from "./chart-import.js?v=4d760669";
+} from "./chart-import.js?v=4b191e60";
 
 import {
 terminalVisibleBars,
@@ -126,17 +126,17 @@ TERMINAL_HISTORY_LAZY_BATCH_BARS
 
 import {
 mountCoinsTabletController
-} from "./terminal-tablet-controller.js?v=484552d7";
+} from "./terminal-tablet-controller.js?v=72db21df";
 
 import {
 disconnectKlineStream
-} from "./market-ws.js?v=fe5ab981";
+} from "./market-ws.js?v=22428043";
 
 import {
 syncBackgroundAlertStreams,
 onMacdSeriesUpdate,
 onRsiSeriesUpdate
-} from "./alert-monitor.js?v=69465799";
+} from "./alert-monitor.js?v=b26b4301";
 
 import {
 createSharedDrawUndoStack
@@ -160,7 +160,7 @@ mountChartSnapshot
 
 import {
 mountChartSymbolFullName
-} from "./symbol-display-name.js?v=7b2a3b0b";
+} from "./symbol-display-name.js?v=0fc577a5";
 
 import {
 perfMark,
@@ -208,18 +208,18 @@ mountCoinsScaleInvertMenu
 
 import {
 mountTerminalDrawChrome
-} from "./terminal/terminal-draw-chrome.js?v=035681f6";
+} from "./terminal/terminal-draw-chrome.js?v=92dd6ae2";
 
 
 
 import {
 stopTickerStream
-} from "./tickers.js?v=c8d3e2ba";
+} from "./tickers.js?v=094c36f5";
 
 import {
 mountCoinsListRefreshControls,
 applyCoinsListRefreshInterval
-} from "./terminal-list-refresh.js?v=4d79e0d3";
+} from "./terminal-list-refresh.js?v=7095d2d7";
 
 import {
 readCoinsPrefs,
@@ -233,11 +233,11 @@ applyCoinsPrefs,
 applySortForCurrentMarket,
 readUrlParams,
 readLastViewForExchange
-} from "./terminal/terminal-prefs.js?v=4b100193";
+} from "./terminal/terminal-prefs.js?v=20320277";
 
 import {
 mountDesktopOpenChartHandler
-} from "./desktop-open-chart.js?v=94444294";
+} from "./desktop-open-chart.js?v=e3450372";
 
 import {
 getCurrentSymbols,
@@ -255,7 +255,7 @@ setCoinsTableHooks,
 syncCoinListFreezeFromFlagMenus,
 getExtraCoinMarkets,
 isExtraCoinMarket
-} from "./terminal/terminal-table.js?v=c404e42f";
+} from "./terminal/terminal-table.js?v=269f4a56";
 
 import {
 createCoinsChartSwitchVeil
@@ -270,7 +270,7 @@ syncCoinsChartLinkedViewports,
 resizeCharts,
 scheduleResizeCharts,
 applyDefaultZoom
-} from "./terminal/terminal-chart-layout.js?v=10b2678c";
+} from "./terminal/terminal-chart-layout.js?v=c9f3804a";
 
 import {
 isTerminalReplayActive,
@@ -286,7 +286,7 @@ import {
 initTerminalMultiChart,
 syncPrimaryTfToLayout,
 isTerminalMultiChartLayout
-} from "./terminal-multi-chart.js?v=6cc2dbf9";
+} from "./terminal-multi-chart.js?v=1a9e7bd2";
 
 import {
 mountTerminalLayoutPicker
@@ -303,7 +303,7 @@ saveChartDisplayStyle
 
 import {
 createPriceSeriesHost
-} from "./chart/price-series-host.js?v=1bb8fd85";
+} from "./chart/price-series-host.js?v=579c4113";
 
 import {
 CHART_PRICE_SCALE_MODE_LOGARITHMIC,
@@ -334,7 +334,7 @@ loadVisibleTerminalHistory as loadVisibleTerminalHistoryMoved,
 applyMergedTerminalCandles as applyMergedTerminalCandlesMoved,
 settleTerminalHistoryAfterPaint as settleTerminalHistoryAfterPaintMoved,
 bindTerminalHistoryLazyLoad as bindTerminalHistoryLazyLoadMoved
-} from "./terminal/terminal-history.js?v=22605769";
+} from "./terminal/terminal-history.js?v=14156a86";
 import {
 allCoinsDrawTools as allCoinsDrawToolsMoved,
 scheduleCoinsDrawRedraw as scheduleCoinsDrawRedrawMoved,
@@ -435,7 +435,7 @@ syncCoinsMarketFilterOptions as syncCoinsMarketFilterOptionsMoved,
 handleExchangeChanged as handleExchangeChangedMoved,
 refreshCoinsMarketUi as refreshCoinsMarketUiMoved,
 syncTerminalAlgoEarlyT3List as syncTerminalAlgoEarlyT3ListMoved
-} from "./terminal/terminal-coins-page.js?v=0341d9dd";
+} from "./terminal/terminal-coins-page.js?v=8874110c";
 let terminalAlgoEarlyT3ListMod =
 null;
 
@@ -3112,7 +3112,7 @@ window.cryptoTerminalDesktop?.isDesktop ||
 window.cryptoTerminalDesktop?.webTrading
 ){
 void import(
-"./script-terminal-status.js?v=dfdee5f9"
+"./script-terminal-status.js?v=7658f1f6"
 ).then(
 m=>
 m.mountScriptTerminalStatus?.()
@@ -3130,7 +3130,7 @@ if(
 shouldRunScriptBackgroundJobs()
 ){
 void import(
-"./script-scan-background.js?v=68f03788"
+"./script-scan-background.js?v=24e8ef5b"
 ).then(
 m=>
 m.resumeScriptScanBackgroundJob?.()
@@ -3470,6 +3470,40 @@ syncCoinsChartTurnover24(
 item.symbol
 );
 },
+repaintScaledCandles(){
+if(isTerminalReplayActive()){
+return;
+}
+const display =
+buildChartDisplayCandles();
+runWithPreservedVisibleLogicalRange(
+chart,
+()=>{
+try{
+candleSeries.setData(
+display
+);
+}catch{
+/* ignore */
+}
+}
+);
+const last =
+display[
+display.length -
+1
+];
+applyChartPriceFormat(
+candleSeries,
+last?.close ??
+1
+);
+rebuildRsiFromCandles();
+chartIndicators?.notifyCandlesUpdate?.();
+syncLiveChartOverlays(
+last
+);
+},
 applyChartLiveCandle(
 bar
 ){
@@ -3518,6 +3552,7 @@ painted?.close ??
 syncLiveChartOverlays(
 painted
 );
+priceHudCtrl.refresh?.();
 }
 });
 

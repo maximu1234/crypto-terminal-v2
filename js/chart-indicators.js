@@ -254,16 +254,16 @@ createIndicatorSettingsDialog
 await Promise.all(
 [
 import(
-"./indicators/rsi-pane.js?v=be416893"
+"./indicators/rsi-pane.js?v=ce40b028"
 ),
 import(
 "./indicators/volume-pane.js?v=4072f277"
 ),
 import(
-"./indicators/ao-pane.js?v=399a4784"
+"./indicators/ao-pane.js?v=6049ea01"
 ),
 import(
-"./indicators/macd-pane.js?v=84bece76"
+"./indicators/macd-pane.js?v=f0af4a5f"
 ),
 import(
 "./indicators/moving-average.js?v=7b8af22e"
@@ -286,7 +286,7 @@ createPattern12IndicatorOverride
 "./indicators/pattern-12.js?v=4570161f"
 ),
 import(
-"./indicators/horizontal-volume.js?v=191fcaeb"
+"./indicators/horizontal-volume.js?v=d1bbc0a9"
 ),
 import(
 "./indicators/volume-bubbles.js?v=27daa08e"

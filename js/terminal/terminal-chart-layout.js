@@ -7,7 +7,7 @@ computeChartFutureMarginBars,
 computeCoinsChartViewportPlan,
 equalizeLinkedPanePriceScales,
 syncLinkedChartTimescales
-} from "../chart-import.js?v=4d760669";
+} from "../chart-import.js?v=4b191e60";
 
 import {
 terminalVisibleBars,
@@ -16,7 +16,7 @@ TERMINAL_VISIBLE_BARS
 
 import {
 quoteCandlesToBtc
-} from "../chart/btc-quote.js?v=724c8d74";
+} from "../chart/btc-quote.js?v=7996cc43";
 
 import {
 isChartLayoutReady,

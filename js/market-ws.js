@@ -11,7 +11,7 @@ subscribeKline as subscribeBybitKline,
 subscribeTicker as subscribeBybitTicker,
 connectKlineStream as connectBybitKlineStream,
 disconnectKlineStream as disconnectBybitKlineStream
-} from "./ws.js?v=410efbcd";
+} from "./ws.js?v=a3fc2075";
 
 import {
 subscribeBingxKline,
@@ -19,17 +19,17 @@ subscribeBingxTicker,
 connectBingxKlineStream,
 disconnectBingxKlineStream,
 shutdownBingxWs
-} from "./exchanges/bingx/ws.js?v=5ec08b95";
+} from "./exchanges/bingx/ws.js?v=7e674a03";
 
 import {
 bindLiveCandleCatchup,
 installMarketWsResume
-} from "./market-ws-resume.js?v=9aabc188";
+} from "./market-ws-resume.js?v=bcf5f880";
 
 import {
 subscribeMoexKline,
 subscribeMoexTicker
-} from "./moex-live-poll.js?v=de9d76e0";
+} from "./moex-live-poll.js?v=0b9b31bb";
 
 let boundExchangeListener =
 false;

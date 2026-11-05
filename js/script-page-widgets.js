@@ -13,13 +13,13 @@ linkPairedChartTimeScales,
 SCREENER_PAGE_MAX_BARS,
 SCREENER_PAGE_VISIBLE_BARS,
 SCREENER_PAGE_HISTORY_REQUESTS
-} from "./chart-import.js?v=4d760669";
+} from "./chart-import.js?v=4b191e60";
 
 import {
 loadMarketHistory,
 getActiveExchangeId,
 getExchangeDefinition
-} from "./market-api.js?v=509a465f";
+} from "./market-api.js?v=a65f5c56";
 
 import {
 calculateRSI,
@@ -29,7 +29,7 @@ alignRsiWithCandleTimes
 import {
 subscribeKline,
 bindLiveCandleCatchup
-} from "./market-ws.js?v=fe5ab981";
+} from "./market-ws.js?v=22428043";
 
 import {
 ensureOhlcRollover,
@@ -38,11 +38,11 @@ lastOhlcBar,
 liveBarPeriodSec,
 paintCatchupLiveSeries,
 paintLiveOhlcSeries
-} from "./chart/live-bar-roll.js?v=a1406271";
+} from "./chart/live-bar-roll.js?v=b31f3797";
 
 import {
 fetchTickersInto
-} from "./tickers.js?v=c8d3e2ba";
+} from "./tickers.js?v=094c36f5";
 
 import {
 isScreenerWidgetCurrent as isWidgetCurrentGuard
@@ -57,7 +57,7 @@ getWidgetFlagHtml,
 wireWidgetFlagUi,
 updateWidgetFlagUi,
 bindWidgetFlagGlobalListeners
-} from "./widget-favorite-flag.js?v=af11ead1";
+} from "./widget-favorite-flag.js?v=6ae3d1d6";
 
 const SCRIPT_MAX_CONCURRENT_CHART_LOADS =
 4;
@@ -83,7 +83,7 @@ if(
 ){
 scriptZoomModulePromise =
 import(
-"./screener-widget-zoom.js?v=698ee2af"
+"./screener-widget-zoom.js?v=82773c09"
 ).then(
 mod=>{
 refreshZoomFavoriteUi =
@@ -104,7 +104,7 @@ return scriptZoomModulePromise;
 import {
 PATTERN_SCAN_TF_LABELS,
 PATTERN_SCAN_SIDE_LABELS
-} from "./pattern-12-scanner.js?v=c296527e";
+} from "./pattern-12-scanner.js?v=3caee35d";
 
 let patternOverlayApi =
 null;

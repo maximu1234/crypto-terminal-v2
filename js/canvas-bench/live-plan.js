@@ -76,6 +76,13 @@ return "live";
 
 }
 
+/** Видимый тик рисуем сразу. Ожидание полного кадра линию не держит. */
+export function paintsLiveTick(kind){
+
+return kind === "live" || kind === "rebuild";
+
+}
+
 export function candleX(
 index,
 lastIndex,

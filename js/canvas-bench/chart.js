@@ -10,11 +10,12 @@ candleX,
 rightGapPx,
 clampPan,
 liveUpdateKind,
+paintsLiveTick,
 panForAnchor,
 scaleFromCandles,
 visibleIndexSpan,
 zoomOutFloorSpacing
-} from "./live-plan.js?v=scale-pan4";
+} from "./live-plan.js?v=scale-pan7";
 
 import {
 PRICE_SCALE_LOG,
@@ -379,18 +380,28 @@ prev.volume = Number(next.volume);
 }
 }
 
-if(
-kind === "store" ||
-this.queued
-){
+/*
+ * Очередь полного кадра не должна глотать тик: плашка читает
+ * уже новую цену, а линия оставалась на старом кадре.
+ */
+if(paintsLiveTick(kind)){
+this.paintLive();
+this.counts.live++;
+this.onLive?.();
+}
+
+if(kind === "store"){
 this.note();
 return kind;
 }
 
 if(kind === "live"){
-this.paintLive();
-this.counts.live++;
-this.onLive?.();
+this.note();
+return kind;
+}
+
+if(this.queued){
+this.rebuildWanted = true;
 this.note();
 return kind;
 }
@@ -431,33 +442,43 @@ x <= this.layout.plotRight
 
 scheduleRebuild(){
 
+this.rebuildWanted = true;
+
 if(this.queued){
 return;
 }
 
 this.queued = true;
-const token =
-{};
-this.rebuildToken = token;
+let ran =
+false;
 
 const run =
 ()=>{
 
-if(this.rebuildToken !== token){
+if(ran){
 return;
 }
 
-this.rebuildToken = null;
+ran = true;
 this.queued = false;
+const wanted =
+this.rebuildWanted;
+this.rebuildWanted = false;
+
+if(wanted){
 this.rebuild();
+}
+
+if(this.rebuildWanted){
+this.scheduleRebuild();
+}
 
 };
 
 /*
  * Пока окно не в фокусе, кадр анимации не вызывается.
- * Потерянный колбэк оставлял queued навсегда, и тики
- * переставали рисоваться до перезагрузки страницы.
- * Таймер срабатывает и в фоне.
+ * Таймер всё равно дорисовывает кадр. Первый из двух
+ * вызовов делает работу, второй уже ничего не повторяет.
  */
 if(typeof requestAnimationFrame === "function"){
 requestAnimationFrame(run);

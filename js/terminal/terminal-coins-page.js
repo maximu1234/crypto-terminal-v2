@@ -11,7 +11,7 @@ lastOhlcClose,
 quoteCandlesToBtc,
 setBtcQuoteActive,
 syncBtcQuoteLive
-} from "../chart/btc-quote.js?v=724c8d74";
+} from "../chart/btc-quote.js?v=7996cc43";
 
 /**
  * Closure slice. `host` is the surrounding function's bindings.
@@ -3009,6 +3009,50 @@ host.priceHudCtrl.refresh?.();
 
 }
 
+function paintedHudCandle(host){
+
+const rows =
+host.candleSeries?.data?.();
+
+if(
+Array.isArray(
+rows
+)
+){
+
+for(
+let i =
+rows.length -
+1;
+i >=
+0;
+i--
+){
+
+const close =
+Number(
+rows[i]?.close
+);
+
+if(
+Number.isFinite(
+close
+)
+){
+return rows[i];
+}
+
+}
+
+}
+
+return host.candles[
+host.candles.length -
+1
+];
+
+}
+
 export function startPriceHud(host){
 
 host.priceHudCtrl.stop?.();
@@ -3020,7 +3064,9 @@ series: host.candleSeries,
 wrapEl: host.chartWrapEl,
 getTf: ()=> host.currentTF,
 getLastCandle: ()=>
-host.candles[host.candles.length - 1]
+paintedHudCandle(
+host
+)
 });
 
 }
@@ -4389,7 +4435,7 @@ if(
 ){
 host.terminalAlgoEarlyT3ListMod =
 await import(
-"../algo-trading/terminal-early-t3-list.js?v=54b4fb5c"
+"../algo-trading/terminal-early-t3-list.js?v=3d1e609d"
 );
 }
 host.terminalAlgoEarlyT3ListMod.mountTerminalAlgoEarlyT3List();

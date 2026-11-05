@@ -23,7 +23,7 @@ recordDrawingTombstone
 import {
 EXCHANGE_CHANGED_EVENT,
 loadMarketHistory
-} from "../market-api.js?v=509a465f";
+} from "../market-api.js?v=a65f5c56";
 
 import {
 registerDrawingsStoragePoller,
@@ -50,7 +50,7 @@ ensureDomChartCrosshair,
 hideDomChartCrosshair,
 positionTabletProbeHorizInStack,
 fullCrosshairOptions
-} from "../chart-import.js?v=4d760669";
+} from "../chart-import.js?v=4b191e60";
 
 import {
 STROKE,
@@ -152,7 +152,7 @@ updateChartRulerLabelEl
 
 import {
 mountTabletDrawInput
-} from "../drawings-tablet-input.js?v=4f5f25cc";
+} from "../drawings-tablet-input.js?v=cbdef288";
 
 import {
 cloneDrawingsForUndo,
@@ -161,7 +161,7 @@ createDrawUndoStack
 
 import {
 createDrawDesktopSelection
-} from "./draw-edit-desktop.js?v=80cfff70";
+} from "./draw-edit-desktop.js?v=3b46889b";
 
 import {
 createDrawingsPersist
@@ -169,15 +169,15 @@ createDrawingsPersist
 
 import {
 createDrawStyleBar
-} from "./draw-style-bar.js?v=6f0c7705";
+} from "./draw-style-bar.js?v=cd18bfbc";
 
 import {
 createDrawAlertsChart
-} from "./draw-alerts-chart.js?v=7007f173";
+} from "./draw-alerts-chart.js?v=5b8a9d65";
 
 import {
 createDrawPlacement
-} from "./draw-placement.js?v=823d5a21";
+} from "./draw-placement.js?v=4b2e0f23";
 
 import {
 createDrawTextEditor,
@@ -206,15 +206,15 @@ createBrushPlacement
 
 import {
 createDrawEditInteraction
-} from "./draw-edit-interaction.js?v=3d7c4210";
+} from "./draw-edit-interaction.js?v=59059071";
 
 import {
 createDrawChartInput
-} from "./draw-chart-input.js?v=6d750062";
+} from "./draw-chart-input.js?v=f5210632";
 
 import {
 createDrawPriceScale
-} from "./draw-price-scale.js?v=94a58876";
+} from "./draw-price-scale.js?v=a8c83e74";
 
 import {
 createDrawRedrawLoop
@@ -3453,7 +3453,7 @@ lastChartAlertsPullMs =
 Date.now();
 
 void import(
-"../alerts-cloud-sync.js?v=54c7f527"
+"../alerts-cloud-sync.js?v=00c6f4fb"
 ).then(
 ({ pullRegistryFromCloudNow })=>
 pullRegistryFromCloudNow({

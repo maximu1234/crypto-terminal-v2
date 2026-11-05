@@ -21,12 +21,20 @@ import {
   candleX,
   clampPan,
   liveUpdateKind,
+  paintsLiveTick,
   panForAnchor,
   scaleFromCandles,
   zoomOutFloorSpacing
 } from "../js/canvas-bench/live-plan.js";
 
 const scale = { min: 90, max: 110 };
+
+test("a visible tick is painted even while a full frame is waiting", () => {
+  assert.equal(paintsLiveTick("live"), true);
+  assert.equal(paintsLiveTick("rebuild"), true);
+  assert.equal(paintsLiveTick("store"), false);
+  assert.equal(paintsLiveTick("skip"), false);
+});
 
 test("identical candle is not a paint", () => {
   const candle = {

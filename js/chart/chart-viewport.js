@@ -4,7 +4,7 @@ effectiveChartPriceScaleWidth
 
 import {
 liveBarPeriodSec
-} from "./live-bar-roll.js?v=a1406271";
+} from "./live-bar-roll.js?v=b31f3797";
 
 /** Свечей в видимой области (плотный обзор). */
 export const SCREENER_VISIBLE_BARS = 1500;

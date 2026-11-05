@@ -26,7 +26,7 @@ registerCandleSeries
 
 import {
 liveBarPeriodSec
-} from "./live-bar-roll.js?v=a1406271";
+} from "./live-bar-roll.js?v=b31f3797";
 
 import {
 withChartLocalTime
@@ -38,7 +38,7 @@ attachChartWheelDeadband
 
 import {
 createCanvasLwChart
-} from "./canvas-lw-host.js?v=2735ea3d";
+} from "./canvas-lw-host.js?v=ce59b975";
 
 import {
 ensureDomChartCrosshair,
@@ -338,12 +338,12 @@ restoreScreenerViewport,
 applyScreenerZoom,
 tfPeriodSec,
 rsiPlotTimeOffsetSec
-} from "./chart-viewport.js?v=37de317b";
+} from "./chart-viewport.js?v=3748d050";
 
 import {
 copyVisibleTimeRange,
 tfPeriodSec
-} from "./chart-viewport.js?v=37de317b";
+} from "./chart-viewport.js?v=3748d050";
 
 
 
@@ -1740,7 +1740,7 @@ lineEl.classList.remove(
 
 export {
 linkChartsCrosshair
-} from "./chart-crosshair-link.js?v=d99cb426";
+} from "./chart-crosshair-link.js?v=1f18e5f6";
 
 
 

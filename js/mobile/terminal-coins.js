@@ -6,10 +6,10 @@ import {
   loadMarketSymbols,
   peekMarketSymbolsCache,
   buildMarketLists
-} from "../market-api.js?v=509a465f";
+} from "../market-api.js?v=a65f5c56";
 import {
   fetchTickersInto
-} from "../tickers.js?v=c8d3e2ba";
+} from "../tickers.js?v=094c36f5";
 import {
   filterSymbolsByMinVolume,
   normalizeMinVolume,

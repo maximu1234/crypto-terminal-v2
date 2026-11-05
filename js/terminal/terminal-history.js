@@ -4,7 +4,7 @@ isBtcQuoteActive,
 lastOhlcClose,
 setBtcQuoteActive,
 syncBtcQuoteLive
-} from "../chart/btc-quote.js?v=724c8d74";
+} from "../chart/btc-quote.js?v=7996cc43";
 
 import {
 stopTerminalReplay,
@@ -18,6 +18,62 @@ isPreservingVisibleLogicalRange,
 isTerminalHistoryLazyLoadSuppressed,
 noteHealthyVisibleLogicalRange
 } from "../chart-visible-range.js?v=543a2459";
+
+import {
+marketMap
+} from "./terminal-state.js?v=4747a92f";
+
+import {
+alignCandlesToTradePrice,
+rebaseMergedCandles
+} from "../chart/kline-trade-scale.js?v=3b0f786d";
+
+function listedTradePrice(
+symbol
+){
+
+const raw =
+String(
+symbol ||
+""
+);
+const candidates =
+[
+raw,
+raw.replace(
+/\.P$/i,
+""
+),
+raw.endsWith(
+".P"
+)
+? raw
+: `${raw}.P`
+];
+
+for(
+const key of candidates
+){
+
+const px =
+Number(
+marketMap.get(
+key
+)?.price
+);
+
+if(
+px >
+0
+){
+return px;
+}
+
+}
+
+return 0;
+
+}
 
 /**
  * Closure slice. `host` is the surrounding function's bindings.
@@ -145,7 +201,7 @@ if(
 host.isTradePage
 ){
 void import(
-"../trade-volume-presets.js?v=268bf0dc"
+"../trade-volume-presets.js?v=21f9cc27"
 ).then(
 ({
 switchTradeVolumeSymbol
@@ -213,6 +269,12 @@ return;
 }
 
 host.candles = nextCandles;
+alignCandlesToTradePrice(
+host.candles,
+listedTradePrice(
+symbol
+)
+);
 
 if(
 host.candles.length &&
@@ -263,7 +325,7 @@ host.currentDataset
 )
 ){
 
-void import("../bybit-network-ui.js?v=53205698").then(m=>{
+void import("../bybit-network-ui.js?v=422fbeb0").then(m=>{
 m.showBybitNetworkIssue(
 new Error(
 `История свечей ${host.getActiveExchangeDefinition().name} пуста`
@@ -713,6 +775,12 @@ rangeAtStart;
 
 bumpVisibleRangeRestoreGeneration();
 
+merged =
+rebaseMergedCandles(
+host.candles,
+merged
+);
+
 host.candles =
 merged;
 
@@ -931,6 +999,11 @@ return;
 
 const previous =
 host.candles;
+merged =
+rebaseMergedCandles(
+previous,
+merged
+);
 const shift =
 host.logicalIndexShift(
 previous,

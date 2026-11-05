@@ -1,6 +1,6 @@
 import {
 fetchBybit
-} from "./bybit-fetch.js?v=329c7b6c";
+} from "./bybit-fetch.js?v=a72b26f0";
 
 import {
 fetchTwelveTimeSeries

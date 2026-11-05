@@ -1,13 +1,13 @@
 import {
 getBybitWsUrl,
 rotateBybitWsEndpoint
-} from "./bybit-fetch.js?v=329c7b6c";
+} from "./bybit-fetch.js?v=a72b26f0";
 
 import {
 collectKlineRows,
 queueKlineByTime,
 takeQueuedKlinesSorted
-} from "./chart/live-bar-roll.js?v=a1406271";
+} from "./chart/live-bar-roll.js?v=b31f3797";
 
 import {
 planPublicTopicLiveness

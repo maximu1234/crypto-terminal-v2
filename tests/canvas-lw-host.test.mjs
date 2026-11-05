@@ -36,6 +36,21 @@ function engineAt(panPx, barSpacing = 8, ratio = 0) {
   };
 }
 
+test("a live candle still reaches its bar when future slots sit on the right", () => {
+  const rows = [
+    { time: 100, open: 1, high: 2, low: 0.5, close: 1.5 },
+    { time: 160, open: 1.5, high: 2, low: 1, close: 1.8 },
+    { time: 220 },
+    { time: 280 }
+  ];
+  const bar = { time: 160, open: 1.5, high: 3, low: 1, close: 2.4 };
+  assert.equal(placeSeriesPoint(rows, bar), true);
+  assert.equal(rows[1].close, 2.4);
+  assert.equal(rows.length, 4);
+  assert.equal(rows[2].close, undefined);
+  assert.equal(rows[3].time, 280);
+});
+
 test("indicator update lands on its bar when future slots are already appended", () => {
   const rows = [
     { time: 100, value: 40 },
