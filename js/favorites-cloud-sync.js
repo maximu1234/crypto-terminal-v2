@@ -9,13 +9,13 @@ isCloudApiUsable,
 isCloudAuthError,
 reportCloudAuthFailure,
 tryCloudAuthRecovery
-} from "./cloud-sync.js?v=bd55c825";
+} from "./cloud-sync.js?v=aca47463";
 
 import {
 isFavoritesCloudDisabled,
 isFavoritesAutoCloudDisabled,
 isSupabaseRealtimeDisabled
-} from "./supabase-usage-prefs.js?v=c39811df";
+} from "./supabase-usage-prefs.js?v=4f9c019c";
 
 import {
 getActiveExchangeId

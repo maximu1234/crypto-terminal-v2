@@ -1,3 +1,10 @@
+import {
+isFibType,
+fibShapeLevelXSpan,
+fibShapePriceAtRatio,
+getFibRows
+} from "./fib-spec.js?v=5da57af8";
+
 /**
  * Фигура целиком за видимым окном — её не обводим.
  * Нет границ или неизвестный тип — рисуем, чтобы ничего не пропало.
@@ -10,6 +17,110 @@ return type ===
 "hline" ||
 type ===
 "hray";
+
+}
+
+/*
+ * У фибы уровни 1.25…3 (и <0) выходят за цены якорей 0%/100%.
+ * Отсев только по p1/p2 прятал весь объект, как только жёлтые
+ * опорные линии уезжали за экран, хотя расширения ещё в окне.
+ */
+function pushFibLevelPrices(
+prices,
+shape
+){
+
+if(
+!isFibType(
+shape?.type
+) ||
+!Array.isArray(
+prices
+)
+){
+return;
+}
+
+const rows =
+getFibRows(
+shape
+);
+
+for(
+const row of rows
+){
+
+if(
+!row?.enabled
+){
+continue;
+}
+
+for(
+const logarithmic of [
+false,
+true
+]
+){
+
+const price =
+fibShapePriceAtRatio(
+shape,
+row.v,
+logarithmic
+);
+
+if(
+Number.isFinite(
+price
+)
+){
+prices.push(
+price
+);
+}
+
+}
+
+}
+
+}
+
+function segmentHitsPlot(
+a,
+b,
+left,
+right,
+top,
+bottom
+){
+
+if(
+!a ||
+!b ||
+!Number.isFinite(a.x) ||
+!Number.isFinite(a.y) ||
+!Number.isFinite(b.x) ||
+!Number.isFinite(b.y)
+){
+return false;
+}
+
+const segLeft =
+Math.min(a.x, b.x);
+const segRight =
+Math.max(a.x, b.x);
+const segTop =
+Math.min(a.y, b.y);
+const segBottom =
+Math.max(a.y, b.y);
+
+return !(
+segRight < left ||
+segLeft > right ||
+segBottom < top ||
+segTop > bottom
+);
 
 }
 
@@ -244,6 +355,11 @@ price
 
 }
 
+pushFibLevelPrices(
+prices,
+shape
+);
+
 if(
 !times.length &&
 !prices.length
@@ -312,7 +428,15 @@ finite(
 view.timeTo
 );
 
+/*
+ * Фиба: уровни — горизонтали по цене. Отсев только по времени
+ * прячет их после зума, хотя цены всё ещё в окне. Время для
+ * фибы не отсекаем — span уровней сам заходит на плот.
+ */
 if(
+!isFibType(
+shape.type
+) &&
 timeFrom !=
 null &&
 timeTo !=
@@ -593,6 +717,95 @@ bottom
 return true;
 }
 
+}
+
+/*
+ * Отрезок / фиба пересекает плот, хотя оба якоря уже за краем.
+ * Иначе при зуме фигура пропадает с кадра, но hit-test её ещё
+ * ловит — и под курсором она «проявляется».
+ */
+try{
+
+if(
+shape.p1 &&
+shape.p2 &&
+segmentHitsPlot(
+toXY(shape.p1),
+toXY(shape.p2),
+left,
+right,
+top,
+bottom
+)
+){
+return true;
+}
+
+if(
+isFibType(
+shape.type
+) &&
+shape.p1
+){
+
+const span =
+fibShapeLevelXSpan(
+shape,
+toXY,
+plotW
+);
+
+if(
+span &&
+span.x2 >= 0 &&
+span.x1 <= plotW
+){
+
+const levelPrices =
+[];
+
+pushFibLevelPrices(
+levelPrices,
+shape
+);
+
+for(
+const price of levelPrices
+){
+
+let xy =
+null;
+
+try{
+xy =
+toXY({
+time: shape.p1.time,
+price
+});
+}catch{
+xy =
+null;
+}
+
+if(
+xy &&
+Number.isFinite(
+xy.y
+) &&
+xy.y >= top &&
+xy.y <= bottom
+){
+return true;
+}
+
+}
+
+}
+
+}
+
+}catch{
+/* ignore */
 }
 
 return false;

@@ -9,7 +9,7 @@ parseDrawColor
 
 import {
 isCoarseTouchViewport
-} from "../chart-import.js?v=4b191e60";
+} from "../chart-import.js?v=5baaecc0";
 
 import {
 STROKE,
@@ -27,13 +27,13 @@ isFibType,
 isFibExtType,
 FIB_EXT_TOOL_DEFAULTS_VERSION,
 resolveFibTrendLineColor
-} from "./fib-spec.js?v=5f577f26";
+} from "./fib-spec.js?v=5da57af8";
 
 import {
 setFibPanelCommitHook,
 closeAllFibLineStyleMenus,
 closeAllFibLineWidthMenus
-} from "./fib-portals.js?v=2d6d15fb";
+} from "./fib-portals.js?v=119d1487";
 
 import {
 openChromeSurface,
@@ -59,13 +59,13 @@ calcPositionVolumeUsd
 
 import {
 applyPositionVolumeFromDrawing
-} from "../trade-volume-presets.js?v=21f9cc27";
+} from "../trade-volume-presets.js?v=c5e2d3d4";
 
 import {
 stashDrawingStopsFromDrawing,
 clearDrawingStopsPending,
 hasDrawingStopsPending
-} from "../trade-auto-stops.js?v=21d04d3f";
+} from "../trade-auto-stops.js?v=61234a6f";
 
 import {
 touchShapeRevision
@@ -81,7 +81,7 @@ listTemplatesForType,
 mergeStyleSnapshot,
 saveNamedTemplate,
 deleteTemplateAtIndex
-} from "./draw-templates.js?v=607c5ba2";
+} from "./draw-templates.js?v=a9ae252c";
 
 import {
 isFvpType,
@@ -96,14 +96,14 @@ fillFvpSettingsPanel,
 readFvpSettingsPanel,
 bindFvpSettingsPanel,
 closeFvpColorMenu
-} from "./fixed-volume-profile-settings.js?v=e3dad999";
+} from "./fixed-volume-profile-settings.js?v=44e4a848";
 
 import {
 rectSettingsHtml,
 fillRectSettingsPanel as fillRectSettingsPanelDom,
 readRectSettingsPanel,
 bindRectSettingsPanel
-} from "./draw-rect-settings.js?v=4c8ccbaf";
+} from "./draw-rect-settings.js?v=4c0d3f9f";
 
 import {
 fibSettingsHtml,
@@ -113,13 +113,13 @@ readFibSettingsPanel,
 bindFibSettingsPanel,
 setFibLevelColorButton,
 mergeFibLevelsAfterGlobalChange
-} from "./draw-fib-settings.js?v=fba82cc1";
+} from "./draw-fib-settings.js?v=0cd438c4";
 
 import {
 CHANNEL_DEFAULT_COLOR,
 CHANNEL_TOOL_DEFAULTS_VERSION,
 ensureChannelLevelsVisible
-} from "./channel-spec.js?v=9031b2bf";
+} from "./channel-spec.js?v=e330dd9e";
 
 import {
 channelSettingsHtml,
@@ -127,7 +127,7 @@ mountChannelLevelRows,
 fillChannelSettingsPanel as fillChannelSettingsPanelDom,
 readChannelSettingsPanel,
 bindChannelSettingsPanel
-} from "./draw-channel-settings.js?v=44c96583";
+} from "./draw-channel-settings.js?v=05457f37";
 
 import {
 ELLIOTT_TOOL_DEFAULTS_VERSION,
@@ -137,7 +137,7 @@ isPattern12Draw,
 migrateElliottToolDefaults,
 normalizePattern12TpFlags,
 normalizePattern12TpLevels
-} from "./elliott-spec.js?v=44735be0";
+} from "./elliott-spec.js?v=efb6b06e";
 
 import {
 elliottSettingsHtml,
@@ -145,7 +145,7 @@ fillElliottSettingsPanel as fillElliottSettingsPanelDom,
 readElliottSettingsPanel,
 bindElliottSettingsPanel,
 syncElliottSettingsColor
-} from "./draw-elliott-settings.js?v=4fc046c8";
+} from "./draw-elliott-settings.js?v=2f2bb975";
 
 import {
 hasCoordSettings

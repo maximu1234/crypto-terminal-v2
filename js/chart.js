@@ -49,7 +49,7 @@ isUserCrosshairEvent
 import {
 TABLET_LW_NATIVE_PRICE_SCALE,
 clearTabletProbeCrosshairForChart
-} from "./chart/chart-factory.js?v=924529cc";
+} from "./chart/chart-factory.js?v=0ac80937";
 
 import {
 shouldHandleTabletPriceScalePointer
@@ -98,7 +98,7 @@ coinsTfVisibleBars,
 applyCoinsChartViewport,
 computeCoinsChartViewportPlan,
 refreshCoinsChartBarSpacing
-} from "./chart/chart-factory.js?v=924529cc";
+} from "./chart/chart-factory.js?v=0ac80937";
 
 /* Tablet gestures: import ./chart-tablet-gestures.js only from tablet paths
    (tablet-widget-chart / terminal-tablet-controller) — never re-export here. */

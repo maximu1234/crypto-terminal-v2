@@ -147,3 +147,156 @@ y: -400
 assert.equal(shapeProjectsOnPlot(shape, ()=>null, 200, 100), false);
 
 });
+
+test("a fib stays in the price window after its anchors leave the time range", ()=>{
+
+/*
+ * Короткий fibLevels всё равно мержится с DEFAULT_FIB_SPEC —
+ * явно гасим расширения, иначе v=3 линейно = 200 и «промах»
+ * по 200…300 ломается.
+ */
+const fib = {
+type: "fib",
+p1: { time: 10, price: 20 },
+p2: { time: 20, price: 80 },
+fibLevels: [
+{ v: 0, enabled: true, color: "#facc15" },
+{ v: 0.25, enabled: false },
+{ v: 0.382, enabled: false },
+{ v: 0.5, enabled: true, color: "#ffffff" },
+{ v: 0.618, enabled: false },
+{ v: 0.75, enabled: false },
+{ v: 1, enabled: true, color: "#facc15" },
+{ v: 1.25, enabled: false },
+{ v: 2, enabled: false },
+{ v: 1.5, enabled: false },
+{ v: 2.44, enabled: false },
+{ v: 0.75, enabled: false },
+{ v: 2.5, enabled: false },
+{ v: -0.5, enabled: false },
+{ v: 3, enabled: false },
+{ v: -1.44, enabled: false },
+{ v: -1.44, enabled: false },
+{ v: -2.618, enabled: false }
+]
+};
+const view = {
+timeFrom: 100,
+timeTo: 200,
+priceFrom: 10,
+priceTo: 90
+};
+
+assert.equal(shapeMissesViewport(fib, view), false);
+assert.equal(shapeMissesViewport(fib, {
+...view,
+priceFrom: 200,
+priceTo: 300
+}), true);
+
+/*
+ * Якоря слева от плота: уровни всё равно растягиваются
+ * на весь plotW — и hit-test, и отрисовка их видят.
+ */
+assert.equal(shapeProjectsOnPlot(fib, point=>({
+x: point.time === 10 ? -800 : -700,
+y: 100 - point.price
+}), 200, 100), true);
+
+});
+
+test("fib extension levels keep the object when 0% and 100% leave the price window", ()=>{
+
+/*
+ * Как на ZEC: жёлтые 0/1 около 15…85, а уровни 2…3 уже в зоне
+ * текущей цены. Зум в середину не должен прятать всю фибу.
+ */
+const fib = {
+type: "fib",
+p1: { time: 10, price: 15 },
+p2: { time: 20, price: 85 },
+fibLevels: [
+{ v: 0, enabled: true, color: "#facc15" },
+{ v: 1, enabled: true, color: "#facc15" },
+{ v: 2, enabled: true, color: "#facc15" },
+{ v: 3, enabled: true, color: "#facc15" }
+]
+};
+
+assert.equal(shapeMissesViewport(fib, {
+timeFrom: 1,
+timeTo: 100,
+priceFrom: 200,
+priceTo: 2400
+}), false);
+
+assert.equal(shapeMissesViewport(fib, {
+timeFrom: 1,
+timeTo: 100,
+priceFrom: 5000,
+priceTo: 8000
+}), true);
+
+assert.equal(shapeProjectsOnPlot(fib, (point)=>{
+const price = Number(point.price);
+/* Плот: y 0…100 ↔ цена 2400…200 (как после зума вверх). */
+const y = 100 * (2400 - price) / (2400 - 200);
+return {
+x: point.time === 10 ? -400 : -300,
+y
+};
+}, 200, 100), true);
+
+});
+
+test("fib mid levels stay when only the yellow anchors leave the vertical window", ()=>{
+
+const fib = {
+type: "fib",
+p1: { time: 10, price: 15 },
+p2: { time: 20, price: 85 },
+fibLevels: [
+{ v: 0, enabled: true, color: "#facc15" },
+{ v: 0.5, enabled: true, color: "#ffffff" },
+{ v: 1, enabled: true, color: "#facc15" }
+]
+};
+
+assert.equal(shapeMissesViewport(fib, {
+timeFrom: 1,
+timeTo: 100,
+priceFrom: 40,
+priceTo: 60
+}), false);
+
+assert.equal(shapeProjectsOnPlot(fib, (point)=>{
+const price = Number(point.price);
+/* Окно 40…60: якоря 15/85 за краем, 0.5 ≈ 50 на плоте. */
+const y = 100 * (60 - price) / (60 - 40);
+return {
+x: 80,
+y
+};
+}, 200, 100), true);
+
+});
+
+test("a trendline that only crosses the pane still projects", ()=>{
+
+const line = {
+type: "trendline",
+p1: { time: 1, price: 1 },
+p2: { time: 2, price: 2 }
+};
+
+assert.equal(shapeProjectsOnPlot(line, ()=>({
+x: -50,
+y: 50
+}), 200, 100), false);
+
+assert.equal(shapeProjectsOnPlot(line, point=>({
+x: point.time === 1 ? -40 : 240,
+y: point.time === 1 ? -20 : 120
+}), 200, 100), true);
+
+});

@@ -19,7 +19,7 @@ applyTabletRsiChartOptions,
 SCREENER_PAGE_VISIBLE_BARS,
 SCREENER_PAGE_MAX_BARS,
 SCREENER_PAGE_HISTORY_REQUESTS
-} from "./chart-import.js?v=4b191e60";
+} from "./chart-import.js?v=5baaecc0";
 
 import {
 isIpadWebViewport
@@ -57,7 +57,7 @@ createScreenerMacdChart,
 isScreenerHistogramOscillator,
 setScreenerAoData,
 setScreenerMacdData
-} from "./screener-widget-oscillator.js?v=1148c6cc";
+} from "./screener-widget-oscillator.js?v=3d6f2ed7";
 
 import {
 shouldIgnoreTypingHotkey
@@ -1161,7 +1161,7 @@ const {
 mountWidgetTabletChart
 } =
 await import(
-"./tablet-widget-chart.js?v=362f978a"
+"./tablet-widget-chart.js?v=4391af9b"
 );
 
 if(

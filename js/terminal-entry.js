@@ -7,7 +7,7 @@
  */
 import {
 jsUrl
-} from "./asset-manifest.js?v=1b01a6b7";
+} from "./asset-manifest.js?v=5beb29a7";
 
 await import(
 jsUrl(

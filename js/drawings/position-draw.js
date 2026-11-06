@@ -32,7 +32,7 @@ formatPositionPrice
 
 import {
 isSeriesLogarithmic
-} from "./fib-spec.js?v=5f577f26";
+} from "./fib-spec.js?v=5da57af8";
 
 /**
  * @param {{

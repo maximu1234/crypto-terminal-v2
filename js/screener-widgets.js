@@ -23,7 +23,7 @@ mountChartPriceHud,
 SCREENER_PAGE_VISIBLE_BARS,
 SCREENER_PAGE_MAX_BARS,
 SCREENER_PAGE_HISTORY_REQUESTS
-} from "./chart-import.js?v=4b191e60";
+} from "./chart-import.js?v=5baaecc0";
 
 import {
 isIpadWebViewport
@@ -49,7 +49,7 @@ SCREENER_WIDGET_OSCILLATOR_MACD,
 createScreenerAoChart,
 createScreenerMacdChart,
 isScreenerHistogramOscillator
-} from "./screener-widget-oscillator.js?v=1148c6cc";
+} from "./screener-widget-oscillator.js?v=3d6f2ed7";
 
 let deps = null;
 
@@ -1106,10 +1106,18 @@ requestAnimationFrame(
 widget._lastZoomCandleLen =
 0;
 runZoom();
+/*
+  Ещё кадр после fit/rebuild: setData рисует sync,
+  range догоняет на rAF — иначе виден «доезд».
+*/
+requestAnimationFrame(
+()=>{
 requestAnimationFrame(
 ()=>{
 requestAnimationFrame(
 revealWidgetCharts
+);
+}
 );
 }
 );
@@ -1201,10 +1209,18 @@ settleTries >=
 widget._lastZoomCandleLen =
 0;
 runZoom();
+/*
+  Ждём fit rAF + rebuild после sync setData,
+  иначе первый видимый кадр ещё с «прежним» spacing.
+*/
+requestAnimationFrame(
+()=>{
 requestAnimationFrame(
 ()=>{
 requestAnimationFrame(
 revealWidgetCharts
+);
+}
 );
 }
 );

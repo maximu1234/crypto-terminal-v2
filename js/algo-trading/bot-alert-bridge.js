@@ -11,7 +11,7 @@ removeAlert,
 loadAllAlerts,
 saveAlerts,
 dispatchPriceAlertsChanged
-} from "../alerts.js?v=2caff065";
+} from "../alerts.js?v=430553d0";
 
 import {
 shouldRunAlgoBackgroundJobs

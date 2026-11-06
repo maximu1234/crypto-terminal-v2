@@ -468,7 +468,7 @@ if(
 ){
 equityChartMod =
 await import(
-"./macd-flip-touch-equity-chart.js?v=10640fde"
+"./macd-flip-touch-equity-chart.js?v=761b2c76"
 );
 }
 

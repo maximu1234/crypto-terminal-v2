@@ -5,11 +5,11 @@ formatDrawColor
 
 import {
 TRASH_ICON_SVG
-} from "../draw-ui-shared.js?v=3cb66e92";
+} from "../draw-ui-shared.js?v=f62ca0b5";
 
 import {
 closeAllWidgetDrawToolsMenus
-} from "../watchlist-draw-ui.js?v=5736c004";
+} from "../watchlist-draw-ui.js?v=b9a7df74";
 
 import {
 ensureDrawToolsVisible
@@ -50,7 +50,7 @@ ensureDomChartCrosshair,
 hideDomChartCrosshair,
 positionTabletProbeHorizInStack,
 fullCrosshairOptions
-} from "../chart-import.js?v=4b191e60";
+} from "../chart-import.js?v=5baaecc0";
 
 import {
 STROKE,
@@ -64,7 +64,7 @@ horizPriceLineX1
 import {
 getRectangleHandleScreens,
 moveRectangleHandle
-} from "./arrow-rect.js?v=8d4294c4";
+} from "./arrow-rect.js?v=327f588e";
 
 import {
 bindFvpDataSource,
@@ -90,7 +90,7 @@ getFibRows,
 isSeriesLogarithmic,
 isFibType,
 isFibExtType
-} from "./fib-spec.js?v=5f577f26";
+} from "./fib-spec.js?v=5da57af8";
 
 import {
 setFibPanelCommitHook,
@@ -106,7 +106,7 @@ isFibLineWidthMenuOpenForAnchor,
 fibPortalHitTest,
 retainFibPortals,
 releaseFibPortals
-} from "./fib-portals.js?v=2d6d15fb";
+} from "./fib-portals.js?v=119d1487";
 
 import {
 isPositionType,
@@ -118,11 +118,11 @@ getPositionHandleScreens as resolvePositionHandleScreens
 
 import {
 createDrawPrefs
-} from "./draw-prefs.js?v=2831b980";
+} from "./draw-prefs.js?v=d67770a2";
 
 import {
 createPositionDraw
-} from "./position-draw.js?v=e7f5f3e4";
+} from "./position-draw.js?v=73c4ecc3";
 
 import {
 pickUi
@@ -130,11 +130,11 @@ pickUi
 
 import {
 createDrawHitTester
-} from "./draw-hit.js?v=9736bacb";
+} from "./draw-hit.js?v=ef54a883";
 
 import {
 createDrawRenderer
-} from "./draw-render.js?v=099dee04";
+} from "./draw-render.js?v=324a913a";
 
 import {
 snapPlotToCandleWick
@@ -152,7 +152,7 @@ updateChartRulerLabelEl
 
 import {
 mountTabletDrawInput
-} from "../drawings-tablet-input.js?v=cbdef288";
+} from "../drawings-tablet-input.js?v=9d8ec11c";
 
 import {
 cloneDrawingsForUndo,
@@ -161,23 +161,23 @@ createDrawUndoStack
 
 import {
 createDrawDesktopSelection
-} from "./draw-edit-desktop.js?v=3b46889b";
+} from "./draw-edit-desktop.js?v=b9e632de";
 
 import {
 createDrawingsPersist
-} from "./drawings-persist.js?v=e743d5d5";
+} from "./drawings-persist.js?v=560407d9";
 
 import {
 createDrawStyleBar
-} from "./draw-style-bar.js?v=cd18bfbc";
+} from "./draw-style-bar.js?v=85989834";
 
 import {
 createDrawAlertsChart
-} from "./draw-alerts-chart.js?v=5b8a9d65";
+} from "./draw-alerts-chart.js?v=d39ee9cf";
 
 import {
 createDrawPlacement
-} from "./draw-placement.js?v=4b2e0f23";
+} from "./draw-placement.js?v=a149bcc5";
 
 import {
 createDrawTextEditor,
@@ -188,17 +188,17 @@ hitTestTextBody
 import {
 isElliottType,
 listElliottHandles
-} from "./elliott-spec.js?v=44735be0";
+} from "./elliott-spec.js?v=efb6b06e";
 
 import {
 closeElliottFlyout,
 syncElliottGroupActive
-} from "./elliott-toolbar.js?v=c77a5a04";
+} from "./elliott-toolbar.js?v=44a77f19";
 
 import {
 closeFibFlyout,
 syncFibGroupActive
-} from "./fib-toolbar.js?v=56046908";
+} from "./fib-toolbar.js?v=7bbeff40";
 
 import {
 createBrushPlacement
@@ -206,19 +206,19 @@ createBrushPlacement
 
 import {
 createDrawEditInteraction
-} from "./draw-edit-interaction.js?v=59059071";
+} from "./draw-edit-interaction.js?v=845635a2";
 
 import {
 createDrawChartInput
-} from "./draw-chart-input.js?v=f5210632";
+} from "./draw-chart-input.js?v=843b6918";
 
 import {
 createDrawPriceScale
-} from "./draw-price-scale.js?v=a8c83e74";
+} from "./draw-price-scale.js?v=4eb4919d";
 
 import {
 createDrawRedrawLoop
-} from "./draw-redraw-loop.js?v=29f13942";
+} from "./draw-redraw-loop.js?v=848a2924";
 
 import {
 isAlgoReducedCloudClient
@@ -3453,7 +3453,7 @@ lastChartAlertsPullMs =
 Date.now();
 
 void import(
-"../alerts-cloud-sync.js?v=00c6f4fb"
+"../alerts-cloud-sync.js?v=ec157115"
 ).then(
 ({ pullRegistryFromCloudNow })=>
 pullRegistryFromCloudNow({

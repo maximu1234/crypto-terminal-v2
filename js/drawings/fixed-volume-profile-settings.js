@@ -10,7 +10,7 @@ normalizeFibLineStyle,
 normalizeFibLevelWidth,
 setFibLineStyleButton,
 setFibLevelWidthButton
-} from "./fib-spec.js?v=5f577f26";
+} from "./fib-spec.js?v=5da57af8";
 
 import {
 closeAllFibLineStyleMenus,
@@ -19,7 +19,7 @@ closeAllFibLineWidthMenus,
 openFibLineWidthMenu,
 isFibLineStyleMenuOpenForAnchor,
 isFibLineWidthMenuOpenForAnchor
-} from "./fib-portals.js?v=2d6d15fb";
+} from "./fib-portals.js?v=119d1487";
 
 import {
 createFvpToolDefaults,

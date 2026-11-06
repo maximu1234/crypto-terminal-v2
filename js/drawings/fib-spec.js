@@ -1328,21 +1328,33 @@ const c =
 toXY(
 shape.p3
 );
+const xs =
+[
+a?.x,
+b?.x,
+c?.x
+].filter(
+x=>
+Number.isFinite(
+x
+)
+);
 
+/*
+ * Якоря вне шкалы: toXY может вернуть null, но уровни —
+ * горизонтали по цене. Рисуем на весь плот.
+ */
 if(
-!a ||
-!b ||
-!c
+!xs.length
 ){
-return null;
+return fibLevelXSpanFromXs(
+[],
+plotW
+);
 }
 
 return fibLevelXSpanFromXs(
-[
-a.x,
-b.x,
-c.x
-],
+xs,
 plotW
 );
 
@@ -1352,7 +1364,20 @@ if(
 !a ||
 !b
 ){
-return null;
+
+return fibLevelXSpanFromXs(
+[
+a?.x,
+b?.x
+].filter(
+x=>
+Number.isFinite(
+x
+)
+),
+plotW
+);
+
 }
 
 return fibLevelXSpan(
@@ -1385,11 +1410,35 @@ x
 if(
 !nums.length
 ){
+
+/*
+ * Нет экранных x якорей — уровни всё равно горизонтали:
+ * растягиваем на весь плот (как при обоих якорях за краем).
+ */
+if(
+Number.isFinite(
+plotW
+) &&
+plotW >
+0
+){
+return {
+x1: 0,
+x2: plotW,
+labelX:
+Math.min(
+plotW + FIB_LABEL_X_PAD_PX,
+plotW - FIB_LABEL_RIGHT_RESERVE_PX
+)
+};
+}
+
 return {
 x1: 0,
 x2: 0,
 labelX: 0
 };
+
 }
 
 let x1 =
@@ -1478,6 +1527,48 @@ x2 -
 FIB_MIN_ANCHOR_SPAN_PX
 );
 
+}
+
+}
+
+/*
+ * После зума оба якоря могут уехать влево (или вправо) от плота.
+ * Уровни — горизонтали по цене: их оставляем на всём видимом плоте,
+ * иначе фиба «исчезает», хотя hit-test по цене её ещё находит.
+ */
+if(
+Number.isFinite(
+plotW
+) &&
+plotW >
+0
+){
+
+if(
+x2 <
+0 ||
+x1 >
+plotW
+){
+x1 =
+0;
+x2 =
+plotW;
+}else{
+if(
+x1 <
+0
+){
+x1 =
+0;
+}
+if(
+x2 >
+plotW
+){
+x2 =
+plotW;
+}
 }
 
 }

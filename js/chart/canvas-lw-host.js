@@ -6,7 +6,7 @@
 
 import {
 CandleBenchChart
-} from "../canvas-bench/chart.js?v=scale-pan7";
+} from "../canvas-bench/chart.js?v=scale-pan8";
 
 import {
 candleIndexAt,
@@ -483,6 +483,60 @@ return [
 Math.max(0, start - 1),
 Math.min(rows.length, end + 1)
 ];
+
+}
+
+/** Точка пересечения отрезка с базой baseline (цена). null — нет пересечения. */
+export function baselineCrossingPoint(
+prevValue,
+nextValue,
+base,
+prevX,
+prevY,
+nextX,
+nextY
+){
+
+if(
+!Number.isFinite(prevValue) ||
+!Number.isFinite(nextValue) ||
+!Number.isFinite(base)
+){
+return null;
+}
+
+const prevAbove =
+prevValue >= base;
+const nextAbove =
+nextValue >= base;
+
+if(prevAbove === nextAbove){
+return null;
+}
+
+const denom =
+nextValue - prevValue;
+
+if(denom === 0){
+return null;
+}
+
+const t =
+(base - prevValue) / denom;
+
+if(
+!Number.isFinite(t) ||
+t <= 0 ||
+t >= 1
+){
+return null;
+}
+
+return {
+t,
+x: prevX + t * (nextX - prevX),
+y: prevY + t * (nextY - prevY)
+};
 
 }
 
@@ -1088,9 +1142,19 @@ const last =
 [...series.rows].reverse().map(seriesValue).find(v => v != null);
 
 if(last != null){
+const base =
+series.kind === "baseline"
+? (series.options.baseValue?.price ?? 0)
+: null;
+const tagColor =
+base == null
+? (series.options.color || series.options.topLineColor || "#b2b5be")
+: last >= base
+? (series.options.topLineColor || series.options.color || "#b2b5be")
+: (series.options.bottomLineColor || series.options.color || "#b2b5be");
 tags.push({
 y: yFor(layout, series, last),
-color: series.options.topLineColor || series.options.color || "#b2b5be",
+color: tagColor,
 text: engine.formatAxisPrice
 ? engine.formatAxisPrice(last)
 : formatChartPrice(last, last)
@@ -1250,14 +1314,48 @@ function paintBaseline(ctx, layout, series){
 
 const base =
 series.options.baseValue?.price ?? 0;
+const topColor =
+series.options.topLineColor || series.options.color || "#b2b5be";
+const bottomColor =
+series.options.bottomLineColor || series.options.color || "#b2b5be";
+const colorAt =
+(value)=>
+value >= base ? topColor : bottomColor;
+
 let prev =
+null;
+let pathColor =
 null;
 
 ctx.lineWidth = series.options.lineWidth || 1;
 ctx.lineJoin = "round";
 ctx.lineCap = "round";
 ctx.setLineDash([]);
+
+const flushPath =
+()=>{
+
+if(pathColor != null){
+ctx.stroke();
+pathColor = null;
+}
+
+};
+
+const ensurePath =
+(color)=>{
+
+if(pathColor === color){
+return false;
+}
+
+flushPath();
 ctx.beginPath();
+ctx.strokeStyle = color;
+pathColor = color;
+return true;
+
+};
 
 for(const row of series.rows){
 
@@ -1277,41 +1375,63 @@ layout.plotTop + layout.plotH
 );
 
 if(value == null || x == null || y == null){
-if(prev){
-ctx.stroke();
-}
+flushPath();
 prev = null;
 continue;
 }
 
-const color =
-value >= base
-? (series.options.topLineColor || series.options.color || "#b2b5be")
-: (series.options.bottomLineColor || series.options.color || "#b2b5be");
-
-if(!prev || prev.color !== color){
-if(prev){
-ctx.stroke();
+if(!prev){
+prev = { x, y, value };
+continue;
 }
-ctx.beginPath();
-ctx.strokeStyle = color;
-if(prev){
+
+const fromColor =
+colorAt(prev.value);
+const toColor =
+colorAt(value);
+const cross =
+fromColor !== toColor
+? baselineCrossingPoint(
+prev.value,
+value,
+base,
+prev.x,
+prev.y,
+x,
+y
+)
+: null;
+
+if(cross){
+const crossY =
+clampSeriesCoord(
+yFor(layout, series, base),
+layout.plotTop,
+layout.plotTop + layout.plotH
+) ?? cross.y;
+
+if(ensurePath(fromColor)){
 ctx.moveTo(prev.x, prev.y);
+}
+
+ctx.lineTo(cross.x, crossY);
+flushPath();
+ensurePath(toColor);
+ctx.moveTo(cross.x, crossY);
 ctx.lineTo(x, y);
 }else{
-ctx.moveTo(x, y);
+if(ensurePath(fromColor)){
+ctx.moveTo(prev.x, prev.y);
 }
-}else{
+
 ctx.lineTo(x, y);
 }
 
-prev = { x, y, color };
+prev = { x, y, value };
 
 }
 
-if(prev){
-ctx.stroke();
-}
+flushPath();
 
 }
 

@@ -13,7 +13,7 @@ fibShapeLevelXSpan,
 isFibType,
 isFibExtType,
 resolveFibTrendLineColor
-} from "./fib-spec.js?v=5f577f26";
+} from "./fib-spec.js?v=5da57af8";
 
 import {
 isPositionType
@@ -22,11 +22,11 @@ isPositionType
 import {
 drawFilledArrow,
 drawRectangleShape
-} from "./arrow-rect.js?v=8d4294c4";
+} from "./arrow-rect.js?v=327f588e";
 
 import {
 drawFvpShape
-} from "./fixed-volume-profile-draw.js?v=57a3982d";
+} from "./fixed-volume-profile-draw.js?v=5e05fb3e";
 
 import {
 isFvpType,
@@ -45,7 +45,7 @@ horizPriceLineX1
 import {
 channelLevelSegment,
 ensureChannelLevelsVisible
-} from "./channel-spec.js?v=9031b2bf";
+} from "./channel-spec.js?v=e330dd9e";
 
 import {
 isTextTool,
@@ -71,7 +71,7 @@ PATTERN_12_DEFAULT_CHANNEL_COLOR,
 pattern12ChannelGeometry,
 pattern12DashScreen,
 pattern12TpTickLayout
-} from "./elliott-spec.js?v=44735be0";
+} from "./elliott-spec.js?v=efb6b06e";
 
 /**
  * @param {object} deps
@@ -786,23 +786,22 @@ shape.type
 ? toXY(shape.p3)
 : null;
 
-if(
-!a ||
-!b
-){
-return;
-}
-
+/*
+ * Якоря 0%/100% могут уехать за экран (toXY=null при drag шкалы
+ * или экстремальном зуме). Уровни всё равно рисуем по цене.
+ */
 if(
 isFibExtType(
 shape.type
 ) &&
-!c
+!shape.p3
 ){
 
 if(
 shape.fibShowTrendLine ===
-true
+true &&
+a &&
+b
 ){
 drawFibTrendConnector(
 ctx,

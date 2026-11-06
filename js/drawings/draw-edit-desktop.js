@@ -5,11 +5,11 @@
 
 import {
 isCoarseTouchViewport
-} from "../chart-import.js?v=4b191e60";
+} from "../chart-import.js?v=5baaecc0";
 
 import {
 isFibType
-} from "./fib-spec.js?v=5f577f26";
+} from "./fib-spec.js?v=5da57af8";
 
 export function createDrawDesktopSelection(
 deps

@@ -61,3 +61,21 @@ test("linear scale keeps equal price steps", () => {
     assert.ok(Math.abs(ticks[i] - ticks[i - 1] - step) < 1e-6);
   }
 });
+
+test("a wide ZEC-like log scale still labels the bottom of the pane", () => {
+  const min = 0.26;
+  const max = 19187;
+  const height = 560;
+  const ticks = nicePriceTicks(min, max, height, PRICE_SCALE_LOG);
+  assert.ok(ticks.length >= 14, `got ${ticks.length}`);
+  const last = ticks.at(-1);
+  const y =
+    (Math.log(max) - Math.log(last)) /
+    (Math.log(max) - Math.log(min)) *
+    height;
+  assert.ok(
+    height - y < height * 0.12,
+    `blank ${((height - y) / height * 100).toFixed(1)}% after last tick ${last}`
+  );
+  assert.ok(last < 5, `last tick ${last} should reach the cheap end`);
+});

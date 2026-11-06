@@ -398,8 +398,24 @@ let prevY =
 null;
 let price =
 max - mod;
+/*
+ * На широком логарифме (ZEC $1…$3500) большая часть шагов
+ * «crowded» и раньше упиралась в guard=80: подписи обрывались
+ * около середины шкалы, низ оставался пустым. Считаем принятые
+ * метки отдельно от проходов.
+ */
+const maxTicks =
+48;
+const maxSteps =
+4000;
 
-for(let guard = 0; price > min && guard < 80; guard++){
+for(
+let step = 0, accepted = 0;
+price > min &&
+step < maxSteps &&
+accepted < maxTicks;
+step++
+){
 
 const y =
 tickPixel(price, min, max, height, mode);
@@ -414,6 +430,7 @@ price < max
 ){
 ticks.push(cleanTick(price));
 prevY = y;
+accepted += 1;
 
 if(log){
 span = priceTickSpan(price, min, height);

@@ -20,16 +20,16 @@ normalizePatternDashOpacity,
 normalizePatternLineStyle,
 parsePattern12TpLevel,
 PATTERN_12_DEFAULT_CHANNEL_COLOR
-} from "./elliott-spec.js?v=44735be0";
+} from "./elliott-spec.js?v=efb6b06e";
 
 import {
 setFibLevelWidthButton,
 setFibLineStyleButton
-} from "./fib-spec.js?v=5f577f26";
+} from "./fib-spec.js?v=5da57af8";
 
 import {
 setFibLevelColorButton
-} from "./draw-fib-settings.js?v=fba82cc1";
+} from "./draw-fib-settings.js?v=0cd438c4";
 
 import {
 closeAllFibLineStyleMenus,
@@ -38,7 +38,7 @@ isFibLineStyleMenuOpenForAnchor,
 isFibLineWidthMenuOpenForAnchor,
 openFibLineStyleMenu,
 openFibLineWidthMenu
-} from "./fib-portals.js?v=2d6d15fb";
+} from "./fib-portals.js?v=119d1487";
 
 export function elliottSettingsHtml(){
 

@@ -26,7 +26,7 @@ priceToY,
 yToPrice,
 shiftPriceScale,
 zoomPriceScale
-} from "./price-scale.js?v=scale-pan4";
+} from "./price-scale.js?v=scale-pan8";
 
 const BG =
 "#0e1116";

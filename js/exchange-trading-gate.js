@@ -10,17 +10,17 @@ EXCHANGE_CHANGED_EVENT
 
 import {
 clearTradePositionsCache
-} from "./trade-positions-cache.js?v=82272511";
+} from "./trade-positions-cache.js?v=ac431625";
 
 import {
 stopTradeStreamBridge,
 startTradeStreamBridge
-} from "./trade-stream-bridge.js?v=e6d8387a";
+} from "./trade-stream-bridge.js?v=f20519f8";
 
 import {
 loadTradeExchangeModules,
 resetTradeExchangeModules
-} from "./trade/module-router.js?v=72335742";
+} from "./trade/module-router.js?v=b5a48df4";
 
 const BODY_CLASS =
 "exchange-trading-inactive";

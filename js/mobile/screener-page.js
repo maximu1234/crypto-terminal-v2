@@ -4,7 +4,7 @@
  */
 import {
   mountMobileReadOnlyChart
-} from "./chart-lite.js?v=27e04405";
+} from "./chart-lite.js?v=e7d75834";
 import {
   loadMarketSymbols,
   peekMarketSymbolsCache

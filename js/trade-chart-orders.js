@@ -3,7 +3,7 @@
  */
 import {
   getLoadedTradeExchangeModules
-} from "./trade/module-router.js?v=72335742";
+} from "./trade/module-router.js?v=b5a48df4";
 
 function mod() {
   return getLoadedTradeExchangeModules();

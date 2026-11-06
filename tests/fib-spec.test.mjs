@@ -291,6 +291,87 @@ span.x2,
 );
 
 test(
+"fibLevelXSpan keeps levels on the plot after zoom leaves both anchors",
+async()=>{
+
+const {
+fibLevelXSpan
+} =
+await import(
+"../js/drawings/fib-spec.js"
+);
+
+const left =
+fibLevelXSpan(
+{ x: -800, y: 40 },
+{ x: -200, y: 80 },
+600
+);
+
+assert.equal(
+left.x1,
+0
+);
+assert.equal(
+left.x2,
+600
+);
+
+const partial =
+fibLevelXSpan(
+{ x: -100, y: 40 },
+{ x: 250, y: 80 },
+600
+);
+
+assert.equal(
+partial.x1,
+0
+);
+assert.equal(
+partial.x2,
+250
+);
+
+}
+);
+
+test(
+"fibShapeLevelXSpan fills the plot when toXY cannot map anchors",
+async()=>{
+
+const {
+fibShapeLevelXSpan
+} =
+await import(
+"../js/drawings/fib-spec.js"
+);
+
+const span =
+fibShapeLevelXSpan(
+{
+type: "fib",
+p1: { time: 1, price: 10 },
+p2: { time: 2, price: 20 }
+},
+()=>
+null,
+500
+);
+
+assert.equal(
+span.x1,
+0
+);
+assert.equal(
+span.x2,
+500
+);
+
+}
+);
+
+test(
 "isSeriesLogarithmic reads LW mode 0 and 1",
 async()=>{
 

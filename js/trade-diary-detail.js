@@ -1,7 +1,7 @@
 import {
 destroyDiaryTradeChart,
 mountDiaryTradeChart
-} from "./trade-diary-chart.js?v=741512a1";
+} from "./trade-diary-chart.js?v=1ba87786";
 
 import {
 formatDiaryDuration,
@@ -17,7 +17,7 @@ renderDetailShell
 import {
 getLoadedTradeExchangeModules,
 loadTradeExchangeModules
-} from "./trade/module-router.js?v=72335742";
+} from "./trade/module-router.js?v=b5a48df4";
 
 function diaryMod() {
   return getLoadedTradeExchangeModules();

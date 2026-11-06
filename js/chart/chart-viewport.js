@@ -745,11 +745,110 @@ return true;
 
 }
 
+/** Доля правого запаса у createScreenerChart (rightMarginRatio). */
+const SCREENER_RIGHT_MARGIN_RATIO =
+0.15;
+
+/**
+ * Ширина плота для зума виджета: сначала измеренная, иначе
+ * ширина ячейки минус фиксированная шкала (как на Терминале).
+ */
+function screenerPlotWidthPx(
+chart,
+chartWidth
+){
+
+const width =
+Math.max(
+chartWidth || 0,
+120
+);
+const measured =
+chart?.timeScale?.().width?.() ||
+0;
+
+if(measured > 2){
+return measured;
+}
+
+return Math.max(
+width -
+effectiveChartPriceScaleWidth(),
+40
+);
+
+}
+
+/**
+ * Тот же barSpacing, что ставит applyLogicalRange при setVisibleLogicalRange.
+ * Иначе setData → sync rebuild рисует с plot/(visible+margin), а range сразу
+ * сжимает до 0.85*plot/visible (~2%) — «доезд» в виджете Скринера.
+ */
+export function screenerBarSpacingPx(
+plotWidth,
+visibleBars,
+rightMargin,
+ratio =
+SCREENER_RIGHT_MARGIN_RATIO
+){
+
+const width =
+Math.max(
+Number(plotWidth) || 0,
+40
+);
+const content =
+Math.max(
+1,
+Math.floor(
+Number(visibleBars) ||
+1
+)
+);
+const offset =
+Math.max(
+0,
+Number(rightMargin) ||
+0
+);
+const share =
+Math.min(
+0.35,
+Math.max(
+0,
+Number(ratio) ||
+0
+)
+);
+
+let spacing =
+width /
+(content + offset);
+
+if(
+share >
+0 &&
+offset * spacing <
+width * share
+){
+spacing =
+(width * (1 - share)) /
+content;
+}
+
+return Math.max(
+0.01,
+spacing
+);
+
+}
+
 function applyScreenerViewport(
 chart,
 chartWidth,
 visibleBars,
-totalBars
+totalBars,
+fixedBarSpacing
 ){
 
 if(!chart || visibleBars < 1){
@@ -770,19 +869,27 @@ computeChartFutureMarginBars(
 visibleBars
 );
 
-const width =
-Math.max(chartWidth || 0, 120);
-
 const plotWidth =
-chart.timeScale().width() || Math.max(width - 52, 40);
+screenerPlotWidthPx(
+chart,
+chartWidth
+);
 
-const logicalSpan =
-visibleBars + rightMargin;
+const contentBars =
+Math.max(
+1,
+lastIndex - from
+);
 
 const barSpacing =
-Math.max(
-0.01,
-plotWidth / Math.max(logicalSpan, 1)
+Number.isFinite(fixedBarSpacing) &&
+fixedBarSpacing >
+0
+? fixedBarSpacing
+: screenerBarSpacingPx(
+plotWidth,
+contentBars,
+rightMargin
 );
 
 chart.timeScale().applyOptions({
@@ -797,6 +904,8 @@ from,
 to:lastIndex
 
 });
+
+return barSpacing;
 
 }
 
@@ -881,22 +990,19 @@ const rightMargin =
 computeChartFutureMarginBars(
 visibleBars
 );
-const plotGuess =
+const from =
 Math.max(
-chart.timeScale().width() ||
-width -
-56,
-40
+0,
+totalBars -
+visibleBars
 );
-const initialSpacing =
+const lastIndex =
+totalBars -
+1;
+const contentBars =
 Math.max(
-0.01,
-plotGuess /
-Math.max(
-visibleBars +
-rightMargin,
-1
-)
+1,
+lastIndex - from
 );
 
 chart.applyOptions({
@@ -905,13 +1011,25 @@ height
 });
 
 /*
-  Иначе первый кадр после setData берёт barSpacing 6:
-  на виджете вспыхивают несколько крупных свечей, и только
-  следующий кадр ставит плотный обзор.
+  setData → sync rebuild (и fitPriceAxis). Spacing до setData —
+  только чтобы не вспыхнул default 6px; финальный — после setData
+  по уже сжатому plotW, той же формулой что applyLogicalRange.
 */
+const primingPlot =
+screenerPlotWidthPx(
+chart,
+width
+);
+const primingSpacing =
+screenerBarSpacingPx(
+primingPlot,
+contentBars,
+rightMargin
+);
+
 chart.timeScale().applyOptions({
 barSpacing:
-initialSpacing,
+primingSpacing,
 rightOffset:
 rightMargin,
 fixRightEdge:
@@ -928,6 +1046,27 @@ series.setData(
 candles
 );
 
+const lockedSpacing =
+screenerBarSpacingPx(
+screenerPlotWidthPx(
+chart,
+width
+),
+contentBars,
+rightMargin
+);
+
+chart.timeScale().applyOptions({
+barSpacing:
+lockedSpacing,
+rightOffset:
+rightMargin
+});
+
+/*
+  Повтор на rAF — тот же spacing + range (как на Терминале).
+  Не пересчитывать spacing по новому plotW: иначе «доезд».
+*/
 const fitViewport =
 ()=>{
 
@@ -942,7 +1081,8 @@ applyScreenerViewport(
 chart,
 width,
 visibleBars,
-totalBars
+totalBars,
+lockedSpacing
 );
 }catch{
 /* chart disposed */

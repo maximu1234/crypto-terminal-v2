@@ -13,7 +13,7 @@ finalizeFibLevels,
 isFibType,
 isFibExtType,
 resolveFibTrendLineColor
-} from "./fib-spec.js?v=5f577f26";
+} from "./fib-spec.js?v=5da57af8";
 
 import {
 isPositionType,
@@ -26,7 +26,7 @@ ensureBrushShape
 
 import {
 normalizeRectangleShape
-} from "./arrow-rect.js?v=8d4294c4";
+} from "./arrow-rect.js?v=327f588e";
 
 import {
 isFvpType,
@@ -40,12 +40,12 @@ normalizeTextShape
 
 import {
 ensureChannelLevelsVisible
-} from "./channel-spec.js?v=9031b2bf";
+} from "./channel-spec.js?v=e330dd9e";
 
 import {
 isElliottType,
 normalizeElliottShape
-} from "./elliott-spec.js?v=44735be0";
+} from "./elliott-spec.js?v=efb6b06e";
 
 import {
 drawingsStorageKey

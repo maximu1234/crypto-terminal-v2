@@ -4,7 +4,7 @@
  */
 import {
 isCoarseTouchViewport
-} from "../chart-import.js?v=4b191e60";
+} from "../chart-import.js?v=5baaecc0";
 
 import {
 uid
@@ -24,7 +24,7 @@ isHorizPriceTool
 import {
 getRectangleHandleScreens,
 moveRectangleHandle
-} from "./arrow-rect.js?v=8d4294c4";
+} from "./arrow-rect.js?v=327f588e";
 
 import {
 getFvpHandleScreens,
@@ -41,7 +41,7 @@ import {
 ensureFibAnchorMinSpan,
 isFibType,
 isFibExtType
-} from "./fib-spec.js?v=5f577f26";
+} from "./fib-spec.js?v=5da57af8";
 
 import {
 touchShapeRevision
@@ -49,7 +49,7 @@ touchShapeRevision
 
 import {
 stripAlertFromShape
-} from "./drawings-persist.js?v=e743d5d5";
+} from "./drawings-persist.js?v=560407d9";
 
 import {
 moveBrushHandle,
@@ -68,11 +68,11 @@ isElliottType,
 getElliottPoints,
 setElliottPoints,
 elliottHandleIndex
-} from "./elliott-spec.js?v=44735be0";
+} from "./elliott-spec.js?v=efb6b06e";
 
 import {
 channelP3ScreenFromRailMid
-} from "./channel-spec.js?v=9031b2bf";
+} from "./channel-spec.js?v=e330dd9e";
 
 /**
  * Handle hit circles are larger than the vertex. Drag already uses grab

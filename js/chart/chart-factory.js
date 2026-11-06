@@ -38,7 +38,7 @@ attachChartWheelDeadband
 
 import {
 createCanvasLwChart
-} from "./canvas-lw-host.js?v=ce59b975";
+} from "./canvas-lw-host.js?v=51b45522";
 
 import {
 ensureDomChartCrosshair,
@@ -338,12 +338,12 @@ restoreScreenerViewport,
 applyScreenerZoom,
 tfPeriodSec,
 rsiPlotTimeOffsetSec
-} from "./chart-viewport.js?v=3748d050";
+} from "./chart-viewport.js?v=7364f4ae";
 
 import {
 copyVisibleTimeRange,
 tfPeriodSec
-} from "./chart-viewport.js?v=3748d050";
+} from "./chart-viewport.js?v=7364f4ae";
 
 
 
@@ -1740,7 +1740,7 @@ lineEl.classList.remove(
 
 export {
 linkChartsCrosshair
-} from "./chart-crosshair-link.js?v=1f18e5f6";
+} from "./chart-crosshair-link.js?v=3c45e15c";
 
 
 

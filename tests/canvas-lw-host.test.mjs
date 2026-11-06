@@ -5,6 +5,7 @@ import { timeAtFractionalIndex } from "../js/canvas-bench/drawings.js";
 import { candleIndexAt, candleX, rightGapPx } from "../js/canvas-bench/live-plan.js";
 import {
   applyLogicalRange,
+  baselineCrossingPoint,
   histogramRowSpan,
   logicalRangeFitsSeries,
   logicalRangeFromView,
@@ -12,6 +13,7 @@ import {
   mapGuideX,
   placeSeriesPoint
 } from "../js/chart/canvas-lw-host.js";
+import { screenerBarSpacingPx } from "../js/chart/chart-viewport.js";
 
 function engineAt(panPx, barSpacing = 8, ratio = 0) {
   const candles = [];
@@ -169,4 +171,43 @@ test("visible logical range round-trips through pan and bar spacing", () => {
   const again = logicalRangeFromView(next);
   assert.ok(Math.abs(again.from - range.from) < 0.02);
   assert.ok(Math.abs(again.to - range.to) < 0.02);
+});
+
+test("baseline RSI color split lands exactly on the mid level", () => {
+  assert.equal(baselineCrossingPoint(40, 45, 50, 0, 100, 10, 90), null);
+  assert.equal(baselineCrossingPoint(60, 70, 50, 0, 40, 10, 30), null);
+  const up = baselineCrossingPoint(40, 60, 50, 0, 80, 20, 40);
+  assert.ok(up);
+  assert.equal(up.t, 0.5);
+  assert.equal(up.x, 10);
+  assert.equal(up.y, 60);
+  const down = baselineCrossingPoint(70, 30, 50, 0, 20, 40, 100);
+  assert.ok(down);
+  assert.equal(down.t, 0.5);
+  assert.equal(down.x, 20);
+  assert.equal(down.y, 60);
+});
+
+test("screener bar spacing matches applyLogicalRange ratio branch", () => {
+  const plotW = 252;
+  const content = 2499;
+  const rightMargin = 375;
+  const naive = plotW / (content + rightMargin);
+  const spaced = screenerBarSpacingPx(plotW, content, rightMargin, 0.15);
+  assert.ok(spaced < naive);
+  assert.ok(Math.abs(spaced - (plotW * 0.85) / content) < 1e-9);
+
+  const engine = engineAt(0, naive, 0.15);
+  engine.layout = { plotLeft: 0, plotRight: plotW, plotW };
+  engine.candles = Array.from({ length: content + 1 }, (_, i) => ({
+    time: i * 60,
+    close: 100
+  }));
+  engine.rightOffsetBars = rightMargin;
+  const last = content;
+  assert.equal(
+    applyLogicalRange(engine, { from: last - content, to: last }),
+    true
+  );
+  assert.ok(Math.abs(engine.barSpacing - spaced) < 1e-9);
 });
