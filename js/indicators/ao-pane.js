@@ -8,7 +8,7 @@ linkPairedChartTimeScales,
 appendFutureWhitespaceBars,
 computeChartFutureMarginBars,
 coinsTfVisibleBars
-} from "../chart-import.js?v=5baaecc0";
+} from "../chart-import.js?v=fa7cf2a4";
 
 import {
 calculateAwesomeOscillator,
@@ -36,7 +36,7 @@ isBottomIndicatorPane
 
 import {
 syncPaneViewportAfterData
-} from "./indicator-pane-viewport.js?v=4c3260e5";
+} from "./indicator-pane-viewport.js?v=84b38fa3";
 
 export const AO_PANE_ID =
 "ao";

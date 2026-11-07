@@ -13,7 +13,7 @@ applyRsiSeriesColorMode,
 appendFutureWhitespaceBars,
 computeChartFutureMarginBars,
 syncLinkedChartTimescales
-} from "./chart-import.js?v=5baaecc0";
+} from "./chart-import.js?v=fa7cf2a4";
 
 import {
 applyLiveSeriesUpdate,
@@ -43,7 +43,7 @@ ALGO_TICKER_SCAN_HISTORY_REQUESTS
 import {
 defaultRsiPaneSettings,
 normalizeRsiPaneSettings
-} from "./indicators/rsi-pane.js?v=2835a6f3";
+} from "./indicators/rsi-pane.js?v=27c9fb3d";
 
 import {
 buildChartRsiPoints
@@ -62,7 +62,7 @@ bindLiveCandleCatchup
 import {
 mountAlgoTradingCoinList,
 refreshAlgoMarketListFromFlags
-} from "./algo-trading-list.js?v=96316a21";
+} from "./algo-trading-list.js?v=1ef15f7b";
 
 import {
 mountAlgoTickerScanUi
@@ -85,7 +85,7 @@ mountAlgoRuntimeUi
 
 import {
 mountAlgoBotStrategyUi
-} from "./algo-trading/bot-strategy-ui.js?v=96082540";
+} from "./algo-trading/bot-strategy-ui.js?v=923af517";
 
 import {
 ALGO_ANALYSIS_BOT_CHANGE_EVENT,
@@ -101,7 +101,7 @@ setActiveAnalysisBotId
 
 import {
 mountSessionLogServerSettings
-} from "./algo-trading/bot-session-log-server-ui.js?v=66a8402d";
+} from "./algo-trading/bot-session-log-server-ui.js?v=f20d328d";
 
 import {
 syncBotStrategiesToMain
@@ -109,15 +109,15 @@ syncBotStrategiesToMain
 
 import {
 mountAlgoTradeUi
-} from "./algo-trading/trade/boot.js?v=c05b85bc";
+} from "./algo-trading/trade/boot.js?v=1ae8e55f";
 
 import {
 mountAlgoTradingDrawings
-} from "./algo-trading/drawings.js?v=0bd4356b";
+} from "./algo-trading/drawings.js?v=e0792257";
 
 import {
 mountAlgoTradingIndicators
-} from "./algo-trading/indicators.js?v=e371c654";
+} from "./algo-trading/indicators.js?v=0b08025a";
 
 import {
 mountAlgoPatternEntryOverlay
@@ -125,11 +125,11 @@ mountAlgoPatternEntryOverlay
 
 import {
 mountRsiTouchFlipHost
-} from "./algo-trading/rsi-touch-flip-panel.js?v=48b693b5";
+} from "./algo-trading/rsi-touch-flip-panel.js?v=4c603f4f";
 
 import {
 mountMacdFlipTouchHost
-} from "./algo-trading/macd-flip-touch-panel.js?v=bdfe8b2e";
+} from "./algo-trading/macd-flip-touch-panel.js?v=bac046ce";
 
 import {
 loadRsiTouchFlipPrefs,
@@ -259,7 +259,7 @@ syncRsiLevelDom as syncRsiLevelDomEl,
 setRsiHud as setRsiHudEl,
 lastRsiValue as lastRsiValueFromCandles,
 layoutRsiPane
-} from "./algo-trading/page-rsi.js?v=53daf816";
+} from "./algo-trading/page-rsi.js?v=f32d8961";
 
 import {
 bindAlgoStatsPanelResize

@@ -6,12 +6,12 @@
 
 import {
 CandleBenchChart
-} from "../canvas-bench/chart.js?v=scale-pan8";
+} from "../canvas-bench/chart.js?v=scale-pan10";
 
 import {
 candleIndexAt,
 candleX
-} from "../canvas-bench/live-plan.js?v=scale-pan4";
+} from "../canvas-bench/live-plan.js?v=scale-pan6";
 
 import {
 PRICE_SCALE_LOG,
@@ -2105,6 +2105,8 @@ return;
 /*
  * Сразу после колёсика не принимать чужое узкое окно:
  * оно раздувает свечи и выглядит как сброс зума.
+ * Порог 1.5 (раньше 2.2): даже «умеренный» sync после жеста
+ * не должен скачком увеличить свечи.
  */
 if(
 engine.layout &&
@@ -2119,7 +2121,7 @@ Math.abs(range.to - range.from);
 const nextSpacing =
 engine.layout.plotW / Math.max(content, 1e-6);
 
-if(nextSpacing > engine.barSpacing * 2.2){
+if(nextSpacing > engine.barSpacing * 1.5){
 return;
 }
 

@@ -20,7 +20,7 @@ import {
 getCurrentSymbols,
 getFirstVisibleSymbol,
 getExtraCoinMarkets
-} from "./terminal-table.js?v=2dd197c2";
+} from "./terminal-table.js?v=57c20489";
 
 import {
 parseAlertDeepLinkExchange

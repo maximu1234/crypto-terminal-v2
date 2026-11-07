@@ -363,6 +363,164 @@ max: dataMax + pad
 }
 
 /**
+ * Обычное кручение не должно упираться в стену; ловим только
+ * «огненный шланг» трекпада (десятки событий с dt≪кадра).
+ * product затухает к 1 — пауза/нормальный темп снова дают полный шаг.
+ */
+export const WHEEL_ZOOM_EVENT_MAX =
+1.35;
+export const WHEEL_ZOOM_GESTURE_MAX =
+3.5;
+export const WHEEL_ZOOM_GESTURE_MS =
+220;
+export const WHEEL_ZOOM_SENSITIVITY =
+0.0012;
+/** Полураспад накопленного product к 1, мс. */
+export const WHEEL_ZOOM_PRODUCT_DECAY_MS =
+70;
+/** Ниже этого dt шаг дополнительно глушится (пачка трекпада). */
+export const WHEEL_ZOOM_BURST_DT_MS =
+14;
+
+/**
+ * @param {number} dyPx уже нормализованный deltaY (вниз +, вверх −)
+ * @param {number} gestureProduct накопленный factor жеста (1 = старт)
+ * @param {number} [dtMs] мс с прошлого zoom-события
+ * @returns {{ factor: number, product: number }}
+ */
+export function clampWheelZoomStep(
+dyPx,
+gestureProduct =
+1,
+dtMs =
+Infinity
+){
+
+const dy =
+Number(dyPx) ||
+0;
+let product =
+Number.isFinite(gestureProduct) &&
+gestureProduct >
+0
+? gestureProduct
+: 1;
+const dt =
+Number(dtMs);
+
+if(
+Number.isFinite(dt) &&
+dt >
+0 &&
+product !==
+1
+){
+const keep =
+Math.exp(
+-dt /
+WHEEL_ZOOM_PRODUCT_DECAY_MS
+);
+product =
+1 +
+(product - 1) *
+keep;
+}
+
+if(
+!(
+Math.abs(dy) >
+0
+)
+){
+return {
+factor: 1,
+product
+};
+}
+
+const raw =
+Math.exp(
+-dy * WHEEL_ZOOM_SENSITIVITY
+);
+const eventMin =
+1 /
+WHEEL_ZOOM_EVENT_MAX;
+let factor =
+Math.min(
+WHEEL_ZOOM_EVENT_MAX,
+Math.max(
+eventMin,
+raw
+)
+);
+
+/*
+ * Пачка событий с dt < 14ms: оставляем долю шага.
+ * Обычный notch / спокойный трекпад (dt≳16) — полный factor.
+ */
+if(
+Number.isFinite(dt) &&
+dt >=
+0 &&
+dt <
+WHEEL_ZOOM_BURST_DT_MS
+){
+const damp =
+Math.max(
+0.2,
+dt /
+WHEEL_ZOOM_BURST_DT_MS
+);
+factor =
+1 +
+(factor - 1) *
+damp;
+}
+
+const next =
+product * factor;
+const gestureMin =
+1 /
+WHEEL_ZOOM_GESTURE_MAX;
+
+if(
+next >
+WHEEL_ZOOM_GESTURE_MAX
+){
+factor =
+WHEEL_ZOOM_GESTURE_MAX /
+product;
+}else if(
+next <
+gestureMin
+){
+factor =
+gestureMin /
+product;
+}
+
+if(
+!(
+factor >
+0
+) ||
+!Number.isFinite(factor)
+){
+return {
+factor: 1,
+product
+};
+}
+
+return {
+factor,
+product:
+product * factor
+};
+
+}
+
+/**
  * Ширина свечи, при которой в окне помещается ровно bars баров.
  * Та же формула, что у установки видимого диапазона: правый запас
  * не даёт отдалить сильнее, чем вид при загрузке.

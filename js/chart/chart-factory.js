@@ -38,7 +38,7 @@ attachChartWheelDeadband
 
 import {
 createCanvasLwChart
-} from "./canvas-lw-host.js?v=51b45522";
+} from "./canvas-lw-host.js?v=894444c1";
 
 import {
 ensureDomChartCrosshair,
@@ -1740,7 +1740,7 @@ lineEl.classList.remove(
 
 export {
 linkChartsCrosshair
-} from "./chart-crosshair-link.js?v=3c45e15c";
+} from "./chart-crosshair-link.js?v=0a140014";
 
 
 

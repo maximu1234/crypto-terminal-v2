@@ -9,13 +9,15 @@ candleIndexAt,
 candleX,
 rightGapPx,
 clampPan,
+clampWheelZoomStep,
 liveUpdateKind,
 paintsLiveTick,
 panForAnchor,
 scaleFromCandles,
 visibleIndexSpan,
+WHEEL_ZOOM_GESTURE_MS,
 zoomOutFloorSpacing
-} from "./live-plan.js?v=scale-pan7";
+} from "./live-plan.js?v=scale-pan9";
 
 import {
 PRICE_SCALE_LOG,
@@ -1637,8 +1639,48 @@ if(!dy){
 return;
 }
 
+const now =
+typeof performance !== "undefined"
+? performance.now()
+: Date.now();
+let gesture =
+this._wheelZoomGesture;
+const dt =
+gesture &&
+Number.isFinite(gesture.at)
+? now - gesture.at
+: Infinity;
+
+if(
+!gesture ||
+now >
+gesture.until
+){
+gesture = {
+product: 1,
+until: now + WHEEL_ZOOM_GESTURE_MS,
+at: now
+};
+}else{
+gesture.until =
+now + WHEEL_ZOOM_GESTURE_MS;
+}
+
+const stepped =
+clampWheelZoomStep(
+dy,
+gesture.product,
+dt
+);
+gesture.product =
+stepped.product;
+gesture.at =
+now;
+this._wheelZoomGesture =
+gesture;
+
 const factor =
-Math.exp(-dy * 0.0012);
+stepped.factor;
 const MIN_SPACING =
 this.zoomOutFloor();
 const MAX_SPACING =
@@ -1660,7 +1702,15 @@ Math.min(MAX_SPACING, nextSpacing)
 );
 }
 
-if(nextSpacing === this.barSpacing){
+if(
+!(
+Math.abs(
+nextSpacing -
+this.barSpacing
+) >
+1e-6
+)
+){
 return;
 }
 
