@@ -43,7 +43,7 @@ SCREENER_WIDGET_OSCILLATOR_MACD,
 SCREENER_WIDGET_OSCILLATOR_RSI,
 getScreenerWidgetOscillator,
 setScreenerWidgetOscillator
-} from "./screener-widget-oscillator.js?v=630029ad";
+} from "./screener-widget-oscillator.js?v=ec166d37";
 
 import {
 CANDLE_COLOR_CLASSIC,

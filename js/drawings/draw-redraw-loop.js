@@ -8,7 +8,7 @@ isPositionType
 
 import {
 getRectangleHandleScreens
-} from "./arrow-rect.js?v=327f588e";
+} from "./arrow-rect.js?v=9ea26ef4";
 
 import {
 getFvpHandleScreens,
@@ -30,17 +30,17 @@ isHorizPriceTool
 
 import {
 isFibExtType
-} from "./fib-spec.js?v=5da57af8";
+} from "./fib-spec.js?v=43350118";
 
 import {
 isElliottType,
 elliottSelectionHandlePoints
-} from "./elliott-spec.js?v=efb6b06e";
+} from "./elliott-spec.js?v=3e4f3a47";
 
 import {
 shapeMissesViewport,
 shapeProjectsOnPlot
-} from "./draw-viewport-cull.js?v=4262c4a8";
+} from "./draw-viewport-cull.js?v=77fc6a94";
 
 export function createDrawRedrawLoop(
 deps

@@ -38,7 +38,9 @@ attachChartWheelDeadband
 
 import {
 createCanvasLwChart
-} from "./canvas-lw-host.js?v=894444c1";
+} from "./canvas-lw-host.js?v=44acf005";
+
+/* time-axis: stable ticks + crisp labels (timefix4) */
 
 import {
 ensureDomChartCrosshair,
@@ -338,12 +340,12 @@ restoreScreenerViewport,
 applyScreenerZoom,
 tfPeriodSec,
 rsiPlotTimeOffsetSec
-} from "./chart-viewport.js?v=7364f4ae";
+} from "./chart-viewport.js?v=896816b1";
 
 import {
 copyVisibleTimeRange,
 tfPeriodSec
-} from "./chart-viewport.js?v=7364f4ae";
+} from "./chart-viewport.js?v=896816b1";
 
 
 
@@ -1172,6 +1174,14 @@ subLinked
 );
 }
 
+try{
+linkedChart.bindTimeGuide?.(
+null
+);
+}catch{
+/* chart disposed */
+}
+
 };
 
 }
@@ -1740,7 +1750,7 @@ lineEl.classList.remove(
 
 export {
 linkChartsCrosshair
-} from "./chart-crosshair-link.js?v=0a140014";
+} from "./chart-crosshair-link.js?v=74333013";
 
 
 
@@ -1763,6 +1773,7 @@ const key of [
 "leftOffset",
 "minBarSpacing",
 "maxBarSpacing",
+"maxZoomOutBars",
 "shiftVisibleRangeOnNewBar"
 ]
 ){

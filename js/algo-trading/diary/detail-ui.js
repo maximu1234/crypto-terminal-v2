@@ -1,7 +1,7 @@
 import {
 destroyDiaryTradeChart,
 mountDiaryTradeChart
-} from "./chart.js?v=8e8cc55d";
+} from "./chart.js?v=5c60ae69";
 
 import {
 executionSideLabel,

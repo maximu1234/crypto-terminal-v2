@@ -19,7 +19,7 @@ applyTabletRsiChartOptions,
 SCREENER_PAGE_VISIBLE_BARS,
 SCREENER_PAGE_MAX_BARS,
 SCREENER_PAGE_HISTORY_REQUESTS
-} from "./chart-import.js?v=fa7cf2a4";
+} from "./chart-import.js?v=5bc46d47";
 
 import {
 isIpadWebViewport
@@ -49,6 +49,10 @@ paintLiveOhlcSeries
 } from "./chart/live-bar-roll.js?v=b31f3797";
 
 import {
+subscribeOhlcSecondTick
+} from "./chart/ohlc-second-tick.js?v=d4fce2a0";
+
+import {
 SCREENER_WIDGET_OSCILLATOR_AO,
 SCREENER_WIDGET_OSCILLATOR_CHANGED,
 SCREENER_WIDGET_OSCILLATOR_MACD,
@@ -57,7 +61,7 @@ createScreenerMacdChart,
 isScreenerHistogramOscillator,
 setScreenerAoData,
 setScreenerMacdData
-} from "./screener-widget-oscillator.js?v=630029ad";
+} from "./screener-widget-oscillator.js?v=ec166d37";
 
 import {
 shouldIgnoreTypingHotkey
@@ -849,6 +853,15 @@ zoomState.disposeTabletPan?.();
 }
 
 try{
+zoomState.unlinkTimeScales?.();
+}catch{
+/* ignore */
+}
+
+zoomState.unlinkTimeScales =
+null;
+
+try{
 zoomState.rsiChart?.remove?.();
 zoomState.chart?.remove?.();
 }catch{
@@ -1161,7 +1174,7 @@ const {
 mountWidgetTabletChart
 } =
 await import(
-"./tablet-widget-chart.js?v=280a33e2"
+"./tablet-widget-chart.js?v=3b121fcf"
 );
 
 if(
@@ -1744,8 +1757,8 @@ shifted
 
 }
 );
-const timer =
-setInterval(
+const unsubSecondTick =
+subscribeOhlcSecondTick(
 ()=>{
 
 if(
@@ -1776,8 +1789,7 @@ kind:
 }
 );
 
-},
-1000
+}
 );
 
 const unbindCatchup =
@@ -1822,9 +1834,7 @@ state.unsubKline =
 ()=>{
 unbindCatchup?.();
 unsub?.();
-clearInterval(
-timer
-);
+unsubSecondTick?.();
 };
 
 }
@@ -2203,6 +2213,8 @@ unbindUserPan:
 null,
 disposeTabletPan:
 null,
+unlinkTimeScales:
+null,
 userAdjustedZoom:
 false,
 fittedOnce:
@@ -2225,6 +2237,7 @@ state;
 
 let rsiLayoutRaf =
 0;
+state.unlinkTimeScales =
 linkPairedChartTimeScales(
 chart,
 oscChart,

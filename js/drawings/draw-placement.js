@@ -5,7 +5,7 @@
 import {
 hideDomChartCrosshair,
 positionTabletProbeHorizInStack
-} from "../chart-import.js?v=fa7cf2a4";
+} from "../chart-import.js?v=5bc46d47";
 
 import {
 ensureFibLevelsVisible,
@@ -14,7 +14,7 @@ ensureFibAnchorMinSpan,
 isFibType,
 isFibExtType,
 resolveFibTrendLineColor
-} from "./fib-spec.js?v=5da57af8";
+} from "./fib-spec.js?v=43350118";
 
 import {
 isPositionType
@@ -44,7 +44,7 @@ TEXT_DEFAULT_CONTENT
 import {
 ensureChannelLevelsVisible,
 cloneDefaultChannelRows
-} from "./channel-spec.js?v=e330dd9e";
+} from "./channel-spec.js?v=5e41db1c";
 
 import {
 isElliottType,
@@ -52,7 +52,7 @@ isPattern12Draw,
 elliottPointCount,
 normalizePattern12TpFlags,
 normalizePattern12TpLevels
-} from "./elliott-spec.js?v=efb6b06e";
+} from "./elliott-spec.js?v=3e4f3a47";
 
 import {
 isFvpType,

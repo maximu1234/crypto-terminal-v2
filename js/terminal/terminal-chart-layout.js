@@ -7,7 +7,7 @@ computeChartFutureMarginBars,
 computeCoinsChartViewportPlan,
 equalizeLinkedPanePriceScales,
 syncLinkedChartTimescales
-} from "../chart-import.js?v=fa7cf2a4";
+} from "../chart-import.js?v=5bc46d47";
 
 import {
 terminalVisibleBars,

@@ -5,7 +5,7 @@ import {
 maybeApplyAutoStopsForNewPosition,
 clearDismissedStops,
 isStopDismissed
-} from "./auto-stops.js?v=0e31e88c";
+} from "./auto-stops.js?v=0cc1c1d2";
 
 import {
 tryApplyDrawingStopsPending,
@@ -14,7 +14,7 @@ wasDrawingStopsJustApplied
 
 import {
 maybeReconcileOrdersOnPositionOpen
-} from "./position-open-orders.js?v=9f39b3e0";
+} from "./position-open-orders.js?v=e3894b33";
 
 import {
 maybeReconcileOrdersOnPositionClose
@@ -29,7 +29,7 @@ resetTradePositionSoundBaseline
 
 import {
 getTradeConfig
-} from "./config.js?v=6ddbe7e2";
+} from "./config.js?v=8396b3fd";
 
 const cacheBySymbol =
 new Map();

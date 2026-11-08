@@ -5,18 +5,18 @@ import {
 formatFibInputValue,
 parseFibRatioField,
 normalizeFibLevelColor
-} from "./fib-spec.js?v=5da57af8";
+} from "./fib-spec.js?v=43350118";
 
 import {
 setFibLevelColorButton
-} from "./draw-fib-settings.js?v=0cd438c4";
+} from "./draw-fib-settings.js?v=5a8a2107";
 
 import {
 CHANNEL_DEFAULT_COLOR,
 DEFAULT_CHANNEL_LEVEL_SPEC,
 cloneDefaultChannelRows,
 ensureChannelLevelsVisible
-} from "./channel-spec.js?v=e330dd9e";
+} from "./channel-spec.js?v=5e41db1c";
 
 export function channelSettingsHtml(){
 

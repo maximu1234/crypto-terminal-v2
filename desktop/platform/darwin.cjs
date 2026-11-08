@@ -38,14 +38,42 @@ function ensureAppVisible(
 app
 ){
 
+showDockIcon(
+app
+);
+
+}
+
+function showDockIcon(
+app
+){
+
 if(
-!app.dock?.show
+!app?.dock?.show
 ){
 return;
 }
 
 try{
 app.dock.show();
+}catch{
+/* ignore */
+}
+
+}
+
+function hideDockIcon(
+app
+){
+
+if(
+!app?.dock?.hide
+){
+return;
+}
+
+try{
+app.dock.hide();
 }catch{
 /* ignore */
 }
@@ -232,6 +260,8 @@ module.exports = {
 id,
 applyPlatformCommandLineSwitches,
 ensureAppVisible,
+showDockIcon,
+hideDockIcon,
 registerAuthProtocol,
 registerPlatformHandlers,
 registerActivateHandler,

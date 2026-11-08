@@ -6,7 +6,7 @@ getCachedPosition,
 listCachedPositionsForSymbol,
 removeTradePositionFromCache,
 upsertTradePositionInCache
-} from "./positions-cache.js?v=4e2f5360";
+} from "./positions-cache.js?v=799c29e8";
 
 import {
 getActiveTradeVolumeUsdt
@@ -15,7 +15,7 @@ getActiveTradeVolumeUsdt
 import {
 applyAutoStopsAfterEntry,
 getAutoStopSettings
-} from "./auto-stops.js?v=0e31e88c";
+} from "./auto-stops.js?v=0cc1c1d2";
 
 import {
 peekDrawingStopsPendingForSide,
@@ -29,11 +29,11 @@ marketMap
 
 import {
 getTradeConfig
-} from "./config.js?v=6ddbe7e2";
+} from "./config.js?v=8396b3fd";
 
 import {
 mountTradeChartMarkersToggle
-} from "./chart-execution-markers.js?v=d88e60f9";
+} from "./chart-execution-markers.js?v=2d50c86a";
 
 const REFRESH_MS =
 1500;

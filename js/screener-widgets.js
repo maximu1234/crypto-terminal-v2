@@ -23,7 +23,7 @@ mountChartPriceHud,
 SCREENER_PAGE_VISIBLE_BARS,
 SCREENER_PAGE_MAX_BARS,
 SCREENER_PAGE_HISTORY_REQUESTS
-} from "./chart-import.js?v=fa7cf2a4";
+} from "./chart-import.js?v=5bc46d47";
 
 import {
 isIpadWebViewport
@@ -44,12 +44,16 @@ paintLiveOhlcSeries
 } from "./chart/live-bar-roll.js?v=b31f3797";
 
 import {
+subscribeOhlcSecondTick
+} from "./chart/ohlc-second-tick.js?v=d4fce2a0";
+
+import {
 SCREENER_WIDGET_OSCILLATOR_AO,
 SCREENER_WIDGET_OSCILLATOR_MACD,
 createScreenerAoChart,
 createScreenerMacdChart,
 isScreenerHistogramOscillator
-} from "./screener-widget-oscillator.js?v=630029ad";
+} from "./screener-widget-oscillator.js?v=ec166d37";
 
 let deps = null;
 
@@ -708,8 +712,8 @@ shifted
 
 }
 );
-const timer =
-setInterval(
+const unsubSecondTick =
+subscribeOhlcSecondTick(
 ()=>{
 
 if(
@@ -746,8 +750,7 @@ kind:
 /* chart disposed during page change */
 }
 
-},
-1000
+}
 );
 
 const unbindCatchup =
@@ -795,9 +798,7 @@ widget.unsubKline =
 ()=>{
 unbindCatchup?.();
 unsub?.();
-clearInterval(
-timer
-);
+unsubSecondTick?.();
 };
 
 }

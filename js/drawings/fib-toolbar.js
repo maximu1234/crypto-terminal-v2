@@ -12,13 +12,13 @@ getDrawToolIconSrc
 
 import {
 closeElliottFlyout
-} from "./elliott-toolbar.js?v=44a77f19";
+} from "./elliott-toolbar.js?v=112e15f9";
 
 import {
 FIB_EXT_TYPE,
 FIB_RETRACEMENT_TYPE,
 isFibType
-} from "./fib-spec.js?v=5da57af8";
+} from "./fib-spec.js?v=43350118";
 
 const FLYOUT_CLASS =
 "fib-flyout";

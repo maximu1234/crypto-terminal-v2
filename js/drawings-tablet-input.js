@@ -4,7 +4,7 @@ isTabletChartViewport,
 hasAnyFinePointer,
 positionDomChartCrosshair,
 hideDomChartCrosshair
-} from "./chart-import.js?v=fa7cf2a4";
+} from "./chart-import.js?v=5bc46d47";
 
 import {
 isFineChartPointerType,
@@ -22,11 +22,11 @@ isHorizPriceTool
 import {
 isElliottType,
 elliottPointCount
-} from "./drawings/elliott-spec.js?v=efb6b06e";
+} from "./drawings/elliott-spec.js?v=3e4f3a47";
 
 import {
 isFibExtType
-} from "./drawings/fib-spec.js?v=5da57af8";
+} from "./drawings/fib-spec.js?v=43350118";
 
 /**
  * Touch/pointer placement for iPad and coarse-touch viewports.

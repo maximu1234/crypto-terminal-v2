@@ -11,7 +11,7 @@ import {
 
 import {
   normalizeRectangleShape
-} from "./arrow-rect.js?v=327f588e";
+} from "./arrow-rect.js?v=9ea26ef4";
 
 import {
   migrateFvpToolDefaults,
@@ -25,7 +25,7 @@ import {
   isFibType,
   isFibExtType,
   resolveFibTrendLineColor
-} from "./fib-spec.js?v=5da57af8";
+} from "./fib-spec.js?v=43350118";
 
 import {
   isPositionType
@@ -39,7 +39,7 @@ import {
 
 import {
   migrateChannelToolDefaults
-} from "./channel-spec.js?v=e330dd9e";
+} from "./channel-spec.js?v=5e41db1c";
 
 import {
   ELLIOTT_TOOL_TYPES,
@@ -47,7 +47,7 @@ import {
 isPattern12Draw,
 migrateElliottToolDefaults,
 normalizePattern12TpFlags
-} from "./elliott-spec.js?v=efb6b06e";
+} from "./elliott-spec.js?v=3e4f3a47";
 
 /**
  * @returns {{

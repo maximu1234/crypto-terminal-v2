@@ -291,7 +291,7 @@ span.x2,
 );
 
 test(
-"fibLevelXSpan keeps levels on the plot after zoom leaves both anchors",
+"fibLevelXSpan clips to the plot and hides a short fib past the edge",
 async()=>{
 
 const {
@@ -309,12 +309,8 @@ fibLevelXSpan(
 );
 
 assert.equal(
-left.x1,
-0
-);
-assert.equal(
-left.x2,
-600
+left,
+null
 );
 
 const partial =
@@ -333,11 +329,23 @@ partial.x2,
 250
 );
 
+const right =
+fibLevelXSpan(
+{ x: 700, y: 40 },
+{ x: 900, y: 80 },
+600
+);
+
+assert.equal(
+right,
+null
+);
+
 }
 );
 
 test(
-"fibShapeLevelXSpan fills the plot when toXY cannot map anchors",
+"fibShapeLevelXSpan returns null when toXY cannot map anchors",
 async()=>{
 
 const {
@@ -360,12 +368,8 @@ null,
 );
 
 assert.equal(
-span.x1,
-0
-);
-assert.equal(
-span.x2,
-500
+span,
+null
 );
 
 }

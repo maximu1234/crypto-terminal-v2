@@ -39,6 +39,22 @@ function ensureAppVisible(
 
 }
 
+function showDockIcon(
+/* app */
+){
+
+/* noop — Windows has no dock */
+
+}
+
+function hideDockIcon(
+/* app */
+){
+
+/* noop */
+
+}
+
 function registerAuthProtocol(
 ctx
 ){
@@ -189,6 +205,8 @@ module.exports = {
 id,
 applyPlatformCommandLineSwitches,
 ensureAppVisible,
+showDockIcon,
+hideDockIcon,
 registerAuthProtocol,
 registerPlatformHandlers,
 registerActivateHandler,

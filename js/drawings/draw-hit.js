@@ -14,7 +14,7 @@ brushPathScreenPoints
 import {
 rectangleBodyDist,
 rectangleScreenBox
-} from "./arrow-rect.js?v=327f588e";
+} from "./arrow-rect.js?v=9ea26ef4";
 
 import {
 fvpBodyDist,
@@ -36,7 +36,7 @@ fibLevelXSpan,
 fibShapeLevelXSpan,
 isFibType,
 isFibExtType
-} from "./fib-spec.js?v=5da57af8";
+} from "./fib-spec.js?v=43350118";
 
 import {
 FIB_HIT_X_PAD_PX,
@@ -60,7 +60,7 @@ measureTextBox
 import {
 channelLevelSegment,
 getChannelDrawRows
-} from "./channel-spec.js?v=e330dd9e";
+} from "./channel-spec.js?v=5e41db1c";
 
 import {
 isElliottType,
@@ -73,7 +73,7 @@ pattern12ChannelGeometry,
 pattern12DashScreen,
 pattern12TpTickLayout,
 isPattern12Draw
-} from "./elliott-spec.js?v=efb6b06e";
+} from "./elliott-spec.js?v=3e4f3a47";
 
 /**
  * @param {object} deps

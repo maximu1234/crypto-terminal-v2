@@ -42,7 +42,7 @@ createRSIChart,
 updateRsiBandLayout,
 updateRsiLevelLinesLayout,
 linkPairedChartTimeScales
-} from "./chart-import.js?v=fa7cf2a4";
+} from "./chart-import.js?v=5bc46d47";
 
 import {
 formatPrice
@@ -63,16 +63,16 @@ getScreenerWidgetOscillator,
 isScreenerHistogramOscillator,
 setScreenerAoData,
 setScreenerMacdData
-} from "./screener-widget-oscillator.js?v=630029ad";
+} from "./screener-widget-oscillator.js?v=ec166d37";
 
 import {
 createDashboardChartWidget,
 mountDashboardChartInteractions
-} from "./chart-widget-host.js?v=756c2719";
+} from "./chart-widget-host.js?v=a6983554";
 
 import {
 mountWidgetTabletChart
-} from "./tablet-widget-chart.js?v=280a33e2";
+} from "./tablet-widget-chart.js?v=3b121fcf";
 
 import {
 subscribeKline,
@@ -92,13 +92,17 @@ paintLiveOhlcSeries
 } from "./chart/live-bar-roll.js?v=b31f3797";
 
 import {
+subscribeOhlcSecondTick
+} from "./chart/ohlc-second-tick.js?v=d4fce2a0";
+
+import {
 getWidgetToolbarHtml,
 getWidgetChartUiHtml,
 initWidgetDrawToolsDropdown,
 wireWidgetDrawToolMenu,
 closeAllWidgetDrawToolsMenus,
 resetWidgetDrawToolsMenus
-} from "./watchlist-draw-ui.js?v=b9a7df74";
+} from "./watchlist-draw-ui.js?v=a1a127ed";
 
 import {
 ensureDrawToolsVisible
@@ -121,7 +125,7 @@ getWidgetFlagHtml,
 wireWidgetFlagUi,
 updateWidgetFlagUi,
 bindWidgetFlagGlobalListeners
-} from "./widget-favorite-flag.js?v=bfb009ef";
+} from "./widget-favorite-flag.js?v=a8ba85d3";
 
 function escapeHtml(
 value
@@ -194,7 +198,7 @@ return;
 
 const mod =
 await import(
-"./trade-widget-mount.js?v=592d79bf"
+"./trade-widget-mount.js?v=7f84cfed"
 );
 
 mountTradeOnDashboardWidget =
@@ -454,6 +458,13 @@ entry.unsubKline?.();
 entry.priceHudCtrl?.stop?.();
 entry.tabletGestures?.dispose?.();
 entry.disposeChartInteractions?.();
+try{
+entry.unlinkTimeScales?.();
+}catch{
+/* ignore */
+}
+entry.unlinkTimeScales =
+null;
 try{
 entry.drawingTools?.destroy();
 }catch(
@@ -1082,6 +1093,13 @@ borderVisible:false
 }
 });
 
+try{
+entry.unlinkTimeScales?.();
+}catch{
+/* ignore */
+}
+
+entry.unlinkTimeScales =
 linkPairedChartTimeScales(
 chart,
 entry.rsiChart,
@@ -1523,8 +1541,8 @@ priceHudCtrl?.refresh?.();
 
 }
 );
-const liveBarRollTimer =
-setInterval(
+const unsubSecondTick =
+subscribeOhlcSecondTick(
 ()=>{
 
 if(
@@ -1550,8 +1568,7 @@ paintWidgetLast(
 true
 );
 
-},
-1000
+}
 );
 
 const unbindCatchup =
@@ -1612,9 +1629,7 @@ entry.unsubKline =
 unbindCatchup?.();
 unsubKline?.();
 unsubTicker?.();
-clearInterval(
-liveBarRollTimer
-);
+unsubSecondTick?.();
 };
 
 applyChartPriceFormat(

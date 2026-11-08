@@ -6,12 +6,12 @@
 
 import {
 CandleBenchChart
-} from "../canvas-bench/chart.js?v=scale-pan10";
+} from "../canvas-bench/chart.js?v=timefix5";
 
 import {
 candleIndexAt,
 candleX
-} from "../canvas-bench/live-plan.js?v=scale-pan6";
+} from "../canvas-bench/live-plan.js?v=timefix4";
 
 import {
 PRICE_SCALE_LOG,
@@ -592,6 +592,34 @@ engine.timeH = 22;
 engine.formatTime = formatAxisTime;
 }
 
+engine.timeToX = time=>{
+
+const guided =
+guideX(time);
+
+if(guided != null){
+return guided;
+}
+
+if(!engine.layout || !engine.candles.length || !Number.isFinite(Number(time))){
+return null;
+}
+
+const index =
+fractionalIndexAtTime(engine.candles, Number(time));
+
+return candleX(
+index,
+engine.candles.length - 1,
+engine.layout.plotRight,
+engine.rightGap,
+engine.barSpacing,
+engine.panPx
+);
+
+};
+engine.timeFromX = x=>guideTime(x);
+
 const studies = overlayCanvas(container, engine.live);
 const markers = overlayCanvas(container, engine.live);
 engine.history.style.zIndex = "1";
@@ -608,6 +636,13 @@ engine.priceLineVisible = false;
 engine.lastValueVisible = false;
 }
 const rangeListeners = new Set();
+/*
+ * Guide panes must rebuild on every main view change. rangesClose in
+ * notifyRange would skip sub-0.25-bar pans, so time labels on RSI stayed
+ * glued while candles moved (Terminal). Algo synced local pan without
+ * isLocked; Terminal needs this eager path when the guide is bound.
+ */
+const guideViewListeners = new Set();
 let lastNotified = null;
 let pinnedRange = null;
 let pinWaitingForLayout = false;
@@ -619,6 +654,7 @@ let paneAutoScale = true;
 let timeGuide = null;
 let guideShiftX = 0;
 let guideShiftAt = -1;
+let guideRangeListener = null;
 
 function rangesClose(a, b){
 
@@ -805,7 +841,15 @@ function notifyRange(){
 
 const range = logicalRangeFromView(engine);
 
-if(!range || rangesClose(range, lastNotified)){
+if(!range){
+return;
+}
+
+for(const listener of guideViewListeners){
+listener(range);
+}
+
+if(rangesClose(range, lastNotified)){
 return;
 }
 
@@ -1775,6 +1819,53 @@ if(!engine.layout || !engine.candles.length){
 return;
 }
 
+/*
+ * Панель с bindTimeGuide: всегда копируем окно main.
+ * Иначе paneAligned/pinnedRange оставляют старый panPx,
+ * а подписи оси времени «стоят на месте» при панорамировании.
+ */
+if(timeGuide){
+
+const guideRange =
+timeGuide.timeScale?.().getVisibleLogicalRange?.();
+
+if(
+guideRange &&
+Number.isFinite(guideRange.from) &&
+Number.isFinite(guideRange.to) &&
+guideRange.to > guideRange.from
+){
+applyLogicalRange(engine, guideRange);
+pinnedRange = {
+from: guideRange.from,
+to: guideRange.to
+};
+/*
+ * Подгоняем spacing/pan к main — иначе guideX и локальная ось
+ * расходятся на доли пикселя и подписи дрожат на скринере/zoom.
+ */
+const mainSpacing =
+Number(
+timeGuide.timeScale?.().options?.()?.barSpacing
+);
+
+if(
+mainSpacing > 0 &&
+engine.candles.length > 0
+){
+engine.barSpacing = mainSpacing;
+engine.panPx =
+(
+Math.max(0, engine.candles.length - 1) -
+guideRange.to
+) * mainSpacing;
+}
+
+}
+
+return;
+}
+
 const mark =
 engine.candles.length + engine.layout.plotW / 1000;
 
@@ -2145,8 +2236,19 @@ return;
 pinWaitingForLayout = false;
 
 const current = logicalRangeFromView(engine);
+const followGuide =
+!!timeGuide;
 
 if(rangesClose(current, range)){
+
+/*
+ * Локальный диапазон уже совпал, но подписи оси идут через
+ * guideX главного графика — его пан всё равно надо дорисовать.
+ */
+if(followGuide){
+engine.scheduleRebuild();
+}
+
 return;
 }
 
@@ -2154,6 +2256,11 @@ const pan = engine.panPx;
 const spacing = engine.barSpacing;
 
 if(!applyLogicalRange(engine, range)){
+
+if(followGuide){
+engine.scheduleRebuild();
+}
+
 return;
 }
 
@@ -2161,6 +2268,11 @@ if(
 Math.abs(engine.panPx - pan) < 0.5 &&
 Math.abs(engine.barSpacing - spacing) < 0.01
 ){
+
+if(followGuide){
+engine.scheduleRebuild();
+}
+
 return;
 }
 
@@ -2173,6 +2285,12 @@ rangeListeners.add(listener);
 },
 unsubscribeVisibleLogicalRangeChange(listener){
 rangeListeners.delete(listener);
+},
+subscribeGuideViewChange(listener){
+guideViewListeners.add(listener);
+},
+unsubscribeGuideViewChange(listener){
+guideViewListeners.delete(listener);
 },
 timeToCoordinate(time){
 
@@ -2294,10 +2412,13 @@ engine.barSpacing = options.barSpacing;
 }
 
 if(
-Number.isFinite(options?.maxZoomOutBars) &&
-options.maxZoomOutBars > 0
+Number.isFinite(options?.maxZoomOutBars)
 ){
-engine.maxZoomOutBars = options.maxZoomOutBars;
+engine.maxZoomOutBars =
+Math.max(
+0,
+options.maxZoomOutBars
+);
 }
 
 if(options?.visible === true){
@@ -2327,7 +2448,8 @@ engine.scheduleRebuild();
 options(){
 return {
 rightOffset: engine.rightOffsetBars,
-barSpacing: engine.barSpacing
+barSpacing: engine.barSpacing,
+maxZoomOutBars: engine.maxZoomOutBars
 };
 }
 };
@@ -2561,14 +2683,52 @@ source.timeScale
 const same =
 timeGuide === next;
 
+if(
+guideRangeListener &&
+timeGuide?.timeScale
+){
+timeGuide.timeScale().unsubscribeGuideViewChange?.(
+guideRangeListener
+);
+timeGuide.timeScale().unsubscribeVisibleLogicalRangeChange(
+guideRangeListener
+);
+guideRangeListener = null;
+}
+
 timeGuide = next;
 guideShiftAt = -1;
 
-if(same){
-return;
+if(next?.timeScale){
+
+/*
+ * Подписи оси и seriesX идут через guideX главного графика.
+ * Eager guideView: каждый пан main, без порога rangesClose.
+ * Иначе даты на RSI «залипают», пока свечи уже едут.
+ */
+guideRangeListener =
+()=>{
+engine.scheduleRebuild();
+};
+if(
+typeof next.timeScale().subscribeGuideViewChange ===
+"function"
+){
+next.timeScale().subscribeGuideViewChange(
+guideRangeListener
+);
+}else{
+next.timeScale().subscribeVisibleLogicalRangeChange(
+guideRangeListener
+);
 }
 
+}
+
+if(!same){
 paneAligned = -1;
+}
+
 engine.scheduleRebuild();
 
 },
@@ -2580,8 +2740,30 @@ chart.applyOptions({ width, height });
 engine.scheduleRebuild();
 },
 remove(){
+try{
+chart.bindTimeGuide?.(
+null
+);
+}catch{
+/* ignore */
+}
+
 engine._ro?.disconnect();
+guideViewListeners.clear();
+rangeListeners.clear();
+priceRangeListeners.clear();
+clickListeners.clear();
+crosshairListeners.clear();
 container.replaceChildren();
+
+if(
+container.__canvasLwChart ===
+chart
+){
+container.__canvasLwChart =
+null;
+}
+
 },
 subscribeClick(listener){
 clickListeners.add(listener);
@@ -2632,6 +2814,7 @@ paintStudies();
 };
 
 host.chart = chart;
+container.__canvasLwChart = chart;
 
 if(!chartOpts.pane && !chartOpts.bare){
 candleSeries = chart.addCandlestickSeries(chartOpts.paint || {});

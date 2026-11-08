@@ -12,15 +12,15 @@ formatRsiAlertLevel,
 isMacdAlert,
 isOscillatorAlert,
 isRsiAlert
-} from "./alerts.js?v=f3c92c34";
+} from "./alerts.js?v=a66c2d92";
 
 import {
 isCloudLoggedInEffective
-} from "./cloud-sync.js?v=a3153665";
+} from "./cloud-sync.js?v=44d356aa";
 
 import {
 getTelegramChatId
-} from "./alerts-cloud-sync.js?v=d78d2231";
+} from "./alerts-cloud-sync.js?v=5ff7c829";
 
 import {
 formatPrice,
@@ -28,7 +28,7 @@ hideDomChartCrosshair,
 hideDomChartCrosshairHorz,
 hideDomChartCrosshairVert,
 positionDomChartCrosshair
-} from "./chart-import.js?v=fa7cf2a4";
+} from "./chart-import.js?v=5bc46d47";
 
 import {
 isFineChartPointerType

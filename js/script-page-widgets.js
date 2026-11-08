@@ -13,7 +13,7 @@ linkPairedChartTimeScales,
 SCREENER_PAGE_MAX_BARS,
 SCREENER_PAGE_VISIBLE_BARS,
 SCREENER_PAGE_HISTORY_REQUESTS
-} from "./chart-import.js?v=fa7cf2a4";
+} from "./chart-import.js?v=5bc46d47";
 
 import {
 loadMarketHistory,
@@ -41,6 +41,10 @@ paintLiveOhlcSeries
 } from "./chart/live-bar-roll.js?v=b31f3797";
 
 import {
+subscribeOhlcSecondTick
+} from "./chart/ohlc-second-tick.js?v=d4fce2a0";
+
+import {
 fetchTickersInto
 } from "./tickers.js?v=094c36f5";
 
@@ -57,7 +61,7 @@ getWidgetFlagHtml,
 wireWidgetFlagUi,
 updateWidgetFlagUi,
 bindWidgetFlagGlobalListeners
-} from "./widget-favorite-flag.js?v=bfb009ef";
+} from "./widget-favorite-flag.js?v=a8ba85d3";
 
 const SCRIPT_MAX_CONCURRENT_CHART_LOADS =
 4;
@@ -83,7 +87,7 @@ if(
 ){
 scriptZoomModulePromise =
 import(
-"./screener-widget-zoom.js?v=6f232f44"
+"./screener-widget-zoom.js?v=2bc18c0f"
 ).then(
 mod=>{
 refreshZoomFavoriteUi =
@@ -607,8 +611,8 @@ shifted
 
 }
 );
-const timer =
-setInterval(
+const unsubSecondTick =
+subscribeOhlcSecondTick(
 ()=>{
 
 if(
@@ -649,8 +653,7 @@ kind:
 /* chart disposed */
 }
 
-},
-1000
+}
 );
 
 const unbindCatchup =
@@ -702,9 +705,7 @@ widget.unsubKline =
 ()=>{
 unbindCatchup?.();
 unsub?.();
-clearInterval(
-timer
-);
+unsubSecondTick?.();
 };
 
 }

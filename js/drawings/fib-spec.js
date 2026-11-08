@@ -1341,16 +1341,13 @@ x
 );
 
 /*
- * Якоря вне шкалы: toXY может вернуть null, но уровни —
- * горизонтали по цене. Рисуем на весь плот.
+ * Якоря вне шкалы: toXY может вернуть null. Не растягиваем
+ * уровни на весь плот — короткая фиба иначе «разъезжается».
  */
 if(
 !xs.length
 ){
-return fibLevelXSpanFromXs(
-[],
-plotW
-);
+return null;
 }
 
 return fibLevelXSpanFromXs(
@@ -1410,35 +1407,7 @@ x
 if(
 !nums.length
 ){
-
-/*
- * Нет экранных x якорей — уровни всё равно горизонтали:
- * растягиваем на весь плот (как при обоих якорях за краем).
- */
-if(
-Number.isFinite(
-plotW
-) &&
-plotW >
-0
-){
-return {
-x1: 0,
-x2: plotW,
-labelX:
-Math.min(
-plotW + FIB_LABEL_X_PAD_PX,
-plotW - FIB_LABEL_RIGHT_RESERVE_PX
-)
-};
-}
-
-return {
-x1: 0,
-x2: 0,
-labelX: 0
-};
-
+return null;
 }
 
 let x1 =
@@ -1450,11 +1419,8 @@ Math.max(
 ...nums
 );
 
-let span =
-x2 - x1;
-
 if(
-span <
+x2 - x1 <
 FIB_MIN_ANCHOR_SPAN_PX
 ){
 
@@ -1470,107 +1436,44 @@ mid - half;
 x2 =
 mid + half;
 
-if(
-x1 <
-0
-){
-
-x2 -=
-x1;
-x1 =
-0;
-
 }
 
 if(
-x2 >
-plotW
-){
-
-const overflow =
-x2 - plotW;
-
-x1 -=
-overflow;
-x2 =
-plotW;
-
-}
-
-if(
-x1 <
-0
-){
-
-x1 =
-0;
-
-}
-
-if(
-x2 - x1 <
-FIB_MIN_ANCHOR_SPAN_PX &&
-plotW >=
-FIB_MIN_ANCHOR_SPAN_PX
-){
-
-x2 =
-Math.min(
-plotW,
-x1 +
-FIB_MIN_ANCHOR_SPAN_PX
-);
-x1 =
-Math.max(
-0,
-x2 -
-FIB_MIN_ANCHOR_SPAN_PX
-);
-
-}
-
-}
-
-/*
- * После зума оба якоря могут уехать влево (или вправо) от плота.
- * Уровни — горизонтали по цене: их оставляем на всём видимом плоте,
- * иначе фиба «исчезает», хотя hit-test по цене её ещё находит.
- */
-if(
+!(
 Number.isFinite(
 plotW
 ) &&
 plotW >
 0
-){
-
-if(
+) ||
 x2 <
 0 ||
 x1 >
 plotW
 ){
-x1 =
-0;
-x2 =
-plotW;
-}else{
-if(
-x1 <
-0
-){
-x1 =
-0;
-}
-if(
-x2 >
-plotW
-){
-x2 =
-plotW;
-}
+/*
+ * Короткая фиба целиком за краем — не растягивать на весь плот.
+ * Иначе при zoom in уровни внезапно на всю ширину экрана.
+ */
+return null;
 }
 
+x1 =
+Math.max(
+0,
+x1
+);
+x2 =
+Math.min(
+plotW,
+x2
+);
+
+if(
+x2 - x1 <
+1
+){
+return null;
 }
 
 return {

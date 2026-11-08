@@ -11,13 +11,18 @@ rightGapPx,
 clampPan,
 clampWheelZoomStep,
 liveUpdateKind,
+niceTimeAxisTimes,
 paintsLiveTick,
 panForAnchor,
 scaleFromCandles,
 visibleIndexSpan,
 WHEEL_ZOOM_GESTURE_MS,
 zoomOutFloorSpacing
-} from "./live-plan.js?v=scale-pan9";
+} from "./live-plan.js?v=timefix4";
+
+import {
+fractionalIndexAtTime
+} from "./drawings.js";
 
 import {
 PRICE_SCALE_LOG,
@@ -208,6 +213,7 @@ this.marginTop = 0;
 this.marginBottom = 0;
 this.showGrid = options.showGrid === true;
 this.formatTime = null;
+this._timeAxisStep = 0;
 this.manualScale = null;
 this.scale = null;
 this.layout = null;
@@ -478,15 +484,30 @@ this.scheduleRebuild();
 };
 
 /*
- * Пока окно не в фокусе, кадр анимации не вызывается.
- * Таймер всё равно дорисовывает кадр. Первый из двух
- * вызовов делает работу, второй уже ничего не повторяет.
+ * На переднем плане — только rAF. setTimeout нужен, когда
+ * вкладка скрыта: rAF там не тикает, иначе шкала «замирает».
  */
-if(typeof requestAnimationFrame === "function"){
-requestAnimationFrame(run);
+const hidden =
+typeof document !==
+"undefined" &&
+document.hidden ===
+true;
+
+if(
+!hidden &&
+typeof requestAnimationFrame ===
+"function"
+){
+requestAnimationFrame(
+run
+);
+return;
 }
 
-setTimeout(run, 32);
+setTimeout(
+run,
+32
+);
 
 }
 
@@ -641,6 +662,26 @@ xOf(index){
 
 const last =
 this.candles.length - 1;
+const candle =
+this.candles[index];
+
+/*
+ * Pane under bindTimeGuide: column x from main, not local pan.
+ * Иначе RSI-линия едет по guideX, а подписи оси (xOf) залипают.
+ */
+if(
+candle &&
+typeof this.timeToX === "function"
+){
+
+const guided =
+this.timeToX(candle.time);
+
+if(Number.isFinite(guided)){
+return guided;
+}
+
+}
 
 return candleX(
 index,
@@ -843,6 +884,8 @@ ctx.lineWidth = 1;
 ctx.textBaseline = "middle";
 
 if(!this.scale){
+this.drawTimeAxis();
+this.afterDraw?.();
 return;
 }
 
@@ -968,12 +1011,108 @@ this.afterDraw?.();
 
 }
 
+xOfTime(time){
+
+if(typeof this.timeToX === "function"){
+
+const guided =
+this.timeToX(time);
+
+if(Number.isFinite(guided)){
+return guided;
+}
+
+}
+
+if(!this.layout || !this.candles.length){
+return null;
+}
+
+const index =
+fractionalIndexAtTime(
+this.candles,
+Number(time)
+);
+
+if(!Number.isFinite(index)){
+return null;
+}
+
+return this.xOf(index);
+
+}
+
+timeAtPlotX(x){
+
+if(typeof this.timeFromX === "function"){
+
+const guided =
+this.timeFromX(x);
+
+if(Number.isFinite(guided)){
+return guided;
+}
+
+}
+
+if(!this.layout || !this.candles.length){
+return null;
+}
+
+const last =
+this.candles.length - 1;
+const index =
+candleIndexAt(
+x,
+last,
+this.layout.plotRight,
+this.rightGap,
+this.barSpacing,
+this.panPx
+);
+
+if(!Number.isFinite(index)){
+return null;
+}
+
+const lo =
+Math.max(
+0,
+Math.min(last, Math.floor(index))
+);
+const hi =
+Math.max(
+0,
+Math.min(last, Math.ceil(index))
+);
+const a =
+this.candles[lo];
+const b =
+this.candles[hi];
+
+if(!a){
+return null;
+}
+
+if(!b || lo === hi){
+return Number(a.time);
+}
+
+const t =
+index - lo;
+
+return Number(a.time) +
+(Number(b.time) - Number(a.time)) * t;
+
+}
+
 drawTimeAxis(){
 
 if(
 !(this.timeH > 0) ||
 typeof this.formatTime !== "function" ||
-this.candles.length < 2
+this.candles.length < 2 ||
+!this.layout
 ){
 return;
 }
@@ -986,38 +1125,102 @@ plotLeft,
 plotRight
 } =
 this.layout;
+/*
+ * Метки — к unix-времени (как TV), не к колонкам экрана:
+ * при панорамировании «12:00» едет вместе со свечой.
+ */
+const timeLeft =
+this.timeAtPlotX(plotLeft);
+const timeRight =
+this.timeAtPlotX(plotRight);
+
+if(
+!Number.isFinite(timeLeft) ||
+!Number.isFinite(timeRight) ||
+timeRight <= timeLeft
+){
+return;
+}
+
+const stripY =
+cssH - this.timeH;
+const stripW =
+Math.max(0, plotRight - plotLeft);
+const dpr =
+this.layout.dpr || 1;
 
 ctx.save();
 ctx.beginPath();
 ctx.rect(
 plotLeft,
-cssH - this.timeH,
-Math.max(0, plotRight - plotLeft),
+stripY,
+stripW,
 this.timeH
 );
 ctx.clip();
+/*
+ * Стираем полосу непрозрачно: иначе при панорамировании
+ * антиалиас текста даёт «раздвоение» цифр (особенно скринер/zoom).
+ */
+ctx.fillStyle = BG;
+ctx.fillRect(
+plotLeft,
+stripY,
+stripW,
+this.timeH
+);
 ctx.font = FONT;
 ctx.fillStyle = AXIS;
 ctx.textAlign = "center";
 ctx.textBaseline = "top";
 
 const y =
-cssH - this.timeH + 4;
+Math.round((stripY + 4) * dpr) / dpr;
 let lastX =
 -Infinity;
+const times =
+niceTimeAxisTimes(
+timeLeft,
+timeRight,
+plotRight - plotLeft,
+72,
+this._timeAxisStep
+);
 
-for(let i = 0; i < this.candles.length; i++){
+if(times.step > 0){
+this._timeAxisStep = times.step;
+}
+
+const stamps =
+times.length
+? times
+: this.candles.map(c=>
+Number(c.time)
+);
+
+for(const time of stamps){
+
+const rawX =
+this.xOfTime(time);
+
+if(
+!Number.isFinite(rawX) ||
+rawX < plotLeft ||
+rawX > plotRight
+){
+continue;
+}
 
 const x =
-this.xOf(i);
+Math.round(rawX * dpr) / dpr;
 
-if(x < plotLeft || x > plotRight || x - lastX < 72){
+if(x - lastX < 56){
 continue;
 }
 
 lastX = x;
 ctx.fillText(
-this.formatTime(this.candles[i].time),
+this.formatTime(time),
 x,
 y
 );

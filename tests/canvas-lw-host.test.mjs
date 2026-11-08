@@ -2,7 +2,13 @@ import test from "node:test";
 import assert from "node:assert/strict";
 
 import { timeAtFractionalIndex } from "../js/canvas-bench/drawings.js";
-import { candleIndexAt, candleX, rightGapPx } from "../js/canvas-bench/live-plan.js";
+import {
+  candleIndexAt,
+  candleX,
+  niceTimeAxisTimes,
+  rightGapPx,
+  stickTimeAxisStepSec
+} from "../js/canvas-bench/live-plan.js";
 import {
   applyLogicalRange,
   baselineCrossingPoint,
@@ -99,6 +105,32 @@ test("dense screener window is not clamped to 1.5px bars", () => {
   assert.ok(Math.abs(again.to - range.to) < 0.05);
 });
 
+test("screener zoom-out floor rejects a wider logical window", () => {
+  const engine = engineAt(0, 8, 0.15);
+  engine.layout = { plotLeft: 0, plotRight: 400, plotW: 400 };
+  engine.maxZoomOutBars = 2499;
+  engine.rightOffsetBars = 375;
+  assert.equal(
+    applyLogicalRange(engine, { from: 0, to: 2499 }),
+    true
+  );
+  assert.equal(
+    applyLogicalRange(engine, { from: 0, to: 2800 }),
+    false
+  );
+});
+
+test("maxZoomOutBars 0 disables the zoom-out floor", () => {
+  const engine = engineAt(0, 8, 0.15);
+  engine.layout = { plotLeft: 0, plotRight: 400, plotW: 400 };
+  engine.maxZoomOutBars = 0;
+  engine.rightOffsetBars = 4;
+  assert.equal(
+    applyLogicalRange(engine, { from: 0, to: 2800 }),
+    true
+  );
+});
+
 test("symmetric price margins do not leave a dead vertical band", () => {
   assert.deepEqual(mainScalePixelMargins(0.12, 0.12), { top: 0, bottom: 0 });
   assert.deepEqual(mainScalePixelMargins(0, 0), { top: 0, bottom: 0 });
@@ -186,6 +218,80 @@ test("baseline RSI color split lands exactly on the mid level", () => {
   assert.equal(down.t, 0.5);
   assert.equal(down.x, 20);
   assert.equal(down.y, 60);
+});
+
+test("time axis ticks stay anchored to unix time when the chart pans", () => {
+  const from = Date.UTC(2026, 10, 7, 10, 0, 0) / 1000;
+  const to = Date.UTC(2026, 10, 7, 18, 0, 0) / 1000;
+  const times = niceTimeAxisTimes(from, to, 800, 72);
+  assert.ok(times.length >= 3);
+  for (let i = 1; i < times.length; i++) {
+    assert.ok(times[i] > times[i - 1]);
+    assert.equal(times[i] % 3600, 0);
+  }
+
+  const engine = engineAt(0, 8);
+  const stamp = engine.candles[50].time;
+  const x0 = candleX(
+    50,
+    engine.candles.length - 1,
+    engine.layout.plotRight,
+    engine.rightGap,
+    engine.barSpacing,
+    engine.panPx
+  );
+  engine.panPx += 40;
+  const x1 = candleX(
+    50,
+    engine.candles.length - 1,
+    engine.layout.plotRight,
+    engine.rightGap,
+    engine.barSpacing,
+    engine.panPx
+  );
+  assert.equal(x1 - x0, 40);
+  assert.equal(engine.candles[50].time, stamp);
+});
+
+test("time axis step hysterises instead of flipping every frame", () => {
+  assert.equal(
+    stickTimeAxisStepSec(1209600, 604800, 120 * 86400, 12),
+    604800
+  );
+  assert.equal(
+    stickTimeAxisStepSec(2592000, 60, 120 * 86400, 12),
+    2592000
+  );
+});
+
+test("multi-day time ticks keep a stable phase while the window slides", () => {
+  const day = 86400;
+  const width = 900;
+  const span = 120 * day;
+  const a0 = Date.UTC(2026, 0, 10, 3, 0, 0) / 1000;
+  const b0 = a0 + span;
+  const first = niceTimeAxisTimes(a0, b0, width, 72);
+  assert.ok(first.length >= 4);
+  const step = first[1] - first[0];
+  assert.ok(step >= 7 * day);
+
+  const shift = 3 * day + 3600;
+  const second = niceTimeAxisTimes(a0 + shift, b0 + shift, width, 72);
+  const shared = first.filter((t) => second.includes(t));
+  assert.ok(shared.length >= 2, "grid phase must not jump on a short pan");
+  for (const t of shared) {
+    assert.equal(t % step, first[0] % step);
+  }
+});
+
+test("guide view listeners are distinct from debounced range listeners", () => {
+  // Contract: canvas-lw-host exposes subscribeGuideViewChange so RSI time
+  // labels rebuild on every main pan, not only when rangesClose (>0.25 bar).
+  assert.equal(typeof mapGuideX, "function");
+  const guided = mapGuideX(100, 12);
+  assert.equal(guided, 112);
+  const afterPan = mapGuideX(140, 12);
+  assert.equal(afterPan - guided, 40);
 });
 
 test("screener bar spacing matches applyLogicalRange ratio branch", () => {

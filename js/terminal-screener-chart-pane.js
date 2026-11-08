@@ -19,11 +19,11 @@ appendFutureWhitespaceBars,
 computeChartFutureMarginBars,
 coinsTfVisibleBars,
 linkChartsCrosshair
-} from "./chart-import.js?v=fa7cf2a4";
+} from "./chart-import.js?v=5bc46d47";
 
 import {
 readCoinsPrefs
-} from "./terminal/terminal-prefs.js?v=004b0449";
+} from "./terminal/terminal-prefs.js?v=be2f0c1a";
 
 import {
 calculateRSI,
@@ -49,12 +49,16 @@ paintCatchupLiveSeries
 } from "./chart/live-bar-roll.js?v=b31f3797";
 
 import {
+subscribeOhlcSecondTick
+} from "./chart/ohlc-second-tick.js?v=d4fce2a0";
+
+import {
 alignCandlesToTradePrice
 } from "./chart/kline-trade-scale.js?v=3b0f786d";
 
 import {
 mountWidgetDomCrosshair
-} from "./chart-widget-host.js?v=756c2719";
+} from "./chart-widget-host.js?v=a6983554";
 
 function buildBodyHtml(
 showRsi
@@ -144,7 +148,7 @@ let unbindCatchup =
 null;
 let unsubTicker =
 null;
-let liveBarRollTimer =
+let unsubSecondTick =
 null;
 let onMarketLastPrice =
 null;
@@ -975,15 +979,9 @@ null;
 unsubTicker?.();
 unsubTicker =
 null;
-if(
-liveBarRollTimer
-){
-clearInterval(
-liveBarRollTimer
-);
-liveBarRollTimer =
+unsubSecondTick?.();
+unsubSecondTick =
 null;
-}
 if(
 onMarketLastPrice
 ){
@@ -1327,8 +1325,9 @@ total
 }
 );
 
-liveBarRollTimer =
-setInterval(
+unsubSecondTick?.();
+unsubSecondTick =
+subscribeOhlcSecondTick(
 ()=>{
 if(
 !alive ||
@@ -1360,8 +1359,7 @@ rsiSeries
 updateRsiData();
 }
 }
-},
-1000
+}
 );
 
 unbindCatchup =

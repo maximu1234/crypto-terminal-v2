@@ -894,7 +894,9 @@ rightMargin
 
 chart.timeScale().applyOptions({
 barSpacing,
-rightOffset:rightMargin
+rightOffset:rightMargin,
+maxZoomOutBars:
+contentBars
 });
 
 chart.timeScale().setVisibleLogicalRange({
@@ -1032,6 +1034,8 @@ barSpacing:
 primingSpacing,
 rightOffset:
 rightMargin,
+maxZoomOutBars:
+contentBars,
 fixRightEdge:
 false,
 shiftVisibleRangeOnNewBar:
@@ -1060,7 +1064,9 @@ chart.timeScale().applyOptions({
 barSpacing:
 lockedSpacing,
 rightOffset:
-rightMargin
+rightMargin,
+maxZoomOutBars:
+contentBars
 });
 
 /*

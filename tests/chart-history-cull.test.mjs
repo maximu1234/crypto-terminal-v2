@@ -148,7 +148,7 @@ assert.equal(shapeProjectsOnPlot(shape, ()=>null, 200, 100), false);
 
 });
 
-test("a fib stays in the price window after its anchors leave the time range", ()=>{
+test("a short fib leaves with its anchors instead of filling the plot", ()=>{
 
 /*
  * Короткий fibLevels всё равно мержится с DEFAULT_FIB_SPEC —
@@ -187,19 +187,30 @@ priceFrom: 10,
 priceTo: 90
 };
 
-assert.equal(shapeMissesViewport(fib, view), false);
+assert.equal(shapeMissesViewport(fib, view), true);
 assert.equal(shapeMissesViewport(fib, {
 ...view,
 priceFrom: 200,
 priceTo: 300
 }), true);
+assert.equal(shapeMissesViewport(fib, {
+timeFrom: 1,
+timeTo: 50,
+priceFrom: 10,
+priceTo: 90
+}), false);
 
 /*
- * Якоря слева от плота: уровни всё равно растягиваются
- * на весь plotW — и hit-test, и отрисовка их видят.
+ * Якоря слева от плота: короткая фиба не растягивается
+ * на весь plotW — ни hit-test, ни отрисовка.
  */
 assert.equal(shapeProjectsOnPlot(fib, point=>({
 x: point.time === 10 ? -800 : -700,
+y: 100 - point.price
+}), 200, 100), false);
+
+assert.equal(shapeProjectsOnPlot(fib, point=>({
+x: point.time === 10 ? -40 : 80,
 y: 100 - point.price
 }), 200, 100), true);
 
@@ -237,15 +248,28 @@ priceFrom: 5000,
 priceTo: 8000
 }), true);
 
+/*
+ * Якоря слева, но уровни 2…3 ещё в цене: объект остаётся
+ * в shapeMissesViewport; на плот проецируется только если
+ * X-span якорей пересекает окно (не на весь plotW).
+ */
 assert.equal(shapeProjectsOnPlot(fib, (point)=>{
 const price = Number(point.price);
-/* Плот: y 0…100 ↔ цена 2400…200 (как после зума вверх). */
+const y = 100 * (2400 - price) / (2400 - 200);
+return {
+x: point.time === 10 ? -40 : 80,
+y
+};
+}, 200, 100), true);
+
+assert.equal(shapeProjectsOnPlot(fib, (point)=>{
+const price = Number(point.price);
 const y = 100 * (2400 - price) / (2400 - 200);
 return {
 x: point.time === 10 ? -400 : -300,
 y
 };
-}, 200, 100), true);
+}, 200, 100), false);
 
 });
 

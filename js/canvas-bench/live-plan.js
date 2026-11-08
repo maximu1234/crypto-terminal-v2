@@ -572,3 +572,247 @@ Math.max(0.01, spacing)
 );
 
 }
+
+/** Шаги оси времени (сек) — как у TradingView: метка привязана ко времени, не к слоту экрана. */
+const TIME_AXIS_STEPS_SEC =
+[
+60,
+120,
+300,
+600,
+900,
+1800,
+3600,
+7200,
+10800,
+14400,
+21600,
+43200,
+86400,
+172800,
+604800,
+1209600,
+2592000
+];
+
+function pickTimeAxisStepSec(
+spanSec,
+targetCount
+){
+
+const raw =
+Math.max(
+1,
+Number(spanSec) || 1
+) / Math.max(1, targetCount);
+
+for(const step of TIME_AXIS_STEPS_SEC){
+
+if(step >= raw){
+return step;
+}
+
+}
+
+return TIME_AXIS_STEPS_SEC[
+TIME_AXIS_STEPS_SEC.length - 1
+];
+
+}
+
+/**
+ * Не прыгать 7д↔14д на каждом кадре пана — иначе подписи
+ * «раздваиваются» на скринере/zoom.
+ */
+export function stickTimeAxisStepSec(
+idealStep,
+preferredStep,
+spanSec,
+targetCount
+){
+
+const ideal =
+Number(idealStep) || 0;
+const preferred =
+Number(preferredStep) || 0;
+
+if(!(preferred > 0) || preferred === ideal){
+return ideal;
+}
+
+const idx =
+TIME_AXIS_STEPS_SEC.indexOf(ideal);
+const pidx =
+TIME_AXIS_STEPS_SEC.indexOf(preferred);
+
+if(idx < 0 || pidx < 0 || Math.abs(idx - pidx) > 1){
+return ideal;
+}
+
+const target =
+Math.max(1, Number(targetCount) || 1);
+const count =
+Math.max(1, Number(spanSec) || 1) / preferred;
+
+if(
+count >= target * 0.55 &&
+count <= target * 1.85
+){
+return preferred;
+}
+
+return ideal;
+
+}
+
+function alignTimeAxisSec(
+sec,
+stepSec
+){
+
+const step =
+Math.max(1, Math.floor(Number(stepSec) || 1));
+const date =
+new Date(Number(sec) * 1000);
+
+if(!Number.isFinite(date.getTime())){
+return Math.floor(Number(sec) || 0);
+}
+
+if(step >= 86400){
+
+const dayStep =
+Math.max(1, Math.round(step / 86400));
+
+/*
+ * Сетка должна быть стабильной относительно эпохи.
+ * Если выравнивать к «полуночи текущего timeLeft», при панорамировании
+ * фаза 7/14-дневных меток прыгает — подписи «стоят на месте»,
+ * пока свечи уже уехали (Terminal/Скринер на широком зуме).
+ */
+if(dayStep === 1){
+date.setHours(0, 0, 0, 0);
+return Math.floor(date.getTime() / 1000);
+}
+
+const utcDay =
+Math.floor(Number(sec) / 86400);
+
+return (
+Math.floor(utcDay / dayStep) *
+dayStep *
+86400
+);
+
+}
+
+if(step >= 3600){
+
+const stepHours =
+Math.max(1, Math.round(step / 3600));
+
+date.setMinutes(0, 0, 0);
+date.setHours(
+Math.floor(date.getHours() / stepHours) *
+stepHours
+);
+
+return Math.floor(date.getTime() / 1000);
+
+}
+
+const stepMin =
+Math.max(1, Math.round(step / 60));
+
+date.setSeconds(0, 0);
+date.setMinutes(
+Math.floor(date.getMinutes() / stepMin) *
+stepMin
+);
+
+return Math.floor(date.getTime() / 1000);
+
+}
+
+/**
+ * Метки оси времени по видимому диапазону.
+ * Возвращает unix-sec; вызывающий сам переводит в x — тогда подписи едут с паном.
+ */
+export function niceTimeAxisTimes(
+fromSec,
+toSec,
+plotW,
+minLabelPx = 72,
+preferredStep = 0
+){
+
+const t0 =
+Number(fromSec);
+const t1 =
+Number(toSec);
+
+if(
+!Number.isFinite(t0) ||
+!Number.isFinite(t1) ||
+t1 <= t0
+){
+const empty =
+[];
+empty.step = 0;
+return empty;
+}
+
+const width =
+Math.max(1, Number(plotW) || 1);
+const minPx =
+Math.max(32, Number(minLabelPx) || 72);
+const target =
+Math.max(
+2,
+Math.floor(width / minPx)
+);
+const ideal =
+pickTimeAxisStepSec(t1 - t0, target);
+const step =
+stickTimeAxisStepSec(
+ideal,
+preferredStep,
+t1 - t0,
+target
+);
+let cursor =
+alignTimeAxisSec(t0, step);
+let bump =
+0;
+
+while(
+cursor < t0 &&
+bump < 64
+){
+cursor += step;
+bump += 1;
+}
+
+const out =
+[];
+const guard =
+Math.max(8, target * 4);
+
+for(
+let n = 0;
+n < guard && cursor <= t1 + step * 0.01;
+n++
+){
+
+if(cursor >= t0 - 1 && cursor <= t1 + 1){
+out.push(cursor);
+}
+
+cursor += step;
+
+}
+
+out.step = step;
+return out;
+
+}

@@ -524,25 +524,17 @@ app
 
 function showDockIcon(){
 
-if(
-process.platform ===
-"darwin" &&
-app.dock
-){
-app.dock.show();
-}
+platform.impl.showDockIcon?.(
+app
+);
 
 }
 
 function hideDockIcon(){
 
-if(
-process.platform ===
-"darwin" &&
-app.dock
-){
-app.dock.hide();
-}
+platform.impl.hideDockIcon?.(
+app
+);
 
 }
 

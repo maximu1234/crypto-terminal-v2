@@ -8,12 +8,12 @@ syncTradePositionsCache,
 upsertTradePositionInCache,
 markTradePositionRecentlyClosed,
 isTradePositionRecentlyClosed
-} from "./positions-cache.js?v=4e2f5360";
+} from "./positions-cache.js?v=799c29e8";
 
 import {
 markStopDismissed,
 clearDismissedStops
-} from "./auto-stops.js?v=0e31e88c";
+} from "./auto-stops.js?v=0cc1c1d2";
 
 import {
 isExchangeTradingEnabled
@@ -26,7 +26,7 @@ usdtPriceToSeries
 
 import {
 getTradeConfig
-} from "./config.js?v=6ddbe7e2";
+} from "./config.js?v=8396b3fd";
 
 import {
 formatTradePnl,
