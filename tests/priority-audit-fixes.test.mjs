@@ -86,10 +86,12 @@ test("telegram webhook and external navigation fail closed", () => {
   }
 });
 
-test("macOS secrets use safeStorage and algo live checks are re-read", () => {
+test("macOS secrets skip the login keychain and algo live checks are re-read", () => {
   for (const file of ["desktop/user-store.cjs", "bot-app/user-store.cjs"]) {
     const source = read(file);
-    assert.doesNotMatch(source, /process\.platform ===\s*\n"darwin"/);
+    assert.match(source, /process\.platform ===\s*\n"darwin"/);
+    assert.match(source, /return false;/);
+    assert.match(source, /isLegacySafeStorageBlob/);
     assert.match(source, /safeStorage\.isEncryptionAvailable/);
   }
   const runtime = read("desktop/trading/algo-trading-runtime.cjs");

@@ -16,17 +16,17 @@ removeAlert,
 stripAlertFlagsNotInRegistry,
 removeAllAlerts,
 alertExchangeId
-} from "./alerts.js?v=ac4ddae0";
+} from "./alerts.js?v=7ad177f6";
 
 import {
 buildAlertChartUrl
-} from "./alert-deep-link-exchange.js?v=711d7dad";
+} from "./alert-deep-link-exchange.js?v=0c7d56b4";
 
 import {
 getTelegramChatId,
 initAlertsCloudSync,
 pullAlertHistoryFromCloud
-} from "./alerts-cloud-sync.js?v=69263323";
+} from "./alerts-cloud-sync.js?v=fb388fa0";
 
 import {
 readAlertTokenSync
@@ -39,11 +39,11 @@ onCloudSyncChange,
 getCloudUserEmail,
 pullDeviceStateFromCloud,
 ensureCloudLoginResolved
-} from "./cloud-sync.js?v=77eb1e79";
+} from "./cloud-sync.js?v=0e5464e2";
 
 import {
 ensureCloudReady
-} from "./auth-ui.js?v=7b6d0aaa";
+} from "./auth-ui.js?v=f7a4819a";
 
 import {
 TELEGRAM_BOT_USERNAME,

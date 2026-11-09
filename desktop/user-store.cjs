@@ -1,10 +1,11 @@
 /**
- * userData persistence. Secrets use Electron safeStorage when the OS reports
- * it (macOS Keychain, Windows DPAPI, Linux). Plaintext UTF-8 remains only if
- * encryption is unavailable. An existing plaintext file is re-encrypted on read.
+ * userData persistence. Windows and Linux use Electron safeStorage (DPAPI /
+ * libsecret): that does not ask for the computer password. macOS Keychain
+ * does, so secrets there stay plaintext. A v10 blob left by the short-lived
+ * Mac encryption is unwrapped once and written back as plaintext.
  *
- * On read, decrypt FIRST — encrypted blobs can look like UTF-8 without NUL
- * bytes and must not be treated as plain.
+ * On Windows/Linux, decrypt FIRST — encrypted blobs can look like UTF-8
+ * without NUL bytes and must not be treated as plain.
  */
 const fs =
 require(
@@ -52,7 +53,30 @@ return false;
 
 }
 
+function isLegacySafeStorageBlob(
+buf
+){
+
+return buf.length >=
+3 &&
+buf[0] ===
+0x76 &&
+buf[1] ===
+0x31 &&
+buf[2] ===
+0x30;
+
+}
+
 function isCredentialEncryptionAvailable(){
+
+/* Login Keychain asks for the Mac password. DPAPI does not. */
+if(
+process.platform ===
+"darwin"
+){
+return false;
+}
 
 try{
 return !!safeStorage.isEncryptionAvailable();
@@ -233,7 +257,30 @@ return text;
 return null;
 }
 
-/* Encryption unavailable: plaintext, then migrate legacy safeStorage blobs. */
+/* macOS, or OS crypto unavailable: plaintext. v10 is unwrapped once. */
+if(
+isLegacySafeStorageBlob(
+raw
+)
+){
+const legacy =
+tryDecryptSecret(
+raw
+);
+
+if(
+legacy
+){
+writePlain(
+filePath,
+legacy
+);
+return legacy;
+}
+
+return null;
+}
+
 if(
 looksLikePlainUtf8(
 raw

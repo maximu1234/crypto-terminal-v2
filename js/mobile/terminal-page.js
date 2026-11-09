@@ -15,14 +15,14 @@ import {
   cancelOpenOrder,
   openMarket,
   closeMarket
-} from "./trade-lite.js?v=17f988fc";
+} from "./trade-lite.js?v=42a0e402";
 import {
   initMobileAlertsLite,
   listMobileAlerts,
   createMobilePriceAlert,
   removeMobileAlert,
   formatMobileAlertLine
-} from "./alerts-lite.js?v=db98fde8";
+} from "./alerts-lite.js?v=793bd45a";
 
 const STORAGE_SYMBOL = "mc-mobile-terminal-symbol-v1";
 const STORAGE_TF = "mc-mobile-terminal-tf-v1";

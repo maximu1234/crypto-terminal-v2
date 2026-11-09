@@ -5,7 +5,7 @@ import {
 getTelegramChatId,
 saveTelegramChatId,
 clearTelegramChatId
-} from "./alerts-cloud-sync.js?v=69263323";
+} from "./alerts-cloud-sync.js?v=fb388fa0";
 
 import {
 TELEGRAM_BOT_USERNAME,
@@ -16,7 +16,7 @@ import {
 isCloudLoggedIn,
 getCloudUserEmail,
 onCloudSyncChange
-} from "./cloud-sync.js?v=77eb1e79";
+} from "./cloud-sync.js?v=0e5464e2";
 
 function setStatus(
 el,

@@ -3,7 +3,7 @@
  */
 import {
 createScriptWidgetGrid
-} from "./script-page-widgets.js?v=1f00219d";
+} from "./script-page-widgets.js?v=40e32623";
 
 import {
 getSharedPatternScanner,

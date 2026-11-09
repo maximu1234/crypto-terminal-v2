@@ -8,7 +8,7 @@ isMacdAlert,
 isOscillatorAlert,
 isRsiAlert,
 normalizeAlertTf
-} from "./alerts.js?v=ac4ddae0";
+} from "./alerts.js?v=7ad177f6";
 
 import {
 subscribeKline
@@ -27,7 +27,7 @@ getAlertToastDurationMs
 import {
 buildAlertChartUrl,
 gateAlertExchangeNavigation
-} from "./alert-deep-link-exchange.js?v=711d7dad";
+} from "./alert-deep-link-exchange.js?v=0c7d56b4";
 
 /* Базовая цена отдельно для каждого алерта (symbol + shapeId) */
 const lastPriceByAlert =
