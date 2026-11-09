@@ -351,6 +351,18 @@ body.terminal-page .widget-draw-tools{
     height:28px;
 }
 
+.widget-draw-tools-menu .draw-tool-hide-drawings .draw-tool-hide-drawings-eye-off{
+    display:none;
+}
+
+.widget-draw-tools-menu .draw-tool-hide-drawings.is-drawings-hidden .draw-tool-hide-drawings-eye{
+    display:none;
+}
+
+.widget-draw-tools-menu .draw-tool-hide-drawings.is-drawings-hidden .draw-tool-hide-drawings-eye-off{
+    display:block;
+}
+
 .draw-btn-sm .draw-tool-icon--xl{
     width:26px;
     height:26px;

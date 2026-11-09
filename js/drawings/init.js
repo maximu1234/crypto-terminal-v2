@@ -9,7 +9,7 @@ TRASH_ICON_SVG
 
 import {
 closeAllWidgetDrawToolsMenus
-} from "../watchlist-draw-ui.js?v=a1a127ed";
+} from "../watchlist-draw-ui.js?v=dcc02ce7";
 
 import {
 ensureDrawToolsVisible
@@ -169,11 +169,11 @@ createDrawingsPersist
 
 import {
 createDrawStyleBar
-} from "./draw-style-bar.js?v=9aa651f4";
+} from "./draw-style-bar.js?v=520f8148";
 
 import {
 createDrawAlertsChart
-} from "./draw-alerts-chart.js?v=d1f157ed";
+} from "./draw-alerts-chart.js?v=a26c6d6d";
 
 import {
 createDrawPlacement
@@ -3453,7 +3453,7 @@ lastChartAlertsPullMs =
 Date.now();
 
 void import(
-"../alerts-cloud-sync.js?v=3c1f57e1"
+"../alerts-cloud-sync.js?v=2919a2aa"
 ).then(
 ({ pullRegistryFromCloudNow })=>
 pullRegistryFromCloudNow({

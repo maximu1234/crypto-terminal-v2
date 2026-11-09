@@ -3,7 +3,7 @@
  */
 import {
 initWidgetDrawings
-} from "../chart-widget-host.js?v=d97076af";
+} from "../chart-widget-host.js?v=ab479137";
 
 import {
 mountDrawToolbar,

@@ -5,6 +5,10 @@ import {
   getDrawToolbarButtonsHtml
 } from "../js/draw-ui-shared.js";
 
+import {
+  getWidgetToolbarHtml
+} from "../js/watchlist-draw-ui.js";
+
 test("terminal toolbar puts the eye between volume profile and trash", () => {
   const html = getDrawToolbarButtonsHtml({
     showDrawingsVisibilityToggle: true
@@ -17,6 +21,17 @@ test("terminal toolbar puts the eye between volume profile and trash", () => {
   assert.ok(eye > fvp);
   assert.ok(trash > eye);
   assert.match(html, /Скрыть рисунки/);
+});
+
+test("watchlist widget menu puts the eye between volume profile and trash", () => {
+  const html = getWidgetToolbarHtml();
+  const fvp = html.indexOf('data-draw-tool="fvp"');
+  const eye = html.indexOf("draw-tool-hide-drawings");
+  const trash = html.indexOf("draw-tool-clear-all");
+
+  assert.ok(fvp > 0);
+  assert.ok(eye > fvp);
+  assert.ok(trash > eye);
 });
 
 test("other toolbars do not get the eye button", () => {

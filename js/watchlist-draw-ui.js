@@ -393,7 +393,10 @@ ${DRAW_TOOLS_PALETTE_ICON_SVG}
 </button>
 
 <div class="widget-draw-tools-menu hidden" role="menu">
-${getDrawToolbarButtonsHtml({ compact: true })}
+${getDrawToolbarButtonsHtml({
+compact: true,
+showDrawingsVisibilityToggle: true
+})}
 </div>
 
 </div>
