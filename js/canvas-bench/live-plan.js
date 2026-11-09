@@ -709,8 +709,47 @@ const TIME_AXIS_STEPS_SEC =
 172800,
 604800,
 1209600,
-2592000
+2592000,
+7776000,
+15552000,
+31536000
 ];
+
+const TIME_AXIS_YEAR_SEC =
+365 * 86400;
+
+/**
+ * Шаг не мельче raw. Дальше 1 года — целые годы,
+ * иначе на максимальном отдалении метки гуще ~50px
+ * и фильтр ширины оставляет их в тех же колонках.
+ */
+function stepAtLeastSec(
+rawSec
+){
+
+const raw =
+Math.max(
+1,
+Number(rawSec) || 1
+);
+
+for(const step of TIME_AXIS_STEPS_SEC){
+
+if(step >= raw){
+return step;
+}
+
+}
+
+const years =
+Math.max(
+1,
+Math.ceil(raw / TIME_AXIS_YEAR_SEC)
+);
+
+return years * TIME_AXIS_YEAR_SEC;
+
+}
 
 function pickTimeAxisStepSec(
 spanSec,
@@ -723,17 +762,9 @@ Math.max(
 Number(spanSec) || 1
 ) / Math.max(1, targetCount);
 
-for(const step of TIME_AXIS_STEPS_SEC){
-
-if(step >= raw){
-return step;
-}
-
-}
-
-return TIME_AXIS_STEPS_SEC[
-TIME_AXIS_STEPS_SEC.length - 1
-];
+return stepAtLeastSec(
+raw
+);
 
 }
 
@@ -795,20 +826,9 @@ export function snapTimeAxisStepSec(
 rawSec
 ){
 
-const raw =
-Math.max(1, Number(rawSec) || 1);
-
-for(const step of TIME_AXIS_STEPS_SEC){
-
-if(step >= raw){
-return step;
-}
-
-}
-
-return TIME_AXIS_STEPS_SEC[
-TIME_AXIS_STEPS_SEC.length - 1
-];
+return stepAtLeastSec(
+rawSec
+);
 
 }
 

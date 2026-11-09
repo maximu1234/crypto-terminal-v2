@@ -2,7 +2,7 @@
 
 Мультичарт для криптовалют: скринер, терминал, вотчлист, алерты, дневник и торговля Bybit. Тот же UI на сайте (Vercel) и в Multichart.app. Живой алгобот и торговля BingX — в приложении.
 
-Текущая подпись: веб `v0.232`, desktop `1.2.16` (`js/release-marker.js`). Карта модулей: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
+Текущая подпись: веб `v0.233`, desktop `1.2.17` (`js/release-marker.js`). Карта модулей: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 
 ## Страницы
 

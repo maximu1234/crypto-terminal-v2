@@ -297,6 +297,59 @@ test("dense candle spacing unlocks intraday time labels", () => {
   assert.ok(nonMidnight.length >= 1, "should include HH:mm marks");
 });
 
+test("max zoom-out uses a step coarse enough that labels can slide", () => {
+  const day = 86400;
+  const bars = 2500;
+  const plotW = 1100;
+  const barSpacing = plotW / bars;
+  const densest = Math.ceil(52 / barSpacing) * day;
+  const from = Date.UTC(2018, 0, 1) / 1000;
+  const to = from + bars * day;
+  const times = niceTimeAxisTimes(from, to, plotW, 64, 0, densest);
+  assert.ok(times.step > 30 * day, `step stayed at ${times.step}`);
+  const labelPx = plotW * (times.step / (to - from));
+  assert.ok(labelPx >= 48, `labels only ${labelPx.toFixed(1)}px apart`);
+  assert.ok(times.length >= 3);
+  assert.ok(times.length <= 24);
+
+  const shift = 12 * day;
+  const slid = niceTimeAxisTimes(from + shift, to + shift, plotW, 64, times.step, densest);
+  const shared = times.filter((t) => slid.includes(t));
+  assert.ok(shared.length >= 2, "calendar marks must survive a short pan");
+});
+
+test("screener widgets, zoom window, and watchlist stay slidable at max zoom-out", () => {
+  const day = 86400;
+  const cases = [
+    { name: "screener widget", plotW: 280, bars: 2000, period: day },
+    { name: "screener zoom", plotW: 1000, bars: 3000, period: day },
+    { name: "watchlist widget", plotW: 480, bars: 2000, period: day },
+    { name: "screener widget 15m", plotW: 280, bars: 2000, period: 900 }
+  ];
+
+  for (const item of cases) {
+    const barSpacing = item.plotW / item.bars;
+    const densest = Math.ceil(52 / barSpacing) * item.period;
+    const from = Date.UTC(2020, 0, 1) / 1000;
+    const to = from + item.bars * item.period;
+    const times = niceTimeAxisTimes(from, to, item.plotW, 64, 0, densest);
+    const labelPx = item.plotW * (times.step / (to - from));
+    assert.ok(labelPx >= 48, `${item.name} labels only ${labelPx.toFixed(1)}px apart`);
+    assert.ok(times.length >= 2, item.name);
+    const shift = Math.max(item.period * 3, times.step / 8);
+    const slid = niceTimeAxisTimes(
+      from + shift,
+      to + shift,
+      item.plotW,
+      64,
+      times.step,
+      densest
+    );
+    const shared = times.filter((t) => slid.includes(t));
+    assert.ok(shared.length >= 1, `${item.name} marks must stay on the calendar while panning`);
+  }
+});
+
 test("multi-day time ticks keep a stable phase while the window slides", () => {
   const day = 86400;
   const width = 900;

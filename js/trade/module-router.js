@@ -29,8 +29,8 @@ export async function loadTradeExchangeModules(exchangeId) {
 
   const generation = ++loadGeneration;
   const pending = (id === "bingx"
-    ? import("./bingx/bundle.js?v=2057f8d6")
-    : import("./bybit/bundle.js?v=e4032f93")
+    ? import("./bingx/bundle.js?v=93a6e4af")
+    : import("./bybit/bundle.js?v=dfbb130c")
   ).then((mod) => {
     if (generation !== loadGeneration) {
       return modules;

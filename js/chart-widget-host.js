@@ -12,11 +12,11 @@ mountWidgetStackCrosshair
 
 import {
 initDrawings
-} from "./drawings.js?v=4c6822df";
+} from "./drawings.js?v=ec3de49f";
 
 import {
 mountPriceAlertUi
-} from "./price-alert-ui.js?v=74a5b4d0";
+} from "./price-alert-ui.js?v=2d318a6a";
 
 function widgetPlotWidth(
 wrapEl,

@@ -79,6 +79,6 @@ Handoff: [HANDOFF.md](./HANDOFF.md)
 
 ## Откат
 
-**Текущий релиз:** `metka-232` / веб `v0.232` / desktop `1.2.16` — [MARKER_232.md](./MARKER_232.md), `js/release-marker.js`. Desktop .app: [DESKTOP_APP.md](./DESKTOP_APP.md).
+**Текущий релиз:** `metka-233` / веб `v0.233` / desktop `1.2.17` — [MARKER_233.md](./MARKER_233.md), `js/release-marker.js`. Desktop .app: [DESKTOP_APP.md](./DESKTOP_APP.md).
 
 Откат perf chrome/chart по-прежнему **`metka-181`** — не удалять, см. [PERF_CHROME_CHART.md](./PERF_CHROME_CHART.md).
