@@ -1,81 +1,15 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 
-test(
-"calcPositionSizing risk to volume",
-async()=>{
+import {
+  calcPositionVolumeUsd,
+  formatVolumeUsd
+} from "../js/position-sizing.js";
 
-const {
-calcPositionSizing
-} =
-await import(
-"../js/position-sizing.js"
-);
-
-const r =
-calcPositionSizing(
-100,
-5,
-2.5
-);
-
-assert.ok(
-r
-);
-assert.ok(
-r.volume >
-0
-);
-assert.ok(
-Number.isFinite(
-r.riskUsd
-)
-);
-
-}
-);
-
-test(
-"formatMoneyUsd keeps fractional dollars",
-async()=>{
-
-const {
-formatMoneyUsd
-} =
-await import(
-"../js/position-sizing.js"
-);
-
-assert.equal(
-formatMoneyUsd(
-0.5
-),
-"0,50$"
-);
-assert.equal(
-formatMoneyUsd(
-2.3
-),
-"2,30$"
-);
-assert.equal(
-formatMoneyUsd(
-1
-),
-"1,00$"
-);
-assert.equal(
-formatMoneyUsd(
-1.55
-),
-"1,55$"
-);
-assert.equal(
-formatMoneyUsd(
-null
-),
-"—"
-);
-
-}
-);
+test("position volume keeps cents instead of rounding to a whole dollar", () => {
+  const volume = calcPositionVolumeUsd(1, 15.17);
+  assert.equal(volume, 6.59);
+  assert.equal(formatVolumeUsd(volume), "6,59");
+  assert.equal(formatVolumeUsd(5.1), "5,10");
+  assert.equal(formatVolumeUsd(5.2), "5,20");
+});

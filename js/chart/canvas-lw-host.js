@@ -6,12 +6,13 @@
 
 import {
 CandleBenchChart
-} from "../canvas-bench/chart.js?v=timefix5";
+} from "../canvas-bench/chart.js?v=timefix9";
 
 import {
 candleIndexAt,
+candleOpenAtIndex,
 candleX
-} from "../canvas-bench/live-plan.js?v=timefix4";
+} from "../canvas-bench/live-plan.js?v=timefix10";
 
 import {
 PRICE_SCALE_LOG,
@@ -25,8 +26,8 @@ scaleLabelTextColorForBackground
 } from "./chart-options.js?v=ccf11c66";
 
 import {
-chartTimeToDate
-} from "./chart-local-time.js?v=027bb0cc";
+formatCanvasAxisTime
+} from "./chart-local-time.js?v=23978500";
 
 import {
 fractionalIndexAtTime,
@@ -69,25 +70,15 @@ Number.isFinite(price) ? price.toFixed(precision) : "";
 
 }
 
-function formatAxisTime(time){
+function formatAxisTime(
+time,
+stepSec
+){
 
-const date =
-chartTimeToDate(time);
-
-if(!date){
-return "";
-}
-
-const hours =
-date.getHours();
-const minutes =
-date.getMinutes();
-
-if(hours === 0 && minutes === 0){
-return String(date.getDate());
-}
-
-return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}`;
+return formatCanvasAxisTime(
+time,
+stepSec
+);
 
 }
 
@@ -179,8 +170,48 @@ engine.barSpacing = Math.min(500, Math.max(0.01, spacing));
 engine.panPx =
 (Math.max(0, engine.candles.length - 1) - range.to) *
 engine.barSpacing;
+restoreZoomHold(engine);
 return true;
 
+}
+
+function zoomHoldNow(){
+return typeof performance !== "undefined"
+? performance.now()
+: Date.now();
+}
+
+/** Снимок зума жив, пока не истёк или пользователь сам не сдвинул график. */
+function activeZoomHold(engine){
+const hold = engine?.zoomHold;
+if(!hold){
+return null;
+}
+if(zoomHoldNow() > hold.until){
+engine.zoomHold = null;
+return null;
+}
+return hold;
+}
+
+function restoreZoomHold(engine){
+const hold = activeZoomHold(engine);
+if(!hold){
+return false;
+}
+engine.barSpacing = hold.barSpacing;
+engine.panPx = hold.panPx;
+if(
+hold.manualScale &&
+Number.isFinite(hold.manualScale.min) &&
+Number.isFinite(hold.manualScale.max)
+){
+engine.manualScale = {
+min: hold.manualScale.min,
+max: hold.manualScale.max
+};
+}
+return true;
 }
 
 /** Старый индексный диапазон нельзя переносить на другую длину серии. */
@@ -728,6 +759,72 @@ engine.candlesVisible = false;
 
 }
 
+function paneVisibleTimeSpan(){
+
+const guided =
+timeGuide?.timeScale?.().getVisibleRange?.();
+
+if(
+guided &&
+Number.isFinite(guided.from) &&
+Number.isFinite(guided.to) &&
+guided.to !== guided.from
+){
+const lo =
+Math.min(guided.from, guided.to);
+const hi =
+Math.max(guided.from, guided.to);
+const pad =
+(hi - lo) * 0.02;
+return {
+from: lo - pad,
+to: hi + pad
+};
+}
+
+const range =
+logicalRangeFromView(engine);
+
+if(
+!range ||
+!engine.candles.length
+){
+return null;
+}
+
+const from =
+timeAtFractionalIndex(
+engine.candles,
+range.from
+);
+const to =
+timeAtFractionalIndex(
+engine.candles,
+range.to
+);
+
+if(
+!Number.isFinite(from) ||
+!Number.isFinite(to) ||
+from === to
+){
+return null;
+}
+
+const lo =
+Math.min(from, to);
+const hi =
+Math.max(from, to);
+const pad =
+(hi - lo) * 0.02;
+
+return {
+from: lo - pad,
+to: hi + pad
+};
+
+}
+
 function fitPaneScale(){
 
 if(!pane || !paneAutoScale){
@@ -771,6 +868,8 @@ let max =
 -Infinity;
 let includeZero =
 false;
+const visible =
+paneVisibleTimeSpan();
 
 for(const series of lineSeries){
 
@@ -783,6 +882,17 @@ includeZero = true;
 }
 
 for(const row of series.rows){
+
+if(
+visible &&
+Number.isFinite(row?.time) &&
+(
+row.time < visible.from ||
+row.time > visible.to
+)
+){
+continue;
+}
 
 const value =
 seriesValue(row);
@@ -826,7 +936,13 @@ engine.priceScaleMode = PRICE_SCALE_REGULAR;
 host.afterSeriesData = function afterSeriesData(){
 
 if(!pane){
+/*
+ * Линии EMA/SMA и остальные оверлеи рисуются и на overlay,
+ * и в bitmap истории. Без пересборки история держит старые
+ * линии, пока график не сдвинут мышкой.
+ */
 host.paintStudies?.();
+engine.scheduleRebuild();
 return;
 }
 
@@ -947,6 +1063,54 @@ x - guideOriginDelta()
 );
 
 return time == null ? null : time;
+
+}
+
+/** Ближайший open, в том числе слот правее последней свечи. */
+function snapCandleAtPlotX(x){
+
+const last =
+engine.candles.length - 1;
+
+if(
+last < 0 ||
+!engine.layout ||
+!Number.isFinite(x)
+){
+return null;
+}
+
+const index =
+candleIndexAt(
+x,
+last,
+engine.layout.plotRight,
+engine.rightGap,
+engine.barSpacing,
+engine.panPx
+);
+const slot =
+candleOpenAtIndex(
+engine.candles,
+index
+);
+
+if(!slot){
+return null;
+}
+
+return {
+bar: slot.bar,
+time: slot.time,
+x: candleX(
+slot.bar,
+last,
+engine.layout.plotRight,
+engine.rightGap,
+engine.barSpacing,
+engine.panPx
+)
+};
 
 }
 
@@ -1820,6 +1984,14 @@ return;
 }
 
 /*
+ * Пока индикатор меняет раскладку, не отдавать зум старому
+ * широкому pinnedRange и чужому setVisibleLogicalRange.
+ */
+if(restoreZoomHold(engine)){
+engine.userMovedView = true;
+}
+
+/*
  * Панель с bindTimeGuide: всегда копируем окно main.
  * Иначе paneAligned/pinnedRange оставляют старый panPx,
  * а подписи оси времени «стоят на месте» при панорамировании.
@@ -1861,6 +2033,14 @@ guideRange.to
 ) * mainSpacing;
 }
 
+if(pane && paneAutoScale){
+fitPaneScale();
+}
+
+}
+
+if(pane && paneAutoScale){
+fitPaneScale();
 }
 
 return;
@@ -1879,10 +2059,16 @@ to: seen.to
 };
 }
 paneAligned = mark;
+if(pane && paneAutoScale){
+fitPaneScale();
+}
 return;
 }
 
 if(paneAligned === mark){
+if(pane && paneAutoScale){
+fitPaneScale();
+}
 return;
 }
 
@@ -1891,7 +2077,20 @@ if(pinnedRange){
 const current =
 logicalRangeFromView(engine);
 
-if(!rangesClose(current, pinnedRange)){
+/*
+ * Старый pin на всё окно не должен сбрасывать приближение,
+ * когда ширина плота меняется из-за панели MACD.
+ */
+if(
+current &&
+pinnedRange.to - pinnedRange.from >
+(current.to - current.from) * 1.35
+){
+pinnedRange = {
+from: current.from,
+to: current.to
+};
+}else if(!rangesClose(current, pinnedRange)){
 applyLogicalRange(engine, pinnedRange);
 }
 
@@ -1902,6 +2101,10 @@ revealLastPaneValue();
 }
 
 paneAligned = mark;
+
+if(pane && paneAutoScale){
+fitPaneScale();
+}
 
 };
 
@@ -1954,6 +2157,14 @@ paneAutoScale = true;
 
 if(pane){
 fitPaneScale();
+}
+
+};
+
+engine.onPriceScaleDrag = function onPriceScaleDrag(){
+
+if(pane){
+paneAutoScale = false;
 }
 
 };
@@ -2067,20 +2278,13 @@ return;
 const rect = container.getBoundingClientRect();
 const x = event.clientX - rect.left;
 const y = event.clientY - rect.top;
-const last = engine.candles.length - 1;
-const index = candleIndexAt(
-x,
-last,
-engine.layout.plotRight,
-engine.rightGap,
-engine.barSpacing,
-engine.panPx
-);
+const snap = snapCandleAtPlotX(x);
 const param = {
-point: { x, y },
-time: engine.candles.length
-? timeAtFractionalIndex(engine.candles, index)
-: null,
+point: {
+x: snap ? snap.x : x,
+y
+},
+time: snap ? snap.time : null,
 seriesData: new Map()
 };
 
@@ -2188,6 +2392,17 @@ getVisibleLogicalRange(){
 return logicalRangeFromView(engine);
 },
 setVisibleLogicalRange(range){
+
+if(restoreZoomHold(engine)){
+const seen = logicalRangeFromView(engine);
+if(seen){
+pinnedRange = {
+from: seen.from,
+to: seen.to
+};
+}
+return;
+}
 
 if(!Number.isFinite(range?.from) || !Number.isFinite(range?.to)){
 return;
@@ -2385,20 +2600,10 @@ if(guided != null){
 return guided;
 }
 
-if(!engine.layout || !engine.candles.length){
-return null;
-}
+const snap =
+snapCandleAtPlotX(x);
 
-const index = candleIndexAt(
-x,
-engine.candles.length - 1,
-engine.layout.plotRight,
-engine.rightGap,
-engine.barSpacing,
-engine.panPx
-);
-
-return timeAtFractionalIndex(engine.candles, index);
+return snap ? snap.time : null;
 
 },
 applyOptions(options){
@@ -2408,7 +2613,22 @@ engine.rightOffsetBars = options.rightOffset;
 }
 
 if(Number.isFinite(options?.barSpacing)){
-engine.barSpacing = options.barSpacing;
+const nextSpacing = options.barSpacing;
+
+/*
+ * Ширина плота изменилась (шкала цены). Масштаб и пан
+ * двигаются вместе, чтобы окно свечей не пересчитывалось заново.
+ */
+if(
+options.preserveLogicalRange &&
+engine.barSpacing > 0 &&
+nextSpacing > 0
+){
+engine.panPx *= nextSpacing / engine.barSpacing;
+}
+
+engine.barSpacing = nextSpacing;
+restoreZoomHold(engine);
 }
 
 if(
@@ -2433,7 +2653,51 @@ engine.timeH = 0;
 engine.scheduleRebuild();
 },
 width(){
+const cssW = container.getBoundingClientRect?.().width || 0;
+if(cssW >= 2){
+return Math.max(0, Math.floor(cssW) - (engine.axisW || 0));
+}
 return engine.layout?.plotW || 0;
+},
+getZoom(){
+return {
+barSpacing: engine.barSpacing,
+panPx: engine.panPx
+};
+},
+holdZoom(ms){
+const manual = engine.manualScale;
+const span = Math.max(0, Number(ms) || 0);
+engine.zoomHold = {
+until: zoomHoldNow() + span,
+barSpacing: engine.barSpacing,
+panPx: engine.panPx,
+manualScale: manual &&
+Number.isFinite(manual.min) &&
+Number.isFinite(manual.max)
+? {
+min: manual.min,
+max: manual.max
+}
+: null
+};
+},
+/*
+ * Вернуть размер свечи и сдвиг, не пересчитывая spacing из окна.
+ * setVisibleLogicalRange этого не умеет: он заново делит плот на диапазон.
+ */
+lockZoom(zoom){
+const next = Number(zoom?.barSpacing);
+if(!(next > 0) || !engine.candles.length){
+return;
+}
+engine.barSpacing = Math.min(500, Math.max(0.01, next));
+if(Number.isFinite(zoom?.panPx)){
+engine.panPx = zoom.panPx;
+}
+engine.userMovedView = true;
+lastNotified = null;
+engine.scheduleRebuild();
 },
 fitContent(){
 engine.panPx = 0;
@@ -2808,6 +3072,7 @@ const index = lineSeries.indexOf(series);
 if(index >= 0){
 lineSeries.splice(index, 1);
 paintStudies();
+engine.scheduleRebuild();
 }
 
 }

@@ -44,12 +44,12 @@ openChromeSurface
 
 import {
 resolveUrlExchangeDeepLink
-} from "./alert-deep-link-exchange.js?v=cf74628c";
+} from "./alert-deep-link-exchange.js?v=962c73f4";
 
 import {
 defaultRsiPaneSettings,
 normalizeRsiPaneSettings
-} from "./indicators/rsi-pane.js?v=852214eb";
+} from "./indicators/rsi-pane.js?v=eac4a600";
 
 import {
 buildChartRsiPoints
@@ -70,18 +70,18 @@ seedWatchlistTfOnBlueFlag
 
 import {
 ensureCloudReady
-} from "./auth-ui.js?v=43e3fef3";
+} from "./auth-ui.js?v=37516247";
 
 import {
 getActiveAlerts,
 isMacdAlert,
 isRsiAlert
-} from "./alerts.js?v=a66c2d92";
+} from "./alerts.js?v=15e48a83";
 
 import {
 persistFavoritesToCloud,
 onFavoritesRemoteUpdate
-} from "./cloud-sync.js?v=44d356aa";
+} from "./cloud-sync.js?v=2aec0d02";
 
 import {
 createCandlestickChart,
@@ -112,7 +112,7 @@ appendFutureWhitespaceBars,
 applyCoinsChartViewport,
 refreshCoinsChartBarSpacing,
 tfPeriodSec
-} from "./chart-import.js?v=5bc46d47";
+} from "./chart-import.js?v=5e72069f";
 
 import {
 terminalVisibleBars,
@@ -126,7 +126,7 @@ TERMINAL_HISTORY_LAZY_BATCH_BARS
 
 import {
 mountCoinsTabletController
-} from "./terminal-tablet-controller.js?v=b7f1e870";
+} from "./terminal-tablet-controller.js?v=b9ef13ba";
 
 import {
 disconnectKlineStream
@@ -136,7 +136,7 @@ import {
 syncBackgroundAlertStreams,
 onMacdSeriesUpdate,
 onRsiSeriesUpdate
-} from "./alert-monitor.js?v=87435c2b";
+} from "./alert-monitor.js?v=5518124b";
 
 import {
 createSharedDrawUndoStack
@@ -208,7 +208,7 @@ mountCoinsScaleInvertMenu
 
 import {
 mountTerminalDrawChrome
-} from "./terminal/terminal-draw-chrome.js?v=21b871fa";
+} from "./terminal/terminal-draw-chrome.js?v=268d03c1";
 
 
 
@@ -219,7 +219,7 @@ stopTickerStream
 import {
 mountCoinsListRefreshControls,
 applyCoinsListRefreshInterval
-} from "./terminal-list-refresh.js?v=34e59ffb";
+} from "./terminal-list-refresh.js?v=e950a5a5";
 
 import {
 readCoinsPrefs,
@@ -233,7 +233,7 @@ applyCoinsPrefs,
 applySortForCurrentMarket,
 readUrlParams,
 readLastViewForExchange
-} from "./terminal/terminal-prefs.js?v=be2f0c1a";
+} from "./terminal/terminal-prefs.js?v=f86c753b";
 
 import {
 mountDesktopOpenChartHandler
@@ -255,7 +255,7 @@ setCoinsTableHooks,
 syncCoinListFreezeFromFlagMenus,
 getExtraCoinMarkets,
 isExtraCoinMarket
-} from "./terminal/terminal-table.js?v=991610b7";
+} from "./terminal/terminal-table.js?v=7bb9827b";
 
 import {
 createCoinsChartSwitchVeil
@@ -270,7 +270,7 @@ syncCoinsChartLinkedViewports,
 resizeCharts,
 scheduleResizeCharts,
 applyDefaultZoom
-} from "./terminal/terminal-chart-layout.js?v=05f8d402";
+} from "./terminal/terminal-chart-layout.js?v=82b8f7f0";
 
 import {
 isTerminalReplayActive,
@@ -286,7 +286,7 @@ import {
 initTerminalMultiChart,
 syncPrimaryTfToLayout,
 isTerminalMultiChartLayout
-} from "./terminal-multi-chart.js?v=40a402b1";
+} from "./terminal-multi-chart.js?v=273a881f";
 
 import {
 mountTerminalLayoutPicker
@@ -334,7 +334,7 @@ loadVisibleTerminalHistory as loadVisibleTerminalHistoryMoved,
 applyMergedTerminalCandles as applyMergedTerminalCandlesMoved,
 settleTerminalHistoryAfterPaint as settleTerminalHistoryAfterPaintMoved,
 bindTerminalHistoryLazyLoad as bindTerminalHistoryLazyLoadMoved
-} from "./terminal/terminal-history.js?v=4677c640";
+} from "./terminal/terminal-history.js?v=6861e1e9";
 import {
 allCoinsDrawTools as allCoinsDrawToolsMoved,
 scheduleCoinsDrawRedraw as scheduleCoinsDrawRedrawMoved,
@@ -435,7 +435,7 @@ syncCoinsMarketFilterOptions as syncCoinsMarketFilterOptionsMoved,
 handleExchangeChanged as handleExchangeChangedMoved,
 refreshCoinsMarketUi as refreshCoinsMarketUiMoved,
 syncTerminalAlgoEarlyT3List as syncTerminalAlgoEarlyT3ListMoved
-} from "./terminal/terminal-coins-page.js?v=058ca096";
+} from "./terminal/terminal-coins-page.js?v=d662bfbb";
 let terminalAlgoEarlyT3ListMod =
 null;
 

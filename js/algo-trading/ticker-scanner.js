@@ -7,11 +7,11 @@ loadMarketHistory
 
 import {
 analyzeAlgoPatterns
-} from "./pattern-analysis.js?v=2c2a5ef1";
+} from "./pattern-analysis.js?v=672a37b2";
 
 import {
 normalizeAlgoStatsMode
-} from "./pattern-trade-stats.js?v=2530eb1e";
+} from "./pattern-trade-stats.js?v=66b9f6f3";
 
 import {
 readAlgoPattern12Settings

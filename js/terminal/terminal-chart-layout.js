@@ -7,7 +7,7 @@ computeChartFutureMarginBars,
 computeCoinsChartViewportPlan,
 equalizeLinkedPanePriceScales,
 syncLinkedChartTimescales
-} from "../chart-import.js?v=5bc46d47";
+} from "../chart-import.js?v=5e72069f";
 
 import {
 terminalVisibleBars,
@@ -35,11 +35,18 @@ import {
 invalidatePreservedVisibleLogicalRange
 } from "../chart-visible-range.js?v=543a2459";
 
+import {
+rememberMainChartPlotWidth
+} from "../chart/chart-viewport.js?v=6127482c";
+
 let layoutCtx =
 null;
 
 let lastChartLayoutKey =
 "";
+
+let lastCoinsChartWrapWidth =
+0;
 
 let layoutDragWasActive =
 false;
@@ -909,10 +916,48 @@ chart,
 panes
 );
 
+/*
+ * Панель MACD/AO/RSI меняет только высоту. Пересчёт barSpacing
+ * в этот момент читает ещё старую ширину плота и на следующем
+ * кадре, когда шкала цены сжимается, отдаляет увеличенный график.
+ */
+const wrapW =
+document.getElementById(
+"chart-wrap"
+)?.clientWidth ||
+0;
+const widthChanged =
+!lastCoinsChartWrapWidth ||
+Math.abs(
+wrapW -
+lastCoinsChartWrapWidth
+) >=
+2;
+
+if(
+wrapW >
+2
+){
+lastCoinsChartWrapWidth =
+wrapW;
+}
+
+if(
+widthChanged
+){
 refreshCoinsChartBarSpacing(
 chart,
 null
 );
+}else{
+requestAnimationFrame(
+()=>{
+rememberMainChartPlotWidth(
+chart
+);
+}
+);
+}
 
 panes.forEach(
 linkedChart=>{

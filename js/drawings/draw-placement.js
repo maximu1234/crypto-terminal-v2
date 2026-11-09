@@ -5,7 +5,7 @@
 import {
 hideDomChartCrosshair,
 positionTabletProbeHorizInStack
-} from "../chart-import.js?v=5bc46d47";
+} from "../chart-import.js?v=5e72069f";
 
 import {
 ensureFibLevelsVisible,
@@ -18,7 +18,7 @@ resolveFibTrendLineColor
 
 import {
 isPositionType
-} from "./position.js?v=152e419c";
+} from "./position.js?v=ef75c433";
 
 import {
 uid

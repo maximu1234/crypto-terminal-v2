@@ -305,6 +305,44 @@ y
 
 });
 
+test("channel parallel rail stays when the three anchors leave the price window", ()=>{
+
+const channel = {
+type: "channel",
+p1: { time: 10, price: 250 },
+p2: { time: 20, price: 100 },
+p3: { time: 10, price: 200 }
+};
+
+assert.equal(shapeMissesViewport(channel, {
+timeFrom: 1,
+timeTo: 100,
+priceFrom: 40,
+priceTo: 60
+}), true);
+
+const toXY = (point)=>{
+const price = Number(point.price);
+const time = Number(point.time);
+return {
+x: 40 + (time - 10) * 12,
+y: 100 * (60 - price) / 20
+};
+};
+
+assert.equal(shapeProjectsOnPlot(channel, toXY, 200, 100), true);
+
+const offscreen = {
+type: "channel",
+p1: { time: 10, price: 200 },
+p2: { time: 20, price: 180 },
+p3: { time: 10, price: 220 }
+};
+
+assert.equal(shapeProjectsOnPlot(offscreen, toXY, 200, 100), false);
+
+});
+
 test("a trendline that only crosses the pane still projects", ()=>{
 
 const line = {

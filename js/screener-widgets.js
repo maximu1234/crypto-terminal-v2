@@ -20,10 +20,11 @@ linkPairedChartTimeScales,
 syncLinkedChartTimescales,
 equalizeLinkedPanePriceScales,
 mountChartPriceHud,
+mountWidgetStackCrosshair,
 SCREENER_PAGE_VISIBLE_BARS,
 SCREENER_PAGE_MAX_BARS,
 SCREENER_PAGE_HISTORY_REQUESTS
-} from "./chart-import.js?v=5bc46d47";
+} from "./chart-import.js?v=5e72069f";
 
 import {
 isIpadWebViewport
@@ -53,7 +54,7 @@ SCREENER_WIDGET_OSCILLATOR_MACD,
 createScreenerAoChart,
 createScreenerMacdChart,
 isScreenerHistogramOscillator
-} from "./screener-widget-oscillator.js?v=ec166d37";
+} from "./screener-widget-oscillator.js?v=859b6111";
 
 let deps = null;
 
@@ -158,6 +159,15 @@ w.unsubKline?.();
 
 w.priceHudCtrl?.stop?.();
 w.priceHudCtrl = null;
+
+try{
+w.disposeCrosshair?.();
+}catch{
+/* ignore */
+}
+
+w.disposeCrosshair =
+null;
 
 try{
 w.unlinkTimeScales?.();
@@ -467,6 +477,15 @@ null;
 
 widget.priceHudCtrl?.stop?.();
 widget.priceHudCtrl = null;
+
+try{
+widget.disposeCrosshair?.();
+}catch{
+/* ignore */
+}
+
+widget.disposeCrosshair =
+null;
 
 try{
 widget.unlinkTimeScales?.();
@@ -1572,6 +1591,28 @@ deps.applyWidgetInversion(
 widget,
 deps.invertCharts
 );
+
+try{
+widget.disposeCrosshair?.();
+}catch{
+/* ignore */
+}
+
+widget.disposeCrosshair =
+mountWidgetStackCrosshair({
+stackEl: root.querySelector(
+".screener-widget-body"
+) ||
+chartEl,
+chart,
+series,
+wrapEl: chartEl,
+chartEl,
+linkedChart: widget.rsiChart,
+linkedSeries: widget.rsiSeries,
+linkedWrapEl: widget.rsiWrapEl,
+linkedChartEl: widget.rsiChartEl
+});
 
 }
 

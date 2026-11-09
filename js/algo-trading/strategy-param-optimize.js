@@ -17,7 +17,7 @@ detectPatternEntryEventsFromSetups
 import {
 computeAlgoTradeStats,
 normalizeAlgoStatsMode
-} from "./pattern-trade-stats.js?v=2530eb1e";
+} from "./pattern-trade-stats.js?v=66b9f6f3";
 
 import {
 computePartialTpTradeStats,
@@ -25,12 +25,12 @@ normalizeTpShares,
 clampPartialTpX,
 clampTrailSlX1,
 clampTrailSlX2
-} from "./pattern-trade-stats-partial.js?v=a92ca5c3";
+} from "./pattern-trade-stats-partial.js?v=68baa161";
 
 import {
 clampSlPctOfX,
 clampTpRr
-} from "./pattern-entry-positions.js?v=492702eb";
+} from "./pattern-entry-positions.js?v=e2ba2abd";
 
 import {
 filterEntryEventsBySupertrend,

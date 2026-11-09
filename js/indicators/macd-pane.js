@@ -8,7 +8,7 @@ linkPairedChartTimeScales,
 appendFutureWhitespaceBars,
 computeChartFutureMarginBars,
 coinsTfVisibleBars
-} from "../chart-import.js?v=5bc46d47";
+} from "../chart-import.js?v=5e72069f";
 
 import {
 calculateMacd,
@@ -32,8 +32,7 @@ isChartLayoutReady
 } from "../chart-layout-gate.js?v=4a8798af";
 
 import {
-captureHealthyVisibleLogicalRange,
-pinVisibleLogicalRangeBriefly
+suppressTerminalHistoryLazyLoad
 } from "../chart-visible-range.js?v=543a2459";
 
 import {
@@ -46,7 +45,7 @@ isBottomIndicatorPane
 
 import {
 syncPaneViewportAfterData
-} from "./indicator-pane-viewport.js?v=955b571b";
+} from "./indicator-pane-viewport.js?v=02d45485";
 
 export const MACD_PANE_ID =
 "macd";
@@ -860,27 +859,14 @@ getHost?.()?.onIndicatorDataReady?.(
 
 function enable(){
 
-const mainChart =
-getHost?.()?.chart;
-const pinned =
-captureHealthyVisibleLogicalRange(
-mainChart
+suppressTerminalHistoryLazyLoad(
+3000
 );
 
 if(
 enabled
 ){
 refreshData();
-pinVisibleLogicalRangeBriefly(
-mainChart,
-pinned,
-{
-suppressMs:
-8000,
-afterResizeMs:
-120
-}
-);
 return;
 }
 
@@ -898,26 +884,13 @@ ensurePaneChartSized();
 refreshData();
 bindTimeSync();
 updateHud();
-pinVisibleLogicalRangeBriefly(
-mainChart,
-pinned,
-{
-suppressMs:
-8000,
-afterResizeMs:
-120
-}
-);
 
 }
 
 function disable(){
 
-const mainChart =
-getHost?.()?.chart;
-const pinned =
-captureHealthyVisibleLogicalRange(
-mainChart
+suppressTerminalHistoryLazyLoad(
+3000
 );
 
 if(
@@ -953,16 +926,6 @@ lastMacdDrawCandles =
 updateHud();
 applyVisibility();
 refreshData();
-pinVisibleLogicalRangeBriefly(
-mainChart,
-pinned,
-{
-suppressMs:
-5000,
-afterResizeMs:
-80
-}
-);
 
 }
 
@@ -1062,8 +1025,6 @@ height:
 paneHeight
 }
 );
-
-pulseMacdAutoscale();
 
 }
 

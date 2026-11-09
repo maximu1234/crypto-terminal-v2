@@ -3920,7 +3920,9 @@ minOrderQty:
 maxLeverage:
 "100",
 minLeverage:
-"1"
+"1",
+tickSize:
+null
 };
 
 if(
@@ -3932,6 +3934,8 @@ result.data?.result?.list?.[
 ];
 const lot =
 row?.lotSizeFilter;
+const priceFilter =
+row?.priceFilter;
 
 if(
 lot
@@ -3950,8 +3954,18 @@ lot.maxOrderQty,
 maxLeverage:
 rules.maxLeverage,
 minLeverage:
-rules.minLeverage
+rules.minLeverage,
+tickSize:
+priceFilter?.tickSize ||
+null
 };
+}
+
+if(
+priceFilter?.tickSize
+){
+rules.tickSize =
+priceFilter.tickSize;
 }
 
 const lev =
@@ -4049,13 +4063,15 @@ message:
 };
 }
 
+const rules =
+await getInstrumentRules(
+sym
+);
 const qtyStr =
 qtyFromVolumeUsdt(
 volumeUsdt,
 price,
-await getInstrumentRules(
-sym
-)
+rules
 );
 
 if(
@@ -4074,8 +4090,9 @@ message:
 }
 
 const priceStr =
-formatTradingStopPrice(
+formatPriceToTick(
 price,
+rules?.tickSize,
 markPrice ||
 price
 );
@@ -4339,9 +4356,14 @@ message:
 };
 }
 
+const rules =
+await getInstrumentRules(
+sym
+);
 const priceStr =
-formatTradingStopPrice(
+formatPriceToTick(
 price,
+rules?.tickSize,
 markPrice ||
 price
 );
@@ -5471,6 +5493,72 @@ decimals
 
 }
 
+function formatPriceToTick(
+price,
+tickSize,
+refPrice
+){
+
+const n =
+Number(
+price
+);
+
+if(
+!Number.isFinite(
+n
+) ||
+n <=
+0
+){
+return null;
+}
+
+const tick =
+Number(
+tickSize
+);
+
+if(
+!Number.isFinite(
+tick
+) ||
+tick <=
+0
+){
+return formatTradingStopPrice(
+n,
+refPrice ||
+n
+);
+}
+
+const snapped =
+Math.round(
+n /
+tick
+) *
+tick;
+
+if(
+!(
+snapped >
+0
+)
+){
+return null;
+}
+
+return snapped.toFixed(
+decimalsFromStep(
+String(
+tickSize
+)
+)
+);
+
+}
+
 async function setPositionStop(
 symbol,
 target,
@@ -5505,9 +5593,14 @@ message:
 
 const pos =
 posResult.position;
+const rules =
+await getInstrumentRules(
+sym
+);
 const priceStr =
-formatTradingStopPrice(
+formatPriceToTick(
 price,
+rules?.tickSize,
 pos.avgPrice
 );
 
@@ -5558,8 +5651,9 @@ existingTp >
 0
 ){
 body.takeProfit =
-formatTradingStopPrice(
+formatPriceToTick(
 existingTp,
+rules?.tickSize,
 pos.avgPrice
 );
 }
@@ -5575,8 +5669,9 @@ existingSl >
 0
 ){
 body.stopLoss =
-formatTradingStopPrice(
+formatPriceToTick(
 existingSl,
+rules?.tickSize,
 pos.avgPrice
 );
 }
@@ -6603,6 +6698,7 @@ closePositionAtMarket,
 openPositionAtMarket,
 cancelPositionStop,
 setPositionStop,
+formatPriceToTick,
 placeTradeOrder,
 cancelTradeOrder,
 amendTradeOrder,

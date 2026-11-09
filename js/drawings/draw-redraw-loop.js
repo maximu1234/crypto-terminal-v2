@@ -4,7 +4,7 @@
  */
 import {
 isPositionType
-} from "./position.js?v=152e419c";
+} from "./position.js?v=ef75c433";
 
 import {
 getRectangleHandleScreens
@@ -40,7 +40,7 @@ elliottSelectionHandlePoints
 import {
 shapeMissesViewport,
 shapeProjectsOnPlot
-} from "./draw-viewport-cull.js?v=77fc6a94";
+} from "./draw-viewport-cull.js?v=036ebf8d";
 
 export function createDrawRedrawLoop(
 deps

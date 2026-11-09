@@ -4,7 +4,7 @@ isTabletChartViewport,
 hasAnyFinePointer,
 positionDomChartCrosshair,
 hideDomChartCrosshair
-} from "./chart-import.js?v=5bc46d47";
+} from "./chart-import.js?v=5e72069f";
 
 import {
 isFineChartPointerType,
@@ -13,7 +13,7 @@ shouldUseTouchDrawPlacement
 
 import {
 isPositionType
-} from "./drawings/position.js?v=152e419c";
+} from "./drawings/position.js?v=ef75c433";
 
 import {
 isHorizPriceTool

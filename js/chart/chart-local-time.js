@@ -150,6 +150,119 @@ false
 }
 
 /**
+ * Подпись оси canvas-графика (как TV / LW TickMarkType):
+ * внутри дня — HH:mm; на полуночи — день; 1-е число — месяц;
+ * 1 янв — год; при шаге ≥ ~3 суток — «день + месяц», чтобы не было
+ * голых «2 / 16» без контекста на широком зуме.
+ *
+ * @param {unknown} time unix-sec
+ * @param {number} [stepSec] шаг сетки из niceTimeAxisTimes
+ * @param {string} [locale]
+ * @returns {string}
+ */
+export function formatCanvasAxisTime(
+time,
+stepSec =
+0,
+locale
+){
+
+const date =
+chartTimeToDate(
+time
+);
+
+if(
+!date ||
+Number.isNaN(
+date.getTime()
+)
+){
+return "";
+}
+
+const loc =
+locale ||
+(
+typeof navigator !==
+"undefined"
+? navigator.language
+: "en-GB"
+);
+const hours =
+date.getHours();
+const minutes =
+date.getMinutes();
+const day =
+date.getDate();
+const month =
+date.getMonth();
+const midnight =
+hours ===
+0 &&
+minutes ===
+0;
+const step =
+Math.max(
+0,
+Number(
+stepSec
+) ||
+0
+);
+
+if(
+!midnight
+){
+return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}`;
+}
+
+if(
+day ===
+1 &&
+month ===
+0
+){
+return String(
+date.getFullYear()
+);
+}
+
+if(
+day ===
+1
+){
+return date.toLocaleDateString(
+loc,
+{
+month:
+"short"
+}
+);
+}
+
+if(
+step >=
+3 * 86400
+){
+return date.toLocaleDateString(
+loc,
+{
+day:
+"numeric",
+month:
+"short"
+}
+);
+}
+
+return String(
+day
+);
+
+}
+
+/**
  * timeScale.tickMarkFormatter
  * TickMarkType: Year=0, Month=1, DayOfMonth=2, Time=3, TimeWithSeconds=4
  * @param {unknown} time

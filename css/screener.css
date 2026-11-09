@@ -562,6 +562,7 @@ flex:1;
 min-height:0;
 display:flex;
 flex-direction:column;
+position:relative;
 }
 
 .screener-widget.has-rsi .screener-chart,
@@ -933,7 +934,8 @@ flex-direction:column;
 position:relative;
 }
 
-.screener-widget-zoom-body .linked-crosshair-vert{
+.screener-widget-zoom-body .linked-crosshair-vert,
+.screener-widget-body > .linked-crosshair-vert{
 position:absolute;
 top:0;
 bottom:0;
@@ -951,12 +953,16 @@ z-index:20;
 transform:translateZ(0);
 }
 
-.screener-widget-zoom-body .linked-crosshair-vert.hidden{
+.screener-widget-zoom-body .linked-crosshair-vert.hidden,
+.screener-widget-body > .linked-crosshair-vert.hidden{
 display:none;
 }
 
 .screener-widget-zoom-body .screener-chart .chart-dom-crosshair-vert,
-.screener-widget-zoom-body .screener-rsi-wrap .chart-dom-crosshair-vert{
+.screener-widget-zoom-body .screener-rsi-wrap .chart-dom-crosshair-vert,
+.screener-widget-body .screener-chart .chart-dom-crosshair-vert,
+.screener-widget-body .screener-rsi-wrap .chart-dom-crosshair-vert,
+.screener-widget > .screener-chart .chart-dom-crosshair-vert{
 position:absolute;
 top:0;
 bottom:0;
@@ -975,7 +981,10 @@ transform:translateZ(0);
 }
 
 .screener-widget-zoom-body .screener-chart .chart-dom-crosshair-horz,
-.screener-widget-zoom-body .screener-rsi-wrap .chart-dom-crosshair-horz{
+.screener-widget-zoom-body .screener-rsi-wrap .chart-dom-crosshair-horz,
+.screener-widget-body .screener-chart .chart-dom-crosshair-horz,
+.screener-widget-body .screener-rsi-wrap .chart-dom-crosshair-horz,
+.screener-widget > .screener-chart .chart-dom-crosshair-horz{
 position:absolute;
 left:0;
 height:1px;
@@ -996,7 +1005,11 @@ transform:translateZ(0);
 .screener-widget-zoom-body .screener-chart .chart-dom-crosshair-vert.hidden,
 .screener-widget-zoom-body .screener-chart .chart-dom-crosshair-horz.hidden,
 .screener-widget-zoom-body .screener-rsi-wrap .chart-dom-crosshair-vert.hidden,
-.screener-widget-zoom-body .screener-rsi-wrap .chart-dom-crosshair-horz.hidden{
+.screener-widget-zoom-body .screener-rsi-wrap .chart-dom-crosshair-horz.hidden,
+.screener-widget-body .chart-dom-crosshair-vert.hidden,
+.screener-widget-body .chart-dom-crosshair-horz.hidden,
+.screener-widget > .screener-chart .chart-dom-crosshair-vert.hidden,
+.screener-widget > .screener-chart .chart-dom-crosshair-horz.hidden{
 display:none;
 }
 
@@ -1072,6 +1085,28 @@ border-top:1px solid #2a2e39;
 background:var(--app-chart-bg);
 box-sizing:border-box;
 position:relative;
+}
+
+.crosshair-axis-label{
+position:absolute;
+z-index:30;
+pointer-events:none;
+user-select:none;
+padding:2px 6px;
+border-radius:2px;
+font-family:-apple-system, BlinkMacSystemFont, "Trebuchet MS", Roboto, Ubuntu, sans-serif;
+font-size:12px;
+font-weight:400;
+line-height:16px;
+font-variant-numeric:tabular-nums;
+color:#d1d5db;
+background:#363a45;
+}
+
+.crosshair-time-label{
+bottom:4px;
+transform:translateX(-50%);
+white-space:nowrap;
 }
 
 .screener-widget-zoom-hint{

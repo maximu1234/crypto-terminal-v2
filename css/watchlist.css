@@ -370,6 +370,29 @@ body.terminal-page .widget-draw-tools{
     min-height:0;
     display:flex;
     flex-direction:column;
+    position:relative;
+}
+
+.widget-chart-body > .linked-crosshair-vert{
+    position:absolute;
+    top:0;
+    bottom:0;
+    width:1px;
+    border:none;
+    background:repeating-linear-gradient(
+        to bottom,
+        #758696 0,
+        #758696 5px,
+        transparent 5px,
+        transparent 9px
+    );
+    pointer-events:none;
+    z-index:20;
+    transform:translateZ(0);
+}
+
+.widget-chart-body > .linked-crosshair-vert.hidden{
+    display:none;
 }
 
 .widget.has-rsi .widget-chart-wrap,

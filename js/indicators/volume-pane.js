@@ -2,9 +2,8 @@
  * Volume — гистограмма внизу панели цены (как на TradingView).
  */
 import {
-captureHealthyVisibleLogicalRange,
-pinVisibleLogicalRangeBriefly,
-runWithPreservedVisibleLogicalRange
+runWithPreservedVisibleLogicalRange,
+suppressTerminalHistoryLazyLoad
 } from "../chart-visible-range.js?v=543a2459";
 
 export const VOLUME_PANE_ID =
@@ -449,11 +448,8 @@ dropSeries();
 
 function enable(){
 
-const chart =
-mainChart();
-const pinned =
-captureHealthyVisibleLogicalRange(
-chart
+suppressTerminalHistoryLazyLoad(
+3000
 );
 
 enableQuietUntil =
@@ -466,16 +462,6 @@ if(
 enabled
 ){
 refreshData();
-pinVisibleLogicalRangeBriefly(
-chart,
-pinned,
-{
-suppressMs:
-8000,
-afterResizeMs:
-120
-}
-);
 return;
 }
 
@@ -487,36 +473,12 @@ return;
 
 enabled =
 true;
-/*
- * addSeries + setData → LW from≈0 на длинной истории (BTC).
- * Тот же pin, что у MA — без hold/watch (ломали смену тикера).
- */
-pinVisibleLogicalRangeBriefly(
-chart,
-pinned,
-{
-suppressMs:
-10000,
-afterResizeMs:
-180
-}
-);
 
 requestAnimationFrame(
 ()=>{
 requestAnimationFrame(
 ()=>{
 refreshData();
-pinVisibleLogicalRangeBriefly(
-chart,
-pinned,
-{
-suppressMs:
-10000,
-afterResizeMs:
-180
-}
-);
 }
 );
 }
@@ -526,11 +488,8 @@ afterResizeMs:
 
 function disable(){
 
-const chart =
-mainChart();
-const pinned =
-captureHealthyVisibleLogicalRange(
-chart
+suppressTerminalHistoryLazyLoad(
+3000
 );
 
 if(
@@ -545,16 +504,6 @@ enabled =
 false;
 dropSeries();
 hideSeparatePane();
-pinVisibleLogicalRangeBriefly(
-chart,
-pinned,
-{
-suppressMs:
-5000,
-afterResizeMs:
-80
-}
-);
 
 }
 

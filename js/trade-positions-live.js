@@ -8,7 +8,7 @@ subscribeTicker
 import {
 getAllCachedPositions,
 applyLiveMarkPrice
-} from "./trade-positions-cache.js?v=2ae6d173";
+} from "./trade-positions-cache.js?v=244783dd";
 
 const unsubBySymbol =
 new Map();

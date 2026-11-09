@@ -4,6 +4,7 @@ import assert from "node:assert/strict";
 import { timeAtFractionalIndex } from "../js/canvas-bench/drawings.js";
 import {
   candleIndexAt,
+  candleOpenAtIndex,
   candleX,
   niceTimeAxisTimes,
   rightGapPx,
@@ -220,6 +221,18 @@ test("baseline RSI color split lands exactly on the mid level", () => {
   assert.equal(down.y, 60);
 });
 
+test("crosshair time continues past the last candle on the bar grid", () => {
+  const period = 4 * 3600;
+  const start = Date.UTC(2026, 10, 8, 20, 0, 0) / 1000;
+  const candles = [0, 1, 2].map((i) => ({ time: start + i * period }));
+  const future = candleOpenAtIndex(candles, 2.6);
+  assert.equal(future.bar, 3);
+  assert.equal(future.time, start + 3 * period);
+  assert.equal(future.time - candles[2].time, period);
+  const onBar = candleOpenAtIndex(candles, 1.2);
+  assert.equal(onBar.time, candles[1].time);
+});
+
 test("time axis ticks stay anchored to unix time when the chart pans", () => {
   const from = Date.UTC(2026, 10, 7, 10, 0, 0) / 1000;
   const to = Date.UTC(2026, 10, 7, 18, 0, 0) / 1000;
@@ -262,6 +275,26 @@ test("time axis step hysterises instead of flipping every frame", () => {
     stickTimeAxisStepSec(2592000, 60, 120 * 86400, 12),
     2592000
   );
+  // Zoom-in: leave a coarse preferred sooner so HH:mm can appear
+  assert.equal(
+    stickTimeAxisStepSec(43200, 86400, 10 * 86400, 14),
+    43200
+  );
+});
+
+test("dense candle spacing unlocks intraday time labels", () => {
+  const day = 86400;
+  const from = Date.UTC(2026, 10, 1, 0, 0, 0) / 1000;
+  const to = from + 5 * day;
+  // ~5 days on a wide plot with densest=4h → step ≤ 12h → times present
+  const times = niceTimeAxisTimes(from, to, 1000, 64, 0, 4 * 3600);
+  assert.ok(times.step > 0);
+  assert.ok(times.step <= 12 * 3600, `expected intraday step, got ${times.step}`);
+  const nonMidnight = times.filter((t) => {
+    const d = new Date(t * 1000);
+    return d.getHours() !== 0 || d.getMinutes() !== 0;
+  });
+  assert.ok(nonMidnight.length >= 1, "should include HH:mm marks");
 });
 
 test("multi-day time ticks keep a stable phase while the window slides", () => {
@@ -275,12 +308,41 @@ test("multi-day time ticks keep a stable phase while the window slides", () => {
   const step = first[1] - first[0];
   assert.ok(step >= 7 * day);
 
+  for (const t of first) {
+    const d = new Date(t * 1000);
+    assert.equal(d.getHours(), 0, "multi-day ticks must be local midnight");
+    assert.equal(d.getMinutes(), 0);
+  }
+
   const shift = 3 * day + 3600;
   const second = niceTimeAxisTimes(a0 + shift, b0 + shift, width, 72);
   const shared = first.filter((t) => second.includes(t));
   assert.ok(shared.length >= 2, "grid phase must not jump on a short pan");
-  for (const t of shared) {
-    assert.equal(t % step, first[0] % step);
+});
+
+test("multi-day ticks are not stuck on UTC midnight in positive TZ", () => {
+  const prev = process.env.TZ;
+  process.env.TZ = "Asia/Bangkok";
+  try {
+    const day = 86400;
+    const a0 = Date.UTC(2026, 0, 10, 12, 0, 0) / 1000;
+    const times = niceTimeAxisTimes(a0, a0 + 90 * day, 900, 72);
+    assert.ok(times.length >= 3);
+    assert.ok(times.step >= 7 * day);
+    for (const t of times) {
+      const d = new Date(t * 1000);
+      assert.equal(d.getHours(), 0);
+      assert.notEqual(
+        `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`,
+        "07:00"
+      );
+    }
+  } finally {
+    if (prev == null) {
+      delete process.env.TZ;
+    } else {
+      process.env.TZ = prev;
+    }
   }
 });
 

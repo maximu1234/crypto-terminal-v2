@@ -3,7 +3,7 @@
  */
 import {
 loadBotStrategiesPrefs
-} from "./bot-strategy-prefs.js?v=e463f141";
+} from "./bot-strategy-prefs.js?v=ff8205fd";
 import {
 readAlgoPattern12Settings
 } from "./pattern-12-settings.js?v=cd75d3d2";
@@ -12,7 +12,7 @@ readAlgoPattern12EarlyT3Settings
 } from "./pattern-12-early-t3-settings.js?v=3317e6a6";
 import {
 loadEarlyT3BotPrefs
-} from "./early-t3-bot-prefs.js?v=920e9956";
+} from "./early-t3-bot-prefs.js?v=eea27f84";
 import {
 loadAlgoTickerFlags,
 ALGO_TICKER_FLAGS_KEY
@@ -30,7 +30,7 @@ hydrateBotTickerBookFromMain,
 loadBotTickerBook,
 loadStagedBotTickerBook,
 writePublishedBotTickerBook
-} from "./bot-ticker-book.js?v=41879a28";
+} from "./bot-ticker-book.js?v=8b12c45e";
 import {
 replaceRsiTouchFlipBook
 } from "./rsi-touch-flip-book.js?v=c8f7d685";

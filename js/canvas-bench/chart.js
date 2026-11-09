@@ -18,7 +18,7 @@ scaleFromCandles,
 visibleIndexSpan,
 WHEEL_ZOOM_GESTURE_MS,
 zoomOutFloorSpacing
-} from "./live-plan.js?v=timefix4";
+} from "./live-plan.js?v=timefix10";
 
 import {
 fractionalIndexAtTime
@@ -1178,13 +1178,46 @@ const y =
 Math.round((stripY + 4) * dpr) / dpr;
 let lastX =
 -Infinity;
+const plotW =
+plotRight - plotLeft;
+let densestStepSec =
+0;
+
+if(
+this.candles.length >= 2 &&
+this.barSpacing > 0
+){
+const a =
+Number(
+this.candles[
+this.candles.length - 2
+]?.time
+);
+const b =
+Number(
+this.candles[
+this.candles.length - 1
+]?.time
+);
+const period =
+Math.max(
+1,
+b - a
+);
+densestStepSec =
+Math.ceil(
+52 / this.barSpacing
+) * period;
+}
+
 const times =
 niceTimeAxisTimes(
 timeLeft,
 timeRight,
-plotRight - plotLeft,
-72,
-this._timeAxisStep
+plotW,
+64,
+this._timeAxisStep,
+densestStepSec
 );
 
 if(times.step > 0){
@@ -1197,9 +1230,18 @@ times.length
 : this.candles.map(c=>
 Number(c.time)
 );
+const formatSteps =
+times.formatSteps ||
+[];
 
-for(const time of stamps){
+for(
+let i = 0;
+i < stamps.length;
+i++
+){
 
+const time =
+stamps[i];
 const rawX =
 this.xOfTime(time);
 
@@ -1214,13 +1256,19 @@ continue;
 const x =
 Math.round(rawX * dpr) / dpr;
 
-if(x - lastX < 56){
+if(x - lastX < 48){
 continue;
 }
 
 lastX = x;
 ctx.fillText(
-this.formatTime(time),
+this.formatTime(
+time,
+formatSteps[i] ||
+times.step ||
+this._timeAxisStep ||
+0
+),
 x,
 y
 );
@@ -1514,6 +1562,7 @@ max: this.scale.max
 };
 stage.setPointerCapture(event.pointerId);
 event.preventDefault();
+this.onPriceScaleDrag?.();
 return;
 }
 
@@ -1650,6 +1699,7 @@ this.rightGap,
 nextSpacing
 );
 this.userMovedView = true;
+this.zoomHold = null;
 this.scheduleRebuild();
 return;
 
@@ -1706,6 +1756,7 @@ return;
 
 this.panPx = next;
 this.userMovedView = true;
+this.zoomHold = null;
 
 if(shifted){
 this.manualScale = shifted;
@@ -1833,6 +1884,7 @@ this.rightGap,
 this.barSpacing
 );
 this.userMovedView = true;
+this.zoomHold = null;
 this.scheduleRebuild();
 return;
 
@@ -1955,6 +2007,7 @@ this.rightGap,
 nextSpacing
 );
 this.userMovedView = true;
+this.zoomHold = null;
 this.scheduleRebuild();
 
 },

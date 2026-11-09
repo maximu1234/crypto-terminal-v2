@@ -10,7 +10,7 @@ tfPeriodSec
 import {
 isPositionType,
 positionEntryPrice
-} from "./position.js?v=152e419c";
+} from "./position.js?v=ef75c433";
 
 import {
 priceDecimalPlaces

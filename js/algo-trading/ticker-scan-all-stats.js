@@ -7,11 +7,11 @@ loadMarketHistory
 
 import {
 analyzeAlgoPatterns
-} from "./pattern-analysis.js?v=2c2a5ef1";
+} from "./pattern-analysis.js?v=672a37b2";
 
 import {
 normalizeAlgoStatsMode
-} from "./pattern-trade-stats.js?v=2530eb1e";
+} from "./pattern-trade-stats.js?v=66b9f6f3";
 
 import {
 readAlgoPattern12Settings
@@ -23,7 +23,7 @@ pickStrategyStats,
 ALGO_TICKER_SCAN_HISTORY_REQUESTS,
 ALGO_TICKER_SCAN_CONCURRENCY,
 ALGO_TICKER_SCAN_DELAY_MS
-} from "./ticker-scanner.js?v=4e72e31f";
+} from "./ticker-scanner.js?v=8e85c0f3";
 
 import {
 resolveAlgoScanSymbols

@@ -566,6 +566,30 @@ return plan.futureMargin;
 
 }
 
+/** Plot width, under which main barSpacing was last fitted. */
+const fittedMainPlotWidth = new WeakMap();
+
+/** Запомнить текущую ширину плота, не меняя зум. */
+export function rememberMainChartPlotWidth(
+chart
+){
+
+const plot =
+chart?.timeScale?.().width?.() ||
+0;
+
+if(
+plot >
+2
+){
+fittedMainPlotWidth.set(
+chart,
+plot
+);
+}
+
+}
+
 /** После resize — сохранить диапазон, пересчитать barSpacing (будущее не схлопывается). */
 export function refreshCoinsChartBarSpacing(
 mainChart,
@@ -710,6 +734,62 @@ plotWidth <
 return false;
 }
 
+const prevWidth =
+fittedMainPlotWidth.get(
+mainChart
+) ||
+0;
+const spacing =
+mainChart.timeScale().options().barSpacing;
+
+/*
+ * Высота панели индикатора меняется, ширина плота — нет.
+ * Пересчёт barSpacing из логического окна сбрасывал зум
+ * и несколько кадров боролся с pin при включении MACD.
+ */
+if(
+prevWidth >
+2 &&
+Math.abs(
+plotWidth -
+prevWidth
+) <
+1
+){
+return true;
+}
+
+if(
+prevWidth >
+2 &&
+spacing >
+0
+){
+const scaled =
+Math.min(
+500,
+Math.max(
+0.01,
+spacing * (
+plotWidth /
+prevWidth
+)
+)
+);
+
+mainChart.timeScale().applyOptions({
+barSpacing:
+scaled,
+preserveLogicalRange:
+true
+});
+fittedMainPlotWidth.set(
+mainChart,
+plotWidth
+);
+return true;
+}
+
 const span =
 Math.max(
 range.to -
@@ -739,6 +819,10 @@ false
 
 mainChart.timeScale().setVisibleLogicalRange(
 range
+);
+fittedMainPlotWidth.set(
+mainChart,
+plotWidth
 );
 
 return true;

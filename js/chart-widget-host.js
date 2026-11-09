@@ -6,16 +6,17 @@ createCandlestickChart,
 ensureDomChartCrosshair,
 positionDomChartCrosshair,
 hideDomChartCrosshair,
-mountChartPriceHud
-} from "./chart-import.js?v=5bc46d47";
+mountChartPriceHud,
+mountWidgetStackCrosshair
+} from "./chart-import.js?v=5e72069f";
 
 import {
 initDrawings
-} from "./drawings.js?v=ef3da099";
+} from "./drawings.js?v=39d39ba4";
 
 import {
 mountPriceAlertUi
-} from "./price-alert-ui.js?v=5f5a4981";
+} from "./price-alert-ui.js?v=8950b5d5";
 
 function widgetPlotWidth(
 wrapEl,
@@ -258,7 +259,12 @@ getSymbol,
 getTf,
 getDrawingTools,
 onPlusActivate =
-null
+null,
+stackEl = null,
+linkedChart = null,
+linkedSeries = null,
+linkedWrapEl = null,
+linkedChartEl = null
 }){
 
 if(
@@ -274,11 +280,16 @@ let crosshairSuppressed =
 false;
 
 const disposeCrosshair =
-mountWidgetDomCrosshair({
+mountWidgetStackCrosshair({
+stackEl,
 chart,
 series,
 wrapEl,
-chartContainer,
+chartEl: chartContainer,
+linkedChart,
+linkedSeries,
+linkedWrapEl,
+linkedChartEl,
 isSuppressed:()=>
 crosshairSuppressed
 });
@@ -307,6 +318,7 @@ onCrosshairSuppress:()=>{
 
 crosshairSuppressed =
 true;
+disposeCrosshair.clear?.();
 hideDomChartCrosshair(
 wrapEl
 );

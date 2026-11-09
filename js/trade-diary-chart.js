@@ -12,7 +12,7 @@ effectiveChartScaleFontSize
 
 import {
 withChartLocalTime
-} from "./chart/chart-local-time.js?v=027bb0cc";
+} from "./chart/chart-local-time.js?v=23978500";
 
 import {
 candleSeriesPaint,
@@ -21,7 +21,7 @@ registerCandleSeries
 
 import {
 createCanvasLwChart
-} from "./chart/canvas-lw-host.js?v=44acf005";
+} from "./chart/canvas-lw-host.js?v=b3c4379d";
 
 import {
 candleAlignSec,

@@ -30,7 +30,7 @@ liveBarPeriodSec
 
 import {
 withChartLocalTime
-} from "./chart-local-time.js?v=027bb0cc";
+} from "./chart-local-time.js?v=23978500";
 
 import {
 attachChartWheelDeadband
@@ -38,7 +38,7 @@ attachChartWheelDeadband
 
 import {
 createCanvasLwChart
-} from "./canvas-lw-host.js?v=44acf005";
+} from "./canvas-lw-host.js?v=b3c4379d";
 
 /* time-axis: stable ticks + crisp labels (timefix4) */
 
@@ -54,7 +54,7 @@ hideDomChartCrosshairVert,
 positionDomChartCrosshairHorz,
 positionTabletProbeHorizInStack,
 hideTabletProbeHorizInStack
-} from "./chart-dom-crosshair.js?v=f94b139b";
+} from "./chart-dom-crosshair.js?v=724fa04d";
 
 const chartHostElements =
 new WeakMap();
@@ -340,12 +340,12 @@ restoreScreenerViewport,
 applyScreenerZoom,
 tfPeriodSec,
 rsiPlotTimeOffsetSec
-} from "./chart-viewport.js?v=896816b1";
+} from "./chart-viewport.js?v=6127482c";
 
 import {
 copyVisibleTimeRange,
 tfPeriodSec
-} from "./chart-viewport.js?v=896816b1";
+} from "./chart-viewport.js?v=6127482c";
 
 
 
@@ -1137,8 +1137,11 @@ typeof window !==
 win?.addEventListener(
 "pointerup",
 ()=>{
+const wasDown = linkedPointerDown;
 linkedPointerDown = false;
+if(wasDown){
 markLinkedGesture();
+}
 },
 listenerOpts
 );
@@ -1146,8 +1149,11 @@ listenerOpts
 win?.addEventListener(
 "pointercancel",
 ()=>{
+const wasDown = linkedPointerDown;
 linkedPointerDown = false;
+if(wasDown){
 markLinkedGesture();
+}
 },
 listenerOpts
 );
@@ -1749,8 +1755,9 @@ lineEl.classList.remove(
 }
 
 export {
-linkChartsCrosshair
-} from "./chart-crosshair-link.js?v=74333013";
+linkChartsCrosshair,
+mountWidgetStackCrosshair
+} from "./chart-crosshair-link.js?v=c986412e";
 
 
 

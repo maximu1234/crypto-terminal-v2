@@ -15,7 +15,7 @@ distToSegment
 import {
 calcPositionVolumeUsd,
 formatRiskRewardLabel
-} from "../position-sizing.js?v=81c492bf";
+} from "../position-sizing.js?v=6752880f";
 
 export function isPositionType(type){
 

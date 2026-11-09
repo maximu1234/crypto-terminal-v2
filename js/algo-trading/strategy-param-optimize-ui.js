@@ -6,11 +6,11 @@ optimizeAlgoStrategyParams,
 normalizeAlgoOptimizeStrategyId,
 algoOptimizeStrategyLabel,
 comboToApplyPatch
-} from "./strategy-param-optimize.js?v=156a9f8f";
+} from "./strategy-param-optimize.js?v=33a03f8b";
 
 import {
 normalizeAlgoStatsMode
-} from "./pattern-trade-stats.js?v=2530eb1e";
+} from "./pattern-trade-stats.js?v=66b9f6f3";
 
 import {
 ALGO_SUPERTREND_TF_OPTIONS

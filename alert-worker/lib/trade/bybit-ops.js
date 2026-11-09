@@ -287,10 +287,18 @@ function qtyFromVolumeUsdt(volumeUsdt, price, rules) {
   return String(raw);
 }
 
-function formatPrice(price, refPrice) {
+function formatPrice(price, refPrice, tickSize) {
   const n = Number(price);
   if (!Number.isFinite(n) || n <= 0) {
     return null;
+  }
+  const tick = Number(tickSize);
+  if (Number.isFinite(tick) && tick > 0) {
+    const snapped = Math.round(n / tick) * tick;
+    if (!(snapped > 0)) {
+      return null;
+    }
+    return snapped.toFixed(decimalsFromStep(String(tickSize)));
   }
   const ref = Number(refPrice);
   let decimals = 4;
@@ -318,6 +326,7 @@ async function getInstrumentRules(symbol) {
   const rules = {
     qtyStep: lot.qtyStep,
     minOrderQty: lot.minOrderQty,
+    tickSize: row?.priceFilter?.tickSize || null,
     maxLeverage: Number(row?.leverageFilter?.maxLeverage) || 100
   };
   instrumentCache.set(sym, { at: Date.now(), rules });
@@ -424,7 +433,8 @@ export async function setPositionStop(symbol, target, price) {
   if (!pos.position) {
     return fail("Нет открытой позиции");
   }
-  const priceStr = formatPrice(price, pos.position.avgPrice);
+  const rules = await getInstrumentRules(symbol);
+  const priceStr = formatPrice(price, pos.position.avgPrice, rules?.tickSize);
   if (!priceStr) {
     return fail("Некорректная цена");
   }
@@ -486,15 +496,16 @@ export async function placeOrder(payload) {
   if (!Number.isFinite(volumeUsdt) || volumeUsdt <= 0) {
     return fail("Invalid volume");
   }
+  const rules = await getInstrumentRules(sym);
   const qtyStr = qtyFromVolumeUsdt(
     volumeUsdt,
     price,
-    await getInstrumentRules(sym)
+    rules
   );
   if (!qtyStr || Number(qtyStr) <= 0) {
     return fail("Volume too small");
   }
-  const priceStr = formatPrice(price, markPrice || price);
+  const priceStr = formatPrice(price, markPrice || price, rules?.tickSize);
   const refMark = Number.isFinite(markPrice) && markPrice > 0 ? markPrice : price;
   const triggerDirection = price > refMark ? 1 : 2;
   const body = {

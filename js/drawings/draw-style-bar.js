@@ -9,7 +9,7 @@ parseDrawColor
 
 import {
 isCoarseTouchViewport
-} from "../chart-import.js?v=5bc46d47";
+} from "../chart-import.js?v=5e72069f";
 
 import {
 STROKE,
@@ -43,7 +43,7 @@ closeChromeSurface
 import {
 isPositionType,
 positionEntryPrice
-} from "./position.js?v=152e419c";
+} from "./position.js?v=ef75c433";
 
 import {
 isTextTool,
@@ -55,17 +55,17 @@ TEXT_DEFAULT_SIZE
 import {
 parseMoneyInput,
 calcPositionVolumeUsd
-} from "../position-sizing.js?v=81c492bf";
+} from "../position-sizing.js?v=6752880f";
 
 import {
 applyPositionVolumeFromDrawing
-} from "../trade-volume-presets.js?v=7a426761";
+} from "../trade-volume-presets.js?v=7da6537b";
 
 import {
 stashDrawingStopsFromDrawing,
 clearDrawingStopsPending,
 hasDrawingStopsPending
-} from "../trade-auto-stops.js?v=037a29b9";
+} from "../trade-auto-stops.js?v=29193fcf";
 
 import {
 touchShapeRevision
@@ -81,7 +81,7 @@ listTemplatesForType,
 mergeStyleSnapshot,
 saveNamedTemplate,
 deleteTemplateAtIndex
-} from "./draw-templates.js?v=f4ed259d";
+} from "./draw-templates.js?v=d92bb01a";
 
 import {
 isFvpType,
@@ -149,7 +149,7 @@ syncElliottSettingsColor
 
 import {
 hasCoordSettings
-} from "./draw-coords.js?v=e488967c";
+} from "./draw-coords.js?v=b7a76e30";
 
 import {
 bindCoordSettingsPanel,
@@ -158,7 +158,7 @@ coordSettingsHtml,
 drawSettingsTabsHtml,
 fillCoordSettingsPanel,
 isCoordInputFocused
-} from "./draw-coord-settings.js?v=5b092af7";
+} from "./draw-coord-settings.js?v=f8f6d810";
 
 import {
 fillStyleUI as fillStyleUIMoved,

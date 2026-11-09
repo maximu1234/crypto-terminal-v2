@@ -40,10 +40,11 @@ stopLossPct <= 0
 return null;
 }
 
-return Math.round(
+const raw =
 (riskUsd * 100) /
-stopLossPct
-);
+stopLossPct;
+
+return Math.round(raw * 100) / 100;
 
 }
 
@@ -56,8 +57,13 @@ volume == null ||
 return "—";
 }
 
-return Math.round(volume)
-.toLocaleString("ru-RU");
+return volume.toLocaleString(
+"ru-RU",
+{
+minimumFractionDigits: 2,
+maximumFractionDigits: 2
+}
+);
 
 }
 

@@ -12,7 +12,7 @@ getActiveExchangeId
 
 import {
 normalizeAlgoOptimizeStrategyId
-} from "./strategy-param-optimize.js?v=156a9f8f";
+} from "./strategy-param-optimize.js?v=33a03f8b";
 
 import {
 normalizeAlgoSupertrendFilterEnabled,

@@ -10,15 +10,16 @@ clearCrosshairAxisLabels,
 hideDomChartCrosshair,
 hideDomChartCrosshairHorz,
 hideDomChartCrosshairVert,
+positionDomChartCrosshair,
 positionDomChartCrosshairHorz,
 positionTabletProbeHorizInStack,
 hideTabletProbeHorizInStack
-} from "./chart-dom-crosshair.js?v=f94b139b";
+} from "./chart-dom-crosshair.js?v=724fa04d";
 
 import {
 chartPlotMetrics,
 isClientOnChartPriceScale
-} from "./chart-factory.js?v=f2df72b5";
+} from "./chart-factory.js?v=cb6b61e8";
 
 export function linkChartsCrosshair({
 mainChart,
@@ -347,6 +348,41 @@ linkedChart.clearCrosshairPosition();
 
 }
 
+/** X центра бара (включая слоты правее последней свечи). */
+function barSnapX(
+chart,
+x
+){
+
+if(
+!Number.isFinite(x) ||
+!chart?.timeScale
+){
+return x;
+}
+
+const scale =
+chart.timeScale();
+const time =
+scale.coordinateToTime?.(
+x
+);
+
+if(time == null){
+return x;
+}
+
+const snapped =
+scale.timeToCoordinate?.(
+time
+);
+
+return Number.isFinite(snapped)
+? snapped
+: x;
+
+}
+
 function crosshairVertX(
 param
 ){
@@ -373,21 +409,10 @@ return param.point?.x;
 
 }
 
-/** DOM-линии следуют за курсором; привязка к свече — только для подписи времени / RSI. */
+/** Вертикаль и плашка времени — на open ближайшей свечи (4h → 07/11/15/19/23). */
 function crosshairOverlayPlotX(
 param
 ){
-
-const px =
-param?.point?.x;
-
-if(
-Number.isFinite(
-px
-)
-){
-return px;
-}
 
 return crosshairVertX(
 param
@@ -894,9 +919,15 @@ clientY
 return true;
 }
 
+const paneX =
+barSnapX(
+hit.pane.chart,
+hit.plot.x
+);
+
 applyExtraPaneCrosshairPlot(
 hit.pane,
-hit.plot.x,
+paneX,
 hit.plot.y
 );
 
@@ -920,7 +951,7 @@ hit.pane.chart.clearCrosshairPosition();
 
 let probeTime =
 hit.pane.chart.timeScale()?.coordinateToTime?.(
-hit.plot.x
+paneX
 );
 
 if(
@@ -931,7 +962,7 @@ mainChart?.timeScale
 
 probeTime =
 mainChart.timeScale().coordinateToTime?.(
-hit.plot.x
+paneX
 );
 
 }
@@ -940,13 +971,13 @@ updateCrosshairAxisLabels({
 param:{
 time: probeTime,
 point:{
-x: hit.plot.x,
+x: paneX,
 y: hit.plot.y
 }
 },
 timeLabelEl:crosshairTimeLabelEl,
 priceLabelEl:crosshairPriceLabelEl,
-snappedX:hit.plot.x,
+snappedX:paneX,
 plotY:hit.pane.series
 ? hit.plot.y
 : null,
@@ -1053,8 +1084,14 @@ if(
 return;
 }
 
+const rsiX =
+barSnapX(
+linkedChart,
+plot.x
+);
+
 applyRsiCrosshairPlot(
-plot.x,
+rsiX,
 plot.y
 );
 
@@ -1072,7 +1109,7 @@ linkedChart.clearCrosshairPosition();
 
 let probeTime =
 linkedChart.timeScale().coordinateToTime?.(
-plot.x
+rsiX
 );
 
 if(
@@ -1083,7 +1120,7 @@ mainChart?.timeScale
 
 probeTime =
 mainChart.timeScale().coordinateToTime?.(
-plot.x
+rsiX
 );
 
 }
@@ -1092,13 +1129,13 @@ updateCrosshairAxisLabels({
 param:{
 time: probeTime,
 point:{
-x: plot.x,
+x: rsiX,
 y: plot.y
 }
 },
 timeLabelEl:crosshairTimeLabelEl,
 priceLabelEl:crosshairPriceLabelEl,
-snappedX:plot.x,
+snappedX:rsiX,
 plotY:null,
 mainSeries:null,
 mainChart:null
@@ -1658,7 +1695,10 @@ return;
 }
 
 applyMainCrosshairPlot(
-plot.x,
+barSnapX(
+mainChart,
+plot.x
+),
 plot.y
 );
 
@@ -2226,7 +2266,10 @@ plot
 ){
 
 applyMainCrosshairPlot(
-plot.x,
+barSnapX(
+mainChart,
+plot.x
+),
 plot.y
 );
 
@@ -2302,5 +2345,343 @@ clearLinked();
 
 }
 };
+
+}
+
+function ensureCrosshairTimeLabel(
+hostEl
+){
+
+if(
+!hostEl
+){
+return null;
+}
+
+for(
+const child of hostEl.children
+){
+
+if(
+child.classList?.contains(
+"crosshair-time-label"
+)
+){
+return child;
+}
+
+}
+
+const el =
+document.createElement(
+"div"
+);
+
+el.className =
+"crosshair-axis-label crosshair-time-label hidden";
+el.setAttribute(
+"aria-hidden",
+"true"
+);
+hostEl.appendChild(
+el
+);
+
+return el;
+
+}
+
+function ensureLinkedCrosshairVert(
+hostEl
+){
+
+for(
+const child of hostEl.children
+){
+
+if(
+child.classList?.contains(
+"linked-crosshair-vert"
+)
+){
+return child;
+}
+
+}
+
+const el =
+document.createElement(
+"div"
+);
+
+el.className =
+"linked-crosshair-vert hidden";
+el.setAttribute(
+"aria-hidden",
+"true"
+);
+hostEl.appendChild(
+el
+);
+
+return el;
+
+}
+
+function mountSinglePaneTimeCrosshair({
+chart,
+series,
+wrapEl,
+chartEl,
+timeLabelEl,
+isSuppressed
+}){
+
+ensureDomChartCrosshair(
+wrapEl
+);
+
+function hide(){
+
+hideDomChartCrosshair(
+wrapEl
+);
+clearCrosshairAxisLabels(
+timeLabelEl
+);
+
+}
+
+function onMove(
+e
+){
+
+if(
+isSuppressed() ||
+e.pointerType ===
+"touch" ||
+document.body.classList.contains(
+"chart-probe-active"
+)
+){
+return;
+}
+
+if(
+isClientOnChartPriceScale(
+chartEl,
+chart,
+e.clientX,
+e.clientY
+)
+){
+hide();
+return;
+}
+
+const rect =
+wrapEl.getBoundingClientRect();
+
+if(
+e.clientX <
+rect.left ||
+e.clientX >
+rect.right ||
+e.clientY <
+rect.top ||
+e.clientY >
+rect.bottom
+){
+hide();
+return;
+}
+
+const placed =
+positionDomChartCrosshair({
+wrapEl,
+chartEl,
+chart,
+series,
+clientX: e.clientX,
+clientY: e.clientY
+});
+
+updateCrosshairAxisLabels({
+param:{
+time: placed?.time ??
+null,
+point:{
+x: placed?.x,
+y: placed?.y
+}
+},
+timeLabelEl,
+snappedX: placed?.x,
+plotY: placed?.y,
+mainSeries: series,
+mainChart: chart,
+labelWrapEl: wrapEl
+});
+
+}
+
+function onLeave(){
+
+if(
+isSuppressed()
+){
+return;
+}
+
+hide();
+
+}
+
+wrapEl.addEventListener(
+"pointermove",
+onMove,
+{
+passive: true,
+capture: true
+}
+);
+wrapEl.addEventListener(
+"pointerleave",
+onLeave
+);
+
+function dispose(){
+
+wrapEl.removeEventListener(
+"pointermove",
+onMove,
+{
+capture: true
+}
+);
+wrapEl.removeEventListener(
+"pointerleave",
+onLeave
+);
+hide();
+
+}
+
+dispose.clear =
+hide;
+
+return dispose;
+
+}
+
+/**
+ * Крест как на Терминале: вертикаль через цену и индикатор,
+ * плашка времени на нижней шкале (open свечи, в том числе в будущем).
+ */
+export function mountWidgetStackCrosshair({
+stackEl = null,
+chart,
+series,
+wrapEl,
+chartEl,
+linkedChart = null,
+linkedSeries = null,
+linkedWrapEl = null,
+linkedChartEl = null,
+isSuppressed = ()=>
+false
+}){
+
+if(
+!chart ||
+!series ||
+!wrapEl ||
+!chartEl
+){
+return ()=>{};
+}
+
+const timeHost =
+linkedWrapEl ||
+wrapEl;
+const timeLabelEl =
+ensureCrosshairTimeLabel(
+timeHost
+);
+
+if(
+linkedChart &&
+linkedWrapEl &&
+linkedChartEl
+){
+
+const host =
+stackEl ||
+linkedWrapEl.parentElement ||
+wrapEl.parentElement;
+
+if(
+!host
+){
+return ()=>{};
+}
+
+const vert =
+ensureLinkedCrosshairVert(
+host
+);
+const link =
+linkChartsCrosshair({
+mainChart: chart,
+linkedChart,
+mainSeries: series,
+linkedSeries,
+linkedVertOverlayEl: vert,
+chartWrapEl: wrapEl,
+chartEl,
+linkedWrapEl,
+linkedChartEl,
+crosshairTimeLabelEl: timeLabelEl
+});
+
+function dispose(){
+
+try{
+link.detachPointerCrosshair?.();
+}catch{
+/* ignore */
+}
+
+try{
+link.clearLinked?.();
+}catch{
+/* ignore */
+}
+
+}
+
+dispose.clear =
+()=>{
+
+try{
+link.clearLinked?.();
+}catch{
+/* ignore */
+}
+
+};
+
+return dispose;
+
+}
+
+return mountSinglePaneTimeCrosshair({
+chart,
+series,
+wrapEl,
+chartEl,
+timeLabelEl,
+isSuppressed
+});
 
 }

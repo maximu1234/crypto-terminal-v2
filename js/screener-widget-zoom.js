@@ -19,7 +19,7 @@ applyTabletRsiChartOptions,
 SCREENER_PAGE_VISIBLE_BARS,
 SCREENER_PAGE_MAX_BARS,
 SCREENER_PAGE_HISTORY_REQUESTS
-} from "./chart-import.js?v=5bc46d47";
+} from "./chart-import.js?v=5e72069f";
 
 import {
 isIpadWebViewport
@@ -61,7 +61,7 @@ createScreenerMacdChart,
 isScreenerHistogramOscillator,
 setScreenerAoData,
 setScreenerMacdData
-} from "./screener-widget-oscillator.js?v=ec166d37";
+} from "./screener-widget-oscillator.js?v=859b6111";
 
 import {
 shouldIgnoreTypingHotkey
@@ -1174,7 +1174,7 @@ const {
 mountWidgetTabletChart
 } =
 await import(
-"./tablet-widget-chart.js?v=3b121fcf"
+"./tablet-widget-chart.js?v=c85f0349"
 );
 
 if(
@@ -1612,7 +1612,9 @@ state.chartEl,
 linkedWrapEl:
 state.rsiWrapEl,
 linkedChartEl:
-state.rsiChartEl
+state.rsiChartEl,
+crosshairTimeLabelEl:
+state.timeLabelEl
 }
 );
 
@@ -2094,6 +2096,19 @@ const linkedCrosshairVertEl =
 panel.querySelector(
 ".screener-widget-zoom-body .linked-crosshair-vert"
 );
+const timeLabelEl =
+document.createElement(
+"div"
+);
+timeLabelEl.className =
+"crosshair-axis-label crosshair-time-label hidden";
+timeLabelEl.setAttribute(
+"aria-hidden",
+"true"
+);
+rsiWrapEl.appendChild(
+timeLabelEl
+);
 
 const {
 chart,
@@ -2199,6 +2214,7 @@ macdSignalSeries:
 macdPair?.signalSeries ||
 null,
 linkedCrosshairVertEl,
+timeLabelEl,
 candles:
 [],
 unsubKline:

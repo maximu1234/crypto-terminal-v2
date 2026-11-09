@@ -5,6 +5,11 @@ fibShapePriceAtRatio,
 getFibRows
 } from "./fib-spec.js?v=43350118";
 
+import {
+channelLevelSegment,
+ensureChannelLevelsVisible
+} from "./channel-spec.js?v=5e41db1c";
+
 /**
  * Фигура целиком за видимым окном — её не обводим.
  * Нет границ или неизвестный тип — рисуем, чтобы ничего не пропало.
@@ -737,6 +742,74 @@ bottom
 )
 ){
 return true;
+}
+
+if(
+shape.type === "channel" &&
+shape.p1 &&
+shape.p2 &&
+shape.p3
+){
+
+const c1 = toXY(shape.p1);
+const c2 = toXY(shape.p2);
+const c3 = toXY(shape.p3);
+
+if(
+c1 &&
+c2 &&
+c3
+){
+
+const c4 = {
+x: c3.x + (c2.x - c1.x),
+y: c3.y + (c2.y - c1.y)
+};
+
+const rows =
+ensureChannelLevelsVisible(
+shape.channelLevels
+);
+
+for(
+const row of rows
+){
+
+if(
+!row.enabled
+){
+continue;
+}
+
+const seg =
+channelLevelSegment(
+{
+p1: c1,
+p2: c2,
+p3: c3,
+p4: c4
+},
+row.v
+);
+
+if(
+seg &&
+segmentHitsPlot(
+seg.start,
+seg.end,
+left,
+right,
+top,
+bottom
+)
+){
+return true;
+}
+
+}
+
+}
+
 }
 
 if(

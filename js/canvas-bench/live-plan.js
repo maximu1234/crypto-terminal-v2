@@ -140,6 +140,123 @@ return Math.max(bars, width * share);
 
 }
 
+function barStepSec(
+candles,
+fromEnd
+){
+
+const last =
+candles.length - 1;
+
+if(last < 1){
+return 0;
+}
+
+if(fromEnd){
+
+for(let i = last; i > 0; i--){
+
+const step =
+Number(candles[i].time) -
+Number(candles[i - 1].time);
+
+if(step > 0){
+return step;
+}
+
+}
+
+}else{
+
+for(let i = 1; i <= last; i++){
+
+const step =
+Number(candles[i].time) -
+Number(candles[i - 1].time);
+
+if(step > 0){
+return step;
+}
+
+}
+
+}
+
+return 0;
+
+}
+
+/**
+ * Open свечи по индексу. Индекс правее последней свечи
+ * продолжает тот же шаг в будущее — крест и плашка не
+ * пропадают в правом поле.
+ */
+export function candleOpenAtIndex(
+candles,
+index
+){
+
+const last =
+candles?.length
+? candles.length - 1
+: -1;
+
+if(
+last < 0 ||
+!Number.isFinite(index)
+){
+return null;
+}
+
+const bar =
+Math.round(index);
+
+if(bar >= 0 && bar <= last){
+
+const time =
+Number(candles[bar].time);
+
+return Number.isFinite(time)
+? { bar, time }
+: null;
+
+}
+
+const step =
+barStepSec(
+candles,
+bar > last
+);
+
+if(!(step > 0)){
+
+const clamp =
+bar > last ? last : 0;
+const time =
+Number(candles[clamp].time);
+
+return Number.isFinite(time)
+? { bar: clamp, time }
+: null;
+
+}
+
+const anchor =
+bar > last ? last : 0;
+const anchorTime =
+Number(candles[anchor].time);
+
+if(!Number.isFinite(anchorTime)){
+return null;
+}
+
+return {
+bar,
+time: anchorTime + (bar - anchor) * step
+};
+
+}
+
 export function candleIndexAt(
 x,
 lastIndex,
@@ -623,6 +740,7 @@ TIME_AXIS_STEPS_SEC.length - 1
 /**
  * Не прыгать 7д↔14д на каждом кадре пана — иначе подписи
  * «раздваиваются» на скринере/zoom.
+ * Zoom-in (мельче шаг) переключаем охотнее, чем zoom-out.
  */
 export function stickTimeAxisStepSec(
 idealStep,
@@ -654,6 +772,13 @@ Math.max(1, Number(targetCount) || 1);
 const count =
 Math.max(1, Number(spanSec) || 1) / preferred;
 
+if(ideal < preferred){
+if(count >= target * 0.85){
+return preferred;
+}
+return ideal;
+}
+
 if(
 count >= target * 0.55 &&
 count <= target * 1.85
@@ -662,6 +787,28 @@ return preferred;
 }
 
 return ideal;
+
+}
+
+/** Ближайший «красивый» шаг ≥ raw (сек). */
+export function snapTimeAxisStepSec(
+rawSec
+){
+
+const raw =
+Math.max(1, Number(rawSec) || 1);
+
+for(const step of TIME_AXIS_STEPS_SEC){
+
+if(step >= raw){
+return step;
+}
+
+}
+
+return TIME_AXIS_STEPS_SEC[
+TIME_AXIS_STEPS_SEC.length - 1
+];
 
 }
 
@@ -685,24 +832,44 @@ const dayStep =
 Math.max(1, Math.round(step / 86400));
 
 /*
- * Сетка должна быть стабильной относительно эпохи.
- * Если выравнивать к «полуночи текущего timeLeft», при панорамировании
- * фаза 7/14-дневных меток прыгает — подписи «стоят на месте»,
- * пока свечи уже уехали (Terminal/Скринер на широком зуме).
+ * Локальные полуночи: formatCanvasAxisTime на 00:00 даёт день/месяц/год
+ * (как TV), внутри дня — HH:mm. UTC-сетка в UTC+7 давала везде «07:00».
+ * Фаза стабильна по календарным датам (не по «полуночи timeLeft»).
  */
-if(dayStep === 1){
 date.setHours(0, 0, 0, 0);
+
+if(dayStep === 1){
 return Math.floor(date.getTime() / 1000);
 }
 
-const utcDay =
-Math.floor(Number(sec) / 86400);
-
-return (
-Math.floor(utcDay / dayStep) *
-dayStep *
-86400
+const dayIndex =
+Math.floor(
+Date.UTC(
+date.getFullYear(),
+date.getMonth(),
+date.getDate()
+) /
+86400000
 );
+const alignedIndex =
+Math.floor(dayIndex / dayStep) *
+dayStep;
+const ymd =
+new Date(
+alignedIndex * 86400000
+);
+const aligned =
+new Date(
+ymd.getUTCFullYear(),
+ymd.getUTCMonth(),
+ymd.getUTCDate(),
+0,
+0,
+0,
+0
+);
+
+return Math.floor(aligned.getTime() / 1000);
 
 }
 
@@ -736,14 +903,19 @@ return Math.floor(date.getTime() / 1000);
 
 /**
  * Метки оси времени по видимому диапазону.
- * Возвращает unix-sec; вызывающий сам переводит в x — тогда подписи едут с паном.
+ * Возвращает unix-sec (+ .step, .formatSteps); вызывающий сам → x.
+ *
+ * densestStepSec — мин. шаг по плотности свечей (barSpacing×period):
+ * иначе правый margin раздувает span и ось остаётся на «днях»,
+ * хотя места под HH:mm уже хватает.
  */
 export function niceTimeAxisTimes(
 fromSec,
 toSec,
 plotW,
 minLabelPx = 72,
-preferredStep = 0
+preferredStep = 0,
+densestStepSec = 0
 ){
 
 const t0 =
@@ -759,6 +931,8 @@ t1 <= t0
 const empty =
 [];
 empty.step = 0;
+empty.formatSteps =
+[];
 return empty;
 }
 
@@ -771,13 +945,30 @@ Math.max(
 2,
 Math.floor(width / minPx)
 );
+const span =
+t1 - t0;
+const fromSpan =
+pickTimeAxisStepSec(span, target);
+const fromDensity =
+densestStepSec > 0
+? snapTimeAxisStepSec(
+densestStepSec
+)
+: fromSpan;
+/*
+ * Плотность свечей задаёт самый мелкий допустимый шаг;
+ * span — не грубее (если margin раздул окно).
+ */
 const ideal =
-pickTimeAxisStepSec(t1 - t0, target);
+Math.min(
+fromSpan,
+fromDensity
+);
 const step =
 stickTimeAxisStepSec(
 ideal,
 preferredStep,
-t1 - t0,
+span,
 target
 );
 let cursor =
@@ -795,6 +986,8 @@ bump += 1;
 
 const out =
 [];
+const formatSteps =
+[];
 const guard =
 Math.max(8, target * 4);
 
@@ -806,6 +999,7 @@ n++
 
 if(cursor >= t0 - 1 && cursor <= t1 + 1){
 out.push(cursor);
+formatSteps.push(step);
 }
 
 cursor += step;
@@ -813,6 +1007,7 @@ cursor += step;
 }
 
 out.step = step;
+out.formatSteps = formatSteps;
 return out;
 
 }

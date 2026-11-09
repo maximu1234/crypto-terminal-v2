@@ -5,7 +5,7 @@
  */
 import {
   createCanvasLwChart
-} from "../chart/canvas-lw-host.js?v=44acf005";
+} from "../chart/canvas-lw-host.js?v=b3c4379d";
 import {
   RSI_TOUCH_FLIP_EQUITY_POS_COLOR
 } from "./rsi-touch-flip-equity.js?v=40586292";
