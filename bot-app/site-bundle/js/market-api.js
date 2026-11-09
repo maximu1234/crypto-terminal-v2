@@ -14,7 +14,7 @@ formatExchangeDisplayLabel
 
 import {
 bybitPublicAdapter
-} from "./exchanges/bybit/public.js?v=febf8202";
+} from "./exchanges/bybit/public.js?v=b3742165";
 
 import {
 bingxPublicAdapter
@@ -26,7 +26,7 @@ moexPublicAdapter
 
 import {
 peekBybitSymbolsCache
-} from "./api.js?v=cdf95f33";
+} from "./api.js?v=d2a5a6fe";
 
 const ADAPTERS =
 {

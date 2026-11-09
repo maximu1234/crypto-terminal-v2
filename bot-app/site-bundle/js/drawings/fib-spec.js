@@ -1328,21 +1328,30 @@ const c =
 toXY(
 shape.p3
 );
+const xs =
+[
+a?.x,
+b?.x,
+c?.x
+].filter(
+x=>
+Number.isFinite(
+x
+)
+);
 
+/*
+ * Якоря вне шкалы: toXY может вернуть null. Не растягиваем
+ * уровни на весь плот — короткая фиба иначе «разъезжается».
+ */
 if(
-!a ||
-!b ||
-!c
+!xs.length
 ){
 return null;
 }
 
 return fibLevelXSpanFromXs(
-[
-a.x,
-b.x,
-c.x
-],
+xs,
 plotW
 );
 
@@ -1352,7 +1361,20 @@ if(
 !a ||
 !b
 ){
-return null;
+
+return fibLevelXSpanFromXs(
+[
+a?.x,
+b?.x
+].filter(
+x=>
+Number.isFinite(
+x
+)
+),
+plotW
+);
+
 }
 
 return fibLevelXSpan(
@@ -1385,11 +1407,7 @@ x
 if(
 !nums.length
 ){
-return {
-x1: 0,
-x2: 0,
-labelX: 0
-};
+return null;
 }
 
 let x1 =
@@ -1401,11 +1419,8 @@ Math.max(
 ...nums
 );
 
-let span =
-x2 - x1;
-
 if(
-span <
+x2 - x1 <
 FIB_MIN_ANCHOR_SPAN_PX
 ){
 
@@ -1421,65 +1436,44 @@ mid - half;
 x2 =
 mid + half;
 
-if(
-x1 <
-0
-){
-
-x2 -=
-x1;
-x1 =
-0;
-
 }
 
 if(
-x2 >
+!(
+Number.isFinite(
+plotW
+) &&
+plotW >
+0
+) ||
+x2 <
+0 ||
+x1 >
 plotW
 ){
-
-const overflow =
-x2 - plotW;
-
-x1 -=
-overflow;
-x2 =
-plotW;
-
+/*
+ * Короткая фиба целиком за краем — не растягивать на весь плот.
+ * Иначе при zoom in уровни внезапно на всю ширину экрана.
+ */
+return null;
 }
 
-if(
-x1 <
-0
-){
-
-x1 =
-0;
-
-}
-
-if(
-x2 - x1 <
-FIB_MIN_ANCHOR_SPAN_PX &&
-plotW >=
-FIB_MIN_ANCHOR_SPAN_PX
-){
-
-x2 =
-Math.min(
-plotW,
-x1 +
-FIB_MIN_ANCHOR_SPAN_PX
-);
 x1 =
 Math.max(
 0,
-x2 -
-FIB_MIN_ANCHOR_SPAN_PX
+x1
+);
+x2 =
+Math.min(
+plotW,
+x2
 );
 
-}
-
+if(
+x2 - x1 <
+1
+){
+return null;
 }
 
 return {

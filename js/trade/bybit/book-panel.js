@@ -11,7 +11,7 @@ getAllCachedPositions,
 isTradePositionRecentlyClosed,
 removeTradePositionFromCache,
 syncTradePositionsCache
-} from "./positions-cache.js?v=799c29e8";
+} from "./positions-cache.js?v=c46f95e7";
 
 import {
 getTradeConfig
@@ -43,7 +43,7 @@ getAlertsSorted,
 getAlertsHistorySorted,
 removeAlert,
 removeAlertHistoryEntry
-} from "../../alerts.js?v=60a96622";
+} from "../../alerts.js?v=ac4ddae0";
 
 const SHARE_ICON_V =
 2;

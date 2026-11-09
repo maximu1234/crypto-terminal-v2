@@ -17,6 +17,10 @@ function fromB64url(s) {
 }
 
 export function verifySiteGateToken(secret, token) {
+  const key = String(secret || "");
+  if (!key) {
+    return null;
+  }
   const raw = String(token || "");
   const parts = raw.split(".");
   if (parts.length !== 3 || parts[0] !== "v1") {
@@ -24,7 +28,7 @@ export function verifySiteGateToken(secret, token) {
   }
   const [, body, sig] = parts;
   const expect = crypto
-    .createHmac("sha256", secret)
+    .createHmac("sha256", key)
     .update(`v1.${body}`)
     .digest("hex");
   const a = Buffer.from(sig);

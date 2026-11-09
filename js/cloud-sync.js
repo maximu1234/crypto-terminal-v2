@@ -79,7 +79,7 @@ isFavoritesAutoCloudDisabled,
 isAlertsCloudDisabled,
 isAutoDevicePullDisabled,
 scaleSupabasePollMs
-} from "./supabase-usage-prefs.js?v=11283d28";
+} from "./supabase-usage-prefs.js?v=5c877457";
 
 import {
 isAlgoBotLiteShell
@@ -1806,7 +1806,7 @@ readLanRemoteConn,
 isMultichartRemoteControlHost
 } =
 await import(
-"./algo-trading/bot-remote-client.js?v=4d262a39"
+"./algo-trading/bot-remote-client.js?v=14c55485"
 );
 
 if(
@@ -2532,7 +2532,7 @@ isFavoritesAutoCloudDisabled()
 return;
 }
 
-void import("./favorites-cloud-sync.js?v=462109c0").then(
+void import("./favorites-cloud-sync.js?v=244a0a1e").then(
 m=>{
 m.applyFavoritesFromRealtimeRow(
 row
@@ -2670,7 +2670,7 @@ settingsChannel = channel;
 export async function mergeFavoritesWithCloud(){
 
 const m =
-await import("./favorites-cloud-sync.js?v=462109c0");
+await import("./favorites-cloud-sync.js?v=244a0a1e");
 
 return m.reconcileLocalFavoritesWithCloud();
 
@@ -2680,7 +2680,7 @@ return m.reconcileLocalFavoritesWithCloud();
 export async function pullFavoritesIfCloudNewer(){
 
 const m =
-await import("./favorites-cloud-sync.js?v=462109c0");
+await import("./favorites-cloud-sync.js?v=244a0a1e");
 
 await m.pullFavoritesFromCloudNow();
 return favoritesToCloudList(
@@ -2704,7 +2704,7 @@ return collectAllLocalDrawings();
 async function syncFavoritesWithCloud(){
 
 const m =
-await import("./favorites-cloud-sync.js?v=462109c0");
+await import("./favorites-cloud-sync.js?v=244a0a1e");
 
 await m.reconcileLocalFavoritesWithCloud();
 
@@ -2738,7 +2738,7 @@ return;
 }
 
 const m =
-await import("./favorites-cloud-sync.js?v=462109c0");
+await import("./favorites-cloud-sync.js?v=244a0a1e");
 
 m.pushFavoritesAfterLocalEdit(
 favorites
@@ -4327,7 +4327,7 @@ try{
 const {
 clearAllTelegramChatCaches
 } =
-await import("./alerts-cloud/telegram-id.js?v=d86e7bed");
+await import("./alerts-cloud/telegram-id.js?v=51c453cc");
 
 clearAllTelegramChatCaches();
 
@@ -4611,7 +4611,7 @@ return;
 try{
 
 const favoritesCloud =
-await import("./favorites-cloud-sync.js?v=462109c0");
+await import("./favorites-cloud-sync.js?v=244a0a1e");
 
 if(
 !isFavoritesAutoCloudDisabled() &&
@@ -4625,7 +4625,7 @@ if(
 !isAlertsCloudDisabled()
 ){
 const alertsCloud =
-await import("./alerts-cloud-sync.js?v=2919a2aa");
+await import("./alerts-cloud-sync.js?v=69263323");
 
 await alertsCloud.hydrateAlertsAfterAuth({
 force: true
@@ -4728,9 +4728,9 @@ await ensureCloudLoginResolved(
 );
 
 const alertsCloud =
-await import("./alerts-cloud-sync.js?v=2919a2aa");
+await import("./alerts-cloud-sync.js?v=69263323");
 const { stripAlertFlagsNotInRegistry } =
-await import("./alerts.js?v=60a96622");
+await import("./alerts.js?v=ac4ddae0");
 
 const stripOpts =
 isAlertsPage()

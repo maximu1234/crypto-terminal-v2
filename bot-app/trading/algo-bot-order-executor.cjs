@@ -2424,6 +2424,32 @@ message:
 };
 }
 
+const {
+getAlgoTradingMode
+} =
+require(
+"./algo-trading-runtime.cjs"
+);
+const {
+isAlgoLiveTradingEnabled
+} =
+require(
+"./algo-trading-edition.cjs"
+);
+
+if(
+getAlgoTradingMode() !==
+"live" ||
+!isAlgoLiveTradingEnabled()
+){
+return {
+ok:
+false,
+message:
+"Ручной режим: ордер не отправлен"
+};
+}
+
 const oppositeMirror =
 payload?.oppositeMirror ===
 true;

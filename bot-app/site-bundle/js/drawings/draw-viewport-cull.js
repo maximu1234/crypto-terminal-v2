@@ -1,3 +1,15 @@
+import {
+isFibType,
+fibShapeLevelXSpan,
+fibShapePriceAtRatio,
+getFibRows
+} from "./fib-spec.js?v=43350118";
+
+import {
+channelLevelSegment,
+ensureChannelLevelsVisible
+} from "./channel-spec.js?v=5e41db1c";
+
 /**
  * Фигура целиком за видимым окном — её не обводим.
  * Нет границ или неизвестный тип — рисуем, чтобы ничего не пропало.
@@ -10,6 +22,110 @@ return type ===
 "hline" ||
 type ===
 "hray";
+
+}
+
+/*
+ * У фибы уровни 1.25…3 (и <0) выходят за цены якорей 0%/100%.
+ * Отсев только по p1/p2 прятал весь объект, как только жёлтые
+ * опорные линии уезжали за экран, хотя расширения ещё в окне.
+ */
+function pushFibLevelPrices(
+prices,
+shape
+){
+
+if(
+!isFibType(
+shape?.type
+) ||
+!Array.isArray(
+prices
+)
+){
+return;
+}
+
+const rows =
+getFibRows(
+shape
+);
+
+for(
+const row of rows
+){
+
+if(
+!row?.enabled
+){
+continue;
+}
+
+for(
+const logarithmic of [
+false,
+true
+]
+){
+
+const price =
+fibShapePriceAtRatio(
+shape,
+row.v,
+logarithmic
+);
+
+if(
+Number.isFinite(
+price
+)
+){
+prices.push(
+price
+);
+}
+
+}
+
+}
+
+}
+
+function segmentHitsPlot(
+a,
+b,
+left,
+right,
+top,
+bottom
+){
+
+if(
+!a ||
+!b ||
+!Number.isFinite(a.x) ||
+!Number.isFinite(a.y) ||
+!Number.isFinite(b.x) ||
+!Number.isFinite(b.y)
+){
+return false;
+}
+
+const segLeft =
+Math.min(a.x, b.x);
+const segRight =
+Math.max(a.x, b.x);
+const segTop =
+Math.min(a.y, b.y);
+const segBottom =
+Math.max(a.y, b.y);
+
+return !(
+segRight < left ||
+segLeft > right ||
+segBottom < top ||
+segTop > bottom
+);
 
 }
 
@@ -244,6 +360,11 @@ price
 
 }
 
+pushFibLevelPrices(
+prices,
+shape
+);
+
 if(
 !times.length &&
 !prices.length
@@ -312,6 +433,12 @@ finite(
 view.timeTo
 );
 
+/*
+ * Фиба тоже по времени якорей: короткая фиба за левым краем
+ * не должна «разъезжаться» на весь плот только из‑за цены.
+ * Вертикальные расширения уровней учитывает shapeDataBox /
+ * pushFibLevelPrices ниже.
+ */
 if(
 timeFrom !=
 null &&
@@ -593,6 +720,163 @@ bottom
 return true;
 }
 
+}
+
+/*
+ * Отрезок / фиба пересекает плот, хотя оба якоря уже за краем.
+ * Иначе при зуме фигура пропадает с кадра, но hit-test её ещё
+ * ловит — и под курсором она «проявляется».
+ */
+try{
+
+if(
+shape.p1 &&
+shape.p2 &&
+segmentHitsPlot(
+toXY(shape.p1),
+toXY(shape.p2),
+left,
+right,
+top,
+bottom
+)
+){
+return true;
+}
+
+if(
+shape.type === "channel" &&
+shape.p1 &&
+shape.p2 &&
+shape.p3
+){
+
+const c1 = toXY(shape.p1);
+const c2 = toXY(shape.p2);
+const c3 = toXY(shape.p3);
+
+if(
+c1 &&
+c2 &&
+c3
+){
+
+const c4 = {
+x: c3.x + (c2.x - c1.x),
+y: c3.y + (c2.y - c1.y)
+};
+
+const rows =
+ensureChannelLevelsVisible(
+shape.channelLevels
+);
+
+for(
+const row of rows
+){
+
+if(
+!row.enabled
+){
+continue;
+}
+
+const seg =
+channelLevelSegment(
+{
+p1: c1,
+p2: c2,
+p3: c3,
+p4: c4
+},
+row.v
+);
+
+if(
+seg &&
+segmentHitsPlot(
+seg.start,
+seg.end,
+left,
+right,
+top,
+bottom
+)
+){
+return true;
+}
+
+}
+
+}
+
+}
+
+if(
+isFibType(
+shape.type
+) &&
+shape.p1
+){
+
+const span =
+fibShapeLevelXSpan(
+shape,
+toXY,
+plotW
+);
+
+if(
+span &&
+span.x2 >= 0 &&
+span.x1 <= plotW
+){
+
+const levelPrices =
+[];
+
+pushFibLevelPrices(
+levelPrices,
+shape
+);
+
+for(
+const price of levelPrices
+){
+
+let xy =
+null;
+
+try{
+xy =
+toXY({
+time: shape.p1.time,
+price
+});
+}catch{
+xy =
+null;
+}
+
+if(
+xy &&
+Number.isFinite(
+xy.y
+) &&
+xy.y >= top &&
+xy.y <= bottom
+){
+return true;
+}
+
+}
+
+}
+
+}
+
+}catch{
+/* ignore */
 }
 
 return false;

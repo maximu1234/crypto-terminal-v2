@@ -1,10 +1,10 @@
 /**
- * userData persistence. Prefer OS encryption off macOS (no Keychain prompts);
- * on darwin keep plaintext UTF-8 with mode 0o600. Legacy safeStorage blobs
- * decrypt on read; re-encrypted on next save when encryption is available.
+ * userData persistence. Secrets use Electron safeStorage when the OS reports
+ * it (macOS Keychain, Windows DPAPI, Linux). Plaintext UTF-8 remains only if
+ * encryption is unavailable. An existing plaintext file is re-encrypted on read.
  *
- * Windows/Linux: encrypt with safeStorage. On read, decrypt FIRST — encrypted
- * blobs can look like UTF-8 without NUL bytes and must not be treated as plain.
+ * On read, decrypt FIRST — encrypted blobs can look like UTF-8 without NUL
+ * bytes and must not be treated as plain.
  */
 const fs =
 require(
@@ -52,18 +52,7 @@ return false;
 
 }
 
-/**
- * macOS Keychain prompts made safeStorage painful — skip encrypt there.
- * Windows/Linux: use OS encryption when Electron reports it available.
- */
 function isCredentialEncryptionAvailable(){
-
-if(
-process.platform ===
-"darwin"
-){
-return false;
-}
 
 try{
 return !!safeStorage.isEncryptionAvailable();
@@ -230,15 +219,21 @@ looksLikePlainUtf8(
 raw
 )
 ){
-return raw.toString(
+const text =
+raw.toString(
 "utf8"
 );
+writeSecretText(
+filePath,
+text
+);
+return text;
 }
 
 return null;
 }
 
-/* Darwin / no-encrypt: plaintext, then migrate legacy safeStorage blobs. */
+/* Encryption unavailable: plaintext, then migrate legacy safeStorage blobs. */
 if(
 looksLikePlainUtf8(
 raw

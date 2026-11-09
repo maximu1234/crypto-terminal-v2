@@ -8,16 +8,16 @@ isMacdAlert,
 isOscillatorAlert,
 isRsiAlert,
 normalizeAlertTf
-} from "./alerts.js?v=6b4ba128";
+} from "./alerts.js?v=ac4ddae0";
 
 import {
 subscribeKline
-} from "./market-ws.js?v=d0679bf8";
+} from "./market-ws.js?v=22428043";
 
 import {
 EXCHANGE_CHANGED_EVENT,
 getActiveExchangeId
-} from "./market-api.js?v=145e2e28";
+} from "./market-api.js?v=a65f5c56";
 
 import {
 getAlertNotifyMode,
@@ -27,7 +27,7 @@ getAlertToastDurationMs
 import {
 buildAlertChartUrl,
 gateAlertExchangeNavigation
-} from "./alert-deep-link-exchange.js?v=04ad0960";
+} from "./alert-deep-link-exchange.js?v=711d7dad";
 
 /* Базовая цена отдельно для каждого алерта (symbol + shapeId) */
 const lastPriceByAlert =

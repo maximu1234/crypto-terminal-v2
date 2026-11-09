@@ -5,7 +5,7 @@
  */
 import {
   ALGO_TICKER_SCAN_HISTORY_REQUESTS
-} from "./ticker-scanner.js?v=05523b26";
+} from "./ticker-scanner.js?v=8e85c0f3";
 import {
   rsiTouchFlipTfPeriodSec
 } from "./rsi-touch-flip-mtf.js?v=450e7571";

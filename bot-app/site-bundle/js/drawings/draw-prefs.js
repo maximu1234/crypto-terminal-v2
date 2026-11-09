@@ -11,12 +11,12 @@ import {
 
 import {
   normalizeRectangleShape
-} from "./arrow-rect.js?v=8d4294c4";
+} from "./arrow-rect.js?v=9ea26ef4";
 
 import {
   migrateFvpToolDefaults,
   isFvpType
-} from "./fixed-volume-profile.js?v=51ef58c3";
+} from "./fixed-volume-profile.js?v=77a3231c";
 
 import {
   migrateFibToolDefaults,
@@ -25,11 +25,11 @@ import {
   isFibType,
   isFibExtType,
   resolveFibTrendLineColor
-} from "./fib-spec.js?v=5f577f26";
+} from "./fib-spec.js?v=43350118";
 
 import {
   isPositionType
-} from "./position.js?v=152e419c";
+} from "./position.js?v=ef75c433";
 
 import {
   migrateTextToolDefaults,
@@ -39,7 +39,7 @@ import {
 
 import {
   migrateChannelToolDefaults
-} from "./channel-spec.js?v=a8bcf3c9";
+} from "./channel-spec.js?v=5e41db1c";
 
 import {
   ELLIOTT_TOOL_TYPES,
@@ -47,7 +47,7 @@ import {
 isPattern12Draw,
 migrateElliottToolDefaults,
 normalizePattern12TpFlags
-} from "./elliott-spec.js?v=3fb92981";
+} from "./elliott-spec.js?v=3e4f3a47";
 
 /**
  * @returns {{

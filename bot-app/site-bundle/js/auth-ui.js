@@ -13,7 +13,7 @@ completeAuthFromCallbackUrl,
 hasAuthCallbackInUrl,
 exportAuthSessionTransferString,
 importAuthSessionTransferString
-} from "./cloud-sync.js?v=d2544836";
+} from "./cloud-sync.js?v=77eb1e79";
 
 import {
 isSupabaseConfigured
@@ -31,7 +31,7 @@ import {
 initAppSettingsWindow,
 refreshAppSettingsAdminNav,
 openAppSettingsWindow
-} from "./app-settings-window.js?v=8d17445a";
+} from "./app-settings-window.js?v=96a3a5f4";
 
 import {
 ensureHeaderSettingsShell
@@ -905,7 +905,7 @@ if(
 isAlgoBotShell()
 ){
 void import(
-"./algo-trading/bot-session-log-server-ui.js?v=ebed730e"
+"./algo-trading/bot-session-log-server-ui.js?v=7ae026ad"
 ).then(
 mod=>{
 mod.mountSessionLogServerSettings(
@@ -1766,7 +1766,7 @@ const {
 getTelegramChatId
 } =
 await import(
-"./alerts-cloud/telegram-id.js?v=48e6b43c"
+"./alerts-cloud/telegram-id.js?v=51c453cc"
 );
 const chatId =
 await getTelegramChatId();

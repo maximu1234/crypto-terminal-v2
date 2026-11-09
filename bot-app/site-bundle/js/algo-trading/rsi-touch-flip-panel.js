@@ -9,7 +9,7 @@ isActiveAnalysisBot
 } from "./active-analysis-bot.js?v=c1b8293b";
 import {
 loadMarketHistory
-} from "../market-api.js?v=145e2e28";
+} from "../market-api.js?v=a65f5c56";
 import {
 RSI_TOUCH_FLIP_SIZE_AVERAGE,
 loadRsiTouchFlipPrefs,
@@ -46,7 +46,7 @@ mountRsiTouchFlipOverlay
 import {
 mountRsiTouchFlipFit,
 loadRsiTouchFlipFitRowForSymbol
-} from "./rsi-touch-flip-fit-panel.js?v=cb980665";
+} from "./rsi-touch-flip-fit-panel.js?v=4d1a0e01";
 import {
 RSI_TOUCH_FLIP_DEFAULT_TRAIN_PCT,
 rsiTouchFlipFitPrefsForHydrate
@@ -468,7 +468,7 @@ if(
 ){
 equityChartMod =
 await import(
-"./rsi-touch-flip-equity-chart.js?v=dd91534b"
+"./rsi-touch-flip-equity-chart.js?v=9772a830"
 );
 }
 

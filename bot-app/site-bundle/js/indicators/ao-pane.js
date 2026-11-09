@@ -8,7 +8,7 @@ linkPairedChartTimeScales,
 appendFutureWhitespaceBars,
 computeChartFutureMarginBars,
 coinsTfVisibleBars
-} from "../chart-import.js?v=613e412b";
+} from "../chart-import.js?v=5e72069f";
 
 import {
 calculateAwesomeOscillator,
@@ -22,8 +22,7 @@ isChartLayoutReady
 } from "../chart-layout-gate.js?v=4a8798af";
 
 import {
-captureHealthyVisibleLogicalRange,
-pinVisibleLogicalRangeBriefly
+suppressTerminalHistoryLazyLoad
 } from "../chart-visible-range.js?v=543a2459";
 
 import {
@@ -36,7 +35,7 @@ isBottomIndicatorPane
 
 import {
 syncPaneViewportAfterData
-} from "./indicator-pane-viewport.js?v=a8633490";
+} from "./indicator-pane-viewport.js?v=02d45485";
 
 export const AO_PANE_ID =
 "ao";
@@ -322,6 +321,17 @@ null
 )
 }
 );
+
+try{
+chart.priceScale(
+"right"
+).applyOptions({
+invertScale:
+!!getHost?.()?.isCoinsAoInverted
+});
+}catch{
+/* ignore */
+}
 
 return true;
 
@@ -666,27 +676,14 @@ getHost?.()?.onIndicatorDataReady?.(
 
 function enable(){
 
-const mainChart =
-getHost?.()?.chart;
-const pinned =
-captureHealthyVisibleLogicalRange(
-mainChart
+suppressTerminalHistoryLazyLoad(
+3000
 );
 
 if(
 enabled
 ){
 refreshData();
-pinVisibleLogicalRangeBriefly(
-mainChart,
-pinned,
-{
-suppressMs:
-8000,
-afterResizeMs:
-120
-}
-);
 return;
 }
 
@@ -702,27 +699,13 @@ applyVisibility();
 ensurePaneChartSized();
 refreshData();
 bindTimeSync();
-/* Показ панели AO жмёт main chart → from≈0; guard как у Volume. */
-pinVisibleLogicalRangeBriefly(
-mainChart,
-pinned,
-{
-suppressMs:
-8000,
-afterResizeMs:
-120
-}
-);
 
 }
 
 function disable(){
 
-const mainChart =
-getHost?.()?.chart;
-const pinned =
-captureHealthyVisibleLogicalRange(
-mainChart
+suppressTerminalHistoryLazyLoad(
+3000
 );
 
 if(
@@ -755,16 +738,6 @@ lastAoMinMove =
 null;
 updateHud();
 applyVisibility();
-pinVisibleLogicalRangeBriefly(
-mainChart,
-pinned,
-{
-suppressMs:
-5000,
-afterResizeMs:
-80
-}
-);
 
 }
 
@@ -856,8 +829,6 @@ height:
 paneHeight
 }
 );
-
-pulseAoAutoscale();
 
 }
 

@@ -5,7 +5,7 @@ import {
 maybeApplyAutoStopsForNewPosition,
 clearDismissedStops,
 isStopDismissed
-} from "./auto-stops.js?v=0e31e88c";
+} from "./auto-stops.js?v=49a27c35";
 
 import {
 tryApplyDrawingStopsPending,
@@ -14,7 +14,7 @@ wasDrawingStopsJustApplied
 
 import {
 maybeReconcileOrdersOnPositionOpen
-} from "./position-open-orders.js?v=9f39b3e0";
+} from "./position-open-orders.js?v=e3894b33";
 
 import {
 maybeReconcileOrdersOnPositionClose
@@ -29,7 +29,7 @@ resetTradePositionSoundBaseline
 
 import {
 getTradeConfig
-} from "./config.js?v=6ddbe7e2";
+} from "./config.js?v=8396b3fd";
 
 const cacheBySymbol =
 new Map();
@@ -1395,7 +1395,9 @@ return false;
 }
 
 export function upsertTradePositionInCache(
-position
+position,
+options =
+{}
 ){
 
 const policy =
@@ -1422,9 +1424,20 @@ isTradePositionRecentlyClosed(
 key
 )
 ){
+/* Stop drag after close must not resurrect the row. A new open opts in. */
+if(
+options.allowReviveClosed ===
+true &&
+isActivePosition(
+position
+)
+){
 clearTradePositionRecentlyClosed(
 key
 );
+}else{
+return false;
+}
 }
 
 const row =

@@ -118,6 +118,21 @@ if (!botSession.includes("persist:multichart-algo-bot")) {
   fail("bot-app/app-session.cjs must keep persist:multichart-algo-bot (not Multichart desktop partition)");
 }
 
+const { reachableBundleJs, listBundleJs, STUB_RESOLVED } = require("./sync-bot-lite-js-graph.cjs");
+const reachable = reachableBundleJs();
+const unreachable = listBundleJs().filter(
+  (file) => file !== STUB_RESOLVED && !reachable.has(file)
+);
+if (unreachable.length) {
+  fail(
+    "site-bundle JS outside the algo import graph (run npm run bundle:bot):\n" +
+      unreachable
+        .map((file) => path.relative(ROOT, file))
+        .sort()
+        .join("\n")
+  );
+}
+
 const logsViewerPath = path.join(
   ROOT,
   "bot-app/site-bundle/js/algo-trading/bot-session-logs-viewer.js"

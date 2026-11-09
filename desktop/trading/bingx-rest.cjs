@@ -1960,7 +1960,7 @@ async function closePositionAtMarket(symbol, options = {}) {
     return { ok: false, message: "Invalid close quantity" };
   }
 
-  /* Close first for UI latency; cancel leftover STOP/TP in background. */
+  /* Close the position first. Then wait for stop cancels so a rejection is not dropped. */
   const body = {
     symbol: toBingxSymbol(sym),
     side: sides.side,
@@ -1980,7 +1980,23 @@ async function closePositionAtMarket(symbol, options = {}) {
   if (result?.ok) {
     rememberOpenOrderRowsCache([]);
     invalidatePositionListCache();
-    void cancelAllStopsForPosition(sym, pos);
+    try {
+      let stops = await cancelAllStopsForPosition(sym, pos);
+      if (stops?.ok === false) {
+        stops = await cancelAllStopsForPosition(sym, pos);
+      }
+      if (stops?.ok === false) {
+        return { ...result, stopsCancel: stops };
+      }
+    } catch (err) {
+      return {
+        ...result,
+        stopsCancel: {
+          ok: false,
+          message: err?.message || "stop cancel failed"
+        }
+      };
+    }
   }
   return result;
 }
@@ -2745,7 +2761,10 @@ async function cancelStopExtrasExcept(sym, tgt, pos, keepId, price) {
     if (id === keep) {
       continue;
     }
-    await cancelTradeOrder(sym, id, { verify: false });
+    const cancelled = await cancelTradeOrder(sym, id, { verify: false });
+    if (cancelled?.ok === false) {
+      return cancelled;
+    }
   }
 
   rememberOpenOrderRowsCache([]);
@@ -2938,21 +2957,32 @@ async function setPositionStop(symbol, target, price, options = {}) {
      * Do not await openOrders confirm loops here: that blocked open/drag IPC
      * for seconds and still could not stop UI snap-back. */
     if (placedId) {
+      const cancelJobs = [];
       for (const id of oldIds) {
         if (id && id !== placedId) {
-          void cancelTradeOrder(sym, id, { verify: false });
+          cancelJobs.push(cancelTradeOrder(sym, id, { verify: false }));
         }
       }
-      void cancelStopExtrasExcept(sym, tgt, pos, placedId, p).then(() => {
-        updateStopAmend(amendKey, { phase: "confirmed" });
-        /* Keep amend briefly so stream gate ignores stale old prices. */
-        setTimeout(() => {
-          const cur = getStopAmend(amendKey);
-          if (cur && cur.phase === "confirmed") {
-            clearStopAmend(amendKey);
+      cancelJobs.push(cancelStopExtrasExcept(sym, tgt, pos, placedId, p));
+      void Promise.all(cancelJobs)
+        .then((results) => {
+          const failed = (results || []).find((row) => row?.ok === false);
+          if (failed) {
+            updateStopAmend(amendKey, { phase: "failed" });
+            return;
           }
-        }, 2500);
-      });
+          updateStopAmend(amendKey, { phase: "confirmed" });
+          /* Keep amend briefly so stream gate ignores stale old prices. */
+          setTimeout(() => {
+            const cur = getStopAmend(amendKey);
+            if (cur && cur.phase === "confirmed") {
+              clearStopAmend(amendKey);
+            }
+          }, 2500);
+        })
+        .catch(() => {
+          updateStopAmend(amendKey, { phase: "failed" });
+        });
     }
 
     const confirmed = false;

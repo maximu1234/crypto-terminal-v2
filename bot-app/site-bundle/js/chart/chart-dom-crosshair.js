@@ -1,7 +1,7 @@
 import {
 formatPrice,
 formatChartPrice
-} from "./chart-options.js?v=f4be0094";
+} from "./chart-options.js?v=ccf11c66";
 
 const DOM_CROSSHAIR_VERT =
 "chart-dom-crosshair-vert";
@@ -650,6 +650,19 @@ y
 )
 );
 
+const time =
+chart.timeScale().coordinateToTime?.(
+x
+);
+const snappedX =
+chart.timeScale().timeToCoordinate?.(
+time
+);
+const lineX =
+Number.isFinite(snappedX)
+? snappedX
+: x;
+
 const vert =
 wrapEl.querySelector(
 `.${DOM_CROSSHAIR_VERT}`
@@ -660,7 +673,7 @@ vert
 ){
 
 vert.style.left =
-`${Math.round(x)}px`;
+`${Math.round(lineX)}px`;
 
 vert.classList.remove(
 "hidden"
@@ -681,18 +694,13 @@ chart.clearCrosshairPosition();
 /* ignore */
 }
 
-const time =
-chart.timeScale().coordinateToTime?.(
-x
-);
-
 const price =
 series?.coordinateToPrice?.(
 y
 );
 
 return {
-x,
+x: lineX,
 y,
 time,
 price

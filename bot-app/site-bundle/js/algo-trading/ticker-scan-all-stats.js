@@ -3,15 +3,15 @@
  */
 import {
 loadMarketHistory
-} from "../market-api.js?v=145e2e28";
+} from "../market-api.js?v=a65f5c56";
 
 import {
 analyzeAlgoPatterns
-} from "./pattern-analysis.js?v=1e002b9c";
+} from "./pattern-analysis.js?v=672a37b2";
 
 import {
 normalizeAlgoStatsMode
-} from "./pattern-trade-stats.js?v=2530eb1e";
+} from "./pattern-trade-stats.js?v=66b9f6f3";
 
 import {
 readAlgoPattern12Settings
@@ -23,11 +23,11 @@ pickStrategyStats,
 ALGO_TICKER_SCAN_HISTORY_REQUESTS,
 ALGO_TICKER_SCAN_CONCURRENCY,
 ALGO_TICKER_SCAN_DELAY_MS
-} from "./ticker-scanner.js?v=05523b26";
+} from "./ticker-scanner.js?v=8e85c0f3";
 
 import {
 resolveAlgoScanSymbols
-} from "./scan-universe.js?v=492e17e1";
+} from "./scan-universe.js?v=a5c65d53";
 
 /**
  * @typedef {{

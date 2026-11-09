@@ -28,7 +28,7 @@ isCoarseTouchViewport,
 effectiveChartPriceScaleWidth,
 effectiveChartScaleFontSize,
 isTabletChartViewport
-} from "./chart/chart-options.js?v=f4be0094";
+} from "./chart/chart-options.js?v=ccf11c66";
 
 export {
 ensureDomChartCrosshair,
@@ -44,12 +44,12 @@ hideTabletProbeHorizInStack,
 hideTabletProbeCrosshair,
 formatCrosshairTimeLabel,
 isUserCrosshairEvent
-} from "./chart/chart-dom-crosshair.js?v=0730674e";
+} from "./chart/chart-dom-crosshair.js?v=724fa04d";
 
 import {
 TABLET_LW_NATIVE_PRICE_SCALE,
 clearTabletProbeCrosshairForChart
-} from "./chart/chart-factory.js?v=c0ecce8b";
+} from "./chart/chart-factory.js?v=cb6b61e8";
 
 import {
 shouldHandleTabletPriceScalePointer
@@ -75,6 +75,7 @@ applyScreenerZoom,
 restoreScreenerViewport,
 mountChartRangeFreeze,
 linkChartsCrosshair,
+mountWidgetStackCrosshair,
 linkPairedChartTimeScales,
 syncLinkedChartPriceScales,
 equalizeLinkedPanePriceScales,
@@ -98,7 +99,7 @@ coinsTfVisibleBars,
 applyCoinsChartViewport,
 computeCoinsChartViewportPlan,
 refreshCoinsChartBarSpacing
-} from "./chart/chart-factory.js?v=c0ecce8b";
+} from "./chart/chart-factory.js?v=cb6b61e8";
 
 /* Tablet gestures: import ./chart-tablet-gestures.js only from tablet paths
    (tablet-widget-chart / terminal-tablet-controller) — never re-export here. */
@@ -107,7 +108,7 @@ import {
 effectiveChartPriceScaleWidth,
 CHART_TIME_SCALE_HEIGHT,
 isTabletChartViewport
-} from "./chart/chart-options.js?v=f4be0094";
+} from "./chart/chart-options.js?v=ccf11c66";
 
 export {
 CHART_PRICE_SCALE_MODE_LOGARITHMIC,
@@ -1155,11 +1156,33 @@ true;
 function notifyChartPriceRangeChanged(){
 
 /*
- * Keep autoScale:true. iPad strip zoom locks the range via
- * series.autoscaleInfoProvider (priceZoomRange), not via
- * autoScale:false + setVisibleRange — that path freezes the
- * axis (provider is ignored when autoScale is off).
+ * Холст держит ручной масштаб в setVisibleRange.
+ * autoScale:true его сбрасывает, а autoscaleInfoProvider
+ * на основной серии не читается.
  */
+if(
+chart?.takeover === "canvas" &&
+priceZoomRange &&
+Number.isFinite(priceZoomRange.min) &&
+Number.isFinite(priceZoomRange.max) &&
+priceZoomRange.max !== priceZoomRange.min
+){
+
+try{
+chart.priceScale(
+"right"
+).setVisibleRange({
+from: priceZoomRange.min,
+to: priceZoomRange.max
+});
+}catch{
+/* ignore */
+}
+
+return;
+
+}
+
 try{
 chart.priceScale(
 "right"

@@ -3,7 +3,7 @@
  */
 import {
 normalizeTpShares
-} from "./pattern-trade-stats-partial.js?v=a92ca5c3";
+} from "./pattern-trade-stats-partial.js?v=68baa161";
 
 export const ALGO_BOT_STRATEGIES_KEY =
 "algo_trading_bot_strategies_v1";

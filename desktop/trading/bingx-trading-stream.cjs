@@ -755,45 +755,6 @@ row?.closePosition ===
 
 }
 
-function hasOpenPositionForSymbol(
-sym
-){
-
-const normalized =
-normalizeSymbol(
-sym
-);
-
-if(
-!normalized
-){
-return false;
-}
-
-const prefix =
-normalized +
-":";
-
-for(
-const key of positionsBySymbol.keys()
-){
-
-if(
-key ===
-normalized ||
-key.startsWith(
-prefix
-)
-){
-return true;
-}
-
-}
-
-return false;
-
-}
-
 /**
  * Hedge: SELL+LONG / BUY+SHORT reduce; opposite opens.
  * One-way BOTH: compare order side vs open position side.
@@ -1128,17 +1089,7 @@ key
 return true;
 }
 
-if(
-removePositionsForSymbol(
-sym
-)
-){
-markRecentlyClosedSymbol(
-sym
-);
-return true;
-}
-
+/* Hedge: a zero-size fill for this side must not erase the other leg. */
 return false;
 
 }
@@ -1261,32 +1212,6 @@ isClosingFillOrder(
 row
 )
 ){
-const sym =
-normalizeSymbol(
-row?.symbol
-);
-
-if(
-prevSize <=
-0 &&
-sym &&
-hasOpenPositionForSymbol(
-sym
-)
-){
-if(
-removePositionsForSymbol(
-sym
-)
-){
-markRecentlyClosedSymbol(
-sym
-);
-return true;
-}
-
-}
-
 const reduceBy =
 fillDelta >
 0
@@ -1423,26 +1348,7 @@ applyOptimisticFillFromOrder(
 row
 )
 ){
-markRecentlyClosedSymbol(
-row?.symbol
-);
-return true;
-}
-
-const sym =
-normalizeSymbol(
-row?.symbol
-);
-
-if(
-sym &&
-removePositionsForSymbol(
-sym
-)
-){
-markRecentlyClosedSymbol(
-sym
-);
+/* Partial fill keeps the leg open. A full close already tombstoned that key. */
 return true;
 }
 
@@ -2516,9 +2422,19 @@ sym
 if(
 removed
 ){
+if(
+opts.positionSide ||
+opts.side ||
+opts.position
+){
+markRecentlyClosedKey(
+key
+);
+}else{
 markRecentlyClosedSymbol(
 sym
 );
+}
 streamModules.invalidatePositionListCache?.();
 streamModules.invalidateOpenOrderRowsCache?.();
 emitPositions();
@@ -2850,9 +2766,19 @@ sym
 if(
 removed
 ){
+if(
+sideKnown
+){
+markRecentlyClosedKey(
+positionKeyFromRow(
+row
+)
+);
+}else{
 markRecentlyClosedSymbol(
 sym
 );
+}
 changed =
 true;
 }

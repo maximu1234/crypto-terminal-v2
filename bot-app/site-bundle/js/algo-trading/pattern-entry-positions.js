@@ -10,7 +10,7 @@ POSITION_DEFAULT_WIDTH_BARS
 
 import {
 initialPositionTpSlPercent
-} from "../drawings/position.js?v=152e419c";
+} from "../drawings/position.js?v=ef75c433";
 
 export const ALGO_PATTERN_ENTRY_FLAG =
 "algoPatternEntry";

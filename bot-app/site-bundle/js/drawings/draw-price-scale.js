@@ -7,7 +7,7 @@ chartScaleFont,
 CHART_SCALE_LABEL_PAD_LEFT,
 CHART_SCALE_LABEL_LINE_HEIGHT,
 scaleLabelTextColorForBackground
-} from "../chart-import.js?v=613e412b";
+} from "../chart-import.js?v=5e72069f";
 
 import {
 layoutScaleLabelYs,
@@ -16,12 +16,12 @@ CHART_PRICE_HUD_FALLBACK_HEIGHT
 
 import {
 isSeriesLogarithmic
-} from "./fib-spec.js?v=5f577f26";
+} from "./fib-spec.js?v=43350118";
 
 import {
 isPositionType,
 positionScaleLabelColor
-} from "./position.js?v=152e419c";
+} from "./position.js?v=ef75c433";
 
 import {
 collectChartScaleLabelEntries

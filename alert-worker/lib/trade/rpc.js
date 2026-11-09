@@ -104,8 +104,12 @@ export async function runTradeRpc(method, payload = {}, session = null) {
     case "pingBybit":
       return bybit.pingBybit();
     case "reconcileOrdersOnPositionOpen":
+      return bybit.reconcileOrdersOnPositionOpen(
+        payload.symbol,
+        payload.positionSide
+      );
     case "reconcileOrdersOnPositionClose":
-      return { ok: true };
+      return bybit.reconcileOrdersOnPositionClose(payload.symbol);
     case "replayStream":
     case "requestStreamSeed":
       restartTradePrivateStream();
@@ -144,7 +148,10 @@ export function tradeHealth() {
 }
 
 export function verifyTradeRequest(req) {
-  const secret = readEnv("SITE_GATE_SECRET");
+  const secret = String(readEnv("SITE_GATE_SECRET") || "").trim();
+  if (!secret) {
+    return null;
+  }
   const auth = req.headers.authorization || "";
   const token = auth.startsWith("Bearer ")
     ? auth.slice(7).trim()

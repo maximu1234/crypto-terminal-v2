@@ -5,7 +5,7 @@
 import {
 hideDomChartCrosshair,
 positionTabletProbeHorizInStack
-} from "../chart-import.js?v=613e412b";
+} from "../chart-import.js?v=5e72069f";
 
 import {
 ensureFibLevelsVisible,
@@ -14,11 +14,11 @@ ensureFibAnchorMinSpan,
 isFibType,
 isFibExtType,
 resolveFibTrendLineColor
-} from "./fib-spec.js?v=5f577f26";
+} from "./fib-spec.js?v=43350118";
 
 import {
 isPositionType
-} from "./position.js?v=152e419c";
+} from "./position.js?v=ef75c433";
 
 import {
 uid
@@ -44,7 +44,7 @@ TEXT_DEFAULT_CONTENT
 import {
 ensureChannelLevelsVisible,
 cloneDefaultChannelRows
-} from "./channel-spec.js?v=a8bcf3c9";
+} from "./channel-spec.js?v=5e41db1c";
 
 import {
 isElliottType,
@@ -52,12 +52,12 @@ isPattern12Draw,
 elliottPointCount,
 normalizePattern12TpFlags,
 normalizePattern12TpLevels
-} from "./elliott-spec.js?v=3fb92981";
+} from "./elliott-spec.js?v=3e4f3a47";
 
 import {
 isFvpType,
 copyFvpStyleToShape
-} from "./fixed-volume-profile.js?v=51ef58c3";
+} from "./fixed-volume-profile.js?v=77a3231c";
 
 import {
 constrainPointerToAxis,
@@ -159,6 +159,48 @@ new Set([
 "channel",
 "arrow"
 ]);
+
+function isMagnetModifierClick(
+e
+){
+
+return !!(
+(
+e?.button ===
+2 ||
+e?.button ===
+0
+) &&
+(
+e?.metaKey ||
+e?.ctrlKey
+)
+);
+
+}
+
+function isPlacementClick(
+e
+){
+
+if(
+!e?.isPrimary
+){
+return false;
+}
+
+if(
+e.button ===
+0
+){
+return true;
+}
+
+return isMagnetModifierClick(
+e
+);
+
+}
 
 function usesDesktopStrokePlacement(
 type
@@ -542,9 +584,9 @@ return;
 }
 
 if(
-!e.isPrimary ||
-e.button !==
-0
+!isPlacementClick(
+e
+)
 ){
 return;
 }
@@ -561,12 +603,59 @@ const placement =
 getPlacement();
 
 if(
-!placement ||
+!placement
+){
+return;
+}
+
+if(
 !usesDesktopStrokePlacement(
 placement.type
 )
 ){
+
+/*
+ * Горизонтали, паттерны, позиция и профиль ставятся по click.
+ * На Маке click с Cmd не приходит, остаётся только pointerdown.
+ */
+if(
+!e.metaKey &&
+!e.ctrlKey
+){
 return;
+}
+
+const { x, y } =
+pointerFromEvent(
+e
+);
+
+handleToolClick({
+point:{
+x,
+y
+},
+metaKey:
+!!(
+e.metaKey ||
+e.ctrlKey
+),
+ctrlKey:
+!!e.ctrlKey,
+shiftKey:
+!!e.shiftKey,
+useEventPlot:
+true,
+pointerType:
+e.pointerType
+});
+setBlockChartClick(
+true
+);
+e.preventDefault();
+e.stopPropagation();
+return;
+
 }
 
 const needed =
@@ -665,9 +754,9 @@ return;
 }
 
 if(
-!e.isPrimary ||
-e.button !==
-0
+!isPlacementClick(
+e
+)
 ){
 return;
 }
@@ -784,6 +873,18 @@ getTool() !==
 
 e.preventDefault();
 e.stopPropagation();
+
+/*
+ * На Маке клик с Cmd/Control — это contextmenu.
+ * Инструмент из-за него сбрасывался, и прилипшая точка не оставалась.
+ */
+if(
+e.metaKey ||
+e.ctrlKey
+){
+return;
+}
+
 setTool(
 "cursor"
 );
@@ -840,6 +941,8 @@ enableMagnet &&
 (
 getDrawMagnetKeyDown() ||
 optEvent?.metaKey ===
+true ||
+optEvent?.ctrlKey ===
 true
 )
 );
@@ -852,6 +955,8 @@ optEvent
 
 if(
 optEvent?.metaKey ===
+true ||
+optEvent?.ctrlKey ===
 true
 ){
 setDrawMagnetKeyDown(true);

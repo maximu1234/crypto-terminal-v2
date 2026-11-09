@@ -3,7 +3,12 @@
  */
 import {
 isExchangeTradingEnabled
-} from "../../market-api.js?v=145e2e28";
+} from "../../market-api.js?v=a65f5c56";
+
+import {
+seriesPriceToUsdt,
+usdtPriceToSeries
+} from "../../chart/btc-quote.js?v=7996cc43";
 
 import {
 maskTradeDisplay
@@ -325,6 +330,8 @@ function priceToY(
 price
 ){
 
+price = usdtPriceToSeries(price);
+
 const dt =
 host?.getDrawingTools?.();
 
@@ -431,7 +438,7 @@ price <=
 return null;
 }
 
-return price;
+return seriesPriceToUsdt(price);
 
 }
 

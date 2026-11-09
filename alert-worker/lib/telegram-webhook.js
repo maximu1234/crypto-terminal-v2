@@ -1,3 +1,4 @@
+import crypto from "node:crypto";
 import { getWorkerConfig, readEnv } from "./config.js";
 import {
   readJsonBody,
@@ -57,13 +58,21 @@ function webhookSecretOk(req) {
     readEnv("TELEGRAM_WEBHOOK_SECRET");
 
   if (!expected) {
-    return true;
+    return false;
   }
 
   const got =
-    req.headers["x-telegram-bot-api-secret-token"];
+    String(req.headers["x-telegram-bot-api-secret-token"] || "");
+  const left =
+    Buffer.from(got);
+  const right =
+    Buffer.from(expected);
 
-  return got === expected;
+  if (left.length !== right.length) {
+    return false;
+  }
+
+  return crypto.timingSafeEqual(left, right);
 
 }
 
@@ -96,7 +105,14 @@ export async function ensureTelegramWebhook() {
   const url =
     `${base}/telegram/webhook`;
   const secret =
-    readEnv("TELEGRAM_WEBHOOK_SECRET") || undefined;
+    readEnv("TELEGRAM_WEBHOOK_SECRET");
+
+  if (!secret) {
+    console.log(
+      "telegram webhook: skip (TELEGRAM_WEBHOOK_SECRET is required)"
+    );
+    return;
+  }
 
   const res =
     await fetch(

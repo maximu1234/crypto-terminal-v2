@@ -351,6 +351,13 @@ body.terminal-page .widget-draw-tools{
     height:28px;
 }
 
+/* Глаз — SVG на весь viewBox, PNG-иконки уже с полями. 19px ≈ в 1.5 раза меньше 28. */
+.widget-draw-tools-menu .draw-tool-hide-drawings .draw-tool-hide-drawings-eye,
+.widget-draw-tools-menu .draw-tool-hide-drawings .draw-tool-hide-drawings-eye-off{
+    width:19px;
+    height:19px;
+}
+
 .widget-draw-tools-menu .draw-tool-hide-drawings .draw-tool-hide-drawings-eye-off{
     display:none;
 }

@@ -3,7 +3,7 @@
  */
 import {
   getActiveExchangeId
-} from "../../../market-api.js?v=145e2e28";
+} from "../../../market-api.js?v=a65f5c56";
 
 import {
   dayKeyFromMs,

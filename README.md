@@ -1,17 +1,24 @@
-# Crypto Terminal v2
+# Multichart
 
-Мультичарт-терминал для криптовалют (Bybit): скринер, графики, алерты, избранное.
+Мультичарт для криптовалют: скринер, терминал, вотчлист, алерты, дневник и торговля Bybit. Тот же UI на сайте (Vercel) и в Multichart.app. Живой алгобот и торговля BingX — в приложении.
+
+Текущая подпись: веб `v0.231`, desktop `1.2.15` (`js/release-marker.js`). Карта модулей: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 
 ## Страницы
 
-| Страница | URL | Описание |
-|----------|-----|----------|
-| Скринер | `/screener` (`screener.html`) | Скринер 4 / 6 / 9 виджетов, избранное (флаг). `/` и `/index` открывают его |
-| Терминал | `/terminal` (`terminal.html`) | Свечи, RSI, рисование, алерты на лучах. `/coins` и `/trade` открывают его |
-| Вотчлист | `/watchlist` (`watchlist.html`) | Графики монет с синим флагом, до 9 |
-| Листинги | `/listings` | USDT-перпетуалы Bybit (`launchTime`, до 365 дн.) |
-| Алерты | `/alerts` | Активные и история (30 последних) |
-| Калькулятор | `/trade-calculator` | Размер позиции по риску и стопу |
+| Страница | URL | Вход |
+|----------|-----|------|
+| Скринер | `/`, `/screener.html` | `js/screener.js` |
+| Терминал | `/terminal.html` | `js/terminal-page-boot.js` → `js/terminal.js` |
+| Вотчлист | `/watchlist.html` | `js/watchlist.js` |
+| Дневник | `/diary/` | `js/trade-diary-page.js` |
+| Алерты | `/alerts/` | `js/alerts-page.js` |
+| Скрипт | `/script.html` | `js/script-page.js`, тоггл в Системных |
+| Алго | `/algo-trading.html` | `js/algo-trading.js`, тоггл; живой бот только в `.app` |
+| Листинги | `/listings.html` | `js/listings.js` |
+| Калькулятор | `/trade-calculator.html` | `js/trade-calculator.js` |
+
+`/coins` и `/trade` открывают Терминал. Отдельного `coins.html` нет.
 
 ## Локальный запуск
 
@@ -34,42 +41,29 @@
 
 **После деплоя:** жёсткое обновление в браузере (Cmd+Shift+R), чтобы сбросить кэш скриптов.
 
-## Основные возможности
+Desktop: [docs/DESKTOP_APP.md](docs/DESKTOP_APP.md). Торговля: [docs/TRADING_MODULE.md](docs/TRADING_MODULE.md).
 
-- **Избранное** — localStorage; с входом по email — синхронизация через Supabase (скринер + монеты).
-- **Рисунки** — `drawings_{SYMBOL}` в localStorage; с входом — синхронизация между устройствами.
-- **Алерты** — горизонтальный луч → пересечение цены → звук, тост, удаление луча; история на `/alerts`.
-- **Coins** — запоминает последнюю монету и ТФ (`coins_page_prefs_v1`).
-## Данные
+## Данные и торговля
 
-- **Crypto / Новые** — Bybit Linear (REST + WebSocket); «Новые» = 7 дней, страница Листинги = до 365 дней (`js/bybit-listings.js`).
-- **Stocks / Commodities / Forex** — Twelve Data через `/api/twelvedata` (ключ только на сервере: `TWELVEDATA_API_KEY` в Vercel / локально в env).
+- **Bybit** — свечи и тикеры напрямую (REST + WebSocket), запасной путь `/api/bybit`. Приватные ордера на сайте идут через Railway, в `.app` — через IPC.
+- **BingX** — публичный рынок через `/api/bingx`. Торговля BingX только в `.app`.
+- **Листинги** — USDT-перпетуалы Bybit (`launchTime`, до 365 дней, `js/bybit-listings.js`).
+- **Stocks / Commodities / Forex** — Twelve Data через `/api/twelvedata` (ключ только на сервере: `TWELVEDATA_API_KEY`).
 
 ## Структура
 
 ```
-index.html, coins.html, listings.html, terminal.html, trade-calculator.html
-alerts/screener.html
-screener.html          — редирект
-vercel.json, start.sh, .env.example
-
-api/
-  bybit.js, twelvedata.js   — прокси на Vercel (ключи не в браузере)
-
-css/                   — common, screener, terminal, dashboard, alerts, trade-calculator, listings
-js/
-  api.js, twelvedata-fetch.js, chart.js, ws.js, tickers.js, indicators.js, storage.js
-  bybit-listings.js    — новые листинги Bybit (launchTime)
-  screener.js          — главная
-  terminal.js          — монеты
-  listings.js          — страница листингов
-  watchlist.js         — терминал
-  drawings.js          — инструменты на графике
-  alerts.js, alert-monitor.js, alert-auth-cache.js, alerts-cloud-sync.js
-  alerts-page.js, site-boot.js
-sounds/                — cute_msg_alert.mp3 (звук срабатывания)
-  trade-calculator.js, symbol-autocomplete.js, draw-ui-shared.js
+index.html, screener.html, terminal.html, watchlist.html
+algo-trading.html, script.html, listings.html, trade-calculator.html
+diary/, alerts/, system/
+api/                   — Vercel: bybit, bingx, moex, twelvedata, site-gate
+js/                    — UI. drawings/ и terminal/ — модули страниц
+desktop/               — Electron Multichart
+bot-app/               — отдельный Algo Bot
+alert-worker/          — Railway: алерты, Telegram, веб-ордера Bybit
 ```
+
+`js/drawings.js` и `js/terminal-entry.js` — тонкие входы. Рисунки живут в `js/drawings/`, страница Терминала — в `js/terminal/`.
 
 ## Версии скриптов и стилей
 

@@ -19,7 +19,7 @@ isActiveAnalysisBot
 function stopPatternOptimizeJob(){
 
 return import(
-"./optimize-universe-background.js?v=ffe6b45a"
+"./optimize-universe-background.js?v=ce8a0c72"
 ).then(
 m=>
 m.stopAlgoOptimizeUniverseJob?.()
@@ -48,7 +48,7 @@ ALGO_ANALYSIS_BOT_PATTERN_12
 )
 ){
 void import(
-"./optimize-universe-background.js?v=ffe6b45a"
+"./optimize-universe-background.js?v=ce8a0c72"
 ).then(
 m=>
 m.resumeAlgoOptimizeUniverseJob?.()
@@ -65,7 +65,7 @@ void stopPatternOptimizeJob();
 }
 
 void import(
-"./bot-alert-bridge.js?v=83e9e2e9"
+"./bot-alert-bridge.js?v=6d89a034"
 ).then(
 m=>
 m.mountAlgoBotAlertBridge?.()
@@ -85,7 +85,7 @@ export function stopAlgoDesktopBackgroundJobs(){
 const tasks =
 [
 import(
-"./optimize-universe-background.js?v=ffe6b45a"
+"./optimize-universe-background.js?v=ce8a0c72"
 ).then(
 m=>
 m.stopAlgoOptimizeUniverseJob?.()
@@ -98,7 +98,7 @@ err
 }
 ),
 import(
-"./bot-alert-bridge.js?v=83e9e2e9"
+"./bot-alert-bridge.js?v=6d89a034"
 ).then(
 m=>
 m.unmountAlgoBotAlertBridge?.()
@@ -117,7 +117,7 @@ if(
 ){
 tasks.push(
 import(
-"./bot-bridge.js?v=ad065c93"
+"./bot-bridge.js?v=0c03d029"
 ).then(
 m=>
 m.stopAlgoBotIfRunning?.()

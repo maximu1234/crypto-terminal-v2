@@ -10,7 +10,7 @@ normalizeFibLineStyle,
 normalizeFibLevelWidth,
 setFibLineStyleButton,
 setFibLevelWidthButton
-} from "./fib-spec.js?v=5f577f26";
+} from "./fib-spec.js?v=43350118";
 
 import {
 closeAllFibLineStyleMenus,
@@ -19,12 +19,12 @@ closeAllFibLineWidthMenus,
 openFibLineWidthMenu,
 isFibLineStyleMenuOpenForAnchor,
 isFibLineWidthMenuOpenForAnchor
-} from "./fib-portals.js?v=2d6d15fb";
+} from "./fib-portals.js?v=23b3ccb9";
 
 import {
 createFvpToolDefaults,
 migrateFvpToolDefaults
-} from "./fixed-volume-profile.js?v=51ef58c3";
+} from "./fixed-volume-profile.js?v=77a3231c";
 
 function swatchVar(
 color

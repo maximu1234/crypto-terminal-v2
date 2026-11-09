@@ -4008,13 +4008,30 @@ engineConfig?.onActivity?.();
 
 }
 
+let manualModeCheckedAt =
+0;
+let manualModeCached =
+false;
+
 function isManualTradingMode(){
 
-return (
-engineConfig?.tradingMode ||
-getAlgoTradingMode()
-) ===
+const now =
+Date.now();
+
+if(
+now -
+manualModeCheckedAt <
+250
+){
+return manualModeCached;
+}
+
+manualModeCached =
+getAlgoTradingMode() ===
 "manual";
+manualModeCheckedAt =
+now;
+return manualModeCached;
 
 }
 

@@ -425,6 +425,178 @@ export async function cancelOrder(symbol, orderId) {
   });
 }
 
+function isPositionTpslOrderRow(row) {
+  const orderFilter = String(row?.orderFilter || "").trim();
+  const stopOrderType = String(row?.stopOrderType || "").trim();
+  return (
+    orderFilter === "tpslOrder" ||
+    stopOrderType === "TakeProfit" ||
+    stopOrderType === "StopLoss" ||
+    stopOrderType === "TrailingStop"
+  );
+}
+
+function orderKindFromMappedRow(mapped) {
+  const side = String(mapped?.side || "");
+  const orderKind = String(mapped?.orderKind || "");
+  if (orderKind === "stop") {
+    return side === "Buy" ? "buy-stop" : "sell-stop";
+  }
+  if (orderKind === "limit") {
+    return side === "Buy" ? "buy-limit" : "sell-limit";
+  }
+  return "";
+}
+
+async function listSymbolRealtimeOrders(symbol) {
+  const sym = stripSymbol(symbol);
+  const result = await signedGet("/v5/order/realtime", {
+    category: "linear",
+    symbol: sym,
+    openOnly: "0",
+    limit: "50"
+  });
+  if (!result.ok) {
+    return result;
+  }
+  const list = result.data?.result?.list;
+  return { ok: true, symbol: sym, rows: Array.isArray(list) ? list : [] };
+}
+
+export async function reconcileOrdersOnPositionOpen(symbol, positionSide) {
+  const sym = stripSymbol(symbol);
+  const posSide = String(positionSide || "").trim();
+  if (!sym || (posSide !== "Buy" && posSide !== "Sell")) {
+    return fail("Symbol and position side required");
+  }
+  const openingSide = posSide;
+  const closingSide = posSide === "Buy" ? "Sell" : "Buy";
+  const ordersResult = await listSymbolRealtimeOrders(sym);
+  if (!ordersResult.ok) {
+    return ordersResult;
+  }
+  const posResult = await getPosition(sym);
+  const markPrice = Number(posResult?.position?.markPrice) || 0;
+  const canceledOrderIds = [];
+  const stats = { canceled: 0, converted: 0, skipped: 0, errors: [] };
+  for (const row of ordersResult.rows) {
+    if (isPositionTpslOrderRow(row)) {
+      stats.skipped++;
+      continue;
+    }
+    const mapped = mapOrderRow(row);
+    if (!mapped) {
+      stats.skipped++;
+      continue;
+    }
+    const side = String(row?.side || "");
+    const isReduceOnly =
+      row?.reduceOnly === true || row?.reduceOnly === "true";
+    const orderId = String(row?.orderId || "").trim();
+    if (!orderId || side === openingSide || side !== closingSide || isReduceOnly) {
+      stats.skipped++;
+      continue;
+    }
+    const cancelResult = await cancelOrder(sym, orderId);
+    if (cancelResult?.ok === false) {
+      stats.errors.push({
+        orderId,
+        action: "cancel-for-ro",
+        message: cancelResult.message || "cancel failed"
+      });
+      continue;
+    }
+    canceledOrderIds.push(orderId);
+    stats.canceled++;
+    const kind = orderKindFromMappedRow(mapped);
+    if (!kind) {
+      stats.errors.push({
+        orderId,
+        action: "replace-ro",
+        message: "Unknown order kind"
+      });
+      continue;
+    }
+    const refMark = markPrice > 0 ? markPrice : mapped.price;
+    const volumeUsdt =
+      Number(mapped.volumeUsdt) || Number(mapped.qty) * Number(mapped.price);
+    if (!Number.isFinite(volumeUsdt) || volumeUsdt <= 0) {
+      stats.errors.push({
+        orderId,
+        action: "replace-ro",
+        message: "Invalid order volume"
+      });
+      continue;
+    }
+    const placeResult = await placeOrder({
+      symbol: sym,
+      kind,
+      price: mapped.price,
+      volumeUsdt,
+      markPrice: refMark,
+      forceReduceOnly: true
+    });
+    if (placeResult?.ok === false) {
+      stats.errors.push({
+        orderId,
+        action: "replace-ro",
+        message: placeResult.message || "replace failed"
+      });
+      continue;
+    }
+    stats.converted++;
+  }
+  return {
+    ok: true,
+    symbol: sym,
+    positionSide: posSide,
+    canceledOrderIds,
+    ...stats
+  };
+}
+
+export async function reconcileOrdersOnPositionClose(symbol) {
+  const sym = stripSymbol(symbol);
+  if (!sym) {
+    return fail("Symbol required");
+  }
+  const ordersResult = await listSymbolRealtimeOrders(sym);
+  if (!ordersResult.ok) {
+    return ordersResult;
+  }
+  const canceledOrderIds = [];
+  const stats = { canceled: 0, skipped: 0, errors: [] };
+  for (const row of ordersResult.rows) {
+    if (isPositionTpslOrderRow(row)) {
+      stats.skipped++;
+      continue;
+    }
+    const isReduceOnly =
+      row?.reduceOnly === true || row?.reduceOnly === "true";
+    if (!isReduceOnly) {
+      stats.skipped++;
+      continue;
+    }
+    const orderId = String(row?.orderId || "").trim();
+    if (!orderId) {
+      stats.skipped++;
+      continue;
+    }
+    const cancelResult = await cancelOrder(sym, orderId);
+    if (cancelResult?.ok === false) {
+      stats.errors.push({
+        orderId,
+        action: "cancel-ro",
+        message: cancelResult.message || "cancel failed"
+      });
+      continue;
+    }
+    canceledOrderIds.push(orderId);
+    stats.canceled++;
+  }
+  return { ok: true, symbol: sym, canceledOrderIds, ...stats };
+}
+
 export async function setPositionStop(symbol, target, price) {
   const pos = await getPosition(symbol);
   if (!pos.ok) {
@@ -536,6 +708,9 @@ export async function placeOrder(payload) {
     body.triggerBy = "MarkPrice";
   } else {
     return fail("Unknown order kind");
+  }
+  if (payload?.forceReduceOnly === true) {
+    body.reduceOnly = true;
   }
   return signedPost("/v5/order/create", body);
 }

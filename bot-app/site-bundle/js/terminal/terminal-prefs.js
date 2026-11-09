@@ -2,7 +2,7 @@ import {
 getAllCoinsMarketIds,
 getActiveCoinsMarkets,
 getActiveExchangeId
-} from "../market-api.js?v=145e2e28";
+} from "../market-api.js?v=a65f5c56";
 
 import {
 EXCHANGE_IDS
@@ -20,7 +20,7 @@ import {
 getCurrentSymbols,
 getFirstVisibleSymbol,
 getExtraCoinMarkets
-} from "./terminal-table.js?v=e01c7385";
+} from "./terminal-table.js?v=bef5a8c9";
 
 import {
 parseAlertDeepLinkExchange
@@ -172,6 +172,8 @@ lastViewByExchange:
 defaultLastViewByExchange(),
 invertChart:false,
 invertRsiChart:false,
+invertAoChart:false,
+invertMacdChart:false,
 priceScaleMode:
 CHART_PRICE_SCALE_MODE_LOGARITHMIC,
 listRefreshMs:
@@ -462,6 +464,12 @@ out.invertChart =
 out.invertRsiChart =
 !!prefs?.invertRsiChart;
 
+out.invertAoChart =
+!!prefs?.invertAoChart;
+
+out.invertMacdChart =
+!!prefs?.invertMacdChart;
+
 out.priceScaleMode =
 normalizeChartPriceScaleMode(
 prefs?.priceScaleMode
@@ -618,6 +626,12 @@ coinsState().isCoinsChartInverted;
 prefs.invertRsiChart =
 coinsState().isCoinsRsiInverted;
 
+prefs.invertAoChart =
+coinsState().isCoinsAoInverted;
+
+prefs.invertMacdChart =
+coinsState().isCoinsMacdInverted;
+
 prefs.priceScaleMode =
 normalizeChartPriceScaleMode(
 coinsState().coinsPriceScaleMode
@@ -764,12 +778,72 @@ return coinsState().currentSymbol;
 
 }
 
+function keepSavedTfWhenUrlHasNoTf(){
+
+let urlTf =
+"";
+
+try{
+urlTf =
+new URLSearchParams(
+window.location.search
+).get(
+"tf"
+) ||
+"";
+}catch{
+urlTf =
+"";
+}
+
+if(
+String(
+urlTf
+).trim()
+){
+return;
+}
+
+let exchangeId =
+"";
+
+try{
+exchangeId =
+parseAlertDeepLinkExchange(
+new URLSearchParams(
+window.location.search
+)
+);
+}catch{
+exchangeId =
+"";
+}
+
+const last =
+readLastViewForExchange(
+exchangeId ||
+getActiveExchangeId()
+);
+
+if(
+last.tf &&
+COINS_TF_VALUES.has(
+last.tf
+)
+){
+coinsState().currentTF =
+last.tf;
+}
+
+}
+
 export function bootstrapCoinsPageState(){
 
 readUrlParams();
 applyCoinsPrefs();
 
 if(coinsState().hasUrlSymbol){
+keepSavedTfWhenUrlHasNoTf();
 return;
 }
 

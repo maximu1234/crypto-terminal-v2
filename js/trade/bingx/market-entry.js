@@ -6,7 +6,7 @@ getCachedPosition,
 listCachedPositionsForSymbol,
 removeTradePositionFromCache,
 upsertTradePositionInCache
-} from "./positions-cache.js?v=b026a4f3";
+} from "./positions-cache.js?v=3657a75e";
 
 import {
 getActiveTradeVolumeUsdt
@@ -17,7 +17,7 @@ applyAutoStopsAfterEntry,
 calcStopPriceFromUsd,
 getAutoStopSettings,
 markAutoStopsHandled
-} from "./auto-stops.js?v=1933731f";
+} from "./auto-stops.js?v=6cae43e5";
 
 import {
 peekDrawingStopsPendingForSide,
@@ -35,7 +35,7 @@ getTradeConfig
 
 import {
 mountTradeChartMarkersToggle
-} from "./chart-execution-markers.js?v=7c2cfb00";
+} from "./chart-execution-markers.js?v=0891c4e3";
 
 const REFRESH_MS =
 1500;
@@ -323,7 +323,11 @@ result?.position
 ){
 /* Upsert one row — do not replace the full cache with a 1-item snapshot. */
 upsertTradePositionInCache(
-result.position
+result.position,
+{
+allowReviveClosed:
+true
+}
 );
 
 window.dispatchEvent(
@@ -457,7 +461,11 @@ tpPrice;
 }
 
 upsertTradePositionInCache(
-painted
+painted,
+{
+allowReviveClosed:
+true
+}
 );
 window.dispatchEvent(
 new CustomEvent(

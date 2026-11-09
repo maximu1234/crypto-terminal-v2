@@ -320,6 +320,43 @@ body
 
 }
 
+function channelTokensMatch(
+expected,
+got
+){
+
+const left =
+Buffer.from(
+String(
+expected ||
+""
+),
+"utf8"
+);
+const right =
+Buffer.from(
+String(
+got ||
+""
+),
+"utf8"
+);
+
+if(
+!left.length ||
+left.length !==
+right.length
+){
+return false;
+}
+
+return crypto.timingSafeEqual(
+left,
+right
+);
+
+}
+
 function extractToken(
 req,
 url
@@ -1418,8 +1455,10 @@ url
 
 if(
 !prefs.token ||
-token !==
-prefs.token
+!channelTokensMatch(
+prefs.token,
+token
+)
 ){
 sendJson(
 res,

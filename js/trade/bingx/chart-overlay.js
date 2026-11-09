@@ -8,12 +8,12 @@ syncTradePositionsCache,
 upsertTradePositionInCache,
 markTradePositionRecentlyClosed,
 isTradePositionRecentlyClosed
-} from "./positions-cache.js?v=b026a4f3";
+} from "./positions-cache.js?v=3657a75e";
 
 import {
 markStopDismissed,
 clearDismissedStops
-} from "./auto-stops.js?v=1933731f";
+} from "./auto-stops.js?v=6cae43e5";
 
 import {
 isExchangeTradingEnabled
@@ -1258,7 +1258,20 @@ upsertTradePositionInCache(
 patched
 );
 
+const stopPatchClosed =
+isTradePositionRecentlyClosed(
+position.symbol,
+tradePositionIpcOptions(
+patched
+)
+);
+
 if(
+stopPatchClosed
+){
+position =
+null;
+}else if(
 result?.position
 ){
 position =
@@ -3157,8 +3170,6 @@ nextPosition.takeProfit =
 delete nextPosition.tpOrderId;
 }
 
-position =
-nextPosition;
 markStopDismissed(
 sym,
 prevPosition,
@@ -3167,6 +3178,24 @@ target
 upsertTradePositionInCache(
 nextPosition
 );
+if(
+isTradePositionRecentlyClosed(
+sym,
+tradePositionIpcOptions(
+nextPosition
+)
+)
+){
+position =
+null;
+invalidateBadgeLayoutCache();
+scheduleDraw(
+true
+);
+return;
+}
+position =
+nextPosition;
 invalidateBadgeLayoutCache();
 scheduleDraw(
 true
@@ -3965,7 +3994,8 @@ if(
 position =
 null;
 removeTradePositionFromCache(
-symbol
+symbol,
+hintOpts
 );
 invalidateBadgeLayoutCache();
 scheduleDraw(

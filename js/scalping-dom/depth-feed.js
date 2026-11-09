@@ -3,7 +3,7 @@
  */
 import {
 jsUrl
-} from "../asset-manifest.js?v=fb6e094b";
+} from "../asset-manifest.js?v=3d812aba";
 
 import {
 loadMarketOrderbook
@@ -28,12 +28,12 @@ applyPositionOverlays,
 applySlTpHighlights,
 resolvePositionOverlays,
 resolveSlTpPrices
-} from "./position-overlay.js?v=86b26c0e";
+} from "./position-overlay.js?v=9c56972d";
 
 import {
 applyAlertUnderlines,
 resolveAlertPrices
-} from "./alert-overlay.js?v=2862fb72";
+} from "./alert-overlay.js?v=59c031f9";
 
 import {
 applyTriggerUnderlines,

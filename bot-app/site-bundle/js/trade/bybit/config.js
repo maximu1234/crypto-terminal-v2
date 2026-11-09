@@ -19,7 +19,8 @@ function keysMatchSymbol(key, symbol) {
 
 const BYBIT_TRADE = {
   id: "bybit",
-  positionsSyncIntervalMs: 5000,
+  /* Safety net поверх private WS; 15s вместо 5s — меньше REST/CPU. */
+  positionsSyncIntervalMs: 15000,
   autoStopDelayMs: 200,
   setStopMaxAttempts: 1,
   pauseBeforeTpMs: 0,

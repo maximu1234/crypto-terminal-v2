@@ -5,11 +5,11 @@ formatDrawColor
 
 import {
 TRASH_ICON_SVG
-} from "../draw-ui-shared.js?v=a01caf04";
+} from "../draw-ui-shared.js?v=a56e8714";
 
 import {
 closeAllWidgetDrawToolsMenus
-} from "../watchlist-draw-ui.js?v=7adb537b";
+} from "../watchlist-draw-ui.js?v=dcc02ce7";
 
 import {
 ensureDrawToolsVisible
@@ -23,7 +23,7 @@ recordDrawingTombstone
 import {
 EXCHANGE_CHANGED_EVENT,
 loadMarketHistory
-} from "../market-api.js?v=145e2e28";
+} from "../market-api.js?v=a65f5c56";
 
 import {
 registerDrawingsStoragePoller,
@@ -50,7 +50,7 @@ ensureDomChartCrosshair,
 hideDomChartCrosshair,
 positionTabletProbeHorizInStack,
 fullCrosshairOptions
-} from "../chart-import.js?v=613e412b";
+} from "../chart-import.js?v=5e72069f";
 
 import {
 STROKE,
@@ -64,14 +64,14 @@ horizPriceLineX1
 import {
 getRectangleHandleScreens,
 moveRectangleHandle
-} from "./arrow-rect.js?v=8d4294c4";
+} from "./arrow-rect.js?v=9ea26ef4";
 
 import {
 bindFvpDataSource,
 clearFvpLtfCache,
 isFvpType,
 fvpBodyDist
-} from "./fixed-volume-profile.js?v=51ef58c3";
+} from "./fixed-volume-profile.js?v=77a3231c";
 
 import {
 distToSegment
@@ -90,7 +90,7 @@ getFibRows,
 isSeriesLogarithmic,
 isFibType,
 isFibExtType
-} from "./fib-spec.js?v=5f577f26";
+} from "./fib-spec.js?v=43350118";
 
 import {
 setFibPanelCommitHook,
@@ -106,7 +106,7 @@ isFibLineWidthMenuOpenForAnchor,
 fibPortalHitTest,
 retainFibPortals,
 releaseFibPortals
-} from "./fib-portals.js?v=2d6d15fb";
+} from "./fib-portals.js?v=23b3ccb9";
 
 import {
 isPositionType,
@@ -114,15 +114,15 @@ positionEntryPrice,
 positionXBounds as resolvePositionXBounds,
 positionBodyDist as resolvePositionBodyDist,
 getPositionHandleScreens as resolvePositionHandleScreens
-} from "./position.js?v=152e419c";
+} from "./position.js?v=ef75c433";
 
 import {
 createDrawPrefs
-} from "./draw-prefs.js?v=1ac33cfe";
+} from "./draw-prefs.js?v=9419b223";
 
 import {
 createPositionDraw
-} from "./position-draw.js?v=e7f5f3e4";
+} from "./position-draw.js?v=ad2feff2";
 
 import {
 pickUi
@@ -130,11 +130,11 @@ pickUi
 
 import {
 createDrawHitTester
-} from "./draw-hit.js?v=8141a397";
+} from "./draw-hit.js?v=ea3c167b";
 
 import {
 createDrawRenderer
-} from "./draw-render.js?v=9c9b9c9f";
+} from "./draw-render.js?v=53f5b4c4";
 
 import {
 snapPlotToCandleWick
@@ -152,7 +152,7 @@ updateChartRulerLabelEl
 
 import {
 mountTabletDrawInput
-} from "../drawings-tablet-input.js?v=ab454579";
+} from "../drawings-tablet-input.js?v=6d782616";
 
 import {
 cloneDrawingsForUndo,
@@ -161,23 +161,23 @@ createDrawUndoStack
 
 import {
 createDrawDesktopSelection
-} from "./draw-edit-desktop.js?v=4fb812a3";
+} from "./draw-edit-desktop.js?v=0562045e";
 
 import {
 createDrawingsPersist
-} from "./drawings-persist.js?v=0ba84cb0";
+} from "./drawings-persist.js?v=116f0a53";
 
 import {
 createDrawStyleBar
-} from "./draw-style-bar.js?v=5efe2da8";
+} from "./draw-style-bar.js?v=9c2272de";
 
 import {
 createDrawAlertsChart
-} from "./draw-alerts-chart.js?v=47736641";
+} from "./draw-alerts-chart.js?v=987ebfda";
 
 import {
 createDrawPlacement
-} from "./draw-placement.js?v=ea64096e";
+} from "./draw-placement.js?v=5235ba9f";
 
 import {
 createDrawTextEditor,
@@ -188,17 +188,17 @@ hitTestTextBody
 import {
 isElliottType,
 listElliottHandles
-} from "./elliott-spec.js?v=3fb92981";
+} from "./elliott-spec.js?v=3e4f3a47";
 
 import {
 closeElliottFlyout,
 syncElliottGroupActive
-} from "./elliott-toolbar.js?v=cd94d014";
+} from "./elliott-toolbar.js?v=112e15f9";
 
 import {
 closeFibFlyout,
 syncFibGroupActive
-} from "./fib-toolbar.js?v=dd31e8c1";
+} from "./fib-toolbar.js?v=b2cc1989";
 
 import {
 createBrushPlacement
@@ -206,19 +206,19 @@ createBrushPlacement
 
 import {
 createDrawEditInteraction
-} from "./draw-edit-interaction.js?v=c880ef1a";
+} from "./draw-edit-interaction.js?v=be1dd44f";
 
 import {
 createDrawChartInput
-} from "./draw-chart-input.js?v=0e7b5b92";
+} from "./draw-chart-input.js?v=c9609a2d";
 
 import {
 createDrawPriceScale
-} from "./draw-price-scale.js?v=55e6cdcf";
+} from "./draw-price-scale.js?v=732fa8ec";
 
 import {
 createDrawRedrawLoop
-} from "./draw-redraw-loop.js?v=79a94d49";
+} from "./draw-redraw-loop.js?v=87810b6b";
 
 import {
 isAlgoReducedCloudClient
@@ -230,7 +230,7 @@ manualPriceToCoordinate as manualPriceToCoordinateMoved,
 plotCoordinateToPrice as plotCoordinateToPriceMoved,
 resolvePointFromPlotXY as resolvePointFromPlotXYMoved,
 hitTest as hitTestMoved
-} from "./draw-plot-hit.js?v=39e2ce10";
+} from "./draw-plot-hit.js?v=cbda3668";
 import {
 setupTabletNativeSelectionBlock as setupTabletNativeSelectionBlockMoved,
 drawBrushPlacementPreview as drawBrushPlacementPreviewMoved,
@@ -2309,6 +2309,65 @@ redraw();
 
 };
 
+let lastViewportRedrawKey =
+"";
+
+function chartViewportRedrawKey(){
+
+let time =
+null;
+let price =
+null;
+
+try{
+time =
+chart.timeScale().getVisibleLogicalRange();
+}catch{
+/* ignore */
+}
+
+try{
+price =
+chart.priceScale(
+"right"
+).getVisibleRange?.();
+}catch{
+/* ignore */
+}
+
+const part =
+value=>
+Number.isFinite(
+Number(
+value
+)
+)
+? Number(
+value
+).toFixed(
+4
+)
+: "";
+
+return [
+part(
+time?.from
+),
+part(
+time?.to
+),
+part(
+price?.from
+),
+part(
+price?.to
+)
+].join(
+"|"
+);
+
+}
+
 rangeHandler =
 ()=>{
 invalidateLastCandleRightXCache();
@@ -2327,7 +2386,20 @@ scheduleDragRedraw?.();
 return;
 }
 
-bumpChartPanRedraw();
+const key =
+chartViewportRedrawKey();
+
+if(
+key &&
+key ===
+lastViewportRedrawKey
+){
+return;
+}
+
+lastViewportRedrawKey =
+key;
+redraw();
 
 };
 
@@ -2394,7 +2466,7 @@ scheduleDragRedraw?.();
 return;
 }
 
-bumpChartPanRedraw();
+redraw();
 
 };
 
@@ -2474,7 +2546,9 @@ return;
 
 if(
 e.key ===
-"Meta"
+"Meta" ||
+e.key ===
+"Control"
 ){
 
 if(
@@ -2638,18 +2712,17 @@ return;
 
 if(
 e.key !==
-"Meta"
+"Meta" &&
+e.key !==
+"Control"
 ){
 return;
 }
 
-if(
-!drawMagnetKeyDown
-){
-return;
-}
-
-drawMagnetKeyDown = false;
+drawMagnetKeyDown = !!(
+e.metaKey ||
+e.ctrlKey
+);
 refreshPlacementPreviewFromPointer(
 e
 );
@@ -3380,7 +3453,7 @@ lastChartAlertsPullMs =
 Date.now();
 
 void import(
-"../alerts-cloud-sync.js?v=78ee6137"
+"../alerts-cloud-sync.js?v=69263323"
 ).then(
 ({ pullRegistryFromCloudNow })=>
 pullRegistryFromCloudNow({

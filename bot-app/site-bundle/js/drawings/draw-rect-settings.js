@@ -18,7 +18,7 @@ normalizeFibLineStyle,
 normalizeFibLevelWidth,
 setFibLineStyleButton,
 setFibLevelWidthButton
-} from "./fib-spec.js?v=5f577f26";
+} from "./fib-spec.js?v=43350118";
 
 import {
 closeAllFibLineStyleMenus,
@@ -27,7 +27,7 @@ closeAllFibLineWidthMenus,
 openFibLineWidthMenu,
 isFibLineStyleMenuOpenForAnchor,
 isFibLineWidthMenuOpenForAnchor
-} from "./fib-portals.js?v=2d6d15fb";
+} from "./fib-portals.js?v=23b3ccb9";
 
 export function rectSettingsHtml(){
 

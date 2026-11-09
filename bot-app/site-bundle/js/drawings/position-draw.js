@@ -18,7 +18,7 @@ POSITION_RR_LABEL_SAMPLE
 import {
 formatMoneyUsd,
 formatVolumeUsd
-} from "../position-sizing.js?v=81c492bf";
+} from "../position-sizing.js?v=6752880f";
 
 import {
 positionEntryPrice,
@@ -28,11 +28,11 @@ positionSizingFromShape,
 initialPositionTpSlFromScale,
 clampPositionPrices as clampPositionPricesPure,
 formatPositionPrice
-} from "./position.js?v=152e419c";
+} from "./position.js?v=ef75c433";
 
 import {
 isSeriesLogarithmic
-} from "./fib-spec.js?v=5f577f26";
+} from "./fib-spec.js?v=43350118";
 
 /**
  * @param {{

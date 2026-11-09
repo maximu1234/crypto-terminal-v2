@@ -2,13 +2,13 @@
 
 import {
 fibLevelDash
-} from "./fib-spec.js?v=5f577f26";
+} from "./fib-spec.js?v=43350118";
 
 import {
 buildFvpScene,
 formatFvpVolume,
 isFvpType
-} from "./fixed-volume-profile.js?v=51ef58c3";
+} from "./fixed-volume-profile.js?v=77a3231c";
 
 function yForPrice(
 toXY,

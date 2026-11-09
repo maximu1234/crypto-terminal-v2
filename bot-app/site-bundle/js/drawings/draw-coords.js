@@ -10,11 +10,11 @@ tfPeriodSec
 import {
 isPositionType,
 positionEntryPrice
-} from "./position.js?v=152e419c";
+} from "./position.js?v=ef75c433";
 
 import {
 priceDecimalPlaces
-} from "../format-price.js?v=5eb5dc8b";
+} from "../format-price.js?v=10c2a6c4";
 
 const TWO_POINT_TYPES = Object.freeze([
 "trendline",

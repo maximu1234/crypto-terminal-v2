@@ -218,7 +218,8 @@ background:var(--coins-panel-bg);
 border-bottom:var(--coins-block-separator);
 }
 
-body.terminal-page #topbar.coins-topbar #current-symbol{
+body.terminal-page #topbar.coins-topbar #current-symbol,
+body.terminal-page #topbar.coins-topbar #btc-quote-btn{
 font-size:14px;
 font-weight:700;
 line-height:16px;
@@ -494,10 +495,10 @@ display:none !important;
 body.terminal-page #topbar.coins-topbar .coins-symbol-head{
 display:flex;
 align-items:center;
-gap:8px;
+gap:4px;
 flex:0 1 auto;
 min-width:0;
-max-width:min(42vw, 260px);
+max-width:min(56vw, 460px);
 margin-right:0;
 padding-right:12px;
 border-right:var(--coins-block-separator);
@@ -508,7 +509,7 @@ flex-shrink:0;
 }
 
 body.terminal-page #topbar.coins-topbar #current-symbol{
-flex:1 1 auto;
+flex:0 1 auto;
 min-width:0;
 max-width:none;
 margin-right:0;
@@ -517,6 +518,26 @@ border-right:none;
 white-space:nowrap;
 overflow:hidden;
 text-overflow:ellipsis;
+}
+
+body.terminal-page:not(.algo-trading-page) #topbar .symbol-quote-btn{
+border:none;
+background:transparent;
+color:#fff;
+font:700 14px/16px system-ui,-apple-system,sans-serif;
+padding:4px 8px;
+border-radius:8px;
+cursor:pointer;
+flex:0 0 auto;
+white-space:nowrap;
+}
+
+body.terminal-page:not(.algo-trading-page) #topbar .symbol-quote-btn.is-active{
+background:#363a45;
+}
+
+body.terminal-page:not(.algo-trading-page) #topbar #btc-quote-btn[hidden]{
+display:none;
 }
 
 body.terminal-page #app{

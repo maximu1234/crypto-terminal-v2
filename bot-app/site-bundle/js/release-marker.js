@@ -6,14 +6,14 @@
  * Редакция desktop (буква после версии приложения):
  *   f = full (живая + ручная торговля)
  *   m = manual-only (друзья)
- * Источник буквы: desktop/algo-trading-edition.cjs → preload.
+ * Источник буквы: desktop/trading/algo-trading-edition.cjs → preload.
  * Формат desktop: «v0.N / vX.Y.Zf» или «v0.N / vX.Y.Zm».
  */
 export const METKA_NUMBER =
-217;
+231;
 
 export const DESKTOP_APP_VERSION =
-"1.2.3";
+"1.2.15";
 
 export const RELEASE_VERSION_LABEL =
 `v0.${METKA_NUMBER}`;

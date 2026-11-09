@@ -18,16 +18,11 @@ paintSupertrendSegments
 
 import {
 fetchHtfCandles
-} from "./htf-loader.js?v=4c5b8439";
+} from "./htf-loader.js?v=2861d611";
 
 import {
 isChartLayoutReady
 } from "../chart-layout-gate.js?v=4a8798af";
-
-import {
-captureHealthyVisibleLogicalRange,
-pinVisibleLogicalRangeBriefly
-} from "../chart-visible-range.js?v=543a2459";
 
 import {
 closeIndicatorColorPicker,
@@ -703,32 +698,10 @@ void refreshData();
 
 function enable(){
 
-const chart =
-getChart();
-const pinned =
-captureHealthyVisibleLogicalRange(
-chart
-);
-
 if(
 enabled
 ){
-void Promise.resolve(
-refreshData()
-).finally(
-()=>{
-pinVisibleLogicalRangeBriefly(
-chart,
-pinned,
-{
-suppressMs:
-8000,
-afterResizeMs:
-120
-}
-);
-}
-);
+void refreshData();
 return;
 }
 
@@ -745,43 +718,11 @@ return;
 }
 
 bindRedraw();
-pinVisibleLogicalRangeBriefly(
-chart,
-pinned,
-{
-suppressMs:
-10000,
-afterResizeMs:
-180
-}
-);
-void Promise.resolve(
-refreshData()
-).finally(
-()=>{
-pinVisibleLogicalRangeBriefly(
-chart,
-pinned,
-{
-suppressMs:
-10000,
-afterResizeMs:
-180
-}
-);
-}
-);
+void refreshData();
 
 }
 
 function disable(){
-
-const chart =
-getChart();
-const pinned =
-captureHealthyVisibleLogicalRange(
-chart
-);
 
 if(
 !enabled
@@ -797,16 +738,6 @@ downSegments =
 [];
 unbindRedraw();
 requestOverlayRedraw();
-pinVisibleLogicalRangeBriefly(
-chart,
-pinned,
-{
-suppressMs:
-5000,
-afterResizeMs:
-80
-}
-);
 
 }
 

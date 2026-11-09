@@ -1282,9 +1282,15 @@ url
 )
 ){
 event.preventDefault();
+if(
+isExternalHttpUrl(
+url
+)
+){
 shell.openExternal(
 url
 );
+}
 }
 }
 );
@@ -1504,6 +1510,26 @@ mainWindow =
 null;
 }
 );
+}
+
+function isExternalHttpUrl(
+url
+){
+
+try{
+const target =
+new URL(
+url
+);
+
+return target.protocol ===
+"http:" ||
+target.protocol ===
+"https:";
+}catch{
+return false;
+}
+
 }
 
 function isAllowedNavigation(

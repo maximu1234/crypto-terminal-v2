@@ -4,14 +4,12 @@
 import {
 clearAllHtfCache,
 fetchHtfCandles
-} from "./htf-loader.js?v=4c5b8439";
+} from "./htf-loader.js?v=2861d611";
 
 import {
 isChartLayoutReady
 } from "../chart-layout-gate.js?v=4a8798af";
 import {
-captureHealthyVisibleLogicalRange,
-pinVisibleLogicalRangeBriefly,
 runWithPreservedVisibleLogicalRange,
 suppressTerminalHistoryLazyLoad
 } from "../chart-visible-range.js?v=543a2459";
@@ -723,13 +721,6 @@ void refreshData();
 
 function enable(){
 
-const chart =
-getHost?.()?.chart;
-const pinned =
-captureHealthyVisibleLogicalRange(
-chart
-);
-
 enableQuietUntil =
 Date.now() +
 1200;
@@ -737,20 +728,7 @@ Date.now() +
 if(
 enabled
 ){
-void refreshData().finally(
-()=>{
-pinVisibleLogicalRangeBriefly(
-chart,
-pinned,
-{
-suppressMs:
-8000,
-afterResizeMs:
-120
-}
-);
-}
-);
+void refreshData();
 return;
 }
 
@@ -766,42 +744,11 @@ false;
 return;
 }
 
-pinVisibleLogicalRangeBriefly(
-chart,
-pinned,
-{
-suppressMs:
-10000,
-afterResizeMs:
-180
-}
-);
-
-void refreshData().finally(
-()=>{
-pinVisibleLogicalRangeBriefly(
-chart,
-pinned,
-{
-suppressMs:
-10000,
-afterResizeMs:
-220
-}
-);
-}
-);
+void refreshData();
 
 }
 
 function disable(){
-
-const chart =
-getHost?.()?.chart;
-const pinned =
-captureHealthyVisibleLogicalRange(
-chart
-);
 
 if(
 !enabled
@@ -813,16 +760,6 @@ refreshSeq++;
 enabled =
 false;
 removeSeries();
-pinVisibleLogicalRangeBriefly(
-chart,
-pinned,
-{
-suppressMs:
-5000,
-afterResizeMs:
-80
-}
-);
 
 }
 

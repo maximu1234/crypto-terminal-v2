@@ -2,4 +2,4 @@
  * Единая точка импорта chart.js — версию менять в asset-manifest.js (chart.js).
  * После правки: node scripts/sync-asset-versions.cjs
  */
-export * from "./chart.js?v=0be59dc1";
+export * from "./chart.js?v=990a36b2";

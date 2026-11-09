@@ -8,20 +8,25 @@ syncTradePositionsCache,
 upsertTradePositionInCache,
 markTradePositionRecentlyClosed,
 isTradePositionRecentlyClosed
-} from "./positions-cache.js?v=4e2f5360";
+} from "./positions-cache.js?v=c46f95e7";
 
 import {
 markStopDismissed,
 clearDismissedStops
-} from "./auto-stops.js?v=0e31e88c";
+} from "./auto-stops.js?v=49a27c35";
 
 import {
 isExchangeTradingEnabled
-} from "../../market-api.js?v=145e2e28";
+} from "../../market-api.js?v=a65f5c56";
+
+import {
+seriesPriceToUsdt,
+usdtPriceToSeries
+} from "../../chart/btc-quote.js?v=7996cc43";
 
 import {
 getTradeConfig
-} from "./config.js?v=6ddbe7e2";
+} from "./config.js?v=8396b3fd";
 
 import {
 formatTradePnl,
@@ -506,8 +511,10 @@ data.length -
 1
 ];
 const close =
+seriesPriceToUsdt(
 Number(
 last?.close
+)
 );
 
 if(
@@ -655,7 +662,7 @@ price <=
 return null;
 }
 
-return price;
+return seriesPriceToUsdt(price);
 
 }
 
@@ -1062,7 +1069,20 @@ upsertTradePositionInCache(
 patched
 );
 
+const stopPatchClosed =
+isTradePositionRecentlyClosed(
+position.symbol,
+tradePositionIpcOptions(
+patched
+)
+);
+
 if(
+stopPatchClosed
+){
+position =
+null;
+}else if(
 result?.position
 ){
 position =
@@ -1547,6 +1567,8 @@ null;
 function priceToY(
 price
 ){
+
+price = usdtPriceToSeries(price);
 
 const dt =
 host?.getDrawingTools?.();
@@ -2913,8 +2935,6 @@ nextPosition.takeProfit =
 delete nextPosition.tpOrderId;
 }
 
-position =
-nextPosition;
 markStopDismissed(
 sym,
 prevPosition,
@@ -2923,6 +2943,24 @@ target
 upsertTradePositionInCache(
 nextPosition
 );
+if(
+isTradePositionRecentlyClosed(
+sym,
+tradePositionIpcOptions(
+nextPosition
+)
+)
+){
+position =
+null;
+invalidateBadgeLayoutCache();
+scheduleDraw(
+true
+);
+return;
+}
+position =
+nextPosition;
 invalidateBadgeLayoutCache();
 scheduleDraw(
 true
@@ -3114,8 +3152,14 @@ immediate =
 false
 ){
 
+/*
+ * The time/price scale listeners pass a range object. Only a real
+ * `true` is the urgent path. A range object used to take that path
+ * and redraw the whole overlay on every live tick.
+ */
 if(
-immediate
+immediate ===
+true
 ){
 
 if(
@@ -3145,10 +3189,89 @@ requestAnimationFrame(
 
 rafId =
 0;
+const key =
+overlayScaleDrawKey();
+
+if(
+key &&
+key ===
+lastOverlayScaleDrawKey
+){
+return;
+}
+
+lastOverlayScaleDrawKey =
+key;
 draw();
 
 }
 );
+
+}
+
+let lastOverlayScaleDrawKey =
+"";
+
+function overlayScaleDrawKey(){
+
+const part =
+range=>{
+
+const from =
+Number(
+range?.from
+);
+const to =
+Number(
+range?.to
+);
+
+if(
+!Number.isFinite(
+from
+) ||
+!Number.isFinite(
+to
+)
+){
+return "";
+}
+
+const span =
+Math.max(
+Math.abs(
+to -
+from
+),
+1e-12
+);
+
+return `${Math.round(from / span * 400)}:${Math.round(to / span * 400)}`;
+
+};
+
+let time =
+null;
+let price =
+null;
+
+try{
+time =
+host?.chart?.timeScale?.().getVisibleLogicalRange?.();
+}catch{
+/* ignore */
+}
+
+try{
+price =
+host?.chart?.priceScale?.(
+"right"
+)?.getVisibleRange?.();
+}catch{
+/* ignore */
+}
+
+return `${part(time)}|${part(price)}`;
 
 }
 

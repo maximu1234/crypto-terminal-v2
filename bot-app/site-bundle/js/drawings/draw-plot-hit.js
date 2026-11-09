@@ -446,6 +446,8 @@ host.enableMagnet &&
 (
 host.drawMagnetKeyDown ||
 optEvent?.metaKey ===
+true ||
+optEvent?.ctrlKey ===
 true
 );
 

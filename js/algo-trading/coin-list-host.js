@@ -13,7 +13,7 @@ applyCoinsPrefs,
 persistCoinsPrefs,
 applySortForCurrentMarket,
 readCoinsPrefs
-} from "../terminal/terminal-prefs.js?v=aa3ba933";
+} from "../terminal/terminal-prefs.js?v=a459021d";
 
 export {
 generateMarketData,
@@ -28,4 +28,4 @@ syncCoinListFreezeFromFlagMenus,
 getCurrentSymbols,
 getVisibleSymbolList,
 setCoinOpenPositionChecker
-} from "../terminal/terminal-table.js?v=61416715";
+} from "../terminal/terminal-table.js?v=bef5a8c9";

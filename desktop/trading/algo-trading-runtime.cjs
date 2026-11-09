@@ -331,9 +331,31 @@ runtimeState =
 runtimeMessage =
 "";
 
+const exchangeId =
+normalizeExchangeId(
+prefs.exchangeId
+);
+
+if(
+prefs.tradingMode ===
+"live" &&
+exchangeId !==
+"bybit"
+){
+runtimeState =
+"error";
+runtimeMessage =
+"Живой алго-бот сейчас работает только с Bybit";
+log.warn(
+"algo-runtime:",
+runtimeMessage
+);
+return getAlgoRuntimeStatus();
+}
+
 const creds =
 getAlgoCredentials(
-prefs.exchangeId
+"bybit"
 );
 
 if(

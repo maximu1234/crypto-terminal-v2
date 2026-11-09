@@ -13,14 +13,14 @@ applyRsiSeriesColorMode,
 appendFutureWhitespaceBars,
 computeChartFutureMarginBars,
 syncLinkedChartTimescales
-} from "./chart-import.js?v=613e412b";
+} from "./chart-import.js?v=5e72069f";
 
 import {
 applyLiveSeriesUpdate,
 ensureOhlcRollover,
 liveBarPeriodSec,
 paintCatchupLiveSeries
-} from "./chart/live-bar-roll.js?v=6ff2b718";
+} from "./chart/live-bar-roll.js?v=b31f3797";
 
 import {
 terminalVisibleBars,
@@ -38,35 +38,35 @@ logicalIndexShift
 
 import {
 ALGO_TICKER_SCAN_HISTORY_REQUESTS
-} from "./algo-trading/ticker-scanner.js?v=05523b26";
+} from "./algo-trading/ticker-scanner.js?v=8e85c0f3";
 
 import {
 defaultRsiPaneSettings,
 normalizeRsiPaneSettings
-} from "./indicators/rsi-pane.js?v=482968f4";
+} from "./indicators/rsi-pane.js?v=eac4a600";
 
 import {
 buildChartRsiPoints
-} from "./indicators/htf-project.js?v=2d6ecf34";
+} from "./indicators/htf-project.js?v=df7207b3";
 
 import {
 loadMarketHistory,
 getActiveExchangeId
-} from "./market-api.js?v=145e2e28";
+} from "./market-api.js?v=a65f5c56";
 
 import {
 subscribeKline,
 bindLiveCandleCatchup
-} from "./market-ws.js?v=d0679bf8";
+} from "./market-ws.js?v=22428043";
 
 import {
 mountAlgoTradingCoinList,
 refreshAlgoMarketListFromFlags
-} from "./algo-trading-list.js?v=59096fe8";
+} from "./algo-trading-list.js?v=c43e1396";
 
 import {
 mountAlgoTickerScanUi
-} from "./algo-trading/ticker-scan-ui.js?v=e2268367";
+} from "./algo-trading/ticker-scan-ui.js?v=dc130461";
 
 import {
 getTickerStrategyOverlay,
@@ -77,15 +77,15 @@ writeTickerStrategyOverlays
 
 import {
 mountAlgoStrategyParamOptimizeUi
-} from "./algo-trading/strategy-param-optimize-ui.js?v=e4b23135";
+} from "./algo-trading/strategy-param-optimize-ui.js?v=2b532005";
 
 import {
 mountAlgoRuntimeUi
-} from "./algo-trading/runtime-ui.js?v=ffc1dd16";
+} from "./algo-trading/runtime-ui.js?v=698834fd";
 
 import {
 mountAlgoBotStrategyUi
-} from "./algo-trading/bot-strategy-ui.js?v=6c6c933e";
+} from "./algo-trading/bot-strategy-ui.js?v=8c54e361";
 
 import {
 ALGO_ANALYSIS_BOT_CHANGE_EVENT,
@@ -101,35 +101,35 @@ setActiveAnalysisBotId
 
 import {
 mountSessionLogServerSettings
-} from "./algo-trading/bot-session-log-server-ui.js?v=ebed730e";
+} from "./algo-trading/bot-session-log-server-ui.js?v=7ae026ad";
 
 import {
 syncBotStrategiesToMain
-} from "./algo-trading/bot-bridge.js?v=ad065c93";
+} from "./algo-trading/bot-bridge.js?v=0c03d029";
 
 import {
 mountAlgoTradeUi
-} from "./algo-trading/trade/boot.js?v=3a956ce5";
+} from "./algo-trading/trade/boot.js?v=8979ee2e";
 
 import {
 mountAlgoTradingDrawings
-} from "./algo-trading/drawings.js?v=5b2809c4";
+} from "./algo-trading/drawings.js?v=d6724712";
 
 import {
 mountAlgoTradingIndicators
-} from "./algo-trading/indicators.js?v=fa70db90";
+} from "./algo-trading/indicators.js?v=b09a69a1";
 
 import {
 mountAlgoPatternEntryOverlay
-} from "./algo-trading/pattern-entry-overlay.js?v=ceecf4be";
+} from "./algo-trading/pattern-entry-overlay.js?v=62a1e5d6";
 
 import {
 mountRsiTouchFlipHost
-} from "./algo-trading/rsi-touch-flip-panel.js?v=be09d093";
+} from "./algo-trading/rsi-touch-flip-panel.js?v=deaf0fb4";
 
 import {
 mountMacdFlipTouchHost
-} from "./algo-trading/macd-flip-touch-panel.js?v=06464759";
+} from "./algo-trading/macd-flip-touch-panel.js?v=b9b4d234";
 
 import {
 loadRsiTouchFlipPrefs,
@@ -142,7 +142,7 @@ loadMacdFlipTouchPrefs
 import {
 clearAlgoPatternAnalysisUi,
 refreshAlgoPatternAnalysis
-} from "./algo-trading/pattern-analysis.js?v=1e002b9c";
+} from "./algo-trading/pattern-analysis.js?v=672a37b2";
 
 import {
 invalidateAlgoPattern12SceneCache,
@@ -153,7 +153,7 @@ import {
 clampSlPctOfX,
 clampTpRr,
 clampRiskUsd
-} from "./algo-trading/pattern-entry-positions.js?v=492702eb";
+} from "./algo-trading/pattern-entry-positions.js?v=e2ba2abd";
 
 import {
 clampPartialTpX,
@@ -164,7 +164,7 @@ rebalanceTpShares,
 DEFAULT_PARTIAL_TP1_X,
 DEFAULT_PARTIAL_TP2_X,
 DEFAULT_PARTIAL_TP3_X
-} from "./algo-trading/pattern-trade-stats-partial.js?v=a92ca5c3";
+} from "./algo-trading/pattern-trade-stats-partial.js?v=68baa161";
 
 import {
 clampEntryTimeoutBars,
@@ -181,15 +181,15 @@ import {
 normalizeAlgoSupertrendTf,
 clampAlgoSupertrendAtr,
 clampAlgoSupertrendFactor
-} from "./algo-trading/pattern-supertrend-filter.js?v=7676bfd0";
+} from "./algo-trading/pattern-supertrend-filter.js?v=a09d5e52";
 
 import {
 createAlgoSupertrendFilterOverlay
-} from "./algo-trading/supertrend-filter-overlay.js?v=c9dd85fb";
+} from "./algo-trading/supertrend-filter-overlay.js?v=ff6758bd";
 
 import {
 normalizeAlgoStatsMode
-} from "./algo-trading/pattern-trade-stats.js?v=2530eb1e";
+} from "./algo-trading/pattern-trade-stats.js?v=66b9f6f3";
 
 import {
 readAlgoPattern12Settings
@@ -221,11 +221,11 @@ writePrefs,
 clampScanMinWinRate,
 normalizeAlgoScanTfPref,
 resolveInitialSymbol
-} from "./algo-trading/page-prefs.js?v=0fea35db";
+} from "./algo-trading/page-prefs.js?v=ae93d0d7";
 
 import {
 mergeLiveCandle
-} from "./algo-trading/live-candle.js?v=537e93bf";
+} from "./algo-trading/live-candle.js?v=da5fd43d";
 
 import {
 formatTurnover24Label
@@ -251,7 +251,7 @@ applyStrategyPatchToMemory as applyStrategyPatchToMemoryFromMemory,
 syncStrategyDomFromMemory as syncStrategyDomFromMemoryFromMemory,
 restoreStrategyMemoryFromPrefs as restoreStrategyMemoryFromPrefsFromMemory,
 buildAlgoPrefsSnapshot
-} from "./algo-trading/page-strategy-state.js?v=ae7b6845";
+} from "./algo-trading/page-strategy-state.js?v=fed1354c";
 
 import {
 syncRsiHudPeriod as syncRsiHudPeriodEl,
@@ -259,7 +259,7 @@ syncRsiLevelDom as syncRsiLevelDomEl,
 setRsiHud as setRsiHudEl,
 lastRsiValue as lastRsiValueFromCandles,
 layoutRsiPane
-} from "./algo-trading/page-rsi.js?v=c76c91cb";
+} from "./algo-trading/page-rsi.js?v=07344fc8";
 
 import {
 bindAlgoStatsPanelResize
@@ -272,7 +272,7 @@ mountAlgoBotLiteLayout
 
 import {
 loadAlgoBotLiteHistory
-} from "./algo-trading/lite-history.js?v=7106a962";
+} from "./algo-trading/lite-history.js?v=7c788f22";
 
 /** Глубина ботов / сканов / «Подобрать»: ~10 000. График сначала ~5000, затем догрузка. */
 const HISTORY_REQUESTS =

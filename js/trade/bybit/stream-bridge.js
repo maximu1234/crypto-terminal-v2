@@ -4,7 +4,7 @@
 import {
 applyTradePositionsStream,
 syncTradePositionsCache
-} from "./positions-cache.js?v=799c29e8";
+} from "./positions-cache.js?v=c46f95e7";
 
 import {
 isTradePositionSoundBaselineReady

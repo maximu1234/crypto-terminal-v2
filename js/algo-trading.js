@@ -62,7 +62,7 @@ bindLiveCandleCatchup
 import {
 mountAlgoTradingCoinList,
 refreshAlgoMarketListFromFlags
-} from "./algo-trading-list.js?v=f5a5735a";
+} from "./algo-trading-list.js?v=c43e1396";
 
 import {
 mountAlgoTickerScanUi
@@ -85,7 +85,7 @@ mountAlgoRuntimeUi
 
 import {
 mountAlgoBotStrategyUi
-} from "./algo-trading/bot-strategy-ui.js?v=3d3bb5d2";
+} from "./algo-trading/bot-strategy-ui.js?v=8c54e361";
 
 import {
 ALGO_ANALYSIS_BOT_CHANGE_EVENT,
@@ -101,7 +101,7 @@ setActiveAnalysisBotId
 
 import {
 mountSessionLogServerSettings
-} from "./algo-trading/bot-session-log-server-ui.js?v=0d0ab8d7";
+} from "./algo-trading/bot-session-log-server-ui.js?v=7ae026ad";
 
 import {
 syncBotStrategiesToMain
@@ -109,11 +109,11 @@ syncBotStrategiesToMain
 
 import {
 mountAlgoTradeUi
-} from "./algo-trading/trade/boot.js?v=8639200d";
+} from "./algo-trading/trade/boot.js?v=8979ee2e";
 
 import {
 mountAlgoTradingDrawings
-} from "./algo-trading/drawings.js?v=29f63ddd";
+} from "./algo-trading/drawings.js?v=d6724712";
 
 import {
 mountAlgoTradingIndicators

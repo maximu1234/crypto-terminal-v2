@@ -3,11 +3,11 @@
  */
 import {
 getTradeConfig
-} from "./config.js?v=6ddbe7e2";
+} from "./config.js?v=8396b3fd";
 
 import {
 getCachedPosition
-} from "./positions-cache.js?v=4e2f5360";
+} from "./positions-cache.js?v=c46f95e7";
 
 const STORAGE_KEY =
 "trade_auto_stops_bybit_v1";

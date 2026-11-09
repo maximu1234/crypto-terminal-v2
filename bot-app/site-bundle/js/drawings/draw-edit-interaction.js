@@ -4,7 +4,7 @@
  */
 import {
 isCoarseTouchViewport
-} from "../chart-import.js?v=613e412b";
+} from "../chart-import.js?v=5e72069f";
 
 import {
 uid
@@ -24,24 +24,24 @@ isHorizPriceTool
 import {
 getRectangleHandleScreens,
 moveRectangleHandle
-} from "./arrow-rect.js?v=8d4294c4";
+} from "./arrow-rect.js?v=9ea26ef4";
 
 import {
 getFvpHandleScreens,
 moveFvpHandle,
 isFvpType
-} from "./fixed-volume-profile.js?v=51ef58c3";
+} from "./fixed-volume-profile.js?v=77a3231c";
 
 import {
 isPositionType,
 positionEntryPrice
-} from "./position.js?v=152e419c";
+} from "./position.js?v=ef75c433";
 
 import {
 ensureFibAnchorMinSpan,
 isFibType,
 isFibExtType
-} from "./fib-spec.js?v=5f577f26";
+} from "./fib-spec.js?v=43350118";
 
 import {
 touchShapeRevision
@@ -49,7 +49,7 @@ touchShapeRevision
 
 import {
 stripAlertFromShape
-} from "./drawings-persist.js?v=0ba84cb0";
+} from "./drawings-persist.js?v=116f0a53";
 
 import {
 moveBrushHandle,
@@ -68,7 +68,11 @@ isElliottType,
 getElliottPoints,
 setElliottPoints,
 elliottHandleIndex
-} from "./elliott-spec.js?v=3fb92981";
+} from "./elliott-spec.js?v=3e4f3a47";
+
+import {
+channelP3ScreenFromRailMid
+} from "./channel-spec.js?v=5e41db1c";
 
 /**
  * Handle hit circles are larger than the vertex. Drag already uses grab
@@ -258,16 +262,91 @@ handle.point
 if(
 xy
 ){
-out.push({
+const row = {
 id: handle.id,
 x: xy.x,
 y: xy.y
-});
+};
+if(
+handle.square
+){
+row.square = true;
+}
+out.push(row);
 }
 
+}
+
+if(
+shape.type ===
+"channel"
+){
+appendChannelRailMidHandle(
+out
+);
 }
 
 return out;
+
+}
+
+function appendChannelRailMidHandle(
+out
+){
+
+const p1 =
+out.find(
+h=>
+h.id ===
+"p1"
+);
+const p2 =
+out.find(
+h=>
+h.id ===
+"p2"
+);
+const p3 =
+out.find(
+h=>
+h.id ===
+"p3"
+);
+
+if(
+!p1 ||
+!p2 ||
+!p3
+){
+return;
+}
+
+const x =
+p3.x +
+(p2.x - p1.x) /
+2;
+const y =
+p3.y +
+(p2.y - p1.y) /
+2;
+
+if(
+!Number.isFinite(
+x
+) ||
+!Number.isFinite(
+y
+)
+){
+return;
+}
+
+out.push({
+id: "midB",
+square: true,
+x,
+y
+});
 
 }
 
@@ -880,6 +959,15 @@ shape
 );
 }
 
+if(
+handleId ===
+"midB"
+){
+return channelRailMidPoint(
+shape
+);
+}
+
 }
 
 if(
@@ -954,6 +1042,42 @@ price: shape.slPrice
 }
 
 return null;
+
+}
+
+function channelRailMidPoint(
+shape
+){
+
+const a =
+toXY(
+shape?.p1
+);
+const b =
+toXY(
+shape?.p2
+);
+const c =
+toXY(
+shape?.p3
+);
+
+if(
+!a ||
+!b ||
+!c
+){
+return null;
+}
+
+return pointFromXY(
+c.x +
+(b.x - a.x) /
+2,
+c.y +
+(b.y - a.y) /
+2
+);
 
 }
 
@@ -1323,6 +1447,43 @@ pointFromXY(
 p4xy.x - (b.x - a.x),
 p4xy.y - (b.y - a.y)
 );
+
+if(np3){
+shape.p3 = np3;
+}
+
+}
+
+if(handleId === "midB"){
+
+const a =
+toXY(shape.p1);
+const b =
+toXY(shape.p2);
+const mid =
+toXY(point);
+
+if(
+!a ||
+!b ||
+!mid
+){
+return;
+}
+
+const np3xy =
+channelP3ScreenFromRailMid(
+a,
+b,
+mid
+);
+const np3 =
+np3xy
+? pointFromXY(
+np3xy.x,
+np3xy.y
+)
+: null;
 
 if(np3){
 shape.p3 = np3;

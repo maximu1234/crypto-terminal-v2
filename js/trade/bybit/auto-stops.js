@@ -7,7 +7,7 @@ getTradeConfig
 
 import {
 getCachedPosition
-} from "./positions-cache.js?v=799c29e8";
+} from "./positions-cache.js?v=c46f95e7";
 
 const STORAGE_KEY =
 "trade_auto_stops_bybit_v1";

@@ -5,7 +5,7 @@ import {
 maybeApplyAutoStopsForNewPosition,
 clearDismissedStops,
 isStopDismissed
-} from "./auto-stops.js?v=1933731f";
+} from "./auto-stops.js?v=6cae43e5";
 
 import {
 tryApplyDrawingStopsPending,
@@ -1448,7 +1448,9 @@ return false;
 }
 
 export function upsertTradePositionInCache(
-position
+position,
+options =
+{}
 ){
 
 const policy =
@@ -1475,9 +1477,20 @@ isTradePositionRecentlyClosed(
 key
 )
 ){
+/* Stop drag after close must not resurrect the row. A new open opts in. */
+if(
+options.allowReviveClosed ===
+true &&
+isActivePosition(
+position
+)
+){
 clearTradePositionRecentlyClosed(
 key
 );
+}else{
+return false;
+}
 }
 
 const row =

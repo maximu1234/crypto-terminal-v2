@@ -7,12 +7,13 @@ new Map();
 export const HTF_KLINE_PAGE_BARS =
 1000;
 
+/* 1m на 15 000 свечей 5m: 75 страниц по 1000. */
 export const HTF_LTF_REQUESTS_CAP =
-13;
+80;
 
-/** Не грузить 1m на всю 5m-историю — хватает видимого окна Терминала. */
+/** Вся загруженная история графика, не только правое окно в 2500 свечей. */
 export const HTF_LTF_CHART_BARS_CAP =
-2500;
+15000;
 
 export function tfPeriodSec(
 tf

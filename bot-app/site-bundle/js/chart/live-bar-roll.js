@@ -5,6 +5,19 @@
  * arrives in the same flush window.
  */
 
+import {
+alignCandlesToTradePrice,
+integerPriceScale,
+rebaseMergedCandles,
+scaleIncomingKline
+} from "./kline-trade-scale.js?v=3b0f786d";
+
+export {
+alignCandlesToTradePrice,
+integerPriceScale,
+rebaseMergedCandles
+};
+
 /** 1970-01-05 00:00 UTC — first Monday after Unix epoch. */
 export const UNIX_MONDAY_OPEN_SEC = 4 * 86400;
 
@@ -225,6 +238,11 @@ bar: null
 };
 }
 
+const scaled =
+alignCandlesToTradePrice(
+candles,
+px
+);
 const rolled =
 ensureOhlcRollover(
 candles,
@@ -290,7 +308,8 @@ bar;
 
 return {
 rolled,
-bar
+bar,
+scaled
 };
 
 }
@@ -314,6 +333,11 @@ const time = Number(bar.time);
 if(!Number.isFinite(time)){
 return null;
 }
+
+bar = scaleIncomingKline(
+candles,
+bar
+);
 
 const next = {
 ...bar,
@@ -388,8 +412,13 @@ return "last";
 }
 
 if(time === last.time){
+const sameOhlc =
+last.open === next.open &&
+last.high === next.high &&
+last.low === next.low &&
+last.close === next.close;
 candles[candles.length - 1] = next;
-return "last";
+return sameOhlc ? null : "last";
 }
 
 if(time > last.time){
@@ -613,6 +642,11 @@ const time = Number(bar.time);
 if(!Number.isFinite(time)){
 return null;
 }
+
+bar = scaleIncomingKline(
+candles,
+bar
+);
 
 const next = {
 ...bar,

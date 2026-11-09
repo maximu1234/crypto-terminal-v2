@@ -13,25 +13,25 @@ fibShapeLevelXSpan,
 isFibType,
 isFibExtType,
 resolveFibTrendLineColor
-} from "./fib-spec.js?v=5f577f26";
+} from "./fib-spec.js?v=43350118";
 
 import {
 isPositionType
-} from "./position.js?v=152e419c";
+} from "./position.js?v=ef75c433";
 
 import {
 drawFilledArrow,
 drawRectangleShape
-} from "./arrow-rect.js?v=8d4294c4";
+} from "./arrow-rect.js?v=9ea26ef4";
 
 import {
 drawFvpShape
-} from "./fixed-volume-profile-draw.js?v=b52eb0f3";
+} from "./fixed-volume-profile-draw.js?v=05e36753";
 
 import {
 isFvpType,
 copyFvpStyleToShape
-} from "./fixed-volume-profile.js?v=51ef58c3";
+} from "./fixed-volume-profile.js?v=77a3231c";
 
 import {
 drawBrushPath
@@ -45,7 +45,7 @@ horizPriceLineX1
 import {
 channelLevelSegment,
 ensureChannelLevelsVisible
-} from "./channel-spec.js?v=a8bcf3c9";
+} from "./channel-spec.js?v=5e41db1c";
 
 import {
 isTextTool,
@@ -71,7 +71,7 @@ PATTERN_12_DEFAULT_CHANNEL_COLOR,
 pattern12ChannelGeometry,
 pattern12DashScreen,
 pattern12TpTickLayout
-} from "./elliott-spec.js?v=3fb92981";
+} from "./elliott-spec.js?v=3e4f3a47";
 
 /**
  * @param {object} deps
@@ -786,23 +786,22 @@ shape.type
 ? toXY(shape.p3)
 : null;
 
-if(
-!a ||
-!b
-){
-return;
-}
-
+/*
+ * Якоря 0%/100% могут уехать за экран (toXY=null при drag шкалы
+ * или экстремальном зуме). Уровни всё равно рисуем по цене.
+ */
 if(
 isFibExtType(
 shape.type
 ) &&
-!c
+!shape.p3
 ){
 
 if(
 shape.fibShowTrendLine ===
-true
+true &&
+a &&
+b
 ){
 drawFibTrendConnector(
 ctx,
@@ -1036,7 +1035,139 @@ width
 
 }
 
-function drawChannelAtXY(ctx, p1, p2, p3, color, width, levels){
+/*
+ * Якоря при сильном зуме уезжают на сотни тысяч пикселей.
+ * Холст такой отрезок не рисует, хотя он ещё пересекает плот.
+ * Оставляем только кусок внутри кадра.
+ */
+function clipSegmentToRect(
+x1,
+y1,
+x2,
+y2,
+left,
+top,
+right,
+bottom
+){
+
+if(
+!Number.isFinite(x1) ||
+!Number.isFinite(y1) ||
+!Number.isFinite(x2) ||
+!Number.isFinite(y2)
+){
+return null;
+}
+
+const LEFT = 1;
+const RIGHT = 2;
+const BOTTOM = 4;
+const TOP = 8;
+
+const code = (x, y)=>{
+
+let bits = 0;
+
+if(x < left){
+bits |= LEFT;
+}else if(x > right){
+bits |= RIGHT;
+}
+
+if(y < top){
+bits |= TOP;
+}else if(y > bottom){
+bits |= BOTTOM;
+}
+
+return bits;
+
+};
+
+let c1 = code(x1, y1);
+let c2 = code(x2, y2);
+
+for(let step = 0; step < 8; step++){
+
+if((c1 | c2) === 0){
+return {
+x1,
+y1,
+x2,
+y2
+};
+}
+
+if((c1 & c2) !== 0){
+return null;
+}
+
+const out = c1 !== 0 ? c1 : c2;
+const dx = x2 - x1;
+const dy = y2 - y1;
+let x = 0;
+let y = 0;
+
+if(out & TOP){
+
+if(dy === 0){
+return null;
+}
+
+x = x1 + dx * (top - y1) / dy;
+y = top;
+
+}else if(out & BOTTOM){
+
+if(dy === 0){
+return null;
+}
+
+x = x1 + dx * (bottom - y1) / dy;
+y = bottom;
+
+}else if(out & RIGHT){
+
+if(dx === 0){
+return null;
+}
+
+y = y1 + dy * (right - x1) / dx;
+x = right;
+
+}else{
+
+if(dx === 0){
+return null;
+}
+
+y = y1 + dy * (left - x1) / dx;
+x = left;
+
+}
+
+if(!Number.isFinite(x) || !Number.isFinite(y)){
+return null;
+}
+
+if(c1 !== 0){
+x1 = x;
+y1 = y;
+c1 = code(x1, y1);
+}else{
+x2 = x;
+y2 = y;
+c2 = code(x2, y2);
+}
+
+}
+
+return null;
+
+}
+
+function drawChannelAtXY(ctx, p1, p2, p3, color, width, levels, plotW, plotH){
 
 if(!p1 || !p2 || !p3){
 return;
@@ -1085,12 +1216,45 @@ const lineColor =
 row.color ||
 color;
 
+let x1 = seg.start.x;
+let y1 = seg.start.y;
+let x2 = seg.end.x;
+let y2 = seg.end.y;
+
+if(
+plotW > 0 &&
+plotH > 0
+){
+
+const clipped =
+clipSegmentToRect(
+x1,
+y1,
+x2,
+y2,
+-8,
+-8,
+plotW + 8,
+plotH + 8
+);
+
+if(!clipped){
+return;
+}
+
+x1 = clipped.x1;
+y1 = clipped.y1;
+x2 = clipped.x2;
+y2 = clipped.y2;
+
+}
+
 drawLine(
 ctx,
-seg.start.x,
-seg.start.y,
-seg.end.x,
-seg.end.y,
+x1,
+y1,
+x2,
+y2,
 lineColor,
 width
 );
@@ -1100,7 +1264,7 @@ width
 
 }
 
-function drawChannel(ctx, shape, color, width){
+function drawChannel(ctx, shape, color, width, plotW, plotH){
 
 const p1 = toXY(shape.p1);
 const p2 = toXY(shape.p2);
@@ -1113,7 +1277,9 @@ p2,
 p3,
 color,
 width,
-shape.channelLevels
+shape.channelLevels,
+plotW,
+plotH
 );
 
 }
@@ -1260,7 +1426,7 @@ drawFib(ctx, shape, color, width, w);
 }
 
 if(shape.type === "channel"){
-drawChannel(ctx, shape, color, width);
+drawChannel(ctx, shape, color, width, w, h);
 }
 
 if(
@@ -1609,7 +1775,9 @@ b,
 c,
 style.color,
 style.lineWidth,
-style.channelLevels
+style.channelLevels,
+w,
+h
 );
 }
 

@@ -14,18 +14,18 @@ brushPathScreenPoints
 import {
 rectangleBodyDist,
 rectangleScreenBox
-} from "./arrow-rect.js?v=8d4294c4";
+} from "./arrow-rect.js?v=9ea26ef4";
 
 import {
 fvpBodyDist,
 fvpScreenBox,
 isFvpType
-} from "./fixed-volume-profile.js?v=51ef58c3";
+} from "./fixed-volume-profile.js?v=77a3231c";
 
 import {
 isPositionType,
 positionXBounds
-} from "./position.js?v=152e419c";
+} from "./position.js?v=ef75c433";
 
 import {
 fibPriceAtRatio,
@@ -36,7 +36,7 @@ fibLevelXSpan,
 fibShapeLevelXSpan,
 isFibType,
 isFibExtType
-} from "./fib-spec.js?v=5f577f26";
+} from "./fib-spec.js?v=43350118";
 
 import {
 FIB_HIT_X_PAD_PX,
@@ -49,7 +49,7 @@ horizPriceLineX1
 
 import {
 isCoarseTouchViewport
-} from "../chart/chart-options.js?v=f4be0094";
+} from "../chart/chart-options.js?v=ccf11c66";
 
 import {
 hitTestTextBody,
@@ -60,7 +60,7 @@ measureTextBox
 import {
 channelLevelSegment,
 getChannelDrawRows
-} from "./channel-spec.js?v=a8bcf3c9";
+} from "./channel-spec.js?v=5e41db1c";
 
 import {
 isElliottType,
@@ -73,7 +73,7 @@ pattern12ChannelGeometry,
 pattern12DashScreen,
 pattern12TpTickLayout,
 isPattern12Draw
-} from "./elliott-spec.js?v=3fb92981";
+} from "./elliott-spec.js?v=3e4f3a47";
 
 /**
  * @param {object} deps

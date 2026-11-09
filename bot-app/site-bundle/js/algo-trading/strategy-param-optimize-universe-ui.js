@@ -4,7 +4,7 @@
 import {
 normalizeAlgoOptimizeStrategyId,
 algoOptimizeStrategyLabel
-} from "./strategy-param-optimize.js?v=4337e90e";
+} from "./strategy-param-optimize.js?v=33a03f8b";
 
 import {
 ALGO_OPTIMIZE_UNIVERSE_BG_EVENT,
@@ -14,16 +14,16 @@ isAlgoOptimizeUniverseJobRunning,
 getAlgoOptimizeUniverseJobStrategy,
 readAlgoOptimizeUniverseJob,
 resumeAlgoOptimizeUniverseJob
-} from "./optimize-universe-background.js?v=ffe6b45a";
+} from "./optimize-universe-background.js?v=ce8a0c72";
 
 import {
 normalizeAlgoScanTf,
 ALGO_TICKER_SCAN_TF
-} from "./ticker-scanner.js?v=05523b26";
+} from "./ticker-scanner.js?v=8e85c0f3";
 
 import {
 normalizeAlgoStatsMode
-} from "./pattern-trade-stats.js?v=2530eb1e";
+} from "./pattern-trade-stats.js?v=66b9f6f3";
 
 import {
 loadOptimizeUniverseResult,
@@ -38,7 +38,7 @@ import {
 publishBotTickerBookFromOptimizeRows,
 loadBotTickerBook,
 persistBotTickerBookToMain
-} from "./bot-ticker-book.js?v=24739acf";
+} from "./bot-ticker-book.js?v=8b12c45e";
 
 import {
 writeTickerStrategyOverlays

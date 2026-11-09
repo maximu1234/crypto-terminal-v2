@@ -18,18 +18,18 @@ import {
 isActiveRealtimeMarketDataset,
 isExchangeTradingEnabled,
 peekMarketQuote
-} from "../market-api.js?v=145e2e28";
+} from "../market-api.js?v=a65f5c56";
 
 import {
 connectKlineStream,
 subscribeTicker,
 bindLiveCandleCatchup
-} from "../market-ws.js?v=d0679bf8";
+} from "../market-ws.js?v=22428043";
 
 import {
 connectTickerStream,
 fetchTickersInto
-} from "../tickers.js?v=9c75f859";
+} from "../tickers.js?v=094c36f5";
 
 import {
 createTickerUiBatcher
@@ -37,7 +37,7 @@ createTickerUiBatcher
 
 import {
 processAlertCandle
-} from "../alert-monitor.js?v=5d843742";
+} from "../alert-monitor.js?v=bd2c1ca9";
 
 import {
 getFavoriteGroup,
@@ -54,7 +54,11 @@ applyLiveOhlcBar,
 ensureOhlcRollover,
 liveBarPeriodSec,
 paintCatchupLiveSeries
-} from "../chart/live-bar-roll.js?v=6ff2b718";
+} from "../chart/live-bar-roll.js?v=b31f3797";
+
+import {
+alignCandlesToTradePrice
+} from "../chart/kline-trade-scale.js?v=3b0f786d";
 
 import {
 canonicalChartSymbol,
@@ -96,7 +100,7 @@ isTradePage
 ){
 const tradePositions =
 await import(
-"../trade-open-positions.js?v=24e7f251"
+"../trade-open-positions.js?v=5adf74b5"
 );
 hasOpenPosition =
 tradePositions.hasOpenPosition;
@@ -685,11 +689,17 @@ let liveTickerUnsub =
 null;
 let livePriceFlushTimer =
 null;
+let liveLinePaintFrame =
+0;
 let liveBarRollTimer =
 null;
+const LIVE_CHART_PAINT_MS =
+250;
 let pendingLiveBar =
 null;
 let pendingLiveBarSymbol =
+"";
+let pendingLiveRsiMode =
 "";
 let unbindLiveCatchup =
 null;
@@ -821,6 +831,120 @@ if(
 barSymbol
 )
 ){
+pendingLiveRsiMode =
+"";
+return;
+}
+
+paintLiveChartBar(
+bar
+);
+
+const rsiMode =
+pendingLiveRsiMode;
+pendingLiveRsiMode =
+"";
+
+if(
+rsiMode ===
+"full"
+){
+hooks.rebuildRsiFromCandles?.();
+}else if(
+rsiMode ===
+"last"
+){
+hooks.rebuildRsiFromCandles?.(
+{
+liveLastOnly:
+true
+}
+);
+}
+
+}
+
+function scheduleLiveChartPaint(
+bar,
+sourceSymbol,
+rsiMode
+){
+
+pendingLiveBar =
+bar;
+pendingLiveBarSymbol =
+canonicalChartSymbol(
+sourceSymbol
+);
+
+if(
+rsiMode ===
+"full" ||
+pendingLiveRsiMode !==
+"full"
+){
+pendingLiveRsiMode =
+rsiMode ||
+pendingLiveRsiMode;
+}
+
+if(
+rsiMode ===
+"full"
+){
+if(
+livePriceFlushTimer
+){
+clearTimeout(
+livePriceFlushTimer
+);
+livePriceFlushTimer =
+null;
+}
+flushPendingLiveBar();
+return;
+}
+
+/*
+ * Линия и плашка — в следующем кадре, по последнему тику.
+ * Таймер ниже только дорисовывает RSI, линию он не держит.
+ */
+if(
+!liveLinePaintFrame
+){
+liveLinePaintFrame =
+requestAnimationFrame(
+flushLiveLineFrame
+);
+}
+
+if(
+!livePriceFlushTimer
+){
+livePriceFlushTimer =
+setTimeout(
+flushPendingLiveBar,
+LIVE_CHART_PAINT_MS
+);
+}
+
+}
+
+function flushLiveLineFrame(){
+
+liveLinePaintFrame =
+0;
+const bar =
+pendingLiveBar;
+const barSymbol =
+pendingLiveBarSymbol;
+
+if(
+!bar ||
+!canPaintLiveChartBar(
+barSymbol
+)
+){
 return;
 }
 
@@ -859,6 +983,12 @@ px <=
 return;
 }
 
+const scaled =
+alignCandlesToTradePrice(
+coinsState().candles,
+px
+);
+
 rollLiveBarsIfNeeded();
 
 const last =
@@ -874,12 +1004,7 @@ const low =
 Number(
 last.low
 );
-const bar =
-{
-...last,
-close:
-px,
-high:
+const nextHigh =
 Number.isFinite(
 high
 )
@@ -887,8 +1012,8 @@ high
 high,
 px
 )
-: px,
-low:
+: px;
+const nextLow =
 Number.isFinite(
 low
 )
@@ -896,7 +1021,34 @@ low
 low,
 px
 )
-: px
+: px;
+
+if(
+Number(
+last.close
+) ===
+px &&
+Number(
+last.high
+) ===
+nextHigh &&
+Number(
+last.low
+) ===
+nextLow
+){
+return;
+}
+
+const bar =
+{
+...last,
+close:
+px,
+high:
+nextHigh,
+low:
+nextLow
 };
 
 coinsState().candles[
@@ -904,22 +1056,19 @@ coinsState().candles.length -
 1
 ] =
 bar;
-pendingLiveBar =
-bar;
-pendingLiveBarSymbol =
-canonicalChartSymbol(
-sourceSymbol
-);
 
 if(
-!livePriceFlushTimer
+scaled
 ){
-livePriceFlushTimer =
-setTimeout(
-flushPendingLiveBar,
-120
-);
+hooks.repaintScaledCandles?.();
+return;
 }
+
+scheduleLiveChartPaint(
+bar,
+sourceSymbol,
+"last"
+);
 
 }
 
@@ -956,6 +1105,16 @@ null;
 }
 
 if(
+liveLinePaintFrame
+){
+cancelAnimationFrame(
+liveLinePaintFrame
+);
+liveLinePaintFrame =
+0;
+}
+
+if(
 liveBarRollTimer
 ){
 clearInterval(
@@ -968,6 +1127,8 @@ null;
 pendingLiveBar =
 null;
 pendingLiveBarSymbol =
+"";
+pendingLiveRsiMode =
 "";
 
 }
@@ -1113,28 +1274,22 @@ return;
 lastPublicKlineAt =
 Date.now();
 
-paintLiveChartBar(
-bar
-);
-
-if(
-kind ===
-"last"
-){
-hooks.rebuildRsiFromCandles?.(
-{
-liveLastOnly:
-true
-}
-);
-}else{
-hooks.rebuildRsiFromCandles();
-}
-
 processAlertCandle(
 streamSymbol,
 bar,
 coinsState().currentTF
+);
+
+scheduleLiveChartPaint(
+coinsState().candles[
+coinsState().candles.length -
+1
+],
+streamSymbol,
+kind ===
+"last"
+? "last"
+: "full"
 );
 
 }

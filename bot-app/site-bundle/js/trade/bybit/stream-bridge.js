@@ -4,7 +4,7 @@
 import {
 applyTradePositionsStream,
 syncTradePositionsCache
-} from "./positions-cache.js?v=4e2f5360";
+} from "./positions-cache.js?v=c46f95e7";
 
 import {
 isTradePositionSoundBaselineReady
@@ -12,11 +12,11 @@ isTradePositionSoundBaselineReady
 
 import {
 isExchangeTradingEnabled
-} from "../../market-api.js?v=145e2e28";
+} from "../../market-api.js?v=a65f5c56";
 
 import {
 getTradeConfig
-} from "./config.js?v=6ddbe7e2";
+} from "./config.js?v=8396b3fd";
 
 let unsubscribe =
 null;

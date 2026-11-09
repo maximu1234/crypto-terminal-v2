@@ -254,25 +254,25 @@ createIndicatorSettingsDialog
 await Promise.all(
 [
 import(
-"./indicators/rsi-pane.js?v=482968f4"
+"./indicators/rsi-pane.js?v=eac4a600"
 ),
 import(
-"./indicators/volume-pane.js?v=4072f277"
+"./indicators/volume-pane.js?v=373ca7d3"
 ),
 import(
-"./indicators/ao-pane.js?v=a13d2bc8"
+"./indicators/ao-pane.js?v=558f240e"
 ),
 import(
-"./indicators/macd-pane.js?v=75050516"
+"./indicators/macd-pane.js?v=b26d22f8"
 ),
 import(
-"./indicators/moving-average.js?v=29854dea"
+"./indicators/moving-average.js?v=20ab4a92"
 ),
 import(
-"./indicators/ema-shift-ribbon.js?v=dc58ca22"
+"./indicators/ema-shift-ribbon.js?v=2a9fde48"
 ),
 import(
-"./indicators/supertrend.js?v=a2d9753d"
+"./indicators/supertrend.js?v=e9a9adee"
 ),
 typeof createPattern12IndicatorOverride ===
 "function"
@@ -286,10 +286,10 @@ createPattern12IndicatorOverride
 "./indicators/pattern-12.js?v=4570161f"
 ),
 import(
-"./indicators/horizontal-volume.js?v=0d493f7a"
+"./indicators/horizontal-volume.js?v=d1bbc0a9"
 ),
 import(
-"./indicators/volume-bubbles.js?v=27daa08e"
+"./indicators/volume-bubbles.js?v=e86f5f25"
 ),
 import(
 "./indicators/indicator-settings-dialog.js?v=006c9340"
@@ -846,6 +846,7 @@ blocked;
 
 }
 
+
 function setIndicatorEnabled(
 id,
 on,
@@ -885,6 +886,14 @@ getHost?.()?.chart;
 
 captureHealthyVisibleLogicalRange(
 chart
+);
+
+/*
+ * Панель меняет ширину шкалы и чужой setVisibleLogicalRange
+ * растягивает приближенный график на всё окно. Держим зум.
+ */
+chart?.timeScale?.()?.holdZoom?.(
+2000
 );
 
 if(

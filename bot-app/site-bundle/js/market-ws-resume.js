@@ -5,23 +5,23 @@
  */
 import {
 forceReconnectPublicSocket
-} from "./ws.js?v=b583b6e5";
+} from "./ws.js?v=a3fc2075";
 
 import {
 resetBingxWs
-} from "./exchanges/bingx/ws.js?v=b567a68e";
+} from "./exchanges/bingx/ws.js?v=7e674a03";
 
 import {
 getActiveExchangeId,
 loadMarketHistory
-} from "./market-api.js?v=145e2e28";
+} from "./market-api.js?v=a65f5c56";
 
 import {
 lastOhlcBar,
 liveBarPeriodSec,
 mergeCatchupOhlcBars,
 paintCatchupLiveSeries
-} from "./chart/live-bar-roll.js?v=6ff2b718";
+} from "./chart/live-bar-roll.js?v=b31f3797";
 
 import {
 catchupHistoryPages,

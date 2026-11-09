@@ -13,11 +13,11 @@ normalizeLaunchStrategyId,
 botStrategyListLabel,
 botSidesDirectionLabel,
 formatBotStrategySettingsRows
-} from "./bot-strategy-prefs.js?v=e463f141";
+} from "./bot-strategy-prefs.js?v=ff8205fd";
 import {
 loadEarlyT3BotPrefs,
 saveEarlyT3BotPrefs
-} from "./early-t3-bot-prefs.js?v=920e9956";
+} from "./early-t3-bot-prefs.js?v=eea27f84";
 import {
 snapshotRsiTouchFlipBook,
 rsiTouchFlipShareBudgetFits,
@@ -94,25 +94,25 @@ isAlgoBotDesktop,
 fetchAlgoBotCloudLock,
 clearAlgoBotCloudLock,
 ensureAlgoBotCloudLock
-} from "./bot-bridge.js?v=ad065c93";
+} from "./bot-bridge.js?v=0c03d029";
 import {
 stageBotTickerBookFromPublished,
 hydrateBotTickerBookFromMain,
 loadStagedBotTickerBook,
 loadBotTickerBook,
 persistBotTickerBookToMain
-} from "./bot-ticker-book.js?v=24739acf";
+} from "./bot-ticker-book.js?v=8b12c45e";
 import {
 isMultichartRemoteControlHost
-} from "./bot-remote-client.js?v=8f97f05c";
+} from "./bot-remote-client.js?v=14c55485";
 import {
 mountRemoteSessionLogsEntry,
 mountRemoteWatchlistsPushEntry,
 mountLocalSessionLogsEntry
-} from "./bot-session-logs-viewer.js?v=924e3727";
+} from "./bot-session-logs-viewer.js?v=4965d159";
 import {
 rebalanceTpShares
-} from "./pattern-trade-stats-partial.js?v=a92ca5c3";
+} from "./pattern-trade-stats-partial.js?v=68baa161";
 
 const STATUS_POLL_MS =
 2500;
@@ -1058,7 +1058,7 @@ applyRunBtn();
 );
 
 void import(
-"./optimize-universe-background.js?v=ffe6b45a"
+"./optimize-universe-background.js?v=ce8a0c72"
 ).then(
 m=>
 m.stopAlgoOptimizeUniverseJob?.()
@@ -5087,7 +5087,7 @@ ALGO_ANALYSIS_BOT_PATTERN_12
 )
 ){
 void import(
-"./optimize-universe-background.js?v=ffe6b45a"
+"./optimize-universe-background.js?v=ce8a0c72"
 ).then(
 m=>
 m.stopAlgoOptimizeUniverseJob?.()

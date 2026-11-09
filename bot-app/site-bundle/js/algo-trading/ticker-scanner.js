@@ -3,15 +3,15 @@
  */
 import {
 loadMarketHistory
-} from "../market-api.js?v=145e2e28";
+} from "../market-api.js?v=a65f5c56";
 
 import {
 analyzeAlgoPatterns
-} from "./pattern-analysis.js?v=1e002b9c";
+} from "./pattern-analysis.js?v=672a37b2";
 
 import {
 normalizeAlgoStatsMode
-} from "./pattern-trade-stats.js?v=2530eb1e";
+} from "./pattern-trade-stats.js?v=66b9f6f3";
 
 import {
 readAlgoPattern12Settings
@@ -20,7 +20,7 @@ readAlgoPattern12Settings
 import {
 resolveAlgoScanSymbols,
 normalizeAlgoScanUniverse
-} from "./scan-universe.js?v=492e17e1";
+} from "./scan-universe.js?v=a5c65d53";
 
 /** Дефолтный ТФ скана (если не передан opts.tf). */
 export const ALGO_TICKER_SCAN_TF =

@@ -9,7 +9,7 @@ parseDrawColor
 
 import {
 isCoarseTouchViewport
-} from "../chart-import.js?v=613e412b";
+} from "../chart-import.js?v=5e72069f";
 
 import {
 STROKE,
@@ -27,13 +27,13 @@ isFibType,
 isFibExtType,
 FIB_EXT_TOOL_DEFAULTS_VERSION,
 resolveFibTrendLineColor
-} from "./fib-spec.js?v=5f577f26";
+} from "./fib-spec.js?v=43350118";
 
 import {
 setFibPanelCommitHook,
 closeAllFibLineStyleMenus,
 closeAllFibLineWidthMenus
-} from "./fib-portals.js?v=2d6d15fb";
+} from "./fib-portals.js?v=23b3ccb9";
 
 import {
 openChromeSurface,
@@ -43,7 +43,7 @@ closeChromeSurface
 import {
 isPositionType,
 positionEntryPrice
-} from "./position.js?v=152e419c";
+} from "./position.js?v=ef75c433";
 
 import {
 isTextTool,
@@ -55,17 +55,17 @@ TEXT_DEFAULT_SIZE
 import {
 parseMoneyInput,
 calcPositionVolumeUsd
-} from "../position-sizing.js?v=81c492bf";
+} from "../position-sizing.js?v=6752880f";
 
 import {
 applyPositionVolumeFromDrawing
-} from "../trade-volume-presets.js?v=6aad4532";
+} from "../trade-volume-presets.js?v=ae7c7dc3";
 
 import {
 stashDrawingStopsFromDrawing,
 clearDrawingStopsPending,
 hasDrawingStopsPending
-} from "../trade-auto-stops.js?v=0eefb8cd";
+} from "../trade-auto-stops.js?v=7b445f2a";
 
 import {
 touchShapeRevision
@@ -81,14 +81,14 @@ listTemplatesForType,
 mergeStyleSnapshot,
 saveNamedTemplate,
 deleteTemplateAtIndex
-} from "./draw-templates.js?v=6d130170";
+} from "./draw-templates.js?v=d92bb01a";
 
 import {
 isFvpType,
 copyFvpStyleToShape,
 createFvpToolDefaults,
 FVP_TOOL_DEFAULTS_VERSION
-} from "./fixed-volume-profile.js?v=51ef58c3";
+} from "./fixed-volume-profile.js?v=77a3231c";
 
 import {
 fvpSettingsHtml,
@@ -96,14 +96,14 @@ fillFvpSettingsPanel,
 readFvpSettingsPanel,
 bindFvpSettingsPanel,
 closeFvpColorMenu
-} from "./fixed-volume-profile-settings.js?v=54546c69";
+} from "./fixed-volume-profile-settings.js?v=9f7d5893";
 
 import {
 rectSettingsHtml,
 fillRectSettingsPanel as fillRectSettingsPanelDom,
 readRectSettingsPanel,
 bindRectSettingsPanel
-} from "./draw-rect-settings.js?v=4c8ccbaf";
+} from "./draw-rect-settings.js?v=4c2b26ad";
 
 import {
 fibSettingsHtml,
@@ -113,13 +113,13 @@ readFibSettingsPanel,
 bindFibSettingsPanel,
 setFibLevelColorButton,
 mergeFibLevelsAfterGlobalChange
-} from "./draw-fib-settings.js?v=fba82cc1";
+} from "./draw-fib-settings.js?v=5a8a2107";
 
 import {
 CHANNEL_DEFAULT_COLOR,
 CHANNEL_TOOL_DEFAULTS_VERSION,
 ensureChannelLevelsVisible
-} from "./channel-spec.js?v=a8bcf3c9";
+} from "./channel-spec.js?v=5e41db1c";
 
 import {
 channelSettingsHtml,
@@ -127,7 +127,7 @@ mountChannelLevelRows,
 fillChannelSettingsPanel as fillChannelSettingsPanelDom,
 readChannelSettingsPanel,
 bindChannelSettingsPanel
-} from "./draw-channel-settings.js?v=c760d270";
+} from "./draw-channel-settings.js?v=18db463f";
 
 import {
 ELLIOTT_TOOL_DEFAULTS_VERSION,
@@ -137,7 +137,7 @@ isPattern12Draw,
 migrateElliottToolDefaults,
 normalizePattern12TpFlags,
 normalizePattern12TpLevels
-} from "./elliott-spec.js?v=3fb92981";
+} from "./elliott-spec.js?v=3e4f3a47";
 
 import {
 elliottSettingsHtml,
@@ -145,11 +145,11 @@ fillElliottSettingsPanel as fillElliottSettingsPanelDom,
 readElliottSettingsPanel,
 bindElliottSettingsPanel,
 syncElliottSettingsColor
-} from "./draw-elliott-settings.js?v=f22b6fc7";
+} from "./draw-elliott-settings.js?v=32308e9f";
 
 import {
 hasCoordSettings
-} from "./draw-coords.js?v=09587365";
+} from "./draw-coords.js?v=b7a76e30";
 
 import {
 bindCoordSettingsPanel,
@@ -158,7 +158,7 @@ coordSettingsHtml,
 drawSettingsTabsHtml,
 fillCoordSettingsPanel,
 isCoordInputFocused
-} from "./draw-coord-settings.js?v=d6ea92cb";
+} from "./draw-coord-settings.js?v=f8f6d810";
 
 import {
 fillStyleUI as fillStyleUIMoved,

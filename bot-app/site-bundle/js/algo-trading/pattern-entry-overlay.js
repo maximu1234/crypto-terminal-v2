@@ -11,13 +11,13 @@ DEFAULT_RISK_USD,
 DEFAULT_SL_PCT_OF_X,
 DEFAULT_TP_RR,
 syncAlgoEntryPositions
-} from "./pattern-entry-positions.js?v=492702eb";
+} from "./pattern-entry-positions.js?v=e2ba2abd";
 
 import {
 DEFAULT_PARTIAL_TP1_X,
 DEFAULT_PARTIAL_TP2_X,
 DEFAULT_PARTIAL_TP3_X
-} from "./pattern-trade-stats-partial.js?v=a92ca5c3";
+} from "./pattern-trade-stats-partial.js?v=68baa161";
 
 /**
  * @param {{

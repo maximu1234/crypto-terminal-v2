@@ -19,5 +19,8 @@ Frozen in bot-app (not overwritten by Multichart chrome):
 - bot-session-logs-viewer stub
 - no Terminal trading IPC (stubs only)
 
+JS under `site-bundle/js` that the algo boot graph no longer imports is deleted
+on sync. `scripts/check-bot-lite-bundle.cjs` fails if such a file is committed.
+
 After sync: bump `bot-app/package.json` and cut `algo-bot-v*` / `algo-bot-win-v*` releases.
 Do not treat Multichart `bundle:sync` drift as a CI failure for the bot.
