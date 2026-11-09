@@ -42,7 +42,7 @@ createRSIChart,
 updateRsiBandLayout,
 updateRsiLevelLinesLayout,
 linkPairedChartTimeScales
-} from "./chart-import.js?v=5e72069f";
+} from "./chart-import.js?v=49ac1bf3";
 
 import {
 formatPrice
@@ -63,16 +63,16 @@ getScreenerWidgetOscillator,
 isScreenerHistogramOscillator,
 setScreenerAoData,
 setScreenerMacdData
-} from "./screener-widget-oscillator.js?v=859b6111";
+} from "./screener-widget-oscillator.js?v=89a3618b";
 
 import {
 createDashboardChartWidget,
 mountDashboardChartInteractions
-} from "./chart-widget-host.js?v=331d8755";
+} from "./chart-widget-host.js?v=5d67c7b4";
 
 import {
 mountWidgetTabletChart
-} from "./tablet-widget-chart.js?v=c85f0349";
+} from "./tablet-widget-chart.js?v=50b7f7d1";
 
 import {
 subscribeKline,
@@ -125,7 +125,7 @@ getWidgetFlagHtml,
 wireWidgetFlagUi,
 updateWidgetFlagUi,
 bindWidgetFlagGlobalListeners
-} from "./widget-favorite-flag.js?v=2c59216a";
+} from "./widget-favorite-flag.js?v=5be01f5f";
 
 function escapeHtml(
 value
@@ -198,7 +198,7 @@ return;
 
 const mod =
 await import(
-"./trade-widget-mount.js?v=3e52ba8f"
+"./trade-widget-mount.js?v=7d799f56"
 );
 
 mountTradeOnDashboardWidget =
@@ -729,9 +729,12 @@ if(
 !oscKind
 ){
 return `
+<div class="widget-chart-body">
 <div class="widget-chart-wrap chart-wrap">
 <div class="chart"></div>
 ${chartUi}
+</div>
+<div class="chart-time-scale"></div>
 </div>`;
 }
 
@@ -749,6 +752,7 @@ ${chartUi}
 <div class="widget-rsi-wrap">
 <div class="widget-rsi-chart"></div>
 </div>
+<div class="chart-time-scale"></div>
 </div>`;
 }
 
@@ -765,6 +769,7 @@ ${chartUi}
 <div class="rsi-level-line hidden" data-rsi-level="30" aria-hidden="true"></div>
 <div class="widget-rsi-chart"></div>
 </div>
+<div class="chart-time-scale"></div>
 </div>`;
 
 }
@@ -1074,19 +1079,21 @@ rsiPair.series;
 
 chart.applyOptions({
 timeScale:{
-visible:false,
-borderVisible:false
-}
-});
-
-entry.rsiChart.applyOptions({
-timeScale:{
 visible:true,
 timeVisible:true,
 ticksVisible:true,
 borderColor:"#1f2937",
 borderVisible:true,
 secondsVisible:false
+}
+});
+
+entry.rsiChart.applyOptions({
+timeScale:{
+visible:false,
+timeVisible:false,
+ticksVisible:false,
+borderVisible:false
 },
 rightPriceScale:{
 borderVisible:false

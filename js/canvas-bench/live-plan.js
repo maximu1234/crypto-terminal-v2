@@ -707,6 +707,8 @@ const TIME_AXIS_STEPS_SEC =
 43200,
 86400,
 172800,
+259200,
+432000,
 604800,
 1209600,
 2592000,
@@ -921,6 +923,206 @@ return Math.floor(date.getTime() / 1000);
 
 }
 
+const TIME_AXIS_MONTH_SEC =
+28 * 86400;
+
+/**
+ * 30/90/180/365 суток — это календарные 1/3/6/12 месяцев,
+ * не сдвиг «+30 дней» (он даёт 28-е, 25-е и подпись «Aug 28»).
+ */
+function calendarMonthsForStep(
+stepSec
+){
+
+const step =
+Math.max(
+1,
+Math.floor(Number(stepSec) || 1)
+);
+
+if(step < TIME_AXIS_MONTH_SEC){
+return 0;
+}
+
+if(step >= TIME_AXIS_YEAR_SEC){
+
+return Math.max(
+12,
+Math.round(step / TIME_AXIS_YEAR_SEC) * 12
+);
+
+}
+
+if(step >= 15552000){
+return 6;
+}
+
+if(step >= 7776000){
+return 3;
+}
+
+return 1;
+
+}
+
+function alignCalendarMonthSec(
+sec,
+months
+){
+
+const date =
+new Date(Number(sec) * 1000);
+
+if(!Number.isFinite(date.getTime())){
+return Math.floor(Number(sec) || 0);
+}
+
+const span =
+Math.max(1, Math.floor(Number(months) || 1));
+
+date.setHours(0, 0, 0, 0);
+date.setDate(1);
+
+const idx =
+date.getFullYear() * 12 +
+date.getMonth();
+const aligned =
+Math.floor(idx / span) * span;
+const year =
+Math.floor(aligned / 12);
+const month =
+((aligned % 12) + 12) % 12;
+const out =
+new Date(
+year,
+month,
+1,
+0,
+0,
+0,
+0
+);
+
+return Math.floor(out.getTime() / 1000);
+
+}
+
+function addCalendarMonthsSec(
+sec,
+months
+){
+
+const date =
+new Date(Number(sec) * 1000);
+
+if(!Number.isFinite(date.getTime())){
+return Math.floor(Number(sec) || 0) + 86400;
+}
+
+const span =
+Math.max(1, Math.floor(Number(months) || 1));
+
+date.setDate(1);
+date.setHours(0, 0, 0, 0);
+date.setMonth(date.getMonth() + span);
+
+return Math.floor(date.getTime() / 1000);
+
+}
+
+/**
+ * Дни с 1-го числа каждого месяца. Сетка календарная:
+ * пан не добавляет новых рангов, 1-е всегда на сетке
+ * (подпись — месяц или год).
+ */
+function monthAnchoredDayTicks(
+fromSec,
+toSec,
+dayStep
+){
+
+const stepDays =
+Math.max(
+1,
+Math.round(
+Math.max(1, Number(dayStep) || 86400) / 86400
+)
+);
+const cursor =
+new Date(Number(fromSec) * 1000);
+
+if(!Number.isFinite(cursor.getTime())){
+return [];
+}
+
+cursor.setHours(0, 0, 0, 0);
+cursor.setDate(1);
+
+if(cursor.getTime() / 1000 > fromSec){
+cursor.setMonth(cursor.getMonth() - 1);
+}
+
+const out =
+[];
+let guard =
+0;
+
+while(guard < 480){
+
+const year =
+cursor.getFullYear();
+const month =
+cursor.getMonth();
+const lastDay =
+new Date(
+year,
+month + 1,
+0
+).getDate();
+
+for(
+let day = 1;
+day <= lastDay;
+day += stepDays
+){
+
+const tick =
+new Date(
+year,
+month,
+day,
+0,
+0,
+0,
+0
+);
+const sec =
+Math.floor(tick.getTime() / 1000);
+
+if(
+sec >= fromSec - 1 &&
+sec <= toSec + 1
+){
+out.push(sec);
+}
+
+}
+
+cursor.setMonth(month + 1);
+cursor.setDate(1);
+
+if(cursor.getTime() / 1000 > toSec + 40 * 86400){
+break;
+}
+
+guard += 1;
+
+}
+
+return out;
+
+}
+
 /**
  * Метки оси времени по видимому диапазону.
  * Возвращает unix-sec (+ .step, .formatSteps); вызывающий сам → x.
@@ -979,11 +1181,30 @@ densestStepSec
  * Плотность свечей задаёт самый мелкий допустимый шаг;
  * span — не грубее (если margin раздул окно).
  */
-const ideal =
+let ideal =
 Math.min(
 fromSpan,
 fromDensity
 );
+/*
+ * Несколько месяцев на экране и каждый помещается —
+ * только месяцы и год. Дни между ними не подмешиваем:
+ * иначе при панорамировании «18» и «13» вспыхивают
+ * без изменения зума.
+ */
+const monthPx =
+width * (30 * 86400) / span;
+
+if(
+span >= 150 * 86400 &&
+monthPx >= minPx * 0.9
+){
+ideal = Math.max(
+ideal,
+2592000
+);
+}
+
 const step =
 stickTimeAxisStepSec(
 ideal,
@@ -991,8 +1212,12 @@ preferredStep,
 span,
 target
 );
+const months =
+calendarMonthsForStep(step);
 let cursor =
-alignTimeAxisSec(t0, step);
+months > 0
+? alignCalendarMonthSec(t0, months)
+: alignTimeAxisSec(t0, step);
 let bump =
 0;
 
@@ -1000,13 +1225,22 @@ while(
 cursor < t0 &&
 bump < 64
 ){
-cursor += step;
+
+const next =
+months > 0
+? addCalendarMonthsSec(cursor, months)
+: cursor + step;
+
+if(next <= cursor){
+break;
+}
+
+cursor = next;
 bump += 1;
+
 }
 
 const out =
-[];
-const formatSteps =
 [];
 const guard =
 Math.max(8, target * 4);
@@ -1019,15 +1253,35 @@ n++
 
 if(cursor >= t0 - 1 && cursor <= t1 + 1){
 out.push(cursor);
-formatSteps.push(step);
 }
 
-cursor += step;
+const next =
+months > 0
+? addCalendarMonthsSec(cursor, months)
+: cursor + step;
+
+if(next <= cursor){
+break;
+}
+
+cursor = next;
 
 }
 
-out.step = step;
-out.formatSteps = formatSteps;
-return out;
+const ticks =
+months > 0
+? out
+: step >= 86400
+? monthAnchoredDayTicks(
+t0,
+t1,
+step
+)
+: out;
+
+ticks.step = step;
+ticks.formatSteps =
+ticks.map(() => step);
+return ticks;
 
 }

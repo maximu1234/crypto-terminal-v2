@@ -679,6 +679,12 @@ max-height:74%;
 min-height:0;
 }
 
+body.terminal-page.coins-multi-chart-on .coins-chart-slot-body:has(> .chart-time-scale) > .screener-chart,
+body.script-page .coins-chart-slot-body:has(> .chart-time-scale) > .screener-chart{
+flex:1 1 auto;
+max-height:none;
+}
+
 body.terminal-page.coins-multi-chart-on .coins-chart-slot-body .screener-rsi-wrap,
 body.script-page .coins-chart-slot-body .screener-rsi-wrap{
 position:relative;

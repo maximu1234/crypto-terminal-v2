@@ -21,6 +21,7 @@ import {
   placeSeriesPoint
 } from "../js/chart/canvas-lw-host.js";
 import { screenerBarSpacingPx } from "../js/chart/chart-viewport.js";
+import { formatCanvasAxisTime } from "../js/chart/chart-local-time.js";
 
 function engineAt(panPx, barSpacing = 8, ratio = 0) {
   const candles = [];
@@ -316,6 +317,54 @@ test("max zoom-out uses a step coarse enough that labels can slide", () => {
   const slid = niceTimeAxisTimes(from + shift, to + shift, plotW, 64, times.step, densest);
   const shared = times.filter((t) => slid.includes(t));
   assert.ok(shared.length >= 2, "calendar marks must survive a short pan");
+});
+
+test("zoomed-out 4h axis uses month and year marks, not day plus month", () => {
+  const from = new Date(2025, 7, 1).getTime() / 1000;
+  const to = new Date(2027, 0, 20).getTime() / 1000;
+  const times = niceTimeAxisTimes(from, to, 1200, 64, 0, 24 * 86400);
+  assert.ok(times.length >= 8, `expected monthly marks, got ${times.length}`);
+
+  for (const t of times) {
+    const date = new Date(t * 1000);
+    assert.equal(date.getDate(), 1, date.toDateString());
+    assert.equal(date.getHours(), 0, date.toDateString());
+    const label = formatCanvasAxisTime(t, times.step, "en-GB");
+    if (date.getMonth() === 0) {
+      assert.equal(label, String(date.getFullYear()));
+    } else {
+      assert.match(label, /^[A-Za-z]{3,4}$/);
+    }
+  }
+
+  const shift = 10 * 86400;
+  const slid = niceTimeAxisTimes(from + shift, to + shift, 1200, 64, times.step, 24 * 86400);
+  const shared = times.filter((t) => slid.includes(t));
+  assert.ok(shared.length >= 4, "month marks must slide, not be replaced in place");
+});
+
+test("panning a month-scale axis does not invent day numbers", () => {
+  const from = new Date(2026, 1, 1).getTime() / 1000;
+  const to = new Date(2026, 10, 20).getTime() / 1000;
+  const densest = 14 * 86400;
+  const times = niceTimeAxisTimes(from, to, 1400, 64, 0, densest);
+
+  assert.ok(times.length >= 8);
+  for (const t of times) {
+    const date = new Date(t * 1000);
+    assert.equal(date.getDate(), 1, date.toDateString());
+    assert.equal(date.getHours(), 0);
+  }
+
+  const shift = 20 * 86400;
+  const slid = niceTimeAxisTimes(from + shift, to + shift, 1400, 64, times.step, densest);
+  for (const t of slid) {
+    const date = new Date(t * 1000);
+    assert.equal(date.getDate(), 1, date.toDateString());
+  }
+
+  const shared = times.filter((t) => slid.includes(t));
+  assert.ok(shared.length >= 6, "the same months must stay, without new day ranks");
 });
 
 test("screener widgets, zoom window, and watchlist stay slidable at max zoom-out", () => {

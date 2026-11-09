@@ -13,7 +13,7 @@ linkPairedChartTimeScales,
 SCREENER_PAGE_MAX_BARS,
 SCREENER_PAGE_VISIBLE_BARS,
 SCREENER_PAGE_HISTORY_REQUESTS
-} from "./chart-import.js?v=5e72069f";
+} from "./chart-import.js?v=49ac1bf3";
 
 import {
 loadMarketHistory,
@@ -61,7 +61,7 @@ getWidgetFlagHtml,
 wireWidgetFlagUi,
 updateWidgetFlagUi,
 bindWidgetFlagGlobalListeners
-} from "./widget-favorite-flag.js?v=2c59216a";
+} from "./widget-favorite-flag.js?v=5be01f5f";
 
 const SCRIPT_MAX_CONCURRENT_CHART_LOADS =
 4;
@@ -87,7 +87,7 @@ if(
 ){
 scriptZoomModulePromise =
 import(
-"./screener-widget-zoom.js?v=7a345fce"
+"./screener-widget-zoom.js?v=a0f5e7ea"
 ).then(
 mod=>{
 refreshZoomFavoriteUi =
@@ -260,7 +260,7 @@ showRsi
 if(
 !showRsi
 ){
-return `<div class="screener-chart"></div>`;
+return `<div class="screener-chart"></div><div class="chart-time-scale"></div>`;
 }
 
 return `
@@ -273,6 +273,7 @@ return `
 <div class="rsi-level-line hidden" data-rsi-level="30" aria-hidden="true"></div>
 <div class="screener-rsi-chart"></div>
 </div>
+<div class="chart-time-scale"></div>
 </div>`;
 
 }
@@ -1292,15 +1293,6 @@ rsiPair.series;
 chart.applyOptions({
 timeScale:{
 visible:
-false,
-borderVisible:
-false
-}
-});
-
-widget.rsiChart.applyOptions({
-timeScale:{
-visible:
 true,
 timeVisible:
 true,
@@ -1311,6 +1303,19 @@ borderColor:
 borderVisible:
 true,
 secondsVisible:
+false
+}
+});
+
+widget.rsiChart.applyOptions({
+timeScale:{
+visible:
+false,
+timeVisible:
+false,
+ticksVisible:
+false,
+borderVisible:
 false
 },
 rightPriceScale:{

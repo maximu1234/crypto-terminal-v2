@@ -24,7 +24,7 @@ mountWidgetStackCrosshair,
 SCREENER_PAGE_VISIBLE_BARS,
 SCREENER_PAGE_MAX_BARS,
 SCREENER_PAGE_HISTORY_REQUESTS
-} from "./chart-import.js?v=5e72069f";
+} from "./chart-import.js?v=49ac1bf3";
 
 import {
 isIpadWebViewport
@@ -54,7 +54,7 @@ SCREENER_WIDGET_OSCILLATOR_MACD,
 createScreenerAoChart,
 createScreenerMacdChart,
 isScreenerHistogramOscillator
-} from "./screener-widget-oscillator.js?v=859b6111";
+} from "./screener-widget-oscillator.js?v=89a3618b";
 
 let deps = null;
 
@@ -1547,19 +1547,21 @@ rsiPair.series;
 
 chart.applyOptions({
 timeScale:{
-visible:false,
-borderVisible:false
-}
-});
-
-widget.rsiChart.applyOptions({
-timeScale:{
 visible:true,
 timeVisible:true,
 ticksVisible:true,
 borderColor:"#1f2937",
 borderVisible:true,
 secondsVisible:false
+}
+});
+
+widget.rsiChart.applyOptions({
+timeScale:{
+visible:false,
+timeVisible:false,
+ticksVisible:false,
+borderVisible:false
 },
 rightPriceScale:{
 borderVisible:false

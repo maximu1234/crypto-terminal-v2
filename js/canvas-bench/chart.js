@@ -18,7 +18,7 @@ scaleFromCandles,
 visibleIndexSpan,
 WHEEL_ZOOM_GESTURE_MS,
 zoomOutFloorSpacing
-} from "./live-plan.js?v=timefix10";
+} from "./live-plan.js?v=timefix13";
 
 import {
 fractionalIndexAtTime
@@ -213,6 +213,8 @@ this.marginTop = 0;
 this.marginBottom = 0;
 this.showGrid = options.showGrid === true;
 this.formatTime = null;
+this.externalTimeCanvas = null;
+this.externalTimeCtx = null;
 this._timeAxisStep = 0;
 this.manualScale = null;
 this.scale = null;
@@ -1106,10 +1108,42 @@ return Number(a.time) +
 
 }
 
+bindExternalTimeAxis(el){
+
+if(!el){
+return;
+}
+
+let canvas =
+el.querySelector(
+"canvas.chart-time-scale-canvas"
+);
+
+if(!canvas){
+canvas =
+document.createElement("canvas");
+canvas.className =
+"chart-time-scale-canvas";
+el.appendChild(canvas);
+}
+
+this.externalTimeCanvas = canvas;
+this.externalTimeCtx =
+canvas.getContext("2d", { alpha: true });
+this.timeH = 0;
+
+}
+
 drawTimeAxis(){
 
+const external =
+this.externalTimeCanvas;
+
 if(
-!(this.timeH > 0) ||
+(
+!external &&
+!(this.timeH > 0)
+) ||
 typeof this.formatTime !== "function" ||
 this.candles.length < 2 ||
 !this.layout
@@ -1117,14 +1151,72 @@ this.candles.length < 2 ||
 return;
 }
 
-const ctx =
+let ctx =
 this.hctx;
-const {
-cssH,
-plotLeft,
-plotRight
-} =
-this.layout;
+let plotLeft =
+this.layout.plotLeft;
+let plotRight =
+this.layout.plotRight;
+let stripY =
+this.layout.cssH - this.timeH;
+let stripH =
+this.timeH;
+let dpr =
+this.layout.dpr || 1;
+
+if(external){
+
+const host =
+external.parentElement;
+const cssW =
+Math.max(
+1,
+Math.floor(
+host?.clientWidth ||
+this.layout.cssW
+)
+);
+const cssH =
+Math.max(
+1,
+Math.floor(
+host?.clientHeight ||
+28
+)
+);
+
+dpr =
+window.devicePixelRatio || 1;
+const bw =
+Math.floor(cssW * dpr);
+const bh =
+Math.floor(cssH * dpr);
+
+if(
+external.width !== bw ||
+external.height !== bh
+){
+external.width = bw;
+external.height = bh;
+}
+
+ctx = this.externalTimeCtx;
+ctx.setTransform(
+dpr, 0, 0, dpr, 0, 0
+);
+ctx.clearRect(
+0, 0, cssW, cssH
+);
+plotRight =
+Math.min(
+plotRight,
+cssW
+);
+stripY = 0;
+stripH = cssH;
+
+}
+
 /*
  * Метки — к unix-времени (как TV), не к колонкам экрана:
  * при панорамировании «12:00» едет вместе со свечой.
@@ -1142,12 +1234,8 @@ timeRight <= timeLeft
 return;
 }
 
-const stripY =
-cssH - this.timeH;
 const stripW =
 Math.max(0, plotRight - plotLeft);
-const dpr =
-this.layout.dpr || 1;
 
 ctx.save();
 ctx.beginPath();
@@ -1155,20 +1243,23 @@ ctx.rect(
 plotLeft,
 stripY,
 stripW,
-this.timeH
+stripH
 );
 ctx.clip();
 /*
  * Стираем полосу непрозрачно: иначе при панорамировании
  * антиалиас текста даёт «раздвоение» цифр (особенно скринер/zoom).
+ * Внешняя шкала под индикаторами прозрачная: фон даёт полоса вёрстки.
  */
+if(!external){
 ctx.fillStyle = BG;
 ctx.fillRect(
 plotLeft,
 stripY,
 stripW,
-this.timeH
+stripH
 );
+}
 ctx.font = FONT;
 ctx.fillStyle = AXIS;
 ctx.textAlign = "center";
@@ -1176,8 +1267,6 @@ ctx.textBaseline = "top";
 
 const y =
 Math.round((stripY + 4) * dpr) / dpr;
-let lastX =
--Infinity;
 const plotW =
 plotRight - plotLeft;
 let densestStepSec =
@@ -1256,11 +1345,6 @@ continue;
 const x =
 Math.round(rawX * dpr) / dpr;
 
-if(x - lastX < 48){
-continue;
-}
-
-lastX = x;
 ctx.fillText(
 this.formatTime(
 time,
@@ -2025,6 +2109,16 @@ this._onPriceAxis(stage, event)
 this.manualScale = null;
 this.onAutoScale?.();
 this.scheduleRebuild();
+return;
+}
+
+/*
+ * Сброс зума — только по шкале времени.
+ * Двойной клик по свечам (и второй клик отрезка, фибо,
+ * прямоугольника) ставил barSpacing = 8 одним кадром,
+ * и график прыгал крупнее без колеса.
+ */
+if(!this._onTimeAxis(stage, event)){
 return;
 }
 

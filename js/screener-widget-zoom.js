@@ -19,7 +19,7 @@ applyTabletRsiChartOptions,
 SCREENER_PAGE_VISIBLE_BARS,
 SCREENER_PAGE_MAX_BARS,
 SCREENER_PAGE_HISTORY_REQUESTS
-} from "./chart-import.js?v=5e72069f";
+} from "./chart-import.js?v=49ac1bf3";
 
 import {
 isIpadWebViewport
@@ -61,7 +61,7 @@ createScreenerMacdChart,
 isScreenerHistogramOscillator,
 setScreenerAoData,
 setScreenerMacdData
-} from "./screener-widget-oscillator.js?v=859b6111";
+} from "./screener-widget-oscillator.js?v=89a3618b";
 
 import {
 shouldIgnoreTypingHotkey
@@ -1174,7 +1174,7 @@ const {
 mountWidgetTabletChart
 } =
 await import(
-"./tablet-widget-chart.js?v=c85f0349"
+"./tablet-widget-chart.js?v=50b7f7d1"
 );
 
 if(
@@ -2064,6 +2064,7 @@ showAo
 <div class="rsi-level-line hidden" data-rsi-level="30" aria-hidden="true"></div>
 <div class="screener-rsi-chart"></div>
 </div>`}
+<div class="chart-time-scale"></div>
 </div>
 `;
 
@@ -2150,8 +2151,16 @@ chart.applyOptions(
 {
 timeScale:{
 visible:
-false,
+true,
+timeVisible:
+true,
+ticksVisible:
+true,
+borderColor:
+"#1f2937",
 borderVisible:
+true,
+secondsVisible:
 false
 },
 rightPriceScale:{
@@ -2167,16 +2176,12 @@ oscChart.applyOptions(
 {
 timeScale:{
 visible:
-true,
+false,
 timeVisible:
-true,
+false,
 ticksVisible:
-true,
-borderColor:
-"#1f2937",
+false,
 borderVisible:
-true,
-secondsVisible:
 false
 },
 rightPriceScale:{

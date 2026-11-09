@@ -8,7 +8,7 @@ linkPairedChartTimeScales,
 appendFutureWhitespaceBars,
 computeChartFutureMarginBars,
 coinsTfVisibleBars
-} from "../chart-import.js?v=5e72069f";
+} from "../chart-import.js?v=49ac1bf3";
 
 import {
 calculateAwesomeOscillator,
@@ -30,12 +30,8 @@ isCoinsPaneHeightDrag
 } from "../terminal-layout-resize.js?v=671925b0";
 
 import {
-isBottomIndicatorPane
-} from "./indicator-pane-order.js?v=b9987606";
-
-import {
 syncPaneViewportAfterData
-} from "./indicator-pane-viewport.js?v=02d45485";
+} from "./indicator-pane-viewport.js?v=c769839a";
 
 export const AO_PANE_ID =
 "ao";
@@ -224,19 +220,14 @@ if(
 return;
 }
 
-const showTimeScale =
-isBottomIndicatorPane(
-AO_PANE_ID
-);
-
 chart.timeScale().applyOptions(
 {
 visible:
-showTimeScale,
+false,
 timeVisible:
-showTimeScale,
+false,
 ticksVisible:
-showTimeScale
+false
 }
 );
 

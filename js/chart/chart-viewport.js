@@ -546,11 +546,11 @@ linkedChart
 linkedChart.timeScale().applyOptions({
 ...plan.timeOpts,
 visible:
-true,
+false,
 timeVisible:
-true,
+false,
 ticksVisible:
-true,
+false,
 secondsVisible:
 false
 });

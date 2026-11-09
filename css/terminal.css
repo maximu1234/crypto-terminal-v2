@@ -1743,7 +1743,7 @@ body.tablet-chart .price-scale-touch-strip{
   display:block;
   pointer-events:auto;
   z-index:30;
-  bottom:var(--chart-time-scale-height, 28px);
+  bottom:var(--chart-time-scale-height, 0px);
   touch-action:none;
   cursor:ns-resize;
 }
@@ -2259,7 +2259,7 @@ body.tablet-chart #rsi-wrap .rsi-level-line:not(.hidden){
   position:absolute;
   inset:0;
   right:var(--chart-scale-width, 56px);
-  bottom:var(--chart-time-scale-height, 28px);
+  bottom:var(--chart-time-scale-height, 0px);
   z-index:10;
   touch-action:none;
   pointer-events:none;

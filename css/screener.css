@@ -1020,6 +1020,21 @@ min-height:0;
 position:relative;
 }
 
+.screener-widget-body:has(> .chart-time-scale) > .screener-chart,
+.screener-widget-zoom-body:has(> .chart-time-scale) > .screener-chart,
+.screener-widget:has(> .chart-time-scale) > .screener-chart,
+.coins-chart-slot-body:has(> .chart-time-scale) > .screener-chart{
+flex:1 1 auto;
+max-height:none;
+min-height:0;
+}
+
+.coins-chart-slot-body:has(> .chart-time-scale){
+display:flex;
+flex-direction:column;
+min-height:0;
+}
+
 .screener-widget-zoom-body .screener-chart .tablet-probe-touch-layer{
 position:absolute;
 inset:0;

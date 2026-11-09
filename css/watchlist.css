@@ -421,6 +421,12 @@ body.terminal-page .widget-draw-tools{
     max-height:74%;
 }
 
+.widget-chart-body:has(> .chart-time-scale) > .widget-chart-wrap{
+    flex:1 1 auto;
+    max-height:none;
+    min-height:0;
+}
+
 .widget-rsi-wrap{
     position:relative;
     flex:0 0 26%;
@@ -877,7 +883,7 @@ body.tablet-chart .price-alert-badge-delete{
     position:absolute;
     inset:0;
     right:var(--chart-scale-width, 56px);
-    bottom:var(--chart-time-scale-height, 28px);
+    bottom:var(--chart-time-scale-height, 0px);
     z-index:10;
     touch-action:none;
     pointer-events:none;

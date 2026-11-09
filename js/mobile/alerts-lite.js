@@ -8,14 +8,14 @@ import {
   removeAlert,
   formatAlertTicker,
   formatTfLabel
-} from "../alerts.js?v=c9f5f4f1";
+} from "../alerts.js?v=35999a50";
 import {
   initAlertsCloudSync,
   getTelegramChatId
-} from "../alerts-cloud-sync.js?v=849224e8";
+} from "../alerts-cloud-sync.js?v=9c4ced1b";
 import {
   isCloudLoggedIn
-} from "../cloud-sync.js?v=65dec5d9";
+} from "../cloud-sync.js?v=08a0cd01";
 
 export async function initMobileAlertsLite() {
   initAlertsCloudSync();

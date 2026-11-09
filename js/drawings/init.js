@@ -50,7 +50,7 @@ ensureDomChartCrosshair,
 hideDomChartCrosshair,
 positionTabletProbeHorizInStack,
 fullCrosshairOptions
-} from "../chart-import.js?v=5e72069f";
+} from "../chart-import.js?v=49ac1bf3";
 
 import {
 STROKE,
@@ -152,7 +152,7 @@ updateChartRulerLabelEl
 
 import {
 mountTabletDrawInput
-} from "../drawings-tablet-input.js?v=6d782616";
+} from "../drawings-tablet-input.js?v=98c68079";
 
 import {
 cloneDrawingsForUndo,
@@ -161,7 +161,7 @@ createDrawUndoStack
 
 import {
 createDrawDesktopSelection
-} from "./draw-edit-desktop.js?v=0562045e";
+} from "./draw-edit-desktop.js?v=ab7fbd60";
 
 import {
 createDrawingsPersist
@@ -169,15 +169,15 @@ createDrawingsPersist
 
 import {
 createDrawStyleBar
-} from "./draw-style-bar.js?v=18bda169";
+} from "./draw-style-bar.js?v=a4763179";
 
 import {
 createDrawAlertsChart
-} from "./draw-alerts-chart.js?v=8223a927";
+} from "./draw-alerts-chart.js?v=ed548bf1";
 
 import {
 createDrawPlacement
-} from "./draw-placement.js?v=5235ba9f";
+} from "./draw-placement.js?v=54f981d1";
 
 import {
 createDrawTextEditor,
@@ -206,15 +206,15 @@ createBrushPlacement
 
 import {
 createDrawEditInteraction
-} from "./draw-edit-interaction.js?v=be1dd44f";
+} from "./draw-edit-interaction.js?v=88f45aef";
 
 import {
 createDrawChartInput
-} from "./draw-chart-input.js?v=c9609a2d";
+} from "./draw-chart-input.js?v=7ac62c4f";
 
 import {
 createDrawPriceScale
-} from "./draw-price-scale.js?v=732fa8ec";
+} from "./draw-price-scale.js?v=5ddea448";
 
 import {
 createDrawRedrawLoop
@@ -3453,7 +3453,7 @@ lastChartAlertsPullMs =
 Date.now();
 
 void import(
-"../alerts-cloud-sync.js?v=849224e8"
+"../alerts-cloud-sync.js?v=9c4ced1b"
 ).then(
 ({ pullRegistryFromCloudNow })=>
 pullRegistryFromCloudNow({

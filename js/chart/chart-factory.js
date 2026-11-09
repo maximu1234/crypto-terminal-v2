@@ -30,7 +30,7 @@ liveBarPeriodSec
 
 import {
 withChartLocalTime
-} from "./chart-local-time.js?v=23978500";
+} from "./chart-local-time.js?v=b06bde44";
 
 import {
 attachChartWheelDeadband
@@ -38,7 +38,7 @@ attachChartWheelDeadband
 
 import {
 createCanvasLwChart
-} from "./canvas-lw-host.js?v=b3c4379d";
+} from "./canvas-lw-host.js?v=6d8104d3";
 
 /* time-axis: stable ticks + crisp labels (timefix4) */
 
@@ -255,6 +255,7 @@ priceScaleMode:
 chartOpts?.priceScaleMode,
 axisWidth:
 effectiveChartPriceScaleWidth(),
+timeScaleVisible: true,
 rightMarginRatio: 0.15,
 paint:{
 ...candleSeriesPaint(),
@@ -340,12 +341,12 @@ restoreScreenerViewport,
 applyScreenerZoom,
 tfPeriodSec,
 rsiPlotTimeOffsetSec
-} from "./chart-viewport.js?v=6127482c";
+} from "./chart-viewport.js?v=1a014b72";
 
 import {
 copyVisibleTimeRange,
 tfPeriodSec
-} from "./chart-viewport.js?v=6127482c";
+} from "./chart-viewport.js?v=1a014b72";
 
 
 
@@ -481,13 +482,13 @@ container,
 pane: true,
 priceScaleMode: "regular",
 axisWidth: effectiveChartPriceScaleWidth(),
-timeScaleVisible: true,
+timeScaleVisible: false,
 rightOffsetBars: 24
 }
 ).chart;
 
 chart.timeScale().applyOptions({
-visible: true,
+visible: false,
 rightOffset: 24
 });
 
@@ -661,7 +662,7 @@ px
 
 wrapEl?.style.setProperty(
 "--chart-time-scale-height",
-`${CHART_TIME_SCALE_HEIGHT}px`
+"0px"
 );
 
 document
@@ -689,7 +690,7 @@ document
 ?.style
 .setProperty(
 "--chart-time-scale-height",
-`${CHART_TIME_SCALE_HEIGHT}px`
+"0px"
 );
 
 }
@@ -1420,8 +1421,12 @@ chartEl,
 chart
 );
 
+const scaleVisible =
+chart?.timeScale?.().options?.().visible;
 const timeH =
-readChartTimeScaleHeightPx(
+scaleVisible === false
+? 0
+: readChartTimeScaleHeightPx(
 chartEl
 );
 
@@ -1504,7 +1509,7 @@ if(
 Number.isFinite(
 n
 ) &&
-n >
+n >=
 0
 ){
 return n;
@@ -1627,39 +1632,9 @@ wrapH <
 return wrapH;
 }
 
-let timeScaleH =
-28;
-
-try{
-
-const raw =
-getComputedStyle(
-wrapEl
-).getPropertyValue(
-"--chart-time-scale-height"
-).trim();
-
-if(
-raw.endsWith(
-"px"
-)
-){
-timeScaleH =
-parseFloat(
-raw
-) ||
-timeScaleH;
-}
-
-}catch{
-/* ignore */
-}
-
 return Math.max(
 1,
-wrapH -
-timeScaleH -
-1
+wrapH - 1
 );
 
 }
@@ -1757,7 +1732,7 @@ lineEl.classList.remove(
 export {
 linkChartsCrosshair,
 mountWidgetStackCrosshair
-} from "./chart-crosshair-link.js?v=c986412e";
+} from "./chart-crosshair-link.js?v=659e32f3";
 
 
 

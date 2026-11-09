@@ -6,13 +6,13 @@
 
 import {
 CandleBenchChart
-} from "../canvas-bench/chart.js?v=timefix9";
+} from "../canvas-bench/chart.js?v=timefix14";
 
 import {
 candleIndexAt,
 candleOpenAtIndex,
 candleX
-} from "../canvas-bench/live-plan.js?v=timefix10";
+} from "../canvas-bench/live-plan.js?v=timefix13";
 
 import {
 PRICE_SCALE_LOG,
@@ -27,7 +27,7 @@ scaleLabelTextColorForBackground
 
 import {
 formatCanvasAxisTime
-} from "./chart-local-time.js?v=23978500";
+} from "./chart-local-time.js?v=b06bde44";
 
 import {
 fractionalIndexAtTime,
@@ -571,6 +571,28 @@ y: prevY + t * (nextY - prevY)
 
 }
 
+function findChartTimeAxisEl(
+container
+){
+
+if(
+typeof container?.closest !==
+"function"
+){
+return null;
+}
+
+const root =
+container.closest(
+"#charts-plot-panes, .screener-widget-zoom-body, .screener-widget-body, .widget-chart-body, .coins-chart-slot-body, #charts-stack-panes, .screener-widget"
+);
+
+return root?.querySelector(
+":scope > .chart-time-scale"
+) || null;
+
+}
+
 export function createCanvasLwChart(
 container,
 chartOpts = {}
@@ -618,7 +640,19 @@ if(Number.isFinite(chartOpts.rightMarginRatio)){
 engine.rightMarginRatio = chartOpts.rightMarginRatio;
 }
 
-if(chartOpts.timeScaleVisible){
+const timeAxisEl =
+chartOpts.timeAxisEl ||
+(
+chartOpts.timeScaleVisible
+? findChartTimeAxisEl(container)
+: null
+);
+
+if(timeAxisEl){
+engine.bindExternalTimeAxis(timeAxisEl);
+engine.formatTime = formatAxisTime;
+engine.timeH = 0;
+}else if(chartOpts.timeScaleVisible){
 engine.timeH = 22;
 engine.formatTime = formatAxisTime;
 }
@@ -2642,8 +2676,11 @@ options.maxZoomOutBars
 }
 
 if(options?.visible === true){
-engine.timeH = 22;
 engine.formatTime = formatAxisTime;
+engine.timeH =
+engine.externalTimeCanvas
+? 0
+: 22;
 }
 
 if(options?.visible === false){
@@ -2713,7 +2750,8 @@ options(){
 return {
 rightOffset: engine.rightOffsetBars,
 barSpacing: engine.barSpacing,
-maxZoomOutBars: engine.maxZoomOutBars
+maxZoomOutBars: engine.maxZoomOutBars,
+visible: engine.timeH > 0
 };
 }
 };

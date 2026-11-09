@@ -28,14 +28,7 @@ test("formatCanvasAxisTime mirrors TradingView hierarchy", () => {
 
   assert.match(formatCanvasAxisTime(localNoon, 3600, "en-GB"), /^\d{2}:\d{2}$/);
   assert.equal(formatCanvasAxisTime(localMidnight, 86400, "en-GB"), "9");
-  assert.match(
-    formatCanvasAxisTime(localMidnight, 14 * 86400, "en-GB"),
-    /9/
-  );
-  assert.match(
-    formatCanvasAxisTime(localMidnight, 14 * 86400, "en-GB"),
-    /Nov|ноя/i
-  );
+  assert.equal(formatCanvasAxisTime(localMidnight, 14 * 86400, "en-GB"), "9");
   assert.match(formatCanvasAxisTime(monthStart, 86400, "en-GB"), /Nov|ноя/i);
   assert.equal(formatCanvasAxisTime(yearStart, 86400, "en-GB"), "2026");
 });

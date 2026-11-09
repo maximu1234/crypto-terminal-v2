@@ -19,7 +19,7 @@ hideTabletProbeHorizInStack
 import {
 chartPlotMetrics,
 isClientOnChartPriceScale
-} from "./chart-factory.js?v=cb6b61e8";
+} from "./chart-factory.js?v=cf59edf8";
 
 export function linkChartsCrosshair({
 mainChart,
@@ -2601,7 +2601,15 @@ if(
 return ()=>{};
 }
 
+const timeStack =
+stackEl ||
+wrapEl?.closest?.(
+"#charts-plot-panes, #charts-stack-panes, .screener-widget-zoom-body, .screener-widget-body, .widget-chart-body, .coins-chart-slot-body, .screener-widget"
+);
 const timeHost =
+timeStack?.querySelector(
+":scope > .chart-time-scale"
+) ||
 linkedWrapEl ||
 wrapEl;
 const timeLabelEl =

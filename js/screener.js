@@ -49,7 +49,7 @@ updateRsiLevelLinesLayout,
 linkPairedChartTimeScales,
 SCREENER_VISIBLE_BARS,
 SCREENER_MAX_BARS
-} from "./chart-import.js?v=5e72069f";
+} from "./chart-import.js?v=49ac1bf3";
 
 import {
 isIpadWebViewport
@@ -85,7 +85,7 @@ createTickerUiBatcher
 
 import {
 mountReleaseMarker
-} from "./release-marker.js?v=a3f4d2f9";
+} from "./release-marker.js?v=50cb2a1d";
 
 import {
 saveScreenerState,
@@ -104,7 +104,7 @@ FAVORITES_BY_EXCHANGE_KEY
 
 import {
 ensureCloudReady
-} from "./auth-ui.js?v=eccc3f9e";
+} from "./auth-ui.js?v=a5ed0e0e";
 
 import {
 ensureSettled,
@@ -114,7 +114,7 @@ withTimeout
 import {
 persistFavoritesToCloud,
 onFavoritesRemoteUpdate
-} from "./cloud-sync.js?v=65dec5d9";
+} from "./cloud-sync.js?v=08a0cd01";
 
 import {
 attachSymbolAutocomplete,
@@ -144,7 +144,7 @@ getScreenerWidgetOscillator,
 isScreenerHistogramOscillator,
 setScreenerAoData,
 setScreenerMacdData
-} from "./screener-widget-oscillator.js?v=859b6111";
+} from "./screener-widget-oscillator.js?v=89a3618b";
 
 const SCREENER_MAX_CONCURRENT_CHART_LOADS =
 4;
@@ -176,7 +176,7 @@ if(
 ){
 screenerZoomMountPromise =
 import(
-"./screener-widget-zoom.js?v=7a345fce"
+"./screener-widget-zoom.js?v=a0f5e7ea"
 ).then(
 mod=>{
 refreshZoomFavoriteUi =
@@ -986,7 +986,7 @@ oscKind
 if(
 !showOscillator
 ){
-return `<div class="screener-chart"></div>`;
+return `<div class="screener-chart"></div><div class="chart-time-scale"></div>`;
 }
 
 if(
@@ -1000,6 +1000,7 @@ return `
 <div class="screener-rsi-wrap screener-rsi-pending">
 <div class="screener-rsi-chart"></div>
 </div>
+<div class="chart-time-scale"></div>
 </div>`;
 }
 
@@ -1013,6 +1014,7 @@ return `
 <div class="rsi-level-line hidden" data-rsi-level="30" aria-hidden="true"></div>
 <div class="screener-rsi-chart"></div>
 </div>
+<div class="chart-time-scale"></div>
 </div>`;
 
 }
@@ -1445,7 +1447,7 @@ listInViewWidgetSymbols,
 loadWidgetChart,
 observeWidgetKlineVisibility,
 updateWidgetMeta
-} from "./screener-widgets.js?v=b9dfd2c2";
+} from "./screener-widgets.js?v=cc2e985b";
 
 import {
 startMarketDensitySnapshot

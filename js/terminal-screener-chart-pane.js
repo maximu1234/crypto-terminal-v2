@@ -11,7 +11,6 @@ linkPairedChartTimeScales,
 updateRsiBandLayout,
 updateRsiLevelLinesLayout,
 applyRsiFixedPriceScale,
-CHART_TIME_SCALE_HEIGHT,
 SCREENER_MAX_BARS,
 SCREENER_VISIBLE_BARS,
 applyCoinsChartViewport,
@@ -19,11 +18,11 @@ appendFutureWhitespaceBars,
 computeChartFutureMarginBars,
 coinsTfVisibleBars,
 linkChartsCrosshair
-} from "./chart-import.js?v=5e72069f";
+} from "./chart-import.js?v=49ac1bf3";
 
 import {
 readCoinsPrefs
-} from "./terminal/terminal-prefs.js?v=645a563d";
+} from "./terminal/terminal-prefs.js?v=447cdc9e";
 
 import {
 calculateRSI,
@@ -58,7 +57,7 @@ alignCandlesToTradePrice
 
 import {
 mountWidgetDomCrosshair
-} from "./chart-widget-host.js?v=331d8755";
+} from "./chart-widget-host.js?v=5d67c7b4";
 
 function buildBodyHtml(
 showRsi
@@ -67,7 +66,7 @@ showRsi
 if(
 !showRsi
 ){
-return `<div class="screener-chart"></div>`;
+return `<div class="screener-chart"></div><div class="chart-time-scale"></div>`;
 }
 
 return `
@@ -81,7 +80,8 @@ return `
 <div class="rsi-level-line hidden" data-rsi-level="50" aria-hidden="true"></div>
 <div class="rsi-level-line hidden" data-rsi-level="30" aria-hidden="true"></div>
 <div class="screener-rsi-chart"></div>
-</div>`;
+</div>
+<div class="chart-time-scale"></div>`;
 
 }
 
@@ -362,7 +362,7 @@ rsiWrapEl.style.setProperty(
 
 rsiWrapEl.style.setProperty(
 "--chart-time-scale-height",
-`${CHART_TIME_SCALE_HEIGHT}px`
+"0px"
 );
 
 const wrapRect =
@@ -460,19 +460,8 @@ return;
 chart.applyOptions({
 timeScale:{
 visible:
-false,
+true,
 borderVisible:
-false,
-timeVisible:
-false,
-ticksVisible:
-false
-}
-});
-
-rsiChart.applyOptions({
-timeScale:{
-visible:
 true,
 timeVisible:
 true,
@@ -480,9 +469,20 @@ ticksVisible:
 true,
 borderColor:
 "#1f2937",
-borderVisible:
-true,
 secondsVisible:
+false
+}
+});
+
+rsiChart.applyOptions({
+timeScale:{
+visible:
+false,
+timeVisible:
+false,
+ticksVisible:
+false,
+borderVisible:
 false
 },
 rightPriceScale:{
