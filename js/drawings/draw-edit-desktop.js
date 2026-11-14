@@ -5,7 +5,7 @@
 
 import {
 isCoarseTouchViewport
-} from "../chart-import.js?v=49ac1bf3";
+} from "../chart-import.js?v=5ad6d01c";
 
 import {
 isFibType

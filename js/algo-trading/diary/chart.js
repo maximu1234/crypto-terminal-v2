@@ -21,7 +21,7 @@ registerCandleSeries
 
 import {
 createCanvasLwChart
-} from "../../chart/canvas-lw-host.js?v=6d8104d3";
+} from "../../chart/canvas-lw-host.js?v=4b7f6036";
 
 import {
 candleAlignSec,
@@ -30,7 +30,7 @@ markerForExecutionSide
 
 import {
 diaryFetchKlineBatch
-} from "./chart-klines.js?v=9940a141";
+} from "./chart-klines.js?v=e3538c02";
 
 export const DIARY_CHART_TFS =
 Object.freeze([

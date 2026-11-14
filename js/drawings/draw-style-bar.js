@@ -9,7 +9,7 @@ parseDrawColor
 
 import {
 isCoarseTouchViewport
-} from "../chart-import.js?v=49ac1bf3";
+} from "../chart-import.js?v=5ad6d01c";
 
 import {
 STROKE,
@@ -59,13 +59,13 @@ calcPositionVolumeUsd
 
 import {
 applyPositionVolumeFromDrawing
-} from "../trade-volume-presets.js?v=ad7e2a42";
+} from "../trade-volume-presets.js?v=81467fbd";
 
 import {
 stashDrawingStopsFromDrawing,
 clearDrawingStopsPending,
 hasDrawingStopsPending
-} from "../trade-auto-stops.js?v=7e8b917f";
+} from "../trade-auto-stops.js?v=45cfe77e";
 
 import {
 touchShapeRevision
@@ -81,14 +81,14 @@ listTemplatesForType,
 mergeStyleSnapshot,
 saveNamedTemplate,
 deleteTemplateAtIndex
-} from "./draw-templates.js?v=d92bb01a";
+} from "./draw-templates.js?v=f38d2f41";
 
 import {
 isFvpType,
 copyFvpStyleToShape,
 createFvpToolDefaults,
 FVP_TOOL_DEFAULTS_VERSION
-} from "./fixed-volume-profile.js?v=77a3231c";
+} from "./fixed-volume-profile.js?v=18386d65";
 
 import {
 fvpSettingsHtml,
@@ -96,7 +96,7 @@ fillFvpSettingsPanel,
 readFvpSettingsPanel,
 bindFvpSettingsPanel,
 closeFvpColorMenu
-} from "./fixed-volume-profile-settings.js?v=9f7d5893";
+} from "./fixed-volume-profile-settings.js?v=1483fbe9";
 
 import {
 rectSettingsHtml,

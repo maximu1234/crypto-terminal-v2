@@ -1,14 +1,14 @@
 import {
 loadMarketHistory,
 getActiveExchangeId
-} from "./market-api.js?v=a65f5c56";
+} from "./market-api.js?v=6df7e397";
 
 import {
 peekHistoryCache,
 putHistoryCache,
 mergeCandleRows,
 logicalIndexShift
-} from "./market-history-cache.js?v=dedca4e1";
+} from "./market-history-cache.js?v=2e3913a7";
 
 import {
 createScreenerChart,
@@ -24,7 +24,7 @@ mountWidgetStackCrosshair,
 SCREENER_PAGE_VISIBLE_BARS,
 SCREENER_PAGE_MAX_BARS,
 SCREENER_PAGE_HISTORY_REQUESTS
-} from "./chart-import.js?v=49ac1bf3";
+} from "./chart-import.js?v=5ad6d01c";
 
 import {
 isIpadWebViewport
@@ -33,7 +33,7 @@ isIpadWebViewport
 import {
 subscribeKline,
 bindLiveCandleCatchup
-} from "./market-ws.js?v=22428043";
+} from "./market-ws.js?v=2d187b5c";
 
 import {
 ensureOhlcRollover,
@@ -54,7 +54,7 @@ SCREENER_WIDGET_OSCILLATOR_MACD,
 createScreenerAoChart,
 createScreenerMacdChart,
 isScreenerHistogramOscillator
-} from "./screener-widget-oscillator.js?v=89a3618b";
+} from "./screener-widget-oscillator.js?v=918549ce";
 
 let deps = null;
 

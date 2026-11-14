@@ -104,12 +104,12 @@ persistBotTickerBookToMain
 } from "./bot-ticker-book.js?v=8b12c45e";
 import {
 isMultichartRemoteControlHost
-} from "./bot-remote-client.js?v=9e294d90";
+} from "./bot-remote-client.js?v=de024fa5";
 import {
 mountRemoteSessionLogsEntry,
 mountRemoteWatchlistsPushEntry,
 mountLocalSessionLogsEntry
-} from "./bot-session-logs-viewer.js?v=b51b2dce";
+} from "./bot-session-logs-viewer.js?v=10029437";
 import {
 rebalanceTpShares
 } from "./pattern-trade-stats-partial.js?v=68baa161";
@@ -1058,7 +1058,7 @@ applyRunBtn();
 );
 
 void import(
-"./optimize-universe-background.js?v=ce8a0c72"
+"./optimize-universe-background.js?v=49350541"
 ).then(
 m=>
 m.stopAlgoOptimizeUniverseJob?.()
@@ -5087,7 +5087,7 @@ ALGO_ANALYSIS_BOT_PATTERN_12
 )
 ){
 void import(
-"./optimize-universe-background.js?v=ce8a0c72"
+"./optimize-universe-background.js?v=49350541"
 ).then(
 m=>
 m.stopAlgoOptimizeUniverseJob?.()

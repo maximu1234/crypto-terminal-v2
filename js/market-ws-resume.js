@@ -5,7 +5,7 @@
  */
 import {
 forceReconnectPublicSocket
-} from "./ws.js?v=a3fc2075";
+} from "./ws.js?v=9777c7d0";
 
 import {
 resetBingxWs
@@ -14,7 +14,7 @@ resetBingxWs
 import {
 getActiveExchangeId,
 loadMarketHistory
-} from "./market-api.js?v=a65f5c56";
+} from "./market-api.js?v=6df7e397";
 
 import {
 lastOhlcBar,

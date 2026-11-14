@@ -2,11 +2,11 @@ import {
 loadBybitHistory,
 loadBybitSymbols,
 loadBybitOrderbook
-} from "../../api.js?v=d2a5a6fe";
+} from "../../api.js?v=efc858e5";
 
 import {
 fetchBybitBulk
-} from "../../bybit-fetch.js?v=a72b26f0";
+} from "../../bybit-fetch.js?v=10968585";
 
 import {
 buildCoinsMarketLists
@@ -14,7 +14,7 @@ buildCoinsMarketLists
 
 import {
 pingBybitPublicFromAdapter
-} from "./ping.js?v=a4870c58";
+} from "./ping.js?v=1b081acc";
 
 function isBybitRateLimit(
 json

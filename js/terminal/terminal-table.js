@@ -18,18 +18,18 @@ import {
 isActiveRealtimeMarketDataset,
 isExchangeTradingEnabled,
 peekMarketQuote
-} from "../market-api.js?v=a65f5c56";
+} from "../market-api.js?v=6df7e397";
 
 import {
 connectKlineStream,
 subscribeTicker,
 bindLiveCandleCatchup
-} from "../market-ws.js?v=22428043";
+} from "../market-ws.js?v=2d187b5c";
 
 import {
 connectTickerStream,
 fetchTickersInto
-} from "../tickers.js?v=094c36f5";
+} from "../tickers.js?v=cc078df9";
 
 import {
 createTickerUiBatcher
@@ -37,7 +37,7 @@ createTickerUiBatcher
 
 import {
 processAlertCandle
-} from "../alert-monitor.js?v=ea3e66c5";
+} from "../alert-monitor.js?v=720e31df";
 
 import {
 getFavoriteGroup,
@@ -100,7 +100,7 @@ isTradePage
 ){
 const tradePositions =
 await import(
-"../trade-open-positions.js?v=2eea6d5a"
+"../trade-open-positions.js?v=c9933838"
 );
 hasOpenPosition =
 tradePositions.hasOpenPosition;

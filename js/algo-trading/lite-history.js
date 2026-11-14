@@ -8,10 +8,10 @@
 import {
   loadMarketHistory,
   getActiveExchangeId
-} from "../market-api.js?v=a65f5c56";
+} from "../market-api.js?v=6df7e397";
 import {
   klineGapFillEnds
-} from "../kline-history-pages.js?v=f9dac656";
+} from "../kline-history-pages.js?v=c40d8e78";
 
 const PAGE_BARS = 1000;
 const PAGE_ATTEMPTS = 3;

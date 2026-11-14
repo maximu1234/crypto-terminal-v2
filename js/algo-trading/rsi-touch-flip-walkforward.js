@@ -5,7 +5,7 @@
  */
 import {
   rsiTouchFlipChartDays
-} from "./rsi-touch-flip-mtf.js?v=450e7571";
+} from "./rsi-touch-flip-mtf.js?v=7ca82d9a";
 import {
   RSI_TOUCH_FLIP_TF_OPTIONS
 } from "./rsi-touch-flip-prefs.js?v=f6c3ff87";

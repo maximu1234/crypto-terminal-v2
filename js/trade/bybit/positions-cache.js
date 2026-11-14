@@ -5,7 +5,7 @@ import {
 maybeApplyAutoStopsForNewPosition,
 clearDismissedStops,
 isStopDismissed
-} from "./auto-stops.js?v=49a27c35";
+} from "./auto-stops.js?v=e9ae48ec";
 
 import {
 tryApplyDrawingStopsPending,
@@ -36,6 +36,12 @@ new Map();
 
 const recentlyClosedUntilBySymbol =
 new Map();
+
+const restOmittedUntilBySymbol =
+new Map();
+
+const REST_OMITTED_HOLD_MS =
+60000;
 
 let positionsDispatchRaf =
 0;
@@ -852,6 +858,99 @@ activeKeys
 
 }
 
+function positionCacheKey(
+row
+){
+
+const policy =
+getTradeConfig();
+
+return typeof policy.positionMapKey ===
+"function"
+? policy.positionMapKey(
+row
+)
+: normalizeSymbol(
+row?.symbol
+);
+
+}
+
+function noteRestPositionSnapshot(
+rows
+){
+
+const now =
+Date.now();
+const present =
+new Set();
+
+for(
+const row of rows ||
+[]
+){
+
+const key =
+positionCacheKey(
+row
+);
+
+if(
+key
+){
+present.add(
+key
+);
+}
+
+}
+
+for(
+const [
+key,
+until
+] of restOmittedUntilBySymbol
+){
+
+if(
+until <=
+now
+){
+restOmittedUntilBySymbol.delete(
+key
+);
+}
+
+}
+
+for(
+const key of cacheBySymbol.keys()
+){
+
+if(
+!present.has(
+key
+)
+){
+restOmittedUntilBySymbol.set(
+key,
+now +
+REST_OMITTED_HOLD_MS
+);
+}
+
+}
+
+for(
+const key of present
+){
+restOmittedUntilBySymbol.delete(
+key
+);
+}
+
+}
+
 function applyPositionsList(
 positions,
 options = {}
@@ -865,20 +964,27 @@ const row of positions ||
 []
 ){
 
-const policy =
-getTradeConfig();
 const key =
-typeof policy.positionMapKey ===
-"function"
-? policy.positionMapKey(
+positionCacheKey(
 row
-)
-: normalizeSymbol(
-row?.symbol
 );
 
 if(
 !key
+){
+continue;
+}
+
+if(
+options.fromStream &&
+!row?._optimistic &&
+(
+restOmittedUntilBySymbol.get(
+key
+) ||
+0
+) >
+Date.now()
 ){
 continue;
 }
@@ -1494,7 +1600,11 @@ options = {}
 
 applyPositionsList(
 positions,
-options
+{
+...options,
+fromStream:
+true
+}
 );
 
 }
@@ -1593,6 +1703,11 @@ return result;
 
 lastPositionsSyncError =
 null;
+
+noteRestPositionSnapshot(
+result.positions ||
+[]
+);
 
 applyPositionsList(
 result.positions ||

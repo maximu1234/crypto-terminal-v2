@@ -1,6 +1,6 @@
 import {
 symbolListSignature
-} from "./api.js?v=d2a5a6fe";
+} from "./api.js?v=efc858e5";
 
 import {
 loadMarketHistory,
@@ -10,14 +10,14 @@ peekMarketSymbolsCache,
 getActiveExchangeDefinition,
 getActiveExchangeId,
 EXCHANGE_CHANGED_EVENT
-} from "./market-api.js?v=a65f5c56";
+} from "./market-api.js?v=6df7e397";
 
 import {
 peekHistoryCache,
 putHistoryCache,
 mergeCandleRows,
 logicalIndexShift
-} from "./market-history-cache.js?v=dedca4e1";
+} from "./market-history-cache.js?v=2e3913a7";
 
 import {
 openChromeSurface
@@ -49,7 +49,7 @@ updateRsiLevelLinesLayout,
 linkPairedChartTimeScales,
 SCREENER_VISIBLE_BARS,
 SCREENER_MAX_BARS
-} from "./chart-import.js?v=49ac1bf3";
+} from "./chart-import.js?v=5ad6d01c";
 
 import {
 isIpadWebViewport
@@ -63,7 +63,7 @@ alignRsiWithCandleTimes
 import {
 subscribeKline,
 bindLiveCandleCatchup
-} from "./market-ws.js?v=22428043";
+} from "./market-ws.js?v=2d187b5c";
 
 import {
 ensureOhlcRollover,
@@ -77,7 +77,7 @@ paintLiveOhlcSeries
 import {
 connectTickerStream,
 fetchTickersInto
-} from "./tickers.js?v=094c36f5";
+} from "./tickers.js?v=cc078df9";
 
 import {
 createTickerUiBatcher
@@ -85,7 +85,7 @@ createTickerUiBatcher
 
 import {
 mountReleaseMarker
-} from "./release-marker.js?v=50cb2a1d";
+} from "./release-marker.js?v=8f105b41";
 
 import {
 saveScreenerState,
@@ -104,7 +104,7 @@ FAVORITES_BY_EXCHANGE_KEY
 
 import {
 ensureCloudReady
-} from "./auth-ui.js?v=a5ed0e0e";
+} from "./auth-ui.js?v=7839de5f";
 
 import {
 ensureSettled,
@@ -114,12 +114,12 @@ withTimeout
 import {
 persistFavoritesToCloud,
 onFavoritesRemoteUpdate
-} from "./cloud-sync.js?v=08a0cd01";
+} from "./cloud-sync.js?v=523bd639";
 
 import {
 attachSymbolAutocomplete,
 preloadTradingSymbols
-} from "./symbol-autocomplete.js?v=29ddbb1a";
+} from "./symbol-autocomplete.js?v=663ccef3";
 
 import {
 mountQwertyKeyInput,
@@ -144,7 +144,7 @@ getScreenerWidgetOscillator,
 isScreenerHistogramOscillator,
 setScreenerAoData,
 setScreenerMacdData
-} from "./screener-widget-oscillator.js?v=89a3618b";
+} from "./screener-widget-oscillator.js?v=918549ce";
 
 const SCREENER_MAX_CONCURRENT_CHART_LOADS =
 4;
@@ -176,7 +176,7 @@ if(
 ){
 screenerZoomMountPromise =
 import(
-"./screener-widget-zoom.js?v=a0f5e7ea"
+"./screener-widget-zoom.js?v=fd18a382"
 ).then(
 mod=>{
 refreshZoomFavoriteUi =
@@ -1447,7 +1447,7 @@ listInViewWidgetSymbols,
 loadWidgetChart,
 observeWidgetKlineVisibility,
 updateWidgetMeta
-} from "./screener-widgets.js?v=cc2e985b";
+} from "./screener-widgets.js?v=0b976320";
 
 import {
 startMarketDensitySnapshot
@@ -2604,7 +2604,7 @@ setStatus(
 true
 );
 
-void import("./bybit-network-ui.js?v=422fbeb0").then(m=>{
+void import("./bybit-network-ui.js?v=81e45a4d").then(m=>{
 m.showBybitNetworkIssue(err);
 });
 
@@ -2787,7 +2787,7 @@ err
 screenerMarketLoadFailed = true;
 allSymbols = [];
 
-void import("./bybit-network-ui.js?v=422fbeb0").then(m=>{
+void import("./bybit-network-ui.js?v=81e45a4d").then(m=>{
 m.showBybitNetworkIssue(err);
 });
 

@@ -105,6 +105,34 @@ export async function mapWithConcurrency(items, concurrency, fn){
  * @param {number} [pageBars=1000]
  * @returns {number[]}
  */
+/** Дыра шире этого не пишется в кэш: следующий заход скачает ряд заново. */
+export const KLINE_CACHE_MAX_GAP_BARS =
+30;
+
+export function largestKlineGapBars(candles, tf){
+  const tfMs = klineTfToMs(tf);
+  const rows = Array.isArray(candles) ? candles : [];
+  if(!(tfMs > 0) || rows.length < 2){
+    return 0;
+  }
+  const tfSec = tfMs / 1000;
+  let max = 0;
+  for(let i = 1; i < rows.length; i++){
+    const prev = Number(rows[i - 1]?.time);
+    const next = Number(rows[i]?.time);
+    if(!Number.isFinite(prev) || !Number.isFinite(next)){
+      continue;
+    }
+    const prevSec = prev > 1e12 ? prev / 1000 : prev;
+    const nextSec = next > 1e12 ? next / 1000 : next;
+    const missing = (nextSec - prevSec) / tfSec - 1;
+    if(missing > max){
+      max = missing;
+    }
+  }
+  return max;
+}
+
 export function klineGapFillEnds(candles, tf, pageBars = 1000){
   const tfMs = klineTfToMs(tf);
   const rows = Array.isArray(candles) ? candles : [];

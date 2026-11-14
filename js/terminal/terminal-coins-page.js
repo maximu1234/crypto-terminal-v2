@@ -11,7 +11,7 @@ lastOhlcClose,
 quoteCandlesToBtc,
 setBtcQuoteActive,
 syncBtcQuoteLive
-} from "../chart/btc-quote.js?v=7996cc43";
+} from "../chart/btc-quote.js?v=2aa65b9c";
 
 /**
  * Closure slice. `host` is the surrounding function's bindings.
@@ -4435,7 +4435,7 @@ if(
 ){
 host.terminalAlgoEarlyT3ListMod =
 await import(
-"../algo-trading/terminal-early-t3-list.js?v=415758d0"
+"../algo-trading/terminal-early-t3-list.js?v=bfacec1d"
 );
 }
 host.terminalAlgoEarlyT3ListMod.mountTerminalAlgoEarlyT3List();

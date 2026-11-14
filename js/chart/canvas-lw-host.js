@@ -6,7 +6,7 @@
 
 import {
 CandleBenchChart
-} from "../canvas-bench/chart.js?v=timefix14";
+} from "../canvas-bench/chart.js?v=timefix17";
 
 import {
 candleIndexAt,
@@ -3040,6 +3040,9 @@ return timeScale;
 resize(width, height){
 chart.applyOptions({ width, height });
 engine.scheduleRebuild();
+},
+flushLayout(){
+engine.flushRebuild();
 },
 remove(){
 try{

@@ -5,7 +5,7 @@
 import {
 hideDomChartCrosshair,
 positionTabletProbeHorizInStack
-} from "../chart-import.js?v=49ac1bf3";
+} from "../chart-import.js?v=5ad6d01c";
 
 import {
 ensureFibLevelsVisible,
@@ -57,7 +57,7 @@ normalizePattern12TpLevels
 import {
 isFvpType,
 copyFvpStyleToShape
-} from "./fixed-volume-profile.js?v=77a3231c";
+} from "./fixed-volume-profile.js?v=18386d65";
 
 import {
 constrainPointerToAxis,

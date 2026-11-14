@@ -3,12 +3,12 @@
  */
 import {
 isExchangeTradingEnabled
-} from "../../market-api.js?v=a65f5c56";
+} from "../../market-api.js?v=6df7e397";
 
 import {
 seriesPriceToUsdt,
 usdtPriceToSeries
-} from "../../chart/btc-quote.js?v=7996cc43";
+} from "../../chart/btc-quote.js?v=2aa65b9c";
 
 import {
 maskTradeDisplay

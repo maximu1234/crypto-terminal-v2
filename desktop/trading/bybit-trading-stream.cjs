@@ -84,6 +84,10 @@ let seedInflight =
 null;
 let seedRetryTimer =
 null;
+let positionSeedTimer =
+null;
+const POSITION_SEED_MS =
+15000;
 let reconnectDelayMs =
 1000;
 
@@ -1312,9 +1316,53 @@ null;
 
 }
 
+function startPositionSeedTimer(){
+
+if(
+positionSeedTimer
+){
+return;
+}
+
+positionSeedTimer =
+setInterval(
+()=>{
+
+if(
+seedRetryTimer ||
+seedInflight
+){
+return;
+}
+
+void seedFromRest();
+
+},
+POSITION_SEED_MS
+);
+
+}
+
+function stopPositionSeedTimer(){
+
+if(
+!positionSeedTimer
+){
+return;
+}
+
+clearInterval(
+positionSeedTimer
+);
+positionSeedTimer =
+null;
+
+}
+
 function stopTradingStream(){
 
 stopSocket();
+stopPositionSeedTimer();
 
 if(
 reconcileTimer
@@ -1409,6 +1457,7 @@ if(
 !getStreamStatus().configured
 ){
 stopSocket();
+stopPositionSeedTimer();
 streamActiveExchangeId =
 null;
 return;
@@ -1430,6 +1479,7 @@ streamActiveExchangeId =
 exchangeId;
 
 void seedFromRest();
+startPositionSeedTimer();
 
 socketCtl =
 streamModules.connectPrivateWs({

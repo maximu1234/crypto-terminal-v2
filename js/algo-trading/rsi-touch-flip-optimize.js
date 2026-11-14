@@ -13,7 +13,7 @@ import {
   rsiTouchFlipMinTestTrades,
   rsiTouchFlipTestVerdict,
   rsiTouchFlipTrainTestSplit
-} from "./rsi-touch-flip-walkforward.js?v=2df2b8ca";
+} from "./rsi-touch-flip-walkforward.js?v=b45eb6ca";
 
 export function rsiTouchFlipIntRange(from, to) {
   const start = Math.round(Number(from));

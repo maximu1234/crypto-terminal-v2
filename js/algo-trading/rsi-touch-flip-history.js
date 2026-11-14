@@ -5,10 +5,10 @@
  */
 import {
   ALGO_TICKER_SCAN_HISTORY_REQUESTS
-} from "./ticker-scanner.js?v=8e85c0f3";
+} from "./ticker-scanner.js?v=bc300a6d";
 import {
   rsiTouchFlipTfPeriodSec
-} from "./rsi-touch-flip-mtf.js?v=450e7571";
+} from "./rsi-touch-flip-mtf.js?v=7ca82d9a";
 
 export const RSI_TOUCH_FLIP_HISTORY_PAGE_BARS = 1000;
 

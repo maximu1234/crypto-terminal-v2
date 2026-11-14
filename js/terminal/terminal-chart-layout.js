@@ -7,7 +7,7 @@ computeChartFutureMarginBars,
 computeCoinsChartViewportPlan,
 equalizeLinkedPanePriceScales,
 syncLinkedChartTimescales
-} from "../chart-import.js?v=49ac1bf3";
+} from "../chart-import.js?v=5ad6d01c";
 
 import {
 terminalVisibleBars,
@@ -16,7 +16,7 @@ TERMINAL_VISIBLE_BARS
 
 import {
 quoteCandlesToBtc
-} from "../chart/btc-quote.js?v=7996cc43";
+} from "../chart/btc-quote.js?v=2aa65b9c";
 
 import {
 isChartLayoutReady,
@@ -834,6 +834,72 @@ range
 
 }
 
+function flushChartLayouts(){
+
+const {
+chart,
+getChartIndicators,
+getRsiChart
+} =
+ctx();
+
+const charts =
+[];
+
+if(
+chart?.flushLayout
+){
+charts.push(
+chart
+);
+}
+
+for(
+const item of getChartIndicators?.()?.getLinkedPaneCharts?.() ||
+[]
+){
+
+if(
+item?.flushLayout &&
+!charts.includes(
+item
+)
+){
+charts.push(
+item
+);
+}
+
+}
+
+const rsi =
+getRsiChart?.();
+
+if(
+rsi?.flushLayout &&
+!charts.includes(
+rsi
+)
+){
+charts.push(
+rsi
+);
+}
+
+for(
+const item of charts
+){
+
+try{
+item.flushLayout();
+}catch{
+/* chart disposed */
+}
+
+}
+
+}
+
 export function resizeCharts(){
 
 const dragging =
@@ -882,7 +948,7 @@ getCandles?.() ||
 if(
 !chart ||
 !candles.length ||
-dragging
+pinTime
 ){
 return;
 }
@@ -1000,6 +1066,19 @@ dragging;
 syncLinkedBarSpacing();
 
 /*
+ * Свечи и панели индикаторов должны перерисоваться в этом же кадре.
+ * Иначе рисунки и линии индикатора едут по старому размеру и дёргаются.
+ */
+flushChartLayouts();
+
+/*
+ * Полоса 30/70 — отдельные div поверх холста. До пересчёта шкалы
+ * priceToCoordinate ещё от старой высоты, и блок прыгает, пока линия RSI
+ * уже на новом кадре. Ставим полосу после flush.
+ */
+layoutRsiBand?.();
+
+/*
  * Высота графика меняется на каждом кадре, пока тянут RSI / Volume / AO / MACD.
  * scheduleRedraw с двойным rAF сбрасывается следующим resize и фигуры
  * стоят до pointerup, потом прыгают. Здесь рисуем в том же кадре, что и свечи.
@@ -1035,11 +1114,12 @@ return;
 }
 
 /*
- * Высота индикатора уже стоит в CSS. Если ждать rAF, шкала времени
- * кадр живёт в старом холсте и рябит. Пока тянут — размер в этом же кадре.
+ * Высота индикатора и ширина списка уже стоят в CSS. Если ждать rAF,
+ * рисунки и линии индикатора кадр живут в старом холсте и дёргаются.
+ * Пока тянут — размер в этом же кадре.
  */
 if(
-isCoinsPaneHeightDrag()
+isTerminalLayoutDragging()
 ){
 
 if(

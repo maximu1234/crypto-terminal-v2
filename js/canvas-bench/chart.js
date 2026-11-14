@@ -450,6 +450,20 @@ x <= this.layout.plotRight
 
 }
 
+flushRebuild(){
+
+/*
+ * Тянут границу панели: rAF оставляет старый кадр, а рисунки
+ * уже в новом размере — линии прыгают, пока кнопку не отпустят.
+ */
+this._rebuildEpoch =
+(this._rebuildEpoch || 0) + 1;
+this.queued = false;
+this.rebuildWanted = false;
+this.rebuild();
+
+}
+
 scheduleRebuild(){
 
 this.rebuildWanted = true;
@@ -461,9 +475,18 @@ return;
 this.queued = true;
 let ran =
 false;
+const epoch =
+this._rebuildEpoch || 0;
 
 const run =
 ()=>{
+
+if(
+(this._rebuildEpoch || 0) !==
+epoch
+){
+return;
+}
 
 if(ran){
 return;
@@ -1131,6 +1154,146 @@ this.externalTimeCanvas = canvas;
 this.externalTimeCtx =
 canvas.getContext("2d", { alpha: true });
 this.timeH = 0;
+this._bindExternalTimeDrag(el);
+
+}
+
+_beginTimeDrag(event, anchorX, captureEl){
+
+const last =
+this.candles.length - 1;
+
+this.scaleDrag = null;
+this.drag = null;
+this.timeDrag = {
+id: event.pointerId,
+x: event.clientX,
+anchorX,
+anchorIndex: candleIndexAt(
+anchorX,
+last,
+this.layout.plotRight,
+this.rightGap,
+this.barSpacing,
+this.panPx
+),
+spacing: this.barSpacing
+};
+captureEl.setPointerCapture(event.pointerId);
+event.preventDefault();
+
+}
+
+_applyTimeDrag(event){
+
+if(
+!this.timeDrag ||
+event.pointerId !== this.timeDrag.id ||
+!this.layout
+){
+return false;
+}
+
+const factor =
+Math.exp(
+-(event.clientX - this.timeDrag.x) * 0.005
+);
+const nextSpacing =
+Math.min(
+64,
+Math.max(
+this.zoomOutFloor(),
+this.timeDrag.spacing * factor
+)
+);
+const last =
+this.candles.length - 1;
+
+this.barSpacing = nextSpacing;
+this.panPx =
+clampPan(
+panForAnchor(
+this.timeDrag.anchorIndex,
+this.timeDrag.anchorX,
+last,
+this.layout.plotRight,
+this.rightGap,
+nextSpacing
+),
+this.candles.length,
+this.layout.plotLeft,
+this.layout.plotRight,
+this.rightGap,
+nextSpacing
+);
+this.userMovedView = true;
+this.zoomHold = null;
+this.scheduleRebuild();
+return true;
+
+}
+
+_bindExternalTimeDrag(el){
+
+if(el.dataset.timeDragBound === "1"){
+return;
+}
+
+el.dataset.timeDragBound = "1";
+
+el.addEventListener(
+"pointerdown",
+event=>{
+
+if(event.button !== 0 || !this.layout || !this.candles.length){
+return;
+}
+
+if(this.stage.closest(".chart-draw-interaction")){
+return;
+}
+
+const anchorX =
+event.clientX -
+this.stage.getBoundingClientRect().left;
+
+if(anchorX >= this.layout.plotRight){
+return;
+}
+
+this._beginTimeDrag(event, anchorX, el);
+event.stopPropagation();
+
+}
+);
+
+el.addEventListener(
+"pointermove",
+event=>{
+this._applyTimeDrag(event);
+}
+);
+
+el.addEventListener(
+"dblclick",
+event=>{
+
+const anchorX =
+event.clientX -
+this.stage.getBoundingClientRect().left;
+
+if(this.layout && anchorX >= this.layout.plotRight){
+return;
+}
+
+this.barSpacing = 8;
+this.panPx = 0;
+this.manualScale = null;
+this.onAutoScale?.();
+this.scheduleRebuild();
+
+}
+);
 
 }
 
@@ -1654,28 +1817,11 @@ if(
 this._onTimeAxis(stage, event) &&
 this.candles.length
 ){
-const x =
-this._localX(stage, event);
-const last =
-this.candles.length - 1;
-this.scaleDrag = null;
-this.drag = null;
-this.timeDrag = {
-id: event.pointerId,
-x: event.clientX,
-anchorX: x,
-anchorIndex: candleIndexAt(
-x,
-last,
-this.layout.plotRight,
-this.rightGap,
-this.barSpacing,
-this.panPx
-),
-spacing: this.barSpacing
-};
-stage.setPointerCapture(event.pointerId);
-event.preventDefault();
+this._beginTimeDrag(
+event,
+this._localX(stage, event),
+stage
+);
 return;
 }
 
@@ -1744,49 +1890,8 @@ return;
 
 }
 
-if(
-this.timeDrag &&
-event.pointerId === this.timeDrag.id &&
-this.layout
-){
-
-const factor =
-Math.exp(
--(event.clientX - this.timeDrag.x) * 0.005
-);
-const nextSpacing =
-Math.min(
-64,
-Math.max(
-this.zoomOutFloor(),
-this.timeDrag.spacing * factor
-)
-);
-const last =
-this.candles.length - 1;
-
-this.barSpacing = nextSpacing;
-this.panPx =
-clampPan(
-panForAnchor(
-this.timeDrag.anchorIndex,
-this.timeDrag.anchorX,
-last,
-this.layout.plotRight,
-this.rightGap,
-nextSpacing
-),
-this.candles.length,
-this.layout.plotLeft,
-this.layout.plotRight,
-this.rightGap,
-nextSpacing
-);
-this.userMovedView = true;
-this.zoomHold = null;
-this.scheduleRebuild();
+if(this._applyTimeDrag(event)){
 return;
-
 }
 
 if(

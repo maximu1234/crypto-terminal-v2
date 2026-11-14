@@ -11,7 +11,7 @@ subscribeKline as subscribeBybitKline,
 subscribeTicker as subscribeBybitTicker,
 connectKlineStream as connectBybitKlineStream,
 disconnectKlineStream as disconnectBybitKlineStream
-} from "./ws.js?v=a3fc2075";
+} from "./ws.js?v=9777c7d0";
 
 import {
 subscribeBingxKline,
@@ -24,7 +24,7 @@ shutdownBingxWs
 import {
 bindLiveCandleCatchup,
 installMarketWsResume
-} from "./market-ws-resume.js?v=bcf5f880";
+} from "./market-ws-resume.js?v=b96e748d";
 
 import {
 subscribeMoexKline,

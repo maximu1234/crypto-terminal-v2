@@ -6,11 +6,11 @@ import {
 getScriptScanNextRunAt,
 isScriptScanBackgroundRunning,
 SCRIPT_SCAN_BG_EVENT
-} from "./script-scan-background.js?v=24e8ef5b";
+} from "./script-scan-background.js?v=59d663dd";
 
 import {
 loadScriptPageState
-} from "./script-page-storage.js?v=aaa45797";
+} from "./script-page-storage.js?v=70c9b9b0";
 
 import {
 isTerminalPage

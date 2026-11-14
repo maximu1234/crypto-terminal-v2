@@ -2,6 +2,10 @@
  * Свечи символа в памяти вкладки.
  * Повторный заход рисует уже скачанное окно сразу, сеть добирает только край.
  */
+import {
+KLINE_CACHE_MAX_GAP_BARS,
+largestKlineGapBars
+} from "./kline-history-pages.js";
 const MAX_ENTRIES =
 32;
 
@@ -83,6 +87,16 @@ if(
 candles
 ) ||
 !candles.length
+){
+return;
+}
+
+if(
+largestKlineGapBars(
+candles,
+tf
+) >
+KLINE_CACHE_MAX_GAP_BARS
 ){
 return;
 }

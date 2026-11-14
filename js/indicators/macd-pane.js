@@ -8,7 +8,7 @@ linkPairedChartTimeScales,
 appendFutureWhitespaceBars,
 computeChartFutureMarginBars,
 coinsTfVisibleBars
-} from "../chart-import.js?v=49ac1bf3";
+} from "../chart-import.js?v=5ad6d01c";
 
 import {
 calculateMacd,
@@ -41,7 +41,7 @@ isCoinsPaneHeightDrag
 
 import {
 syncPaneViewportAfterData
-} from "./indicator-pane-viewport.js?v=c769839a";
+} from "./indicator-pane-viewport.js?v=ab011ceb";
 
 export const MACD_PANE_ID =
 "macd";

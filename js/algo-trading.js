@@ -13,7 +13,7 @@ applyRsiSeriesColorMode,
 appendFutureWhitespaceBars,
 computeChartFutureMarginBars,
 syncLinkedChartTimescales
-} from "./chart-import.js?v=49ac1bf3";
+} from "./chart-import.js?v=5ad6d01c";
 
 import {
 applyLiveSeriesUpdate,
@@ -34,16 +34,16 @@ peekHistoryCache,
 putHistoryCache,
 mergeCandleRows,
 logicalIndexShift
-} from "./market-history-cache.js?v=dedca4e1";
+} from "./market-history-cache.js?v=2e3913a7";
 
 import {
 ALGO_TICKER_SCAN_HISTORY_REQUESTS
-} from "./algo-trading/ticker-scanner.js?v=8e85c0f3";
+} from "./algo-trading/ticker-scanner.js?v=bc300a6d";
 
 import {
 defaultRsiPaneSettings,
 normalizeRsiPaneSettings
-} from "./indicators/rsi-pane.js?v=a5791c13";
+} from "./indicators/rsi-pane.js?v=ce4d8e07";
 
 import {
 buildChartRsiPoints
@@ -52,21 +52,21 @@ buildChartRsiPoints
 import {
 loadMarketHistory,
 getActiveExchangeId
-} from "./market-api.js?v=a65f5c56";
+} from "./market-api.js?v=6df7e397";
 
 import {
 subscribeKline,
 bindLiveCandleCatchup
-} from "./market-ws.js?v=22428043";
+} from "./market-ws.js?v=2d187b5c";
 
 import {
 mountAlgoTradingCoinList,
 refreshAlgoMarketListFromFlags
-} from "./algo-trading-list.js?v=bd142a41";
+} from "./algo-trading-list.js?v=f9ddaca6";
 
 import {
 mountAlgoTickerScanUi
-} from "./algo-trading/ticker-scan-ui.js?v=dc130461";
+} from "./algo-trading/ticker-scan-ui.js?v=e56ea30d";
 
 import {
 getTickerStrategyOverlay,
@@ -85,7 +85,7 @@ mountAlgoRuntimeUi
 
 import {
 mountAlgoBotStrategyUi
-} from "./algo-trading/bot-strategy-ui.js?v=b6421a60";
+} from "./algo-trading/bot-strategy-ui.js?v=8efcba90";
 
 import {
 ALGO_ANALYSIS_BOT_CHANGE_EVENT,
@@ -101,7 +101,7 @@ setActiveAnalysisBotId
 
 import {
 mountSessionLogServerSettings
-} from "./algo-trading/bot-session-log-server-ui.js?v=ad9e4a58";
+} from "./algo-trading/bot-session-log-server-ui.js?v=9085131f";
 
 import {
 syncBotStrategiesToMain
@@ -109,15 +109,15 @@ syncBotStrategiesToMain
 
 import {
 mountAlgoTradeUi
-} from "./algo-trading/trade/boot.js?v=5307c246";
+} from "./algo-trading/trade/boot.js?v=3b9bcb59";
 
 import {
 mountAlgoTradingDrawings
-} from "./algo-trading/drawings.js?v=55dd29d3";
+} from "./algo-trading/drawings.js?v=81a661e2";
 
 import {
 mountAlgoTradingIndicators
-} from "./algo-trading/indicators.js?v=852829b9";
+} from "./algo-trading/indicators.js?v=2687f91f";
 
 import {
 mountAlgoPatternEntryOverlay
@@ -125,11 +125,11 @@ mountAlgoPatternEntryOverlay
 
 import {
 mountRsiTouchFlipHost
-} from "./algo-trading/rsi-touch-flip-panel.js?v=f87faa73";
+} from "./algo-trading/rsi-touch-flip-panel.js?v=914b0932";
 
 import {
 mountMacdFlipTouchHost
-} from "./algo-trading/macd-flip-touch-panel.js?v=908e791b";
+} from "./algo-trading/macd-flip-touch-panel.js?v=cf8e5c4c";
 
 import {
 loadRsiTouchFlipPrefs,
@@ -259,7 +259,7 @@ syncRsiLevelDom as syncRsiLevelDomEl,
 setRsiHud as setRsiHudEl,
 lastRsiValue as lastRsiValueFromCandles,
 layoutRsiPane
-} from "./algo-trading/page-rsi.js?v=0e4358d7";
+} from "./algo-trading/page-rsi.js?v=eebe28c3";
 
 import {
 bindAlgoStatsPanelResize
@@ -272,7 +272,7 @@ mountAlgoBotLiteLayout
 
 import {
 loadAlgoBotLiteHistory
-} from "./algo-trading/lite-history.js?v=7c788f22";
+} from "./algo-trading/lite-history.js?v=9d5d93b6";
 
 /** Глубина ботов / сканов / «Подобрать»: ~10 000. График сначала ~5000, затем догрузка. */
 const HISTORY_REQUESTS =
@@ -312,7 +312,7 @@ bindAlgoChartPaneSettle
 } from "./algo-trading/chart-pane-settle.js?v=3ecfb41d";
 import {
 loadSymbol as loadSymbolMoved
-} from "./algo-trading/chart-load-symbol.js?v=a7a72170";
+} from "./algo-trading/chart-load-symbol.js?v=26d5ec0f";
 import {
 applyRsiData as applyRsiDataMoved,
 deepenAlgoHistoryIfNeeded as deepenAlgoHistoryIfNeededMoved,
@@ -323,7 +323,7 @@ resizeAlgoCharts as resizeAlgoChartsMoved,
 fitViewport as fitViewportMoved,
 mergeOlderAlgoCandles as mergeOlderAlgoCandlesMoved,
 applyLiveCandleTick as applyLiveCandleTickMoved
-} from "./algo-trading/chart-data.js?v=203062a1";
+} from "./algo-trading/chart-data.js?v=f46a3be4";
 import {
 rsiPaneSettingsFromFlipPrefs as rsiPaneSettingsFromFlipPrefsMoved,
 readFlipPanePatchFromDom as readFlipPanePatchFromDomMoved,

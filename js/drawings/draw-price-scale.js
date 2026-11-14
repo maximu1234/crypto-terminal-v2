@@ -7,7 +7,7 @@ chartScaleFont,
 CHART_SCALE_LABEL_PAD_LEFT,
 CHART_SCALE_LABEL_LINE_HEIGHT,
 scaleLabelTextColorForBackground
-} from "../chart-import.js?v=49ac1bf3";
+} from "../chart-import.js?v=5ad6d01c";
 
 import {
 layoutScaleLabelYs,

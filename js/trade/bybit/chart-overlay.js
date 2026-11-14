@@ -8,21 +8,21 @@ syncTradePositionsCache,
 upsertTradePositionInCache,
 markTradePositionRecentlyClosed,
 isTradePositionRecentlyClosed
-} from "./positions-cache.js?v=c46f95e7";
+} from "./positions-cache.js?v=bb80aa1a";
 
 import {
 markStopDismissed,
 clearDismissedStops
-} from "./auto-stops.js?v=49a27c35";
+} from "./auto-stops.js?v=e9ae48ec";
 
 import {
 isExchangeTradingEnabled
-} from "../../market-api.js?v=a65f5c56";
+} from "../../market-api.js?v=6df7e397";
 
 import {
 seriesPriceToUsdt,
 usdtPriceToSeries
-} from "../../chart/btc-quote.js?v=7996cc43";
+} from "../../chart/btc-quote.js?v=2aa65b9c";
 
 import {
 getTradeConfig
@@ -3824,46 +3824,81 @@ resolvedRow;
 list.length ===
 0
 ){
-if(
-getTradeConfig().streamMissClearsCache
-){
-position =
-null;
-removeTradePositionFromCache(
-sym,
-tradePositionIpcOptions(
-position
-)
-);
-}else{
-/* Bybit: empty snapshot after open is lag — keep cache, no tombstone. */
-position =
+const cached =
 getCachedPosition(
 sym,
 tradePositionIpcOptions(
 position
 )
+);
+const optimisticAt =
+Number(
+cached?._optimisticAt
 ) ||
+0;
+const keepFreshOpen =
+!!cached?._optimistic &&
+optimisticAt >
+0 &&
+Date.now() -
+optimisticAt <
+8000;
+
+/*
+ * Пустой снимок после закрытия единственной позиции не должен
+ * возвращать линию и бейдж из кэша. Держим только что открытую
+ * сделку: REST/WS ещё не успели её подтвердить.
+ */
+if(
+keepFreshOpen
+){
+position =
+cached;
+}else{
+const dropOpts =
+tradePositionIpcOptions(
+position ||
+cached
+);
+position =
 null;
+pendingStopPrice =
+null;
+dragStop =
+null;
+detachStopDragListeners();
+removeTradePositionFromCache(
+sym,
+dropOpts
+);
+invalidateBadgeLayoutCache();
 }
 
 }else if(
 !symbolMatches.length
 ){
 /* Symbol missing from a non-empty snapshot → closed on exchange */
+const dropOpts =
+tradePositionIpcOptions(
+position
+);
 position =
 null;
+pendingStopPrice =
+null;
+dragStop =
+null;
+detachStopDragListeners();
 removeTradePositionFromCache(
 sym,
 {
-...tradePositionIpcOptions(
-position
-),
+...dropOpts,
 markRecentlyClosed:
 getTradeConfig().streamMissClearsCache !==
 false
 }
 );
+invalidateBadgeLayoutCache();
 }
 
 scheduleDraw(

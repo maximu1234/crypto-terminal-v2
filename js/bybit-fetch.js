@@ -899,7 +899,7 @@ function markBybitSuccess(baseIndex){
 activeApiBaseIndex =
 baseIndex;
 
-void import("./bybit-network-ui.js?v=422fbeb0").then(m=>{
+void import("./bybit-network-ui.js?v=81e45a4d").then(m=>{
 m.clearBybitNetworkIssue();
 });
 
@@ -918,7 +918,7 @@ err
 return;
 }
 
-void import("./bybit-network-ui.js?v=422fbeb0").then(m=>{
+void import("./bybit-network-ui.js?v=81e45a4d").then(m=>{
 m.showBybitNetworkIssue(err);
 });
 

@@ -12,18 +12,18 @@ loadMarketHistory,
 getActiveExchangeId,
 getActiveExchangeDefinition,
 EXCHANGE_CHANGED_EVENT
-} from "./market-api.js?v=a65f5c56";
+} from "./market-api.js?v=6df7e397";
 
 import {
 peekHistoryCache,
 putHistoryCache,
 mergeCandleRows,
 logicalIndexShift
-} from "./market-history-cache.js?v=dedca4e1";
+} from "./market-history-cache.js?v=2e3913a7";
 
 import {
 clearBybitNetworkIssue
-} from "./bybit-network-ui.js?v=422fbeb0";
+} from "./bybit-network-ui.js?v=81e45a4d";
 
 import {
 buildAlertChartUrl
@@ -31,7 +31,7 @@ buildAlertChartUrl
 
 import {
 isLocalDevHost
-} from "./bybit-fetch.js?v=a72b26f0";
+} from "./bybit-fetch.js?v=10968585";
 
 import {
 applyChartPriceFormat,
@@ -42,7 +42,7 @@ createRSIChart,
 updateRsiBandLayout,
 updateRsiLevelLinesLayout,
 linkPairedChartTimeScales
-} from "./chart-import.js?v=49ac1bf3";
+} from "./chart-import.js?v=5ad6d01c";
 
 import {
 formatPrice
@@ -63,22 +63,22 @@ getScreenerWidgetOscillator,
 isScreenerHistogramOscillator,
 setScreenerAoData,
 setScreenerMacdData
-} from "./screener-widget-oscillator.js?v=89a3618b";
+} from "./screener-widget-oscillator.js?v=918549ce";
 
 import {
 createDashboardChartWidget,
 mountDashboardChartInteractions
-} from "./chart-widget-host.js?v=5d67c7b4";
+} from "./chart-widget-host.js?v=7fc71a02";
 
 import {
 mountWidgetTabletChart
-} from "./tablet-widget-chart.js?v=50b7f7d1";
+} from "./tablet-widget-chart.js?v=bfc2636e";
 
 import {
 subscribeKline,
 subscribeTicker,
 bindLiveCandleCatchup
-} from "./market-ws.js?v=22428043";
+} from "./market-ws.js?v=2d187b5c";
 
 import {
 applyLiveLastPriceToCandles,
@@ -110,7 +110,7 @@ ensureDrawToolsVisible
 
 import {
 preloadTradingSymbols
-} from "./symbol-autocomplete.js?v=29ddbb1a";
+} from "./symbol-autocomplete.js?v=663ccef3";
 
 import {
 loadLightweightCharts
@@ -125,7 +125,7 @@ getWidgetFlagHtml,
 wireWidgetFlagUi,
 updateWidgetFlagUi,
 bindWidgetFlagGlobalListeners
-} from "./widget-favorite-flag.js?v=5be01f5f";
+} from "./widget-favorite-flag.js?v=bd5ec146";
 
 function escapeHtml(
 value
@@ -198,7 +198,7 @@ return;
 
 const mod =
 await import(
-"./trade-widget-mount.js?v=7d799f56"
+"./trade-widget-mount.js?v=3a7c59b4"
 );
 
 mountTradeOnDashboardWidget =
@@ -1330,7 +1330,7 @@ widget.classList.add(
 "widget-chart-empty"
 );
 
-void import("./bybit-network-ui.js?v=422fbeb0").then(
+void import("./bybit-network-ui.js?v=81e45a4d").then(
 m=>{
 m.showBybitNetworkIssue(
 new Error(

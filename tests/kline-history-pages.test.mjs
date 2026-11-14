@@ -5,12 +5,23 @@ import {
 klineGapFillEnds,
 klineHistoryPageEnds,
 klineTfToMs,
+largestKlineGapBars,
 mapWithConcurrency,
 shouldFetchKlinePagesInParallel
 } from "../js/kline-history-pages.js";
 import {
 rsiTouchFlipSourceCoversChart
 } from "../js/algo-trading/rsi-touch-flip-mtf.js";
+
+test("largestKlineGapBars counts missing bars between neighbours", () => {
+  const rows = [
+    { time: 0 },
+    { time: 60 },
+    { time: 120 + 40 * 60 }
+  ];
+  assert.equal(largestKlineGapBars(rows, "1"), 40);
+  assert.equal(largestKlineGapBars(rows.slice(0, 2), "1"), 0);
+});
 
 test("klineTfToMs maps Bybit interval tokens", () => {
   assert.equal(klineTfToMs("1"), 60_000);

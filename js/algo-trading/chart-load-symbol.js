@@ -8,7 +8,7 @@ noteAlgoChartViewportReady
 } from "./chart-pane-settle.js?v=3ecfb41d";
 import {
 klineGapFillEnds
-} from "../kline-history-pages.js?v=f9dac656";
+} from "../kline-history-pages.js?v=c40d8e78";
 
 function algoRsiPaneWaiting(host){
 

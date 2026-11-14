@@ -4,7 +4,7 @@
  */
 import {
 isCoarseTouchViewport
-} from "../chart-import.js?v=49ac1bf3";
+} from "../chart-import.js?v=5ad6d01c";
 
 import {
 uid
@@ -30,7 +30,7 @@ import {
 getFvpHandleScreens,
 moveFvpHandle,
 isFvpType
-} from "./fixed-volume-profile.js?v=77a3231c";
+} from "./fixed-volume-profile.js?v=18386d65";
 
 import {
 isPositionType,
@@ -49,7 +49,7 @@ touchShapeRevision
 
 import {
 stripAlertFromShape
-} from "./drawings-persist.js?v=116f0a53";
+} from "./drawings-persist.js?v=98ba7596";
 
 import {
 moveBrushHandle,

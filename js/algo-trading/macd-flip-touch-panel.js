@@ -9,7 +9,7 @@ isActiveAnalysisBot
 } from "./active-analysis-bot.js?v=c1b8293b";
 import {
 loadMarketHistory
-} from "../market-api.js?v=a65f5c56";
+} from "../market-api.js?v=6df7e397";
 import {
 MACD_FLIP_TOUCH_SIZE_AVERAGE,
 loadMacdFlipTouchPrefs,
@@ -468,7 +468,7 @@ if(
 ){
 equityChartMod =
 await import(
-"./macd-flip-touch-equity-chart.js?v=7b0918f8"
+"./macd-flip-touch-equity-chart.js?v=c0265a86"
 );
 }
 

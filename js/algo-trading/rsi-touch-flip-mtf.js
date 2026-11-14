@@ -11,7 +11,7 @@ normalizeRsiTouchFlipPrefs
 } from "./rsi-touch-flip-prefs.js?v=f6c3ff87";
 import {
 klineGapFillEnds
-} from "../kline-history-pages.js?v=f9dac656";
+} from "../kline-history-pages.js?v=c40d8e78";
 
 const KLINE_PAGE =
 1000;

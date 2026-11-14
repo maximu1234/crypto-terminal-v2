@@ -1,6 +1,6 @@
 import {
 fetchBybit
-} from "./bybit-fetch.js?v=a72b26f0";
+} from "./bybit-fetch.js?v=10968585";
 
 import {
 fetchTwelveTimeSeries
@@ -12,7 +12,7 @@ klineGapFillEnds,
 KLINE_PAGE_CONCURRENCY,
 mapWithConcurrency,
 shouldFetchKlinePagesInParallel
-} from "./kline-history-pages.js?v=f9dac656";
+} from "./kline-history-pages.js?v=c40d8e78";
 
 import {
 clampHistoryPageLimit,
@@ -455,13 +455,13 @@ candlesFromBybitRows(
 all
 );
 
-if(pageEnds.length > 1){
+if(candles.length > 1){
 
 for(
 let attempt =
 0;
 attempt <
-2;
+4;
 attempt++
 ){
 
@@ -482,7 +482,10 @@ break;
 const extra =
 await mapWithConcurrency(
 fills,
-KLINE_PAGE_CONCURRENCY,
+attempt <
+2
+? KLINE_PAGE_CONCURRENCY
+: 1,
 async pageEnd=>{
 
 const page =

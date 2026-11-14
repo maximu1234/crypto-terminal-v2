@@ -5,10 +5,10 @@
  */
 import {
   createCanvasLwChart
-} from "../chart/canvas-lw-host.js?v=6d8104d3";
+} from "../chart/canvas-lw-host.js?v=4b7f6036";
 import {
   RSI_TOUCH_FLIP_EQUITY_POS_COLOR
-} from "./rsi-touch-flip-equity.js?v=40586292";
+} from "./rsi-touch-flip-equity.js?v=16528a13";
 
 const BG =
 "#0f1419";

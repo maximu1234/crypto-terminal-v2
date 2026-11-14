@@ -7,7 +7,7 @@ buildMarketLists,
 getActiveExchangeId,
 EXCHANGE_CHANGED_EVENT,
 isActiveRealtimeMarketDataset
-} from "./market-api.js?v=a65f5c56";
+} from "./market-api.js?v=6df7e397";
 
 import {
 coinsState,
@@ -28,7 +28,7 @@ syncCoinListFreezeFromFlagMenus,
 getCurrentSymbols,
 getVisibleSymbolList,
 setCoinOpenPositionChecker
-} from "./algo-trading/coin-list-host.js?v=5923d155";
+} from "./algo-trading/coin-list-host.js?v=38846947";
 
 import {
 hasOpenPosition,
@@ -37,7 +37,7 @@ initAlgoOpenPositions
 
 import {
 mountCoinsListRefreshControls
-} from "./terminal-list-refresh.js?v=d99e753b";
+} from "./terminal-list-refresh.js?v=297004db";
 
 import {
 ALGO_MARKET_LONG_5M,

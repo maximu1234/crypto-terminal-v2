@@ -1,10 +1,10 @@
 import {
 initAlertMonitor
-} from "./alert-monitor.js?v=ea3e66c5";
+} from "./alert-monitor.js?v=720e31df";
 
 import {
 ensureCloudReady
-} from "./auth-ui.js?v=a5ed0e0e";
+} from "./auth-ui.js?v=7839de5f";
 
 import {
 isAlertsPage
@@ -20,18 +20,18 @@ isScriptPage
 import {
 initAlertsCloudSync,
 scheduleRegistryCloudSync
-} from "./alerts-cloud-sync.js?v=9c4ced1b";
+} from "./alerts-cloud-sync.js?v=2137cfbc";
 
 import {
 stripAlertFlagsNotInRegistry
-} from "./alerts.js?v=35999a50";
+} from "./alerts.js?v=e265f401";
 
 import {
 isCloudLoggedIn,
 isCloudLoggedInEffective,
 isCloudSyncEnabled,
 onCloudSyncChange
-} from "./cloud-sync.js?v=08a0cd01";
+} from "./cloud-sync.js?v=523bd639";
 
 import {
 isSupabaseConfigured
@@ -39,17 +39,17 @@ isSupabaseConfigured
 
 import {
 initExchangeContext
-} from "./market-api.js?v=a65f5c56";
+} from "./market-api.js?v=6df7e397";
 
 import {
 initBybitNetworkUi
-} from "./bybit-network-ui.js?v=422fbeb0";
+} from "./bybit-network-ui.js?v=81e45a4d";
 
 import {
 resetBybitEndpoints,
 preloadBybitProxyConfig,
 warmBybitWorkerProxy
-} from "./bybit-fetch.js?v=a72b26f0";
+} from "./bybit-fetch.js?v=10968585";
 
 import {
 ensureDrawToolsVisible
@@ -65,12 +65,12 @@ initFocusBlurAfterPick
 
 import {
 initDesktopAppUi
-} from "./desktop-app-ui.js?v=ade84600";
+} from "./desktop-app-ui.js?v=945b7bbd";
 
 import {
 initSiteHeader,
 enforceSiteHeaderAfterBoot
-} from "./site-header.js?v=bfe5f376";
+} from "./site-header.js?v=2360c275";
 
 import {
 FEATURE_NAV_PREF_EVENT,
@@ -130,7 +130,7 @@ return;
 }
 
 void import(
-"./statistics-background.js?v=cc2751f1"
+"./statistics-background.js?v=9e5dc2cb"
 ).then(
 m=>
 m.resumeStatsBackgroundJob?.()
@@ -154,7 +154,7 @@ return;
 }
 
 void import(
-"./script-scan-background.js?v=24e8ef5b"
+"./script-scan-background.js?v=59d663dd"
 ).then(
 m=>
 m.resumeScriptScanBackgroundJob?.()
@@ -172,7 +172,7 @@ err
 function stopScriptScanBackgroundFromBoot(){
 
 return import(
-"./script-scan-background.js?v=24e8ef5b"
+"./script-scan-background.js?v=59d663dd"
 ).then(
 m=>
 m.stopScriptScanBackground?.()
@@ -202,7 +202,7 @@ return;
 }
 
 void import(
-"./algo-trading/desktop-site-boot.js?v=6add0780"
+"./algo-trading/desktop-site-boot.js?v=ecdcebf7"
 ).then(
 m=>
 m.bootAlgoDesktopBackgroundJobs?.()
@@ -226,7 +226,7 @@ return Promise.resolve();
 }
 
 return import(
-"./algo-trading/desktop-site-boot.js?v=6add0780"
+"./algo-trading/desktop-site-boot.js?v=ecdcebf7"
 ).then(
 m=>
 m.stopAlgoDesktopBackgroundJobs?.()
@@ -564,7 +564,7 @@ isAlgoReducedCloudClient();
 if(
 !algoCloudLite
 ){
-import("./favorites-cloud-sync.js?v=2ca88ec3").then(
+import("./favorites-cloud-sync.js?v=42020c7c").then(
 ({ initFavoritesCloudSync })=>{
 initFavoritesCloudSync();
 }

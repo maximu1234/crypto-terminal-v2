@@ -8,7 +8,7 @@ import {
 klineGapFillEnds,
 KLINE_PAGE_CONCURRENCY,
 mapWithConcurrency
-} from "../kline-history-pages.js?v=f9dac656";
+} from "../kline-history-pages.js?v=c40d8e78";
 
 export function applyRsiData(host, 
 {

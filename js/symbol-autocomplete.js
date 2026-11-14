@@ -2,7 +2,7 @@ import {
 loadMarketSymbols,
 EXCHANGE_CHANGED_EVENT,
 getActiveExchangeId
-} from "./market-api.js?v=a65f5c56";
+} from "./market-api.js?v=6df7e397";
 
 let symbolsCache =
 null;

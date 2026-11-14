@@ -23,7 +23,7 @@ recordDrawingTombstone
 import {
 EXCHANGE_CHANGED_EVENT,
 loadMarketHistory
-} from "../market-api.js?v=a65f5c56";
+} from "../market-api.js?v=6df7e397";
 
 import {
 registerDrawingsStoragePoller,
@@ -50,7 +50,7 @@ ensureDomChartCrosshair,
 hideDomChartCrosshair,
 positionTabletProbeHorizInStack,
 fullCrosshairOptions
-} from "../chart-import.js?v=49ac1bf3";
+} from "../chart-import.js?v=5ad6d01c";
 
 import {
 STROKE,
@@ -71,7 +71,7 @@ bindFvpDataSource,
 clearFvpLtfCache,
 isFvpType,
 fvpBodyDist
-} from "./fixed-volume-profile.js?v=77a3231c";
+} from "./fixed-volume-profile.js?v=18386d65";
 
 import {
 distToSegment
@@ -118,7 +118,7 @@ getPositionHandleScreens as resolvePositionHandleScreens
 
 import {
 createDrawPrefs
-} from "./draw-prefs.js?v=9419b223";
+} from "./draw-prefs.js?v=ef7750fc";
 
 import {
 createPositionDraw
@@ -130,11 +130,11 @@ pickUi
 
 import {
 createDrawHitTester
-} from "./draw-hit.js?v=ea3c167b";
+} from "./draw-hit.js?v=d0e98230";
 
 import {
 createDrawRenderer
-} from "./draw-render.js?v=53f5b4c4";
+} from "./draw-render.js?v=674837db";
 
 import {
 snapPlotToCandleWick
@@ -152,7 +152,7 @@ updateChartRulerLabelEl
 
 import {
 mountTabletDrawInput
-} from "../drawings-tablet-input.js?v=98c68079";
+} from "../drawings-tablet-input.js?v=141f7926";
 
 import {
 cloneDrawingsForUndo,
@@ -161,23 +161,23 @@ createDrawUndoStack
 
 import {
 createDrawDesktopSelection
-} from "./draw-edit-desktop.js?v=ab7fbd60";
+} from "./draw-edit-desktop.js?v=2bb9fd83";
 
 import {
 createDrawingsPersist
-} from "./drawings-persist.js?v=116f0a53";
+} from "./drawings-persist.js?v=98ba7596";
 
 import {
 createDrawStyleBar
-} from "./draw-style-bar.js?v=a4763179";
+} from "./draw-style-bar.js?v=e689a3c9";
 
 import {
 createDrawAlertsChart
-} from "./draw-alerts-chart.js?v=ed548bf1";
+} from "./draw-alerts-chart.js?v=5a286599";
 
 import {
 createDrawPlacement
-} from "./draw-placement.js?v=54f981d1";
+} from "./draw-placement.js?v=680d2f16";
 
 import {
 createDrawTextEditor,
@@ -206,19 +206,19 @@ createBrushPlacement
 
 import {
 createDrawEditInteraction
-} from "./draw-edit-interaction.js?v=88f45aef";
+} from "./draw-edit-interaction.js?v=16d48122";
 
 import {
 createDrawChartInput
-} from "./draw-chart-input.js?v=7ac62c4f";
+} from "./draw-chart-input.js?v=5c87efdb";
 
 import {
 createDrawPriceScale
-} from "./draw-price-scale.js?v=5ddea448";
+} from "./draw-price-scale.js?v=47f45051";
 
 import {
 createDrawRedrawLoop
-} from "./draw-redraw-loop.js?v=87810b6b";
+} from "./draw-redraw-loop.js?v=b9352161";
 
 import {
 isAlgoReducedCloudClient
@@ -3453,7 +3453,7 @@ lastChartAlertsPullMs =
 Date.now();
 
 void import(
-"../alerts-cloud-sync.js?v=9c4ced1b"
+"../alerts-cloud-sync.js?v=2137cfbc"
 ).then(
 ({ pullRegistryFromCloudNow })=>
 pullRegistryFromCloudNow({

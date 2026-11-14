@@ -21,7 +21,7 @@ registerCandleSeries
 
 import {
 createCanvasLwChart
-} from "./chart/canvas-lw-host.js?v=6d8104d3";
+} from "./chart/canvas-lw-host.js?v=4b7f6036";
 
 import {
 candleAlignSec,

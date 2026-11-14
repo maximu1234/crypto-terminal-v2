@@ -38,7 +38,7 @@ attachChartWheelDeadband
 
 import {
 createCanvasLwChart
-} from "./canvas-lw-host.js?v=6d8104d3";
+} from "./canvas-lw-host.js?v=4b7f6036";
 
 /* time-axis: stable ticks + crisp labels (timefix4) */
 
@@ -1610,10 +1610,10 @@ y30
 );
 
 bandEl.style.top =
-`${Math.round(top)}px`;
+`${top}px`;
 
 bandEl.style.height =
-`${Math.round(Math.abs(y30 - y70))}px`;
+`${Math.abs(y30 - y70)}px`;
 
 }
 
@@ -1650,12 +1650,9 @@ wrapEl
 );
 
 return Math.max(
-0.5,
+0,
 Math.min(
-Math.round(
-y
-) +
-0.5,
+y,
 plotMax
 )
 );
@@ -1732,7 +1729,7 @@ lineEl.classList.remove(
 export {
 linkChartsCrosshair,
 mountWidgetStackCrosshair
-} from "./chart-crosshair-link.js?v=659e32f3";
+} from "./chart-crosshair-link.js?v=0e018fe3";
 
 
 
