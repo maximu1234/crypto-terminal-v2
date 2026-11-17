@@ -38,7 +38,7 @@ attachChartWheelDeadband
 
 import {
 createCanvasLwChart
-} from "./canvas-lw-host.js?v=4b7f6036";
+} from "./canvas-lw-host.js?v=db0afac9";
 
 /* time-axis: stable ticks + crisp labels (timefix4) */
 
@@ -1729,7 +1729,7 @@ lineEl.classList.remove(
 export {
 linkChartsCrosshair,
 mountWidgetStackCrosshair
-} from "./chart-crosshair-link.js?v=0e018fe3";
+} from "./chart-crosshair-link.js?v=a085ea10";
 
 
 

@@ -6,13 +6,13 @@
 
 import {
 CandleBenchChart
-} from "../canvas-bench/chart.js?v=timefix17";
+} from "../canvas-bench/chart.js?v=timefix18";
 
 import {
 candleIndexAt,
 candleOpenAtIndex,
 candleX
-} from "../canvas-bench/live-plan.js?v=timefix13";
+} from "../canvas-bench/live-plan.js?v=timefix18";
 
 import {
 PRICE_SCALE_LOG,

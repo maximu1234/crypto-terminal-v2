@@ -267,6 +267,16 @@ test("time axis ticks stay anchored to unix time when the chart pans", () => {
   assert.equal(engine.candles[50].time, stamp);
 });
 
+test("time axis drops a step that would stack HH:mm labels", () => {
+  const from = Date.UTC(2026, 10, 16, 0, 0, 0) / 1000;
+  const to = from + 22.5 * 3600;
+  const plotW = 960;
+  const times = niceTimeAxisTimes(from, to, plotW, 64, 3600, 0);
+  const gap = plotW * times.step / (to - from);
+  assert.ok(gap >= 64, `labels only ${gap.toFixed(1)}px apart at step ${times.step}`);
+  assert.ok(times.step > 3600);
+});
+
 test("time axis step hysterises instead of flipping every frame", () => {
   assert.equal(
     stickTimeAxisStepSec(1209600, 604800, 120 * 86400, 12),

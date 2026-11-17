@@ -10,7 +10,7 @@ isKnownExchangeId
 
 import {
 cssUrl
-} from "./asset-manifest.js?v=af54e7fa";
+} from "./asset-manifest.js?v=4981f76f";
 
 import {
 ALERT_DEEP_LINK_EXCHANGE_PARAM,

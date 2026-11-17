@@ -18,7 +18,7 @@ scaleFromCandles,
 visibleIndexSpan,
 WHEEL_ZOOM_GESTURE_MS,
 zoomOutFloorSpacing
-} from "./live-plan.js?v=timefix13";
+} from "./live-plan.js?v=timefix18";
 
 import {
 fractionalIndexAtTime

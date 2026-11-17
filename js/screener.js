@@ -49,7 +49,7 @@ updateRsiLevelLinesLayout,
 linkPairedChartTimeScales,
 SCREENER_VISIBLE_BARS,
 SCREENER_MAX_BARS
-} from "./chart-import.js?v=5ad6d01c";
+} from "./chart-import.js?v=0eb05058";
 
 import {
 isIpadWebViewport
@@ -85,7 +85,7 @@ createTickerUiBatcher
 
 import {
 mountReleaseMarker
-} from "./release-marker.js?v=8f105b41";
+} from "./release-marker.js?v=ee948b3b";
 
 import {
 saveScreenerState,
@@ -104,7 +104,7 @@ FAVORITES_BY_EXCHANGE_KEY
 
 import {
 ensureCloudReady
-} from "./auth-ui.js?v=7839de5f";
+} from "./auth-ui.js?v=6d08eaa3";
 
 import {
 ensureSettled,
@@ -114,7 +114,7 @@ withTimeout
 import {
 persistFavoritesToCloud,
 onFavoritesRemoteUpdate
-} from "./cloud-sync.js?v=523bd639";
+} from "./cloud-sync.js?v=668ac81e";
 
 import {
 attachSymbolAutocomplete,
@@ -144,7 +144,7 @@ getScreenerWidgetOscillator,
 isScreenerHistogramOscillator,
 setScreenerAoData,
 setScreenerMacdData
-} from "./screener-widget-oscillator.js?v=918549ce";
+} from "./screener-widget-oscillator.js?v=313e5ef8";
 
 const SCREENER_MAX_CONCURRENT_CHART_LOADS =
 4;
@@ -176,7 +176,7 @@ if(
 ){
 screenerZoomMountPromise =
 import(
-"./screener-widget-zoom.js?v=fd18a382"
+"./screener-widget-zoom.js?v=92e95bab"
 ).then(
 mod=>{
 refreshZoomFavoriteUi =
@@ -1447,7 +1447,7 @@ listInViewWidgetSymbols,
 loadWidgetChart,
 observeWidgetKlineVisibility,
 updateWidgetMeta
-} from "./screener-widgets.js?v=0b976320";
+} from "./screener-widgets.js?v=a48a5f51";
 
 import {
 startMarketDensitySnapshot

@@ -17,13 +17,13 @@ loadAllAlerts,
 removeAlert,
 formatAlertDate,
 formatAlertTicker
-} from "../../alerts.js?v=e265f401";
+} from "../../alerts.js?v=7a00a70c";
 
 import {
 isAlgoBotAlertRow,
 rememberBotAlertShapeId,
 retagKnownAlgoBotAlerts
-} from "../bot-alert-bridge.js?v=11df829e";
+} from "../bot-alert-bridge.js?v=b3fd585f";
 
 import {
 fetchAlgoBotStatus,
@@ -988,7 +988,7 @@ isAlgoBotLiteMode()
 return;
 }
 void import(
-"../diary/modal.js?v=af75a568"
+"../diary/modal.js?v=da6fd363"
 ).then(
 (mod)=>{
 if(

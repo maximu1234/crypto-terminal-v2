@@ -823,6 +823,82 @@ return ideal;
 
 }
 
+function nextCoarserTimeAxisStepSec(
+stepSec
+){
+
+const step =
+Number(stepSec) || 0;
+let next =
+0;
+
+for(const item of TIME_AXIS_STEPS_SEC){
+
+if(item > step){
+next = item;
+break;
+}
+
+}
+
+if(!next){
+const years =
+Math.max(
+1,
+Math.floor(step / TIME_AXIS_YEAR_SEC) + 1
+);
+next = years * TIME_AXIS_YEAR_SEC;
+}
+
+return next;
+
+}
+
+/**
+ * Колёсико проходит полосу, где «красивый» шаг ещё слишком мелкий:
+ * «01:30» и «02:00» встают в 30–40px и наезжают. Держим предыдущий
+ * шаг, пока следующий не помещается целиком.
+ */
+export function coarsenTimeAxisStepSec(
+stepSec,
+spanSec,
+plotW,
+minLabelPx
+){
+
+let step =
+Math.max(1, Number(stepSec) || 1);
+const span =
+Math.max(1, Number(spanSec) || 1);
+const width =
+Math.max(1, Number(plotW) || 1);
+const minPx =
+Math.max(32, Number(minLabelPx) || 64);
+
+for(let guard = 0; guard < 16; guard++){
+
+const gap =
+width * step / span;
+
+if(gap >= minPx){
+return step;
+}
+
+const next =
+nextCoarserTimeAxisStepSec(step);
+
+if(next <= step){
+return step;
+}
+
+step = next;
+
+}
+
+return step;
+
+}
+
 /** Ближайший «красивый» шаг ≥ raw (сек). */
 export function snapTimeAxisStepSec(
 rawSec
@@ -1206,11 +1282,16 @@ ideal,
 }
 
 const step =
+coarsenTimeAxisStepSec(
 stickTimeAxisStepSec(
 ideal,
 preferredStep,
 span,
 target
+),
+span,
+width,
+minPx
 );
 const months =
 calendarMonthsForStep(step);
