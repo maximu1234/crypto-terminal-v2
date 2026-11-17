@@ -5,7 +5,7 @@
 import {
 isCoarseTouchViewport,
 isTabletChartViewport
-} from "../chart-import.js?v=0eb05058";
+} from "../chart-import.js?v=a9542153";
 
 import {
 isFineChartPointerType

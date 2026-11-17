@@ -38,6 +38,14 @@ function position(type = "long") {
   };
 }
 
+test("position edge badges sit outside the price, so invert swaps them", async () => {
+  const { positionEdgeBadgeSide } = await import("../js/drawings/position-draw.js");
+
+  assert.equal(positionEdgeBadgeSide(40, 100), "above");
+  assert.equal(positionEdgeBadgeSide(160, 100), "below");
+  assert.equal(positionEdgeBadgeSide(100, 100), "below");
+});
+
 test("positionXBounds normalizes horizontal direction", () => {
   assert.deepEqual(
     positionXBounds(position(), toXY),

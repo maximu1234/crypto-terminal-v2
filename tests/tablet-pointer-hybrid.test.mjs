@@ -284,5 +284,86 @@ shouldStartTabletPlotPan(
 ),
 false
 );
+assert.equal(
+shouldStartTabletPlotPan(
+1,
+12,
+{
+manualPrice: true
+}
+),
+true
+);
+assert.equal(
+shouldStartTabletPlotPan(
+2,
+2,
+{
+manualPrice: true
+}
+),
+false
+);
+
+});
+
+test("overlay wheel zooms time in bar spacing and does not lock the price scale", ()=>{
+
+let zoom = null;
+let priceCalls = 0;
+const chart = {
+timeScale(){
+return {
+getVisibleLogicalRange: ()=>({
+from: 0,
+to: 100
+}),
+zoomByFactor(factor, plotX){
+zoom = { factor, plotX };
+return true;
+},
+panByPixels(){
+return false;
+}
+};
+},
+priceScale(){
+return {
+getVisibleRange: ()=>({
+from: 10,
+to: 20
+}),
+setVisibleRange(){
+priceCalls += 1;
+}
+};
+}
+};
+
+const handled = applyPointerWheelOnChart(
+chart,
+{
+getBoundingClientRect: ()=>({
+left: 0,
+top: 0,
+width: 200,
+height: 100
+})
+},
+{
+deltaY: 80,
+deltaX: 0,
+deltaMode: 0,
+ctrlKey: false,
+clientX: 50,
+clientY: 40
+}
+);
+
+assert.equal(handled, true);
+assert.ok(zoom);
+assert.ok(zoom.factor < 1);
+assert.equal(zoom.plotX, 50);
+assert.equal(priceCalls, 0);
 
 });

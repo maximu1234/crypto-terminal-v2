@@ -50,7 +50,7 @@ ensureDomChartCrosshair,
 hideDomChartCrosshair,
 positionTabletProbeHorizInStack,
 fullCrosshairOptions
-} from "../chart-import.js?v=0eb05058";
+} from "../chart-import.js?v=a9542153";
 
 import {
 STROKE,
@@ -122,7 +122,7 @@ createDrawPrefs
 
 import {
 createPositionDraw
-} from "./position-draw.js?v=ad2feff2";
+} from "./position-draw.js?v=0b933244";
 
 import {
 pickUi
@@ -152,7 +152,7 @@ updateChartRulerLabelEl
 
 import {
 mountTabletDrawInput
-} from "../drawings-tablet-input.js?v=e5f2dad7";
+} from "../drawings-tablet-input.js?v=59a03ded";
 
 import {
 cloneDrawingsForUndo,
@@ -161,7 +161,7 @@ createDrawUndoStack
 
 import {
 createDrawDesktopSelection
-} from "./draw-edit-desktop.js?v=ad801267";
+} from "./draw-edit-desktop.js?v=47c281ae";
 
 import {
 createDrawingsPersist
@@ -169,15 +169,15 @@ createDrawingsPersist
 
 import {
 createDrawStyleBar
-} from "./draw-style-bar.js?v=cf886173";
+} from "./draw-style-bar.js?v=1445cdaa";
 
 import {
 createDrawAlertsChart
-} from "./draw-alerts-chart.js?v=f2573a2f";
+} from "./draw-alerts-chart.js?v=c336e1e8";
 
 import {
 createDrawPlacement
-} from "./draw-placement.js?v=760b7e96";
+} from "./draw-placement.js?v=a245b520";
 
 import {
 createDrawTextEditor,
@@ -206,15 +206,15 @@ createBrushPlacement
 
 import {
 createDrawEditInteraction
-} from "./draw-edit-interaction.js?v=951d4391";
+} from "./draw-edit-interaction.js?v=7a86fdd3";
 
 import {
 createDrawChartInput
-} from "./draw-chart-input.js?v=302e626a";
+} from "./draw-chart-input.js?v=4163184f";
 
 import {
 createDrawPriceScale
-} from "./draw-price-scale.js?v=c033cc35";
+} from "./draw-price-scale.js?v=75f06c9c";
 
 import {
 createDrawRedrawLoop
@@ -630,6 +630,8 @@ let rangeHandlerChartSub =
 null;
 let rangeHandlerCoordSub =
 null;
+let rangeHandlerPriceSub =
+false;
 
 function refreshDrawToolsAccessUi(){
 return refreshDrawToolsAccessUiMoved(
@@ -2487,6 +2489,19 @@ rangeHandler
 );
 }
 
+try{
+chart.priceScale(
+"right"
+).subscribeVisibleLogicalRangeChange(
+rangeHandler
+);
+rangeHandlerPriceSub =
+true;
+}catch{
+rangeHandlerPriceSub =
+false;
+}
+
 const onKeyDown = e=>{
 
 if(!alive || !isActive()){
@@ -3453,7 +3468,7 @@ lastChartAlertsPullMs =
 Date.now();
 
 void import(
-"../alerts-cloud-sync.js?v=bca97922"
+"../alerts-cloud-sync.js?v=d47d703d"
 ).then(
 ({ pullRegistryFromCloudNow })=>
 pullRegistryFromCloudNow({
@@ -4249,6 +4264,22 @@ rangeHandlerCoordSub
 );
 rangeHandlerCoordSub =
 null;
+}
+
+if(
+rangeHandlerPriceSub
+){
+try{
+chart.priceScale(
+"right"
+).unsubscribeVisibleLogicalRangeChange(
+rangeHandler
+);
+}catch{
+/* ignore */
+}
+rangeHandlerPriceSub =
+false;
 }
 
 if(chartApplyPatchRestore){

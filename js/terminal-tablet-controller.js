@@ -15,7 +15,7 @@ normalCrosshairOptions,
 positionTabletProbeCrosshair,
 tabletProbeCrosshairOptions,
 TABLET_USE_CUSTOM_TOUCH_PAN
-} from "./chart-import.js?v=0eb05058";
+} from "./chart-import.js?v=a9542153";
 
 import {
 createTabletGesturePolicy
@@ -395,7 +395,7 @@ const {
 mountTabletChartGestures
 } =
 await import(
-"./chart-tablet-gestures.js?v=5d2031e0"
+"./chart-tablet-gestures.js?v=179d0eb5"
 );
 
 const tabletGestureCtrl =
@@ -423,7 +423,13 @@ blockChartScroll:()=>probeSessionActive,
 onHoldStart: enterProbeSession,
 onHoldEnd: exitProbeSession,
 onProbeAt: probeAt,
-onDocked: enterDockedProbe
+onDocked: enterDockedProbe,
+onPanStart(){
+getDrawingTools()?.holdChartPanRedraw?.();
+},
+onPanEnd(){
+getDrawingTools()?.bumpChartPanRedraw?.();
+}
 }
 );
 

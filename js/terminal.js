@@ -44,12 +44,12 @@ openChromeSurface
 
 import {
 resolveUrlExchangeDeepLink
-} from "./alert-deep-link-exchange.js?v=1310abdb";
+} from "./alert-deep-link-exchange.js?v=26ae093a";
 
 import {
 defaultRsiPaneSettings,
 normalizeRsiPaneSettings
-} from "./indicators/rsi-pane.js?v=3ae624e3";
+} from "./indicators/rsi-pane.js?v=f76f4b02";
 
 import {
 buildChartRsiPoints
@@ -70,18 +70,18 @@ seedWatchlistTfOnBlueFlag
 
 import {
 ensureCloudReady
-} from "./auth-ui.js?v=6d08eaa3";
+} from "./auth-ui.js?v=65835ce8";
 
 import {
 getActiveAlerts,
 isMacdAlert,
 isRsiAlert
-} from "./alerts.js?v=7a00a70c";
+} from "./alerts.js?v=b589442d";
 
 import {
 persistFavoritesToCloud,
 onFavoritesRemoteUpdate
-} from "./cloud-sync.js?v=668ac81e";
+} from "./cloud-sync.js?v=d3f4dea7";
 
 import {
 createCandlestickChart,
@@ -112,7 +112,7 @@ appendFutureWhitespaceBars,
 applyCoinsChartViewport,
 refreshCoinsChartBarSpacing,
 tfPeriodSec
-} from "./chart-import.js?v=0eb05058";
+} from "./chart-import.js?v=a9542153";
 
 import {
 terminalVisibleBars,
@@ -126,7 +126,7 @@ TERMINAL_HISTORY_LAZY_BATCH_BARS
 
 import {
 mountCoinsTabletController
-} from "./terminal-tablet-controller.js?v=c5642019";
+} from "./terminal-tablet-controller.js?v=891645f1";
 
 import {
 disconnectKlineStream
@@ -136,7 +136,7 @@ import {
 syncBackgroundAlertStreams,
 onMacdSeriesUpdate,
 onRsiSeriesUpdate
-} from "./alert-monitor.js?v=38f8c2f2";
+} from "./alert-monitor.js?v=44a0538f";
 
 import {
 createSharedDrawUndoStack
@@ -208,7 +208,7 @@ mountCoinsScaleInvertMenu
 
 import {
 mountTerminalDrawChrome
-} from "./terminal/terminal-draw-chrome.js?v=191dc92c";
+} from "./terminal/terminal-draw-chrome.js?v=693e8385";
 
 
 
@@ -219,7 +219,7 @@ stopTickerStream
 import {
 mountCoinsListRefreshControls,
 applyCoinsListRefreshInterval
-} from "./terminal-list-refresh.js?v=87de4cf6";
+} from "./terminal-list-refresh.js?v=8c9fb73d";
 
 import {
 readCoinsPrefs,
@@ -233,7 +233,7 @@ applyCoinsPrefs,
 applySortForCurrentMarket,
 readUrlParams,
 readLastViewForExchange
-} from "./terminal/terminal-prefs.js?v=ba34408e";
+} from "./terminal/terminal-prefs.js?v=5c6d1b31";
 
 import {
 mountDesktopOpenChartHandler
@@ -255,7 +255,7 @@ setCoinsTableHooks,
 syncCoinListFreezeFromFlagMenus,
 getExtraCoinMarkets,
 isExtraCoinMarket
-} from "./terminal/terminal-table.js?v=e1356795";
+} from "./terminal/terminal-table.js?v=32514a70";
 
 import {
 createCoinsChartSwitchVeil
@@ -270,7 +270,7 @@ syncCoinsChartLinkedViewports,
 resizeCharts,
 scheduleResizeCharts,
 applyDefaultZoom
-} from "./terminal/terminal-chart-layout.js?v=18df696d";
+} from "./terminal/terminal-chart-layout.js?v=75fc2266";
 
 import {
 isTerminalReplayActive,
@@ -286,7 +286,7 @@ import {
 initTerminalMultiChart,
 syncPrimaryTfToLayout,
 isTerminalMultiChartLayout
-} from "./terminal-multi-chart.js?v=f0094637";
+} from "./terminal-multi-chart.js?v=1095e4e1";
 
 import {
 mountTerminalLayoutPicker
@@ -334,7 +334,7 @@ loadVisibleTerminalHistory as loadVisibleTerminalHistoryMoved,
 applyMergedTerminalCandles as applyMergedTerminalCandlesMoved,
 settleTerminalHistoryAfterPaint as settleTerminalHistoryAfterPaintMoved,
 bindTerminalHistoryLazyLoad as bindTerminalHistoryLazyLoadMoved
-} from "./terminal/terminal-history.js?v=288bfe03";
+} from "./terminal/terminal-history.js?v=0b9edb53";
 import {
 allCoinsDrawTools as allCoinsDrawToolsMoved,
 scheduleCoinsDrawRedraw as scheduleCoinsDrawRedrawMoved,
@@ -435,7 +435,7 @@ syncCoinsMarketFilterOptions as syncCoinsMarketFilterOptionsMoved,
 handleExchangeChanged as handleExchangeChangedMoved,
 refreshCoinsMarketUi as refreshCoinsMarketUiMoved,
 syncTerminalAlgoEarlyT3List as syncTerminalAlgoEarlyT3ListMoved
-} from "./terminal/terminal-coins-page.js?v=dc52d500";
+} from "./terminal/terminal-coins-page.js?v=9830f576";
 let terminalAlgoEarlyT3ListMod =
 null;
 
@@ -1370,10 +1370,18 @@ candleSeries
 onInteraction(){
 priceHudCtrl.refresh?.();
 },
-onScaleFrame(){},
-onDragStart(){},
-onDragEnd(){},
-onReset(){}
+onScaleFrame(){
+drawingTools?.holdChartPanRedraw?.();
+},
+onDragStart(){
+drawingTools?.holdChartPanRedraw?.();
+},
+onDragEnd(){
+drawingTools?.bumpChartPanRedraw?.();
+},
+onReset(){
+drawingTools?.bumpChartPanRedraw?.();
+}
 };
 
 const rsiPriceScaleTouchHooks = {

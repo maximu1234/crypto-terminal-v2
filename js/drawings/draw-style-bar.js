@@ -9,7 +9,7 @@ parseDrawColor
 
 import {
 isCoarseTouchViewport
-} from "../chart-import.js?v=0eb05058";
+} from "../chart-import.js?v=a9542153";
 
 import {
 STROKE,
@@ -59,13 +59,13 @@ calcPositionVolumeUsd
 
 import {
 applyPositionVolumeFromDrawing
-} from "../trade-volume-presets.js?v=cbbfd08b";
+} from "../trade-volume-presets.js?v=c10677b9";
 
 import {
 stashDrawingStopsFromDrawing,
 clearDrawingStopsPending,
 hasDrawingStopsPending
-} from "../trade-auto-stops.js?v=30425684";
+} from "../trade-auto-stops.js?v=e718932d";
 
 import {
 touchShapeRevision

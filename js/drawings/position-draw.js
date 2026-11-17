@@ -34,6 +34,30 @@ import {
 isSeriesLogarithmic
 } from "./fib-spec.js?v=43350118";
 
+/** Сторона шильда снаружи уровня: выше на экране — «above». */
+export function positionEdgeBadgeSide(
+levelY,
+entryY
+){
+
+if(
+!Number.isFinite(
+levelY
+) ||
+!Number.isFinite(
+entryY
+)
+){
+return "below";
+}
+
+return levelY <
+entryY
+? "above"
+: "below";
+
+}
+
 /**
  * @param {{
  *   canvas: HTMLCanvasElement,
@@ -1100,18 +1124,6 @@ series
 );
 const cx =
 (x1 + x2) / 2;
-const topY =
-Math.min(
-yEntry,
-yTp,
-ySl
-);
-const botY =
-Math.max(
-yEntry,
-yTp,
-ySl
-);
 
 let tpText;
 let slText;
@@ -1153,17 +1165,16 @@ isLong
 ? "long-center"
 : "short-center";
 
-if(
-isLong
-){
-
 drawPositionBadge(
 ctx,
 tpText,
 cx,
 positionBadgeCyOutside(
-topY,
-"above"
+yTp,
+positionEdgeBadgeSide(
+yTp,
+yEntry
+)
 ),
 "tp"
 );
@@ -1173,37 +1184,14 @@ ctx,
 slText,
 cx,
 positionBadgeCyOutside(
-botY,
-"below"
+ySl,
+positionEdgeBadgeSide(
+ySl,
+yEntry
+)
 ),
 "sl"
 );
-
-}else{
-
-drawPositionBadge(
-ctx,
-slText,
-cx,
-positionBadgeCyOutside(
-topY,
-"above"
-),
-"sl"
-);
-
-drawPositionBadge(
-ctx,
-tpText,
-cx,
-positionBadgeCyOutside(
-botY,
-"below"
-),
-"tp"
-);
-
-}
 
 if(
 sizing

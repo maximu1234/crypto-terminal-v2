@@ -11,7 +11,9 @@ CandleBenchChart
 import {
 candleIndexAt,
 candleOpenAtIndex,
-candleX
+candleX,
+clampPan,
+panForAnchor
 } from "../canvas-bench/live-plan.js?v=timefix18";
 
 import {
@@ -2735,6 +2737,163 @@ engine.panPx = zoom.panPx;
 engine.userMovedView = true;
 lastNotified = null;
 engine.scheduleRebuild();
+},
+/*
+ * Сдвиг пальцем в пикселях. setVisibleLogicalRange глушит
+ * шаг меньше 0.25 бара и заново делит окно.
+ */
+panByPixels(dx){
+
+const layout =
+engine.layout;
+const delta =
+Number(dx) || 0;
+
+if(
+!layout ||
+!engine.candles.length ||
+!delta
+){
+return false;
+}
+
+const next =
+clampPan(
+engine.panPx + delta,
+engine.candles.length,
+layout.plotLeft,
+layout.plotRight,
+engine.rightGap,
+engine.barSpacing
+);
+
+if(
+next ===
+engine.panPx
+){
+return false;
+}
+
+engine.panPx = next;
+engine.userMovedView = true;
+engine.zoomHold = null;
+lastNotified = null;
+engine.scheduleRebuild();
+return true;
+
+},
+/*
+ * factor умножает ширину свечи. Больше 1 — приближение.
+ * Ценовую шкалу не трогает.
+ */
+zoomByFactor(factor, plotX){
+
+const layout =
+engine.layout;
+const scale =
+Number(factor);
+
+if(
+!layout ||
+!engine.candles.length ||
+!(scale > 0) ||
+scale ===
+1
+){
+return false;
+}
+
+const minSpacing =
+typeof engine.zoomOutFloor ===
+"function"
+? engine.zoomOutFloor()
+: 0.05;
+const maxSpacing =
+64;
+let nextSpacing =
+engine.barSpacing * scale;
+
+if(
+scale <
+1
+){
+nextSpacing =
+Math.min(
+engine.barSpacing,
+Math.max(
+minSpacing,
+nextSpacing
+)
+);
+}else{
+nextSpacing =
+Math.max(
+engine.barSpacing,
+Math.min(
+maxSpacing,
+nextSpacing
+)
+);
+}
+
+if(
+!(
+Math.abs(
+nextSpacing -
+engine.barSpacing
+) >
+1e-6
+)
+){
+return false;
+}
+
+const x =
+Number.isFinite(
+Number(plotX)
+)
+? Number(plotX)
+: layout.plotW / 2;
+const last =
+engine.candles.length - 1;
+const index =
+candleIndexAt(
+x,
+last,
+layout.plotRight,
+engine.rightGap,
+engine.barSpacing,
+engine.panPx
+);
+
+engine.barSpacing = nextSpacing;
+engine.wheelZoomAt =
+typeof performance !==
+"undefined"
+? performance.now()
+: Date.now();
+engine.panPx =
+clampPan(
+panForAnchor(
+index,
+x,
+last,
+layout.plotRight,
+engine.rightGap,
+nextSpacing
+),
+engine.candles.length,
+layout.plotLeft,
+layout.plotRight,
+engine.rightGap,
+nextSpacing
+);
+engine.userMovedView = true;
+engine.zoomHold = null;
+lastNotified = null;
+engine.scheduleRebuild();
+return true;
+
 },
 fitContent(){
 engine.panPx = 0;

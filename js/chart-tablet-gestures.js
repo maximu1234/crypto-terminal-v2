@@ -17,11 +17,15 @@ const PAN_HORIZ_BIAS =
 1.25;
 
 /**
- * Plot pan starts on a mostly-horizontal drag (iPad custom pan is time-only).
+ * Автошкала: пан только с горизонтального жеста.
+ * Ручная шкала: любой сдвиг, иначе вертикаль после зума цены не двигает график.
  */
 export function shouldStartTabletPlotPan(
 dx,
-dy
+dy,
+{
+manualPrice = false
+} = {}
 ){
 
 const absDx =
@@ -33,6 +37,16 @@ const absDy =
 Math.abs(
 dy
 );
+
+if(
+manualPrice
+){
+return Math.hypot(
+absDx,
+absDy
+) >=
+PAN_START_PX;
+}
 
 return (
 absDx >=
@@ -246,12 +260,6 @@ Math.max(
 rect?.width ||
 1
 );
-const height =
-Math.max(
-1,
-rect?.height ||
-1
-);
 const anchorFrac =
 rect ?
 Math.min(
@@ -266,23 +274,6 @@ e.clientX ??
 rect.left
 ) /
 width
-)
-) :
-0.5;
-const priceFrac =
-rect ?
-Math.min(
-1,
-Math.max(
-0,
-(
-(
-e.clientY ??
-0
-) -
-rect.top
-) /
-height
 )
 ) :
 0.5;
@@ -301,6 +292,16 @@ dx
 ) >
 0.5
 ){
+
+if(
+typeof ts.panByPixels ===
+"function"
+){
+ts.panByPixels(
+-dx
+);
+return true;
+}
 
 const spacing =
 ts.options?.()?.barSpacing ??
@@ -343,50 +344,32 @@ anchorFrac,
 factor
 );
 
+if(
+typeof ts.zoomByFactor ===
+"function"
+){
+
+const plotX =
+rect
+? (
+e.clientX ??
+0
+) -
+rect.left
+: undefined;
+
+ts.zoomByFactor(
+1 / factor,
+plotX
+);
+
+return true;
+
+}
+
 ts.setVisibleLogicalRange(
 next
 );
-
-try{
-
-const ps =
-chart.priceScale?.(
-"right"
-);
-const pr =
-ps?.getVisibleRange?.();
-
-if(
-pr &&
-Number.isFinite(
-pr.from
-) &&
-Number.isFinite(
-pr.to
-) &&
-pr.to !==
-pr.from
-){
-
-const zoomed =
-rangeZoomAroundAnchor(
-pr.from,
-pr.to,
-1 -
-priceFrac,
-factor,
-Number.EPSILON
-);
-
-ps.setVisibleRange(
-zoomed
-);
-
-}
-
-}catch{
-/* auto-scale / missing scale */
-}
 
 return true;
 
@@ -408,7 +391,8 @@ onHoldStart = ()=>{},
 onHoldEnd = ()=>{},
 onProbeAt = ()=>{},
 onDocked = ()=>{},
-onPanStart = ()=>{}
+onPanStart = ()=>{},
+onPanEnd = ()=>{}
 } = {}
 ){
 
@@ -492,6 +476,9 @@ let lastPanClientY =
 
 let holdTimer =
 null;
+
+let viewReleaseTimer =
+0;
 
 let panSuspended =
 false;
@@ -671,6 +658,55 @@ to
 
 }
 
+function priceScaleIsManual(){
+
+try{
+return chart.priceScale?.(
+"right"
+)?.options?.()?.autoScale ===
+false;
+}catch{
+return false;
+}
+
+}
+
+function holdViewRedraw(){
+
+onPanStart();
+
+if(
+viewReleaseTimer
+){
+clearTimeout(
+viewReleaseTimer
+);
+}
+
+viewReleaseTimer =
+setTimeout(
+()=>{
+
+viewReleaseTimer =
+0;
+
+if(
+mode ===
+"pan" ||
+mode ===
+"pinch"
+){
+return;
+}
+
+onPanEnd();
+
+},
+180
+);
+
+}
+
 function scrollByDx(
 dx
 ){
@@ -684,6 +720,16 @@ return;
 
 const ts =
 chart.timeScale();
+
+if(
+typeof ts.panByPixels ===
+"function"
+){
+ts.panByPixels(
+dx
+);
+return;
+}
 
 const range =
 ts.getVisibleLogicalRange();
@@ -967,6 +1013,8 @@ holdTimer = null;
 
 detachDocListeners();
 
+onPanStart();
+
 }
 
 function applyPinch(
@@ -1024,6 +1072,12 @@ to:center + newHalf
 
 function resetGesture(){
 
+const wasView =
+mode ===
+"pan" ||
+mode ===
+"pinch";
+
 clearTimeout(
 holdTimer
 );
@@ -1046,6 +1100,12 @@ mode =
 
 pointerId = null;
 detachDocListeners();
+
+if(
+wasView
+){
+onPanEnd();
+}
 
 }
 
@@ -1128,7 +1188,10 @@ e.clientY - startClientY;
 if(
 shouldStartTabletPlotPan(
 dx,
-dy
+dy,
+{
+manualPrice: priceScaleIsManual()
+}
 )
 ){
 
@@ -1729,6 +1792,7 @@ return;
 pinchState = null;
 mode =
 "idle";
+onPanEnd();
 
 }
 
@@ -1848,6 +1912,7 @@ if(
 handled
 ){
 e.preventDefault();
+holdViewRedraw();
 }
 
 }
@@ -1917,6 +1982,16 @@ capDown
 );
 
 function dispose(){
+
+if(
+viewReleaseTimer
+){
+clearTimeout(
+viewReleaseTimer
+);
+viewReleaseTimer =
+0;
+}
 
 resetGesture();
 touchLayerEl.classList.remove(
