@@ -24,7 +24,7 @@ mountWidgetStackCrosshair,
 SCREENER_PAGE_VISIBLE_BARS,
 SCREENER_PAGE_MAX_BARS,
 SCREENER_PAGE_HISTORY_REQUESTS
-} from "./chart-import.js?v=a9542153";
+} from "./chart-import.js?v=9a97fec4";
 
 import {
 isIpadWebViewport
@@ -54,7 +54,7 @@ SCREENER_WIDGET_OSCILLATOR_MACD,
 createScreenerAoChart,
 createScreenerMacdChart,
 isScreenerHistogramOscillator
-} from "./screener-widget-oscillator.js?v=f2ad16a2";
+} from "./screener-widget-oscillator.js?v=2035a41c";
 
 let deps = null;
 

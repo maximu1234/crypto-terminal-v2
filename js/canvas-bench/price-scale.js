@@ -143,6 +143,31 @@ ratio * (scale.max - scale.min)
 
 }
 
+/**
+ * Вертикальный зум шкалы считается до переворота.
+ * Экранную Y возвращаем в эту систему, чтобы цена под курсором не уезжала.
+ */
+export function priceScaleDragAnchorY(
+y,
+plotTop,
+plotH,
+inverted
+){
+
+if(
+!inverted ||
+!Number.isFinite(y) ||
+!(plotH > 0)
+){
+return y;
+}
+
+return plotTop +
+plotH -
+(y - plotTop);
+
+}
+
 /** factor > 1 приближает. price остаётся на той же доле высоты. */
 export function zoomPriceScale(
 scale,

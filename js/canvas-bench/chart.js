@@ -18,7 +18,7 @@ scaleFromCandles,
 visibleIndexSpan,
 WHEEL_ZOOM_GESTURE_MS,
 zoomOutFloorSpacing
-} from "./live-plan.js?v=timefix18";
+} from "./live-plan.js?v=timefix19";
 
 import {
 fractionalIndexAtTime
@@ -32,8 +32,9 @@ nicePriceTicks,
 priceToY,
 yToPrice,
 shiftPriceScale,
-zoomPriceScale
-} from "./price-scale.js?v=scale-pan8";
+zoomPriceScale,
+priceScaleDragAnchorY
+} from "./price-scale.js?v=scale-pan9";
 
 const BG =
 "#0e1116";
@@ -1863,7 +1864,13 @@ Math.exp(-dy * 0.006);
 const rect =
 stage.getBoundingClientRect();
 const y =
-this.scaleDrag.y - rect.top;
+priceScaleDragAnchorY(
+this.scaleDrag.y - rect.top,
+this.layout.plotTop,
+this.layout.plotH,
+this.invertScale
+);
+
 const ratio =
 (
 y - this.layout.plotTop

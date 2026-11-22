@@ -468,7 +468,7 @@ if(
 ){
 equityChartMod =
 await import(
-"./rsi-touch-flip-equity-chart.js?v=7f29f3bd"
+"./rsi-touch-flip-equity-chart.js?v=d9a4bc4a"
 );
 }
 

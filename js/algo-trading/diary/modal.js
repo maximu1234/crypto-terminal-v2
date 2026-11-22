@@ -18,7 +18,7 @@ import {
 import {
   closeTradeDetail,
   openTradeDetail
-} from "./detail-ui.js?v=d3cf539d";
+} from "./detail-ui.js?v=eb0ce047";
 
 import {
   mountTradeDiaryPeriodPicker

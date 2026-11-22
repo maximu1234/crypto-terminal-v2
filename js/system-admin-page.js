@@ -1,25 +1,25 @@
 import {
 ensureCloudReady
-} from "./auth-ui.js?v=65835ce8";
+} from "./auth-ui.js?v=37837b2f";
 
 import {
 ensureCloudLoginResolved,
 getEffectiveCloudUserEmail
-} from "./cloud-sync.js?v=d3f4dea7";
+} from "./cloud-sync.js?v=f4896b48";
 
 import {
 isSystemAdminUser,
 getSystemAdminEmails,
 isLoggedInEffective
-} from "./system-admin-access.js?v=16b766e8";
+} from "./system-admin-access.js?v=95e48e59";
 
 import {
 bindSupabaseUsagePrefsForm
-} from "./system-admin-supabase-prefs.js?v=933e5c61";
+} from "./system-admin-supabase-prefs.js?v=0d4b2cf5";
 
 import {
 bindAlertsGarbagePurge
-} from "./system-admin-alerts-purge.js?v=12477966";
+} from "./system-admin-alerts-purge.js?v=ece731cc";
 import {
 bindWorkerReloadMsSettings
 } from "./system-admin-worker-reload-ms.js?v=e2606a6f";

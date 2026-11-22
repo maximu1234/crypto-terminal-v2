@@ -22,6 +22,10 @@ import {
 } from "../js/chart/canvas-lw-host.js";
 import { screenerBarSpacingPx } from "../js/chart/chart-viewport.js";
 import { formatCanvasAxisTime } from "../js/chart/chart-local-time.js";
+import {
+  priceScaleDragAnchorY,
+  yToPrice
+} from "../js/canvas-bench/price-scale.js";
 
 function engineAt(panPx, barSpacing = 8, ratio = 0) {
   const candles = [];
@@ -490,4 +494,16 @@ test("screener bar spacing matches applyLogicalRange ratio branch", () => {
     true
   );
   assert.ok(Math.abs(engine.barSpacing - spaced) < 1e-9);
+});
+
+test("inverted price-scale drag keeps the price under the cursor", () => {
+  const scale = { min: 100, max: 200 };
+  const plotTop = 10;
+  const plotH = 80;
+  const screenY = plotTop;
+  const anchor = priceScaleDragAnchorY(screenY, plotTop, plotH, true);
+  const price = yToPrice(anchor, scale, plotTop, plotH, 0);
+  assert.equal(priceScaleDragAnchorY(screenY, plotTop, plotH, false), screenY);
+  assert.equal(anchor, plotTop + plotH);
+  assert.ok(Math.abs(price - scale.min) < 1e-9);
 });

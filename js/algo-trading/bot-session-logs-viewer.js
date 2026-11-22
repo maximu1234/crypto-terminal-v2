@@ -7,7 +7,7 @@ fetchLanBotStatus,
 sendLanBotCommand,
 normalizeLanBotStrategyId,
 pushAuthSessionToRemoteBot
-} from "./bot-remote-client.js?v=19339655";
+} from "./bot-remote-client.js?v=f182282a";
 import {
 formatBotStrategySettingsRows,
 loadBotStrategiesPrefs

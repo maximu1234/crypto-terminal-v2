@@ -13,7 +13,7 @@ linkPairedChartTimeScales,
 SCREENER_PAGE_MAX_BARS,
 SCREENER_PAGE_VISIBLE_BARS,
 SCREENER_PAGE_HISTORY_REQUESTS
-} from "./chart-import.js?v=a9542153";
+} from "./chart-import.js?v=9a97fec4";
 
 import {
 loadMarketHistory,
@@ -61,7 +61,7 @@ getWidgetFlagHtml,
 wireWidgetFlagUi,
 updateWidgetFlagUi,
 bindWidgetFlagGlobalListeners
-} from "./widget-favorite-flag.js?v=cd8f3c98";
+} from "./widget-favorite-flag.js?v=12eea8ee";
 
 const SCRIPT_MAX_CONCURRENT_CHART_LOADS =
 4;
@@ -87,7 +87,7 @@ if(
 ){
 scriptZoomModulePromise =
 import(
-"./screener-widget-zoom.js?v=b5b5bcb3"
+"./screener-widget-zoom.js?v=04710cf3"
 ).then(
 mod=>{
 refreshZoomFavoriteUi =

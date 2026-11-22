@@ -4,7 +4,7 @@
  */
 import {
 createVolumeChart
-} from "./chart-import.js?v=a9542153";
+} from "./chart-import.js?v=9a97fec4";
 
 import {
 calculateMacd,

@@ -5,7 +5,7 @@
  */
 import {
   createCanvasLwChart
-} from "../chart/canvas-lw-host.js?v=c57738c3";
+} from "../chart/canvas-lw-host.js?v=59c5e3af";
 import {
   MACD_FLIP_TOUCH_EQUITY_POS_COLOR
 } from "./macd-flip-touch-equity.js?v=8b6c93df";

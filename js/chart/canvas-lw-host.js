@@ -6,7 +6,7 @@
 
 import {
 CandleBenchChart
-} from "../canvas-bench/chart.js?v=timefix18";
+} from "../canvas-bench/chart.js?v=timefix19";
 
 import {
 candleIndexAt,
@@ -14,7 +14,7 @@ candleOpenAtIndex,
 candleX,
 clampPan,
 panForAnchor
-} from "../canvas-bench/live-plan.js?v=timefix18";
+} from "../canvas-bench/live-plan.js?v=timefix19";
 
 import {
 PRICE_SCALE_LOG,
@@ -3012,6 +3012,7 @@ options(){
 return {
 mode: engine.priceScaleMode === PRICE_SCALE_REGULAR ? 0 : 1,
 autoScale: !engine.manualScale,
+invertScale: !!engine.invertScale,
 scaleMargins: {
 top: reportedScaleMargins.top,
 bottom: reportedScaleMargins.bottom

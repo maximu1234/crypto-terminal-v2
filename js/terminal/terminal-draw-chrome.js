@@ -7,7 +7,7 @@ import {
 positionTabletProbeCrosshair,
 hideTabletProbeCrosshair,
 isTabletChartViewport
-} from "../chart-import.js?v=a9542153";
+} from "../chart-import.js?v=9a97fec4";
 
 import {
 TERMINAL_VISIBLE_BARS,
@@ -35,7 +35,7 @@ import {
 buildChartDisplayCandles,
 settleCoinsChartViewport,
 scheduleResizeCharts
-} from "./terminal-chart-layout.js?v=75fc2266";
+} from "./terminal-chart-layout.js?v=81f7412b";
 
 import {
 suppressTerminalHistoryLazyLoad
@@ -60,13 +60,13 @@ const {
 initWidgetDrawings
 } =
 await import(
-"../chart-widget-host.js?v=47e7526b"
+"../chart-widget-host.js?v=210aed99"
 );
 const {
 initChartIndicators
 } =
 await import(
-"../chart-indicators.js?v=bdbd54ee"
+"../chart-indicators.js?v=aa279915"
 );
 const {
 createPattern12EarlyT3Indicator
@@ -219,7 +219,7 @@ deps.drawingTools?.getTool?.() ??
 );
 
 void import(
-"../price-alert-ui.js?v=23d89c41"
+"../price-alert-ui.js?v=20a104b7"
 ).then(
 ({
 mountPriceAlertUi
@@ -1064,7 +1064,7 @@ const {
 createTradePlusMenuHandler
 } =
 await import(
-"../trade-order-plus-ui.js?v=514bc976"
+"../trade-order-plus-ui.js?v=0ab33e7e"
 );
 
 tradePlusHandler =
@@ -1095,7 +1095,7 @@ const {
 mountPriceAlertUi
 } =
 await import(
-"../price-alert-ui.js?v=23d89c41"
+"../price-alert-ui.js?v=20a104b7"
 );
 
 let disposeAlertUi =
@@ -1155,7 +1155,7 @@ const {
 mountPriceAlertUi: mountRsiPriceAlertUi
 } =
 await import(
-"../price-alert-ui.js?v=23d89c41"
+"../price-alert-ui.js?v=20a104b7"
 );
 
 mountRsiPriceAlertUi(
