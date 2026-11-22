@@ -18,6 +18,12 @@ getRelayHttpsAgent
 require(
 "../app-proxy-socks-relay.cjs"
 );
+const {
+getSystemProxyAgent
+} =
+require(
+"../system-proxy-agent.cjs"
+);
 
 let WsConstructor =
 null;
@@ -244,7 +250,8 @@ wsUrl(
 creds.testnet
 );
 const agent =
-getRelayHttpsAgent();
+getRelayHttpsAgent() ||
+getSystemProxyAgent();
 
 socket =
 agent

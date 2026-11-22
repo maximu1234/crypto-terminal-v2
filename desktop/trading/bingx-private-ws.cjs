@@ -6,6 +6,7 @@
  * REST-reconcile on "account" topic when position rows are empty.
  */
 const { getCredentials } = require("./exchange-credentials.cjs");
+const { getSystemProxyAgent } = require("../system-proxy-agent.cjs");
 const {
   signedRequest,
   decodeWsMessage,
@@ -178,7 +179,10 @@ function connectBingxPrivateWs(handlers = {}) {
     const wsBase = resolveWsBase(creds);
     const url = `${wsBase}?listenKey=${encodeURIComponent(listenKey)}`;
 
-    socket = new Ws(url);
+    const agent = getSystemProxyAgent();
+    socket = agent
+      ? new Ws(url, { agent })
+      : new Ws(url);
 
     attachSocket(socket, {
       onOpen() {

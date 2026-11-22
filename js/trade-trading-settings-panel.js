@@ -4,15 +4,15 @@
 import {
 wireTradeVolumeDefaultsSettings,
 TRADE_VOLUME_SLOT_COUNT
-} from "./trade-volume-presets.js?v=6dc496d5";
+} from "./trade-volume-presets.js?v=b555b7f6";
 
 import {
 wireAutoStopSettings
-} from "./trade-auto-stops.js?v=fe93561c";
+} from "./trade-auto-stops.js?v=7b5229a3";
 
 import {
 loadTradeExchangeModules
-} from "./trade/module-router.js?v=1e9001a6";
+} from "./trade/module-router.js?v=61933497";
 
 import {
 getActiveExchangeId

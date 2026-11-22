@@ -22,7 +22,7 @@ linkChartsCrosshair
 
 import {
 readCoinsPrefs
-} from "./terminal/terminal-prefs.js?v=e186e1b5";
+} from "./terminal/terminal-prefs.js?v=fab8db4b";
 
 import {
 calculateRSI,
@@ -57,7 +57,7 @@ alignCandlesToTradePrice
 
 import {
 mountWidgetDomCrosshair
-} from "./chart-widget-host.js?v=e4f608a2";
+} from "./chart-widget-host.js?v=14b46dd7";
 
 function buildBodyHtml(
 showRsi

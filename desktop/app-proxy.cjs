@@ -48,6 +48,13 @@ stopSocksAuthRelay
 require(
 "./app-proxy-socks-relay.cjs"
 );
+const {
+setFollowSystemProxy,
+refreshSystemProxyAgent
+} =
+require(
+"./system-proxy-agent.cjs"
+);
 
 const STORE_FILE =
 "app-proxy-settings.json";
@@ -169,7 +176,7 @@ if(
 ){
 await ses.setProxy({
 mode:
-"direct"
+"system"
 });
 }else{
 await ses.setProxy({
@@ -274,6 +281,31 @@ proxyRules
 );
 }
 
+const followSystem =
+!isProxyConfigReady(
+settings
+);
+
+setFollowSystemProxy(
+followSystem
+);
+
+if(
+followSystem
+){
+try{
+await refreshSystemProxyAgent();
+}catch(
+err
+){
+log.warn(
+"system-proxy refresh:",
+err?.message ||
+err
+);
+}
+}
+
 if(
 isProxyConfigReady(
 settings
@@ -288,7 +320,7 @@ settings.port
 );
 }else{
 log.info(
-"app-proxy: direct"
+"app-proxy: system"
 );
 }
 
@@ -364,10 +396,18 @@ if(
 return;
 }
 
-event.preventDefault();
-
 const cfg =
 loadProxySettings();
+
+if(
+!isProxyConfigReady(
+cfg
+)
+){
+return;
+}
+
+event.preventDefault();
 
 callback(
 cfg.username ||

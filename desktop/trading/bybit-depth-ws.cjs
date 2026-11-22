@@ -16,6 +16,12 @@ require(
 "../app-proxy-socks-relay.cjs"
 );
 const {
+getSystemProxyAgent
+} =
+require(
+"../system-proxy-agent.cjs"
+);
+const {
 handleTrustedDesktopUi
 } =
 require(
@@ -265,10 +271,13 @@ return;
 
 const Ws =
 getWs();
-const agent =
+const relay =
 getRelayHttpsAgent();
+const agent =
+relay ||
+getSystemProxyAgent();
 const urls =
-agent
+relay
 ? [
 WS_URL_BYTICK,
 WS_URL_BYBIT

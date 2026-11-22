@@ -27,6 +27,14 @@ require(
 "../app-proxy-socks-relay.cjs"
 );
 const {
+getSystemProxyAgent,
+onSystemProxyChanged,
+refreshSystemProxyAgent
+} =
+require(
+"../system-proxy-agent.cjs"
+);
+const {
 handleTrustedDesktopUi
 } =
 require(
@@ -195,10 +203,17 @@ urls.length;
 
 }
 
+function outboundAgent(){
+
+return getRelayHttpsAgent() ||
+getSystemProxyAgent();
+
+}
+
 function wsClientOptions(){
 
 const agent =
-getRelayHttpsAgent();
+outboundAgent();
 const opts =
 {
 handshakeTimeout:
@@ -774,7 +789,7 @@ return;
 }
 
 const agent =
-getRelayHttpsAgent();
+outboundAgent();
 socketUsedAgent =
 !!agent;
 intentionalClose =
@@ -828,7 +843,7 @@ log.info(
 "bybit public ws connected",
 {
 viaProxy:
-!!agent,
+!!outboundAgent(),
 topics:
 wanted.size
 }
@@ -886,6 +901,8 @@ livedMs <
 ? 3500
 : 2000
 );
+
+void refreshSystemProxyAgent();
 
 }
 );
@@ -1007,7 +1024,7 @@ topics:
 }
 
 const agentNow =
-!!getRelayHttpsAgent();
+!!outboundAgent();
 const reset =
 !!opts.reset;
 
@@ -1245,7 +1262,7 @@ message:
 result.message ||
 "Проверка WebSocket Bybit не удалась.",
 viaProxy:
-!!getRelayHttpsAgent(),
+!!outboundAgent(),
 ms:
 result.ms ||
 0
@@ -1254,6 +1271,21 @@ result.ms ||
 }
 
 setRelayAgentCreatedHandler(
+()=>{
+
+if(
+!wanted.size
+){
+return;
+}
+
+closeSocket();
+connect();
+
+}
+);
+
+onSystemProxyChanged(
 ()=>{
 
 if(
@@ -1287,7 +1319,7 @@ new URL(
 url
 );
 const agent =
-getRelayHttpsAgent();
+outboundAgent();
 const req =
 https.request(
 {
@@ -1580,7 +1612,7 @@ true,
 json,
 base,
 viaProxy:
-!!agent
+!!outboundAgent()
 };
 }
 
@@ -1600,7 +1632,7 @@ message:
 lastErr?.message ||
 "История свечей через прокси не открылась.",
 viaProxy:
-!!agent
+!!outboundAgent()
 };
 
 }

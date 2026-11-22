@@ -104,12 +104,12 @@ persistBotTickerBookToMain
 } from "./bot-ticker-book.js?v=8b12c45e";
 import {
 isMultichartRemoteControlHost
-} from "./bot-remote-client.js?v=c56e86f0";
+} from "./bot-remote-client.js?v=6818b2e6";
 import {
 mountRemoteSessionLogsEntry,
 mountRemoteWatchlistsPushEntry,
 mountLocalSessionLogsEntry
-} from "./bot-session-logs-viewer.js?v=a6e891ec";
+} from "./bot-session-logs-viewer.js?v=d619bf7e";
 import {
 rebalanceTpShares
 } from "./pattern-trade-stats-partial.js?v=68baa161";

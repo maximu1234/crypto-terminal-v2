@@ -1,7 +1,7 @@
 {
   "name": "multichart-desktop",
   "productName": "Multichart",
-  "version": "1.2.22",
+  "version": "1.2.23",
   "description": "Multichart desktop shell for macOS (bundled site UI + auto-update)",
   "main": "main.js",
   "author": "Multichart",
@@ -25,6 +25,8 @@
   },
   "dependencies": {
     "electron-log": "^5.2.4",
+    "https-proxy-agent": "^5.0.1",
+    "socks-proxy-agent": "^7.0.0",
     "ws": "^8.18.0"
   },
   "devDependencies": {

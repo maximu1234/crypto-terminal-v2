@@ -18,6 +18,12 @@ getRelayHttpsAgent
 require(
 "../app-proxy-socks-relay.cjs"
 );
+const {
+getSystemProxyAgent
+} =
+require(
+"../system-proxy-agent.cjs"
+);
 
 function getCredentials(){
 return getAlgoCredentials("bybit");
@@ -248,7 +254,8 @@ wsUrl(
 creds.testnet
 );
 const agent =
-getRelayHttpsAgent();
+getRelayHttpsAgent() ||
+getSystemProxyAgent();
 
 socket =
 agent
