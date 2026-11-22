@@ -2,6 +2,10 @@
  * Terminal price-chart display: candlesticks vs line.
  * OHLC bars stay the source of truth; this only maps them for Lightweight Charts.
  */
+import {
+APPEARANCE_EVENT,
+appearanceColor
+} from "../appearance-theme.js?v=a12dec97";
 
 export const CHART_DISPLAY_STYLE_KEY =
 "terminal_chart_display_style_v1";
@@ -48,7 +52,7 @@ return {
 type: CHART_DISPLAY_TYPE_CANDLES,
 source: "close",
 lineStyle: "solid",
-lineColor: DEFAULT_LINE_COLOR,
+lineColor: appearanceColor("lineColor"),
 lineWidth: 2
 };
 
@@ -78,7 +82,8 @@ const b = hex[3];
 return `#${r}${r}${g}${g}${b}${b}`;
 }
 
-return DEFAULT_LINE_COLOR;
+return appearanceColor("lineColor") ||
+DEFAULT_LINE_COLOR;
 
 }
 
@@ -464,5 +469,57 @@ return {
 minValue,
 maxValue
 };
+
+}
+
+if(typeof window !== "undefined"){
+
+window.addEventListener(
+APPEARANCE_EVENT,
+event=>{
+
+const prev =
+event.detail?.previous?.lineColor;
+const next =
+event.detail?.theme?.lineColor;
+
+if(
+!prev ||
+!next ||
+prev === next
+){
+return;
+}
+
+try{
+const raw =
+localStorage.getItem(
+CHART_DISPLAY_STYLE_KEY
+);
+
+if(!raw){
+return;
+}
+
+const parsed =
+JSON.parse(raw);
+
+if(
+normalizeHexColor(parsed?.lineColor) !==
+prev
+){
+return;
+}
+
+saveChartDisplayStyle({
+...parsed,
+lineColor: next
+});
+}catch{
+/* ignore */
+}
+
+}
+);
 
 }

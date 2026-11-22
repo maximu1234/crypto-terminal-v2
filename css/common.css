@@ -195,7 +195,7 @@ gap:6px;
 
 .cloud-auth-email{
 width:148px;
-background:#171b21;
+background:var(--app-input, #171b21);
 border:1px solid #374151;
 color:#e5e7eb;
 border-radius:6px;
@@ -353,7 +353,7 @@ width:100%;
 min-height:64px;
 resize:vertical;
 box-sizing:border-box;
-background:#171b21;
+background:var(--app-input, #171b21);
 border:1px solid #374151;
 color:#e5e7eb;
 border-radius:6px;
@@ -397,7 +397,7 @@ align-items:center;
 
 .cloud-telegram-chat-id{
 flex:1 1 auto;
-background:#171b21;
+background:var(--app-input, #171b21);
 border:1px solid #374151;
 color:#e5e7eb;
 border-radius:6px;
@@ -557,11 +557,11 @@ color:#fff;
 }
 
 .green{
-color:#22c55e;
+color:var(--appearance-change-up, #22c55e);
 }
 
 .red{
-color:#ef4444;
+color:var(--appearance-change-down, #ef4444);
 }
 
 .hidden{

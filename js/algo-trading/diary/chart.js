@@ -17,7 +17,7 @@ withChartLocalTime
 import {
 candleSeriesPaint,
 registerCandleSeries
-} from "../../chart/candle-color-prefs.js?v=a9347502";
+} from "../../chart/candle-color-prefs.js?v=7a67da75";
 
 import {
 createCanvasLwChart

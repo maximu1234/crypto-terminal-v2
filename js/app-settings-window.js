@@ -3,11 +3,11 @@
  */
 import {
 cssUrl
-} from "./asset-manifest.js?v=5986e78c";
+} from "./asset-manifest.js?v=463d83ae";
 
 import {
 isSystemAdminUser
-} from "./system-admin-access.js?v=95e48e59";
+} from "./system-admin-access.js?v=cee08d6d";
 
 import {
 beginChromeOverlay,
@@ -23,11 +23,11 @@ closeChromeSurface
 
 import {
 mountTelegramSettingsPanel
-} from "./telegram-settings-panel.js?v=cd011418";
+} from "./telegram-settings-panel.js?v=5ccf68b8";
 
 import {
 mountFavoritesCloudSettingsPanel
-} from "./favorites-settings-panel.js?v=f8c466ba";
+} from "./favorites-settings-panel.js?v=71e44803";
 
 const SECTIONS =
 [
@@ -36,6 +36,12 @@ id:
 "system",
 label:
 "Системные"
+},
+{
+id:
+"appearance",
+label:
+"Внешний вид"
 },
 {
 id:
@@ -445,7 +451,7 @@ const {
 closeCloudSettingsDropdown
 } =
 await import(
-"./auth-ui.js?v=37837b2f"
+"./auth-ui.js?v=67ee13f9"
 );
 closeCloudSettingsDropdown();
 await openAppSettingsWindow();
@@ -662,7 +668,7 @@ const {
 mountSystemSettingsPanel
 } =
 await import(
-"./app-settings-system-panel.js?v=a252eaff"
+"./app-settings-system-panel.js?v=b40ca9ed"
 );
 
 systemCtl =
@@ -709,7 +715,7 @@ const {
 mountCloudAuthPanelInSettings
 } =
 await import(
-"./auth-ui.js?v=37837b2f"
+"./auth-ui.js?v=67ee13f9"
 );
 
 mountCloudAuthPanelInSettings(
@@ -776,7 +782,7 @@ mountExchangeConnectionsPanel,
 updateTradeExchangeConnectionChrome
 } =
 await import(
-"./trade-exchange-settings.js?v=97324155"
+"./trade-exchange-settings.js?v=e1842df0"
 );
 
 const host =
@@ -871,7 +877,7 @@ const {
 mountTradingSettingsPanel
 } =
 await import(
-"./trade-trading-settings-panel.js?v=b8e44ea1"
+"./trade-trading-settings-panel.js?v=2c348674"
 );
 
 const host =
@@ -886,6 +892,25 @@ host
 
 await mountTradingSettingsPanel(
 host
+);
+return;
+
+}
+
+if(
+sectionId ===
+"appearance"
+){
+
+const {
+mountAppearanceSettingsPanel
+} =
+await import(
+"./app-settings-appearance-panel.js?v=5664f737"
+);
+
+mountAppearanceSettingsPanel(
+panel
 );
 return;
 
@@ -921,7 +946,7 @@ const {
 mountSecretSettingsPanel
 } =
 await import(
-"./app-settings-secret.js?v=282212e3"
+"./app-settings-secret.js?v=2fe5d997"
 );
 
 await mountSecretSettingsPanel(

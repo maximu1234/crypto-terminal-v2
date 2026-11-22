@@ -1,8 +1,12 @@
 /**
  * Цвет свечей цены на всех графиках.
- * classic — зелёные / красные, mono — все свечи белые.
+ * classic — цвета из «Внешний вид», mono — все свечи белые.
  * Индикаторы этот режим не красят.
  */
+import {
+APPEARANCE_EVENT,
+appearanceColor
+} from "../appearance-theme.js?v=a12dec97";
 export const CANDLE_COLOR_MODE_KEY =
 "chart_candle_color_mode_v1";
 
@@ -15,14 +19,22 @@ export const CANDLE_COLOR_MONO =
 export const CANDLE_COLOR_EVENT =
 "chart-candle-color-changed";
 
-const CLASSIC_PAINT =
-Object.freeze({
-upColor: "#459782",
-downColor: "#ef4444",
+function classicPaint(){
+
+const up =
+appearanceColor("candleUp");
+const down =
+appearanceColor("candleDown");
+
+return {
+upColor: up,
+downColor: down,
 borderVisible: false,
-wickUpColor: "#459782",
-wickDownColor: "#ef4444"
-});
+wickUpColor: up,
+wickDownColor: down
+};
+
+}
 
 const MONO_PAINT =
 Object.freeze({
@@ -63,7 +75,7 @@ export function candleSeriesPaint(){
 return getCandleColorMode() ===
 CANDLE_COLOR_MONO
 ? MONO_PAINT
-: CLASSIC_PAINT;
+: classicPaint();
 
 }
 
@@ -167,6 +179,13 @@ if(
 typeof window !==
 "undefined"
 ){
+
+window.addEventListener(
+APPEARANCE_EVENT,
+()=>{
+paintRegisteredCandleSeries();
+}
+);
 
 window.addEventListener(
 "storage",

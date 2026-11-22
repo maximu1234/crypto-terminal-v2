@@ -26,7 +26,8 @@ const NAMES = [
 "long",
 "short",
 "fixed-volume-profile",
-"trash"
+"trash",
+"magnet"
 ];
 
 

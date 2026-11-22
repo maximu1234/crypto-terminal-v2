@@ -17,6 +17,10 @@
  * LW series methods are class APIs — call inner.fn(...) so `this` is the series.
  */
 import {
+APPEARANCE_EVENT
+} from "../appearance-theme.js?v=a12dec97";
+
+import {
 CANDLE_SERIES_PAINT,
 CHART_DISPLAY_TYPE_CANDLES,
 CHART_DISPLAY_TYPE_LINE,
@@ -27,7 +31,7 @@ mapDisplayCandlesToSeriesData,
 normalizeChartDisplayStyle,
 ohlcPriceRangeFromBars,
 seriesBarClose
-} from "./chart-display-style.js?v=e916eea3";
+} from "./chart-display-style.js?v=2d91c3e5";
 
 import {
 mergeLiveBarIntoDisplay
@@ -63,6 +67,50 @@ high: bar.high ?? close,
 low: bar.low ?? close,
 close
 };
+
+}
+
+const priceSeriesHosts =
+new Set();
+
+if(typeof window !== "undefined"){
+
+window.addEventListener(
+APPEARANCE_EVENT,
+event=>{
+
+const prev =
+event.detail?.previous?.lineColor;
+const next =
+event.detail?.theme?.lineColor;
+
+if(
+!prev ||
+!next ||
+prev === next
+){
+return;
+}
+
+for(const host of priceSeriesHosts){
+const style =
+host.getStyle?.();
+
+if(
+!style ||
+style.lineColor !== prev
+){
+continue;
+}
+
+host.applyDisplayStyle?.({
+...style,
+lineColor: next
+});
+}
+
+}
+);
 
 }
 
@@ -619,7 +667,8 @@ return typeChanged;
 }
 };
 
-return new Proxy(
+const proxy =
+new Proxy(
 host,
 {
 get(
@@ -703,5 +752,8 @@ return true;
 }
 }
 );
+
+priceSeriesHosts.add(proxy);
+return proxy;
 
 }

@@ -42,7 +42,7 @@ createRSIChart,
 updateRsiBandLayout,
 updateRsiLevelLinesLayout,
 linkPairedChartTimeScales
-} from "./chart-import.js?v=9a97fec4";
+} from "./chart-import.js?v=6fc4370c";
 
 import {
 formatPrice
@@ -63,16 +63,16 @@ getScreenerWidgetOscillator,
 isScreenerHistogramOscillator,
 setScreenerAoData,
 setScreenerMacdData
-} from "./screener-widget-oscillator.js?v=2035a41c";
+} from "./screener-widget-oscillator.js?v=48adb16b";
 
 import {
 createDashboardChartWidget,
 mountDashboardChartInteractions
-} from "./chart-widget-host.js?v=210aed99";
+} from "./chart-widget-host.js?v=e4f608a2";
 
 import {
 mountWidgetTabletChart
-} from "./tablet-widget-chart.js?v=3ecc842e";
+} from "./tablet-widget-chart.js?v=cc355c7b";
 
 import {
 subscribeKline,
@@ -102,7 +102,7 @@ initWidgetDrawToolsDropdown,
 wireWidgetDrawToolMenu,
 closeAllWidgetDrawToolsMenus,
 resetWidgetDrawToolsMenus
-} from "./watchlist-draw-ui.js?v=dcc02ce7";
+} from "./watchlist-draw-ui.js?v=58a51c4c";
 
 import {
 ensureDrawToolsVisible
@@ -125,7 +125,7 @@ getWidgetFlagHtml,
 wireWidgetFlagUi,
 updateWidgetFlagUi,
 bindWidgetFlagGlobalListeners
-} from "./widget-favorite-flag.js?v=12eea8ee";
+} from "./widget-favorite-flag.js?v=f1f7f39a";
 
 function escapeHtml(
 value
@@ -198,7 +198,7 @@ return;
 
 const mod =
 await import(
-"./trade-widget-mount.js?v=2788c3d9"
+"./trade-widget-mount.js?v=9b8d7c94"
 );
 
 mountTradeOnDashboardWidget =

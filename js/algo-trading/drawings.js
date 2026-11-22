@@ -3,12 +3,12 @@
  */
 import {
 initWidgetDrawings
-} from "../chart-widget-host.js?v=210aed99";
+} from "../chart-widget-host.js?v=e4f608a2";
 
 import {
 mountDrawToolbar,
 mountDrawToolIcons
-} from "../draw-ui-shared.js?v=a56e8714";
+} from "../draw-ui-shared.js?v=9bf487f0";
 
 /**
  * @param {{

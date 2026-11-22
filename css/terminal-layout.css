@@ -3,8 +3,8 @@
 body.terminal-page{
 display:block;
 overflow:hidden;
---coins-panel-bg:#0f0f0f;
---coins-block-separator:3.5px solid #2e2e30;
+--coins-panel-bg:var(--appearance-terminal-panel, #0f0f0f);
+--coins-block-separator:3.5px solid var(--appearance-terminal-separator, #2e2e30);
 }
 
 /* Десктоп: график | список (без phone-ветки; desktop — default) */
@@ -299,7 +299,7 @@ color:#f0f3fa;
 }
 
 body.terminal-page #draw-toolbar.draw-toolbar-vertical .draw-btn.active{
-background:#363a45;
+background:var(--appearance-tool-active, #363a45);
 color:#fff;
 }
 

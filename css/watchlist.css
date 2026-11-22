@@ -110,8 +110,8 @@ white-space:nowrap;
 ========================================================= */
 
 .widget{
-    background:var(--app-bg);
-    border:1px solid #1f2937;
+    background:var(--appearance-widget-bg, var(--app-bg));
+    border:1px solid var(--appearance-widget-border, #1f2937);
     border-radius:12px;
     display:flex;
     flex-direction:column;
@@ -137,7 +137,7 @@ white-space:nowrap;
     padding:6px 8px;
     flex-shrink:0;
     min-width:0;
-    background:#13181e;
+    background:var(--appearance-widget-header, #13181e);
 }
 
 .widget-header-row{
@@ -269,7 +269,7 @@ white-space:nowrap;
 }
 
 .draw-btn.active{
-    background:#374151;
+    background:var(--appearance-tool-active, #363a45);
     color:#fff;
 }
 
@@ -526,7 +526,7 @@ body.terminal-page .widget-draw-tools{
     text-align:left;
     font-variant-numeric:tabular-nums;
     pointer-events:none;
-    color:#d1d5db;
+    color:var(--appearance-price-hud-text, #d1d5db);
 }
 
 .widget-chart-wrap .chart-price-hud.hidden{
@@ -534,11 +534,11 @@ body.terminal-page .widget-draw-tools{
 }
 
 .widget-chart-wrap .chart-price-hud--up{
-    background:#16a34a;
+    background:var(--appearance-price-hud-up, #16a34a);
 }
 
 .widget-chart-wrap .chart-price-hud--down{
-    background:#dc2626;
+    background:var(--appearance-price-hud-down, #dc2626);
 }
 
 .widget-chart-wrap .chart-price-hud-cd{
@@ -564,7 +564,7 @@ body.terminal-page .widget-draw-tools{
     text-align:left;
     font-variant-numeric:tabular-nums;
     pointer-events:none;
-    color:#d1d5db;
+    color:var(--appearance-price-hud-text, #d1d5db);
 }
 
 .widget-chart-wrap .chart-price-hud.hidden{
@@ -572,11 +572,11 @@ body.terminal-page .widget-draw-tools{
 }
 
 .widget-chart-wrap .chart-price-hud--up{
-    background:#16a34a;
+    background:var(--appearance-price-hud-up, #16a34a);
 }
 
 .widget-chart-wrap .chart-price-hud--down{
-    background:#dc2626;
+    background:var(--appearance-price-hud-down, #dc2626);
 }
 
 .widget-chart-wrap .chart-price-hud-cd{
@@ -1799,7 +1799,7 @@ form.draw-position-risk{
 
 .fib-level-row .fib-level-val{
     min-width:0;
-    background:#171b21;
+    background:var(--app-input, #171b21);
     border:1px solid #374151;
     color:#e5e7eb;
     border-radius:6px;

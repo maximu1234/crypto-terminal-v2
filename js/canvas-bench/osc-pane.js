@@ -18,8 +18,21 @@ macdReplaceLast,
 rollMacd
 } from "./macd.js";
 
+import {
+APPEARANCE_EVENT,
+appearanceColor
+} from "../appearance-theme.js?v=a12dec97";
+
+const liveOscPanes =
+new Set();
+
 const BG = "#0e1116";
-const AXIS = "#d1d5db";
+
+function axisInk(){
+
+return appearanceColor("scaleText");
+
+}
 const FONT =
 "11px -apple-system, BlinkMacSystemFont, 'Trebuchet MS', Roboto, Ubuntu, sans-serif";
 const MACD_LINE = "#2962FF";
@@ -55,6 +68,7 @@ export class OscBenchPane {
 
 constructor(stage, chart, kind){
 
+liveOscPanes.add(this);
 this.stage = stage;
 this.chart = chart;
 this.kind = kind;
@@ -348,7 +362,7 @@ ctx.fillRect(0, 0, layout.cssW, layout.cssH);
 ctx.font = FONT;
 ctx.textBaseline = "middle";
 ctx.textAlign = "left";
-ctx.fillStyle = AXIS;
+ctx.fillStyle = axisInk();
 ctx.fillText(
 this._format(this.scale.max),
 layout.plotRight + 6,
@@ -590,5 +604,27 @@ return value.toFixed(1);
 return value.toFixed(2);
 
 }
+
+}
+
+if(typeof window !== "undefined"){
+
+window.addEventListener(
+APPEARANCE_EVENT,
+()=>{
+
+for(const pane of liveOscPanes){
+
+if(!pane.stage?.isConnected){
+liveOscPanes.delete(pane);
+continue;
+}
+
+pane.rebuild();
+
+}
+
+}
+);
 
 }

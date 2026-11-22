@@ -477,3 +477,78 @@ color:#9ca3af;
     flex-shrink:0;
   }
 }
+
+.app-appearance-group{
+  margin:0 0 16px;
+}
+
+.app-appearance-title{
+  margin:0 0 8px;
+  font-size:12px;
+  font-weight:600;
+  letter-spacing:.02em;
+  text-transform:uppercase;
+  color:#9ca3af;
+}
+
+.app-appearance-row{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  min-height:32px;
+}
+
+.app-appearance-label{
+  font-size:13px;
+  line-height:1.3;
+  color:#e5e7eb;
+}
+
+.app-appearance-swatch{
+  flex:0 0 28px;
+  width:28px;
+  height:22px;
+  padding:0;
+  border:1px solid #363a45;
+  border-radius:4px;
+  cursor:pointer;
+}
+
+.app-appearance-reset{
+  width:100%;
+  margin:0 0 14px;
+  height:34px;
+  border:1px solid #363a45;
+  border-radius:8px;
+  background:#1e222d;
+  color:#e5e7eb;
+  font:500 13px/1 system-ui,-apple-system,sans-serif;
+  cursor:pointer;
+}
+
+.app-appearance-reset:hover:not(:disabled){
+  background:#2a2e39;
+}
+
+.app-appearance-reset:disabled{
+  opacity:.45;
+  cursor:default;
+}
+
+.app-appearance-palette .tv-color-opacity{
+  display:none;
+}
+
+.app-appearance-hex{
+  width:100%;
+  box-sizing:border-box;
+  margin-top:6px;
+  height:26px;
+  padding:0 8px;
+  border:1px solid #363a45;
+  border-radius:4px;
+  background:#131722;
+  color:#d1d4dc;
+  font:12px/26px ui-monospace,SFMono-Regular,Menlo,monospace;
+}

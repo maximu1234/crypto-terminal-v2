@@ -5,7 +5,7 @@
 import {
 hideDomChartCrosshair,
 positionTabletProbeHorizInStack
-} from "../chart-import.js?v=9a97fec4";
+} from "../chart-import.js?v=6fc4370c";
 
 import {
 ensureFibLevelsVisible,
@@ -25,8 +25,9 @@ uid
 } from "./math.js?v=2731b0ed";
 
 import {
+magnetSnapRequested,
 snapPlotToCandleWick
-} from "./draw-magnet.js?v=df326ca8";
+} from "./draw-magnet.js?v=f3d77b13";
 
 import {
 touchShapeRevision
@@ -84,6 +85,9 @@ getPlacementPointerXY,
 setPlacementPointerXY,
 getDrawMagnetKeyDown,
 setDrawMagnetKeyDown,
+getDrawMagnetSticky =
+()=>
+false,
 getShiftKeyDown =
 ()=>
 false,
@@ -938,13 +942,12 @@ return false;
 
 return !!(
 enableMagnet &&
-(
-getDrawMagnetKeyDown() ||
-optEvent?.metaKey ===
-true ||
-optEvent?.ctrlKey ===
-true
-)
+magnetSnapRequested({
+sticky: getDrawMagnetSticky(),
+keyDown: getDrawMagnetKeyDown(),
+metaKey: optEvent?.metaKey === true,
+ctrlKey: optEvent?.ctrlKey === true
+})
 );
 
 }

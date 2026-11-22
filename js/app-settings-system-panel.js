@@ -43,14 +43,14 @@ SCREENER_WIDGET_OSCILLATOR_MACD,
 SCREENER_WIDGET_OSCILLATOR_RSI,
 getScreenerWidgetOscillator,
 setScreenerWidgetOscillator
-} from "./screener-widget-oscillator.js?v=2035a41c";
+} from "./screener-widget-oscillator.js?v=48adb16b";
 
 import {
 CANDLE_COLOR_CLASSIC,
 CANDLE_COLOR_MONO,
 getCandleColorMode,
 setCandleColorMode
-} from "./chart/candle-color-prefs.js?v=a9347502";
+} from "./chart/candle-color-prefs.js?v=7a67da75";
 
 import {
 renderHeaderNav

@@ -10,7 +10,8 @@ const ICONS = [
 "arrow",
 "rectangle",
 "fixed-volume-profile",
-"elliott"
+"elliott",
+"magnet"
 ];
 
 const ICON_DIR = path.join(
@@ -216,7 +217,12 @@ chunk("IEND", Buffer.alloc(0))
 
 }
 
-for(const name of ICONS){
+const names =
+process.argv.length > 2
+? process.argv.slice(2)
+: ICONS;
+
+for(const name of names){
 
 const file = path.join(ICON_DIR, `${name}.png`);
 const { w, h, rgba } = decodePng(file);

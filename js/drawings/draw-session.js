@@ -1542,6 +1542,79 @@ host.setDrawingsHidden(
 
 }
 
+export function syncDrawMagnetButton(host){
+
+host.tools?.querySelectorAll(
+".draw-tool-magnet"
+).forEach(btn=>{
+
+const on =
+!!host.drawMagnetSticky;
+
+btn.classList.toggle(
+"active",
+on
+);
+btn.setAttribute(
+"aria-pressed",
+on
+? "true"
+: "false"
+);
+
+const label =
+on
+? "Магнит включён"
+: "Магнит";
+
+btn.title =
+label;
+btn.setAttribute(
+"aria-label",
+label
+);
+
+});
+
+}
+
+export function bindMagnetToolbarButtons(host){
+
+host.tools?.querySelectorAll(
+".draw-tool-magnet"
+).forEach(btn=>{
+
+if(
+btn.dataset.magnetBound ===
+"1"
+){
+return;
+}
+
+btn.dataset.magnetBound =
+"1";
+
+btn.addEventListener(
+"click",
+e=>{
+
+e.preventDefault();
+e.stopPropagation();
+host.setDrawMagnetSticky(
+!host.drawMagnetSticky
+);
+
+}
+);
+
+});
+
+syncDrawMagnetButton(
+host
+);
+
+}
+
 export function touchStorageSnap(host){
 
 host.touchDrawingsStorageSnap(

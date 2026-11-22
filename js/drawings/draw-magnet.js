@@ -232,3 +232,20 @@ price: snapPrice
 };
 
 }
+
+/** Cmd/Ctrl или включённый пункт «Магнит». Клавиша работает и без пункта. */
+export function magnetSnapRequested({
+sticky = false,
+keyDown = false,
+metaKey = false,
+ctrlKey = false
+} = {}){
+
+return !!(
+sticky ||
+keyDown ||
+metaKey ||
+ctrlKey
+);
+
+}

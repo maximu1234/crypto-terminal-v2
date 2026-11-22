@@ -13,7 +13,7 @@ applyRsiSeriesColorMode,
 appendFutureWhitespaceBars,
 computeChartFutureMarginBars,
 syncLinkedChartTimescales
-} from "./chart-import.js?v=9a97fec4";
+} from "./chart-import.js?v=6fc4370c";
 
 import {
 applyLiveSeriesUpdate,
@@ -43,7 +43,7 @@ ALGO_TICKER_SCAN_HISTORY_REQUESTS
 import {
 defaultRsiPaneSettings,
 normalizeRsiPaneSettings
-} from "./indicators/rsi-pane.js?v=100253cd";
+} from "./indicators/rsi-pane.js?v=79420b83";
 
 import {
 buildChartRsiPoints
@@ -62,7 +62,7 @@ bindLiveCandleCatchup
 import {
 mountAlgoTradingCoinList,
 refreshAlgoMarketListFromFlags
-} from "./algo-trading-list.js?v=969bf947";
+} from "./algo-trading-list.js?v=3d24edf6";
 
 import {
 mountAlgoTickerScanUi
@@ -85,7 +85,7 @@ mountAlgoRuntimeUi
 
 import {
 mountAlgoBotStrategyUi
-} from "./algo-trading/bot-strategy-ui.js?v=4345c367";
+} from "./algo-trading/bot-strategy-ui.js?v=46c11b65";
 
 import {
 ALGO_ANALYSIS_BOT_CHANGE_EVENT,
@@ -101,7 +101,7 @@ setActiveAnalysisBotId
 
 import {
 mountSessionLogServerSettings
-} from "./algo-trading/bot-session-log-server-ui.js?v=bdd94e07";
+} from "./algo-trading/bot-session-log-server-ui.js?v=478fc108";
 
 import {
 syncBotStrategiesToMain
@@ -109,15 +109,15 @@ syncBotStrategiesToMain
 
 import {
 mountAlgoTradeUi
-} from "./algo-trading/trade/boot.js?v=856bea41";
+} from "./algo-trading/trade/boot.js?v=93f42947";
 
 import {
 mountAlgoTradingDrawings
-} from "./algo-trading/drawings.js?v=9360a6d9";
+} from "./algo-trading/drawings.js?v=7d599e9c";
 
 import {
 mountAlgoTradingIndicators
-} from "./algo-trading/indicators.js?v=51d14627";
+} from "./algo-trading/indicators.js?v=c7b716d7";
 
 import {
 mountAlgoPatternEntryOverlay
@@ -259,7 +259,7 @@ syncRsiLevelDom as syncRsiLevelDomEl,
 setRsiHud as setRsiHudEl,
 lastRsiValue as lastRsiValueFromCandles,
 layoutRsiPane
-} from "./algo-trading/page-rsi.js?v=102a5135";
+} from "./algo-trading/page-rsi.js?v=60ada037";
 
 import {
 bindAlgoStatsPanelResize

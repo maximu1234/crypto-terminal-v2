@@ -36,12 +36,23 @@ zoomPriceScale,
 priceScaleDragAnchorY
 } from "./price-scale.js?v=scale-pan9";
 
+import {
+APPEARANCE_EVENT,
+appearanceColor
+} from "../appearance-theme.js?v=a12dec97";
+
+const liveCandleCharts =
+new Set();
+
 const BG =
 "#0e1116";
 const GRID =
 "rgba(255,255,255,0.06)";
-const AXIS =
-"#d1d5db";
+function axisInk(){
+
+return appearanceColor("scaleText");
+
+}
 function positivePrice(value, fallback){
 
 const n =
@@ -163,6 +174,7 @@ export class CandleBenchChart {
 
 constructor(stage, options = {}){
 
+liveCandleCharts.add(this);
 this.stage = stage;
 this.history = document.createElement("canvas");
 this.live = document.createElement("canvas");
@@ -951,7 +963,7 @@ this.showGrid || this.opaque
 ? GRID
 : "rgba(0,0,0,0)";
 ctx.font = AXIS_LABEL_FONT;
-ctx.fillStyle = AXIS;
+ctx.fillStyle = axisInk();
 ctx.textAlign = this.alignAxisLabelsLeft ? "left" : "right";
 ctx.beginPath();
 
@@ -1425,7 +1437,7 @@ stripH
 );
 }
 ctx.font = FONT;
-ctx.fillStyle = AXIS;
+ctx.fillStyle = axisInk();
 ctx.textAlign = "center";
 ctx.textBaseline = "top";
 
@@ -1641,8 +1653,8 @@ ctx.restore();
 
 const tagColor =
 candle.close >= candle.open
-? "#16a34a"
-: "#dc2626";
+? appearanceColor("priceHudUp")
+: appearanceColor("priceHudDown");
 const text =
 (this.formatAxisPrice || formatPrice)(candle.close);
 ctx.font = AXIS_LABEL_FONT;
@@ -1673,7 +1685,7 @@ rects.push(col);
 if(this.lastValueVisible){
 ctx.fillStyle = tagColor;
 ctx.fillRect(tagX, tagY, tagW, tagH);
-ctx.fillStyle = "#ffffff";
+ctx.fillStyle = appearanceColor("priceHudText");
 ctx.fillText(
 text,
 tagX + AXIS_LABEL_PAD,
@@ -2265,5 +2277,27 @@ menu.style.top = `${event.clientY}px`;
 );
 
 }
+
+}
+
+if(typeof window !== "undefined"){
+
+window.addEventListener(
+APPEARANCE_EVENT,
+()=>{
+
+for(const chart of liveCandleCharts){
+
+if(!chart.stage?.isConnected){
+liveCandleCharts.delete(chart);
+continue;
+}
+
+chart.scheduleRebuild();
+
+}
+
+}
+);
 
 }

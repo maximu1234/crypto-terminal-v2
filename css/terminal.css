@@ -8,7 +8,7 @@ html,body{
   overflow:hidden;
   background:var(--app-bg);
   font-family:Arial,sans-serif;
-  color:white;
+  color:var(--appearance-text, #e5e7eb);
 }
 
 body{
@@ -182,7 +182,7 @@ body.terminal-page #draw-toolbar.draw-toolbar-inline .draw-btn .draw-tool-icon--
 }
 
 .draw-btn.active{
-  background:#374151;
+  background:var(--appearance-tool-active, #363a45);
   color:#fff;
 }
 
@@ -1254,7 +1254,7 @@ form.draw-position-risk{
   min-width:0;
   width:auto;
   box-sizing:border-box;
-  background:#171b21;
+  background:var(--app-input, #171b21);
   border:1px solid #374151;
   color:#e5e7eb;
   border-radius:6px;
@@ -1988,7 +1988,7 @@ body.tablet-chart .price-alert-scale-plus-icon{
   text-align:left;
   font-variant-numeric:tabular-nums;
   pointer-events:none;
-  color:#d1d5db;
+  color:var(--appearance-price-hud-text, #d1d5db);
 }
 
 .chart-price-hud.hidden{
@@ -1996,11 +1996,11 @@ body.tablet-chart .price-alert-scale-plus-icon{
 }
 
 .chart-price-hud--up{
-  background:#16a34a;
+  background:var(--appearance-price-hud-up, #16a34a);
 }
 
 .chart-price-hud--down{
-  background:#dc2626;
+  background:var(--appearance-price-hud-down, #dc2626);
 }
 
 .chart-price-hud-cd{
@@ -2430,7 +2430,7 @@ body.tablet-chart .widget-chart-wrap .chart-dom-crosshair-horz{
 #coin-search,
 #coin-volume-filter{
   width:100%;
-  background:#171b21;
+  background:var(--app-input, #171b21);
   color:white;
   border:1px solid #374151;
   border-radius:8px;
@@ -2457,7 +2457,7 @@ body.tablet-chart .widget-chart-wrap .chart-dom-crosshair-horz{
 
 #market-filter{
   width:100%;
-  background:#171b21;
+  background:var(--app-input, #171b21);
   color:white;
   border:1px solid #374151;
   border-radius:8px;
@@ -2536,19 +2536,19 @@ body.trade-page .coin.has-position .coin-symbol{
 }
 
 .green{
-  color:#22c55e;
+  color:var(--appearance-change-up, #22c55e);
 }
 
 .red{
-  color:#ef4444;
+  color:var(--appearance-change-down, #ef4444);
 }
 
 #coins-body .coin-change-pos{
-  color:#459782;
+  color:var(--appearance-coin-up, #459782);
 }
 
 #coins-body .coin-change-neg{
-  color:#ef4444;
+  color:var(--appearance-coin-down, #ef4444);
 }
 
 .col-symbol,

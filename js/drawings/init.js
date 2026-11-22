@@ -5,11 +5,11 @@ formatDrawColor
 
 import {
 TRASH_ICON_SVG
-} from "../draw-ui-shared.js?v=a56e8714";
+} from "../draw-ui-shared.js?v=9bf487f0";
 
 import {
 closeAllWidgetDrawToolsMenus
-} from "../watchlist-draw-ui.js?v=dcc02ce7";
+} from "../watchlist-draw-ui.js?v=58a51c4c";
 
 import {
 ensureDrawToolsVisible
@@ -50,7 +50,7 @@ ensureDomChartCrosshair,
 hideDomChartCrosshair,
 positionTabletProbeHorizInStack,
 fullCrosshairOptions
-} from "../chart-import.js?v=9a97fec4";
+} from "../chart-import.js?v=6fc4370c";
 
 import {
 STROKE,
@@ -138,7 +138,7 @@ createDrawRenderer
 
 import {
 snapPlotToCandleWick
-} from "./draw-magnet.js?v=df326ca8";
+} from "./draw-magnet.js?v=f3d77b13";
 
 import {
 computeChartRulerMetrics,
@@ -152,7 +152,7 @@ updateChartRulerLabelEl
 
 import {
 mountTabletDrawInput
-} from "../drawings-tablet-input.js?v=daff2d25";
+} from "../drawings-tablet-input.js?v=3c2fc556";
 
 import {
 cloneDrawingsForUndo,
@@ -161,7 +161,7 @@ createDrawUndoStack
 
 import {
 createDrawDesktopSelection
-} from "./draw-edit-desktop.js?v=3222fb45";
+} from "./draw-edit-desktop.js?v=646c85c5";
 
 import {
 createDrawingsPersist
@@ -169,15 +169,15 @@ createDrawingsPersist
 
 import {
 createDrawStyleBar
-} from "./draw-style-bar.js?v=800d438b";
+} from "./draw-style-bar.js?v=9e73d5a8";
 
 import {
 createDrawAlertsChart
-} from "./draw-alerts-chart.js?v=5e7d30be";
+} from "./draw-alerts-chart.js?v=29075d4a";
 
 import {
 createDrawPlacement
-} from "./draw-placement.js?v=e68cde8b";
+} from "./draw-placement.js?v=801d0104";
 
 import {
 createDrawTextEditor,
@@ -198,7 +198,7 @@ syncElliottGroupActive
 import {
 closeFibFlyout,
 syncFibGroupActive
-} from "./fib-toolbar.js?v=b2cc1989";
+} from "./fib-toolbar.js?v=20b598d4";
 
 import {
 createBrushPlacement
@@ -206,15 +206,15 @@ createBrushPlacement
 
 import {
 createDrawEditInteraction
-} from "./draw-edit-interaction.js?v=9b553913";
+} from "./draw-edit-interaction.js?v=8bd85c90";
 
 import {
 createDrawChartInput
-} from "./draw-chart-input.js?v=6edde9c6";
+} from "./draw-chart-input.js?v=86ff9b7a";
 
 import {
 createDrawPriceScale
-} from "./draw-price-scale.js?v=5a8e5e39";
+} from "./draw-price-scale.js?v=a0cf9673";
 
 import {
 createDrawRedrawLoop
@@ -230,7 +230,7 @@ manualPriceToCoordinate as manualPriceToCoordinateMoved,
 plotCoordinateToPrice as plotCoordinateToPriceMoved,
 resolvePointFromPlotXY as resolvePointFromPlotXYMoved,
 hitTest as hitTestMoved
-} from "./draw-plot-hit.js?v=cbda3668";
+} from "./draw-plot-hit.js?v=91840008";
 import {
 setupTabletNativeSelectionBlock as setupTabletNativeSelectionBlockMoved,
 drawBrushPlacementPreview as drawBrushPlacementPreviewMoved,
@@ -315,13 +315,15 @@ chartCanvasEl as chartCanvasElMoved,
 onTextDblClick as onTextDblClickMoved,
 syncDrawingsHiddenButton as syncDrawingsHiddenButtonMoved,
 bindHideDrawingsToolbarButtons as bindHideDrawingsToolbarButtonsMoved,
+bindMagnetToolbarButtons as bindMagnetToolbarButtonsMoved,
+syncDrawMagnetButton as syncDrawMagnetButtonMoved,
 touchStorageSnap as touchStorageSnapMoved,
 syncDrawingsFromStorageIfChanged as syncDrawingsFromStorageIfChangedMoved,
 startCoordRetryBurst as startCoordRetryBurstMoved,
 applyRemoteDrawingsToChart as applyRemoteDrawingsToChartMoved,
 syncDrawingsFromStorageNow as syncDrawingsFromStorageNowMoved,
 defaultHrayAnchorTime as defaultHrayAnchorTimeMoved
-} from "./draw-session.js?v=69c5893b";
+} from "./draw-session.js?v=62988438";
 export function initDrawings({
 
 chart,
@@ -408,6 +410,8 @@ get drawUndo(){ return drawUndo; },
 get drawings(){ return drawings; },
 set drawings(value){ drawings = value; },
 get drawingsHidden(){ return drawingsHidden; },
+get drawMagnetSticky(){ return drawMagnetSticky; },
+setDrawMagnetSticky,
 get ensureDrawToolsVisible(){ return ensureDrawToolsVisible; },
 get ephemeralDrawingsByFlag(){ return ephemeralDrawingsByFlag; },
 get fibSettingsSyncDeferred(){ return fibSettingsSyncDeferred; },
@@ -606,6 +610,76 @@ let placement = null;
 let placementPointerXY = null;
 /** Cmd/Meta зажат — перекрестье к хаю/лою свечи под вертикалью. */
 let drawMagnetKeyDown = false;
+
+const DRAW_MAGNET_STICKY_KEY =
+"terminal-draw-magnet";
+
+function readTerminalDrawMagnetSticky(){
+
+try{
+if(
+!document.body?.classList.contains(
+"terminal-page"
+)
+){
+return false;
+}
+
+return localStorage.getItem(
+DRAW_MAGNET_STICKY_KEY
+) ===
+"1";
+}catch{
+return false;
+}
+
+}
+
+let drawMagnetSticky =
+readTerminalDrawMagnetSticky();
+
+function setDrawMagnetSticky(
+next
+){
+
+drawMagnetSticky =
+!!next;
+
+try{
+if(
+document.body?.classList.contains(
+"terminal-page"
+)
+){
+localStorage.setItem(
+DRAW_MAGNET_STICKY_KEY,
+drawMagnetSticky
+? "1"
+: "0"
+);
+}
+}catch{
+/* ignore */
+}
+
+syncDrawMagnetButton();
+
+if(
+placement &&
+placementPointerXY
+){
+refreshPlacementPreviewFromPointer();
+}
+
+if(
+dragState &&
+reapplyActiveDragCoordsHook
+){
+reapplyActiveDragCoordsHook();
+scheduleDragRedraw();
+}
+
+}
 /** Последняя позиция crosshair в plot (fallback для Cmd без pointermove). */
 let lastCrosshairPlotXY = null;
 /** Shift-линейка: начало { time, price } и текущий конец в plot px. */
@@ -891,6 +965,7 @@ get coordChart(){ return coordChart; },
 get distToSegment(){ return distToSegment; },
 get drawBodyHitThreshold(){ return drawBodyHitThreshold; },
 get drawMagnetKeyDown(){ return drawMagnetKeyDown; },
+get drawMagnetSticky(){ return drawMagnetSticky; },
 get drawings(){ return drawings; },
 get drawingsHidden(){ return drawingsHidden; },
 get elliottBodyDist(){ return elliottBodyDist; },
@@ -1945,6 +2020,7 @@ getDrawMagnetKeyDown:()=>drawMagnetKeyDown,
 setDrawMagnetKeyDown:v=>{
 drawMagnetKeyDown = v;
 },
+getDrawMagnetSticky:()=>drawMagnetSticky,
 getShiftKeyDown:()=>chartRulerShiftDown,
 enableMagnet,
 getLastCrosshairPlotXY:()=>lastCrosshairPlotXY,
@@ -2164,6 +2240,18 @@ function bindHideDrawingsToolbarButtons(){
 return bindHideDrawingsToolbarButtonsMoved(
 drawSessionHost(),
 ...arguments
+);
+}
+
+function syncDrawMagnetButton(){
+return syncDrawMagnetButtonMoved(
+drawSessionHost()
+);
+}
+
+function bindMagnetToolbarButtons(){
+return bindMagnetToolbarButtonsMoved(
+drawSessionHost()
 );
 }
 
@@ -2807,6 +2895,9 @@ e.target.closest?.(
 ) ||
 e.target.closest?.(
 ".draw-tool-hide-drawings"
+) ||
+e.target.closest?.(
+".draw-tool-magnet"
 )
 ){
 return;
@@ -2847,6 +2938,20 @@ if(
 hideBtn &&
 tools.contains(
 hideBtn
+)
+){
+return;
+}
+
+const magnetBtn =
+e.target.closest?.(
+".draw-tool-magnet"
+);
+
+if(
+magnetBtn &&
+tools.contains(
+magnetBtn
 )
 ){
 return;
@@ -2895,6 +3000,7 @@ e.detail?.pointerType
 
 bindClearAllToolbarButtons();
 bindHideDrawingsToolbarButtons();
+bindMagnetToolbarButtons();
 
 }
 
@@ -3468,7 +3574,7 @@ lastChartAlertsPullMs =
 Date.now();
 
 void import(
-"../alerts-cloud-sync.js?v=95bf2dc3"
+"../alerts-cloud-sync.js?v=e4280961"
 ).then(
 ({ pullRegistryFromCloudNow })=>
 pullRegistryFromCloudNow({

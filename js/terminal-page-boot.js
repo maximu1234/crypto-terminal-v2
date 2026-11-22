@@ -1,6 +1,8 @@
 /**
  * Загрузка /terminal.html — web: графики; desktop .app: + торговый слой на той же странице.
  */
+import "./appearance-theme.js?v=a12dec97";
+
 import {
 waitForSiteCssReady
 } from "./site-css-gate.js?v=2f1bf426";
@@ -14,7 +16,7 @@ CHART_BUILD_ID,
 CHART_PAGE_ENTRY,
 TERMINAL_ENTRY,
 jsUrl
-} from "./asset-manifest.js?v=5986e78c";
+} from "./asset-manifest.js?v=463d83ae";
 
 function isDesktopTradeMode(){
 
@@ -40,7 +42,7 @@ if(
 ){
 tradeDesktopBootPromise =
 import(
-"./trade-desktop-boot.js?v=27735e4d"
+"./trade-desktop-boot.js?v=c3eb92ec"
 );
 }
 
@@ -66,7 +68,7 @@ if(
 ){
 tradeWebBootPromise =
 import(
-"./trade-web/boot.js?v=41e4bd9f"
+"./trade-web/boot.js?v=9664e8e1"
 );
 }
 

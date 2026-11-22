@@ -1,6 +1,9 @@
 /**
  * Closure slice. `host` is the surrounding function's bindings.
  */
+import {
+magnetSnapRequested
+} from "./draw-magnet.js?v=f3d77b13";
 export function timeFromX(host, x){
 
 const ts =
@@ -443,13 +446,12 @@ optEvent = null
 
 const magnetActive =
 host.enableMagnet &&
-(
-host.drawMagnetKeyDown ||
-optEvent?.metaKey ===
-true ||
-optEvent?.ctrlKey ===
-true
-);
+magnetSnapRequested({
+sticky: host.drawMagnetSticky,
+keyDown: host.drawMagnetKeyDown,
+metaKey: optEvent?.metaKey === true,
+ctrlKey: optEvent?.ctrlKey === true
+});
 
 if(
 magnetActive

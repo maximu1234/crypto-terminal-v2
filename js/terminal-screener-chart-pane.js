@@ -18,11 +18,11 @@ appendFutureWhitespaceBars,
 computeChartFutureMarginBars,
 coinsTfVisibleBars,
 linkChartsCrosshair
-} from "./chart-import.js?v=9a97fec4";
+} from "./chart-import.js?v=6fc4370c";
 
 import {
 readCoinsPrefs
-} from "./terminal/terminal-prefs.js?v=98a5f5d1";
+} from "./terminal/terminal-prefs.js?v=e186e1b5";
 
 import {
 calculateRSI,
@@ -57,7 +57,7 @@ alignCandlesToTradePrice
 
 import {
 mountWidgetDomCrosshair
-} from "./chart-widget-host.js?v=210aed99";
+} from "./chart-widget-host.js?v=e4f608a2";
 
 function buildBodyHtml(
 showRsi

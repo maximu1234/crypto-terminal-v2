@@ -1,7 +1,7 @@
 import {
 isCloudLoggedInEffective,
 ensureCloudLoginResolved
-} from "../cloud-sync.js?v=f4896b48";
+} from "../cloud-sync.js?v=b51dc215";
 
 import {
 resolveAlertAuthFast,
@@ -30,7 +30,7 @@ markAlertsPullSuccess,
 warnAlertsPullThrottled,
 isAlertsPullInBackoff,
 broadcastAlertsRegistrySync
-} from "./debug.js?v=36d9e65a";
+} from "./debug.js?v=272d8487";
 
 import {
 runCloudOp,
@@ -46,11 +46,11 @@ clearAllAlertsFromCloud,
 fetchWithTimeout,
 softDeleteAlertViaRest,
 hintWorkerReloadAlerts
-} from "./worker-client.js?v=cc481c7f";
+} from "./worker-client.js?v=0676bd47";
 
 import {
 isAlertsCloudDisabled
-} from "../supabase-usage-prefs.js?v=6586d5bd";
+} from "../supabase-usage-prefs.js?v=2460c4af";
 
 function resolveAlertExchangeId(
 entry
@@ -131,7 +131,7 @@ cloudId
 ){
 
 const { markAlertCloudSynced, markAlertCloudId } =
-await import("../alerts.js?v=cc832c76");
+await import("../alerts.js?v=9c6f7d20");
 
 const ok =
 await verifyAlertActiveInCloud(
@@ -398,7 +398,7 @@ null;
 
 if(cloudId){
 const { markAlertCloudId } =
-await import("../alerts.js?v=cc832c76");
+await import("../alerts.js?v=9c6f7d20");
 
 markAlertCloudId(
 symbol,
@@ -622,7 +622,7 @@ registrySyncTimer = null;
 }
 
 const { stripAlertFlagsNotInRegistry } =
-await import("../alerts.js?v=cc832c76");
+await import("../alerts.js?v=9c6f7d20");
 
 const ok =
 await clearAllAlertsFromCloud();
@@ -658,7 +658,7 @@ return 0;
 }
 
 const { getActiveAlerts } =
-await import("../alerts.js?v=cc832c76");
+await import("../alerts.js?v=9c6f7d20");
 
 const localKeys =
 new Set(
@@ -758,7 +758,7 @@ return false;
 }
 
 const { ensureCloudReady } =
-await import("../auth-ui.js?v=37837b2f");
+await import("../auth-ui.js?v=67ee13f9");
 
 await ensureCloudReady();
 
@@ -789,7 +789,7 @@ attempt++
 if(await pushAlertViaWorker(row)){
 
 const { markAlertCloudSynced } =
-await import("../alerts.js?v=cc832c76");
+await import("../alerts.js?v=9c6f7d20");
 
 /* Worker пишет service role — не ждём SELECT по JWT пользователя */
 markAlertCloudSynced(
@@ -820,7 +820,7 @@ ctx
 ){
 
 const { markAlertCloudSynced } =
-await import("../alerts.js?v=cc832c76");
+await import("../alerts.js?v=9c6f7d20");
 
 if(
 await markRowSyncedAfterVerify(
@@ -915,7 +915,7 @@ return 0;
 }
 
 const { getActiveAlerts, countAlertsOnChart } =
-await import("../alerts.js?v=cc832c76");
+await import("../alerts.js?v=9c6f7d20");
 
 const onChart =
 countAlertsOnChart();
@@ -990,7 +990,7 @@ return ok;
 async function syncAllLocalAlertsToCloudImpl(){
 
 const { ensureCloudReady } =
-await import("../auth-ui.js?v=37837b2f");
+await import("../auth-ui.js?v=67ee13f9");
 
 await ensureCloudReady();
 
@@ -1005,7 +1005,7 @@ return 0;
 }
 
 const { getActiveAlerts } =
-await import("../alerts.js?v=cc832c76");
+await import("../alerts.js?v=9c6f7d20");
 
 const list =
 getActiveAlerts();
@@ -1451,7 +1451,7 @@ normalizeAlertTf,
 isAlertDeleted,
 forgetAlertDeleted
 } =
-await import("../alerts.js?v=cc832c76");
+await import("../alerts.js?v=9c6f7d20");
 
 const cloudByKey =
 new Map();
@@ -1569,7 +1569,7 @@ tf: row.tf || "60"
 if(removedRows.length){
 
 const { applyRemoteAlertRemoved } =
-await import("../alerts.js?v=cc832c76");
+await import("../alerts.js?v=9c6f7d20");
 
 for(const row of removedRows){
 
@@ -2097,7 +2097,7 @@ return 0;
 const {
 mergeAlertHistoryFromCloudEvents
 } =
-await import("../alerts.js?v=cc832c76");
+await import("../alerts.js?v=9c6f7d20");
 
 const {
 getActiveExchangeId
@@ -2145,7 +2145,7 @@ const n =
 await reconcileLocalRegistryWithCloud();
 
 const { stripAlertFlagsNotInRegistry } =
-await import("../alerts.js?v=cc832c76");
+await import("../alerts.js?v=9c6f7d20");
 
 stripAlertFlagsNotInRegistry(
 isAlertsPage()
@@ -2195,7 +2195,7 @@ return 0;
 
 try{
 const { ensureCloudLoginResolved } =
-await import("../cloud-sync.js?v=f4896b48");
+await import("../cloud-sync.js?v=b51dc215");
 
 await ensureCloudLoginResolved(
 8000
@@ -2223,7 +2223,7 @@ return 0;
 }
 
 const { stripAlertFlagsNotInRegistry } =
-await import("../alerts.js?v=cc832c76");
+await import("../alerts.js?v=9c6f7d20");
 
 stripAlertFlagsNotInRegistry(
 isAlertsPage()

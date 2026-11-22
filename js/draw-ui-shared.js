@@ -1,6 +1,6 @@
 import {
 getDrawToolIconSrc
-} from "./draw-toolbar-icon-data.js?v=f5e35567";
+} from "./draw-toolbar-icon-data.js?v=9a3daf63";
 
 import {
 ensureElliottToolbarEvents
@@ -8,7 +8,7 @@ ensureElliottToolbarEvents
 
 import {
 ensureFibToolbarEvents
-} from "./drawings/fib-toolbar.js?v=b2cc1989";
+} from "./drawings/fib-toolbar.js?v=20b598d4";
 
 export function drawToolIconImg(
 name,
@@ -80,6 +80,7 @@ export const LONG_POSITION_ICON_SVG = drawToolIconImg("long", "draw-tool-icon dr
 export const SHORT_POSITION_ICON_SVG = drawToolIconImg("short", "draw-tool-icon draw-pos-icon draw-pos-icon--short");
 export const FVP_ICON_SVG = drawToolIconImg("fixed-volume-profile");
 export const TRASH_ICON_SVG = drawToolIconImg("trash");
+export const MAGNET_ICON_SVG = drawToolIconImg("magnet");
 export const DRAWINGS_EYE_ICON_SVG = `
 <svg class="draw-tool-icon draw-tool-hide-drawings-eye" viewBox="0 0 24 24" aria-hidden="true">
 <path fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" d="M2.2 12S6 6.6 12 6.6 21.8 12 21.8 12 18 17.4 12 17.4 2.2 12 2.2 12z"/>
@@ -184,6 +185,12 @@ ${getPositionDrawToolbarButtonsHtml(opts)}
 <button type="button" class="${btnClass}" data-draw-tool="fvp" title="Fixed Volume Profile">
 ${FVP_ICON_SVG}
 </button>
+
+${opts.showMagnetToggle ? `
+<button type="button" class="${btnClass} draw-tool-magnet" title="Магнит" aria-pressed="false" aria-label="Магнит">
+${MAGNET_ICON_SVG}
+</button>
+` : ""}
 
 ${opts.showDrawingsVisibilityToggle ? `
 <button type="button" class="${btnClass} draw-tool-hide-drawings" title="Скрыть рисунки" aria-pressed="false" aria-label="Скрыть рисунки">

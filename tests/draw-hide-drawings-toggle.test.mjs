@@ -4,6 +4,9 @@ import test from "node:test";
 import {
   getDrawToolbarButtonsHtml
 } from "../js/draw-ui-shared.js";
+import {
+  magnetSnapRequested
+} from "../js/drawings/draw-magnet.js";
 
 import {
   getWidgetToolbarHtml
@@ -34,11 +37,28 @@ test("watchlist widget menu puts the eye between volume profile and trash", () =
   assert.ok(trash > eye);
 });
 
+test("terminal magnet sits before the eye and does not replace Cmd", () => {
+  const html = getDrawToolbarButtonsHtml({
+    showDrawingsVisibilityToggle: true,
+    showMagnetToggle: true
+  });
+  const fvp = html.indexOf('data-draw-tool="fvp"');
+  const magnet = html.indexOf("draw-tool-magnet");
+  const eye = html.indexOf("draw-tool-hide-drawings");
+
+  assert.ok(magnet > fvp);
+  assert.ok(eye > magnet);
+  assert.equal(magnetSnapRequested({ metaKey: true }), true);
+  assert.equal(magnetSnapRequested({ sticky: true }), true);
+  assert.equal(magnetSnapRequested({}), false);
+});
+
 test("other toolbars do not get the eye button", () => {
   const html = getDrawToolbarButtonsHtml({
     compact: true
   });
 
   assert.equal(html.includes("draw-tool-hide-drawings"), false);
+  assert.equal(html.includes("draw-tool-magnet"), false);
   assert.ok(html.includes("draw-tool-clear-all"));
 });

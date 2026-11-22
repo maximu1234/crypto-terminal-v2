@@ -22,7 +22,7 @@ lwPriceScaleModeId
 import {
 candleSeriesPaint,
 registerCandleSeries
-} from "./candle-color-prefs.js?v=a9347502";
+} from "./candle-color-prefs.js?v=7a67da75";
 
 import {
 liveBarPeriodSec
@@ -1729,7 +1729,7 @@ lineEl.classList.remove(
 export {
 linkChartsCrosshair,
 mountWidgetStackCrosshair
-} from "./chart-crosshair-link.js?v=16661bef";
+} from "./chart-crosshair-link.js?v=ba51e23b";
 
 
 

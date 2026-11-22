@@ -8,7 +8,7 @@ closeChromeSurface
 
 import {
 getDrawToolIconSrc
-} from "../draw-toolbar-icon-data.js?v=f5e35567";
+} from "../draw-toolbar-icon-data.js?v=9a3daf63";
 
 import {
 closeElliottFlyout

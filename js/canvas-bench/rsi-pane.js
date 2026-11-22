@@ -13,6 +13,14 @@ rollRsi,
 rsiReplaceLast
 } from "./rsi.js";
 
+import {
+APPEARANCE_EVENT,
+appearanceColor
+} from "../appearance-theme.js?v=a12dec97";
+
+const liveRsiPanes =
+new Set();
+
 const BG =
 "#0e1116";
 const BAND =
@@ -21,8 +29,12 @@ const LINE =
 "#b2b5be";
 const LEVEL =
 "rgba(174,174,182,0.55)";
-const AXIS =
-"#d1d5db";
+
+function axisInk(){
+
+return appearanceColor("scaleText");
+
+}
 const FONT =
 "11px -apple-system, BlinkMacSystemFont, 'Trebuchet MS', Roboto, Ubuntu, sans-serif";
 
@@ -78,6 +90,7 @@ export class RsiBenchPane {
 
 constructor(stage, chart){
 
+liveRsiPanes.add(this);
 this.stage = stage;
 this.chart = chart;
 this.history = document.createElement("canvas");
@@ -268,7 +281,7 @@ ctx.font = FONT;
 ctx.lineWidth = 1;
 ctx.textBaseline = "middle";
 ctx.textAlign = "left";
-ctx.fillStyle = AXIS;
+ctx.fillStyle = axisInk();
 ctx.strokeStyle = LEVEL;
 ctx.setLineDash([5, 4]);
 ctx.beginPath();
@@ -348,7 +361,7 @@ Math.max(
 Math.round(88 / this.chart.barSpacing)
 );
 
-ctx.fillStyle = AXIS;
+ctx.fillStyle = axisInk();
 ctx.textAlign = "center";
 ctx.textBaseline = "top";
 
@@ -464,5 +477,27 @@ h: tagH + 4
 ];
 
 }
+
+}
+
+if(typeof window !== "undefined"){
+
+window.addEventListener(
+APPEARANCE_EVENT,
+()=>{
+
+for(const pane of liveRsiPanes){
+
+if(!pane.stage?.isConnected){
+liveRsiPanes.delete(pane);
+continue;
+}
+
+pane.rebuild();
+
+}
+
+}
+);
 
 }
